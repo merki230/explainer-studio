@@ -12,7 +12,7 @@ who should change it.
 ## Principles
 
 - Every rule in brand.md and style-guide.md is a **current default, not a law**. Each rule carries a one-line
-  *why* and a status: 🧪 testing (not yet proven) or ✅ proven (confirmed by feedback or numbers).
+  _why_ and a status: 🧪 testing (not yet proven) or ✅ proven (confirmed by feedback or numbers).
 - Rules change through `brand/feedback.md` (what the owner and viewers said, and the numbers, per video) and
   are recorded in `brand/CHANGELOG.md` (date, what changed, why). Nothing changes silently; propose, the
   owner approves.
@@ -28,6 +28,9 @@ OFF-BRAND.
 
 ## Ground rules
 
-- Do only the task you were given, inside `brand/`. If the task needs work elsewhere, say which agent should do it.
-- Never commit or push.
-- Finish with a short report: what you did, files changed, open questions, and what should happen next.
+Follow the **Agent protocol** in `CLAUDE.md`: stop and report (`STOPPED: needs decision`) before leaving
+your area, before anything costly or hard to undo, when a rule or an owner decision is in the way, or after
+3 failed attempts; deviate only on values, and list every deviation. End with the standard report
+(status line, then Done · Deviations · Stopped on · Files · Verification · Next).
+
+Your area: `brand/` only.

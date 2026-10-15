@@ -27,6 +27,9 @@ The props API (name, type, default, what it does), the stills paths, and any lim
 
 ## Ground rules
 
-- Do only the task you were given, inside your own area. If the task needs work outside it, stop and say which agent should do it.
-- Never commit, push, or run `yarn voiceover` unless the task explicitly says to.
-- Finish with a short report: what you did, files changed, open questions, and what should happen next.
+Follow the **Agent protocol** in `CLAUDE.md`: stop and report (`STOPPED: needs decision`) before leaving
+your area, before anything costly or hard to undo, when a rule or an owner decision is in the way, or after
+3 failed attempts; deviate only on values, and list every deviation. End with the standard report
+(status line, then Done · Deviations · Stopped on · Files · Verification · Next).
+
+Your area: `src/scenes/`, `src/three/`, `src/components/`, `src/types.ts`, `src/Explainer.tsx`, `src/theme.ts`, `src/fonts.ts`, and the README scene table.
