@@ -27,8 +27,8 @@ export type SceneSpec = {
   scene: SceneName;
   cue?: string;
   start?: number;
-  /** Small monospace label at the top of the frame. */
-  chip?: {text: string; color?: string};
+  /** Exhibit label at the top of the frame: serif `title` plus a small mono `text` line. */
+  chip?: {text: string; title?: string; color?: string};
   /** Passed straight to the scene component. */
   props?: Record<string, unknown>;
   overlays?: OverlaySpec[];
@@ -37,7 +37,7 @@ export type SceneSpec = {
 export type VideoSpec = {
   /** Seconds of silence kept after the last word. */
   tail?: number;
-  /** Small tag in the top-right corner. Set null to hide. */
+  /** Small tag at the top-left of the safe zone. Set null to hide. */
   watermark?: string | null;
   scenes: SceneSpec[];
 };

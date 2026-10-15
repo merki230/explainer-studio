@@ -1,69 +1,60 @@
 import React from 'react';
-import {Easing, interpolate, spring, useCurrentFrame, useVideoConfig} from 'remotion';
+import {Easing, interpolate, useCurrentFrame, useVideoConfig} from 'remotion';
 import {fonts} from '../fonts';
 import {theme} from '../theme';
+import {cardStyle, ease, monoStyle} from './card';
 
 export type CounterProps = {
   from?: number;
   to: number;
   label: string;
   sub?: string;
-  /** Top-left corner, as fractions of the frame. */
+  /** Top-left corner, as fractions of the frame (0.111 = the safe area's left edge, 120 px). */
   x?: number;
   y?: number;
   /** Seconds to count. */
   duration?: number;
 };
 
-export const Counter: React.FC<CounterProps> = ({from = 0, to, label, sub, x = 0.07, y = 0.55, duration = 1.6}) => {
+/** A number counting up on a paper card: serif digits and label, mono sub-line. */
+export const Counter: React.FC<CounterProps> = ({from = 0, to, label, sub, x = 0.111, y = 0.55, duration = 1.6}) => {
   const frame = useCurrentFrame();
   const {fps, width, height} = useVideoConfig();
-  const enter = spring({frame, fps, config: {damping: 20}});
+  const enter = ease(frame, 0, 10);
   const value = interpolate(frame, [0, duration * fps], [from, to], {
+    extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
-    easing: Easing.out(Easing.cubic),
+    easing: Easing.inOut(Easing.cubic),
   });
 
   return (
     <div
       style={{
+        ...cardStyle,
         position: 'absolute',
         left: x * width,
         top: y * height,
         opacity: enter,
-        padding: '18px 26px',
-        background: theme.panel,
-        border: `1px solid ${theme.hairline}`,
-        borderRadius: 12,
+        transform: `translateY(${interpolate(enter, [0, 1], [8, 0])}px)`,
+        padding: '14px 26px 18px',
       }}
     >
       <div style={{display: 'flex', alignItems: 'baseline', gap: 14}}>
         <span
           style={{
-            fontFamily: fonts.sans,
-            fontWeight: 800,
-            fontSize: 84,
-            color: theme.text,
-            fontVariantNumeric: 'tabular-nums',
+            fontFamily: fonts.serif,
+            fontWeight: 600,
+            fontSize: 80,
+            lineHeight: 1.1,
+            color: theme.inkLabel,
+            fontVariantNumeric: 'tabular-nums lining-nums',
           }}
         >
           {Math.round(value).toLocaleString('en-US')}
         </span>
-        <span style={{fontFamily: fonts.sans, fontWeight: 600, fontSize: 34, color: theme.text}}>{label}</span>
+        <span style={{fontFamily: fonts.serif, fontWeight: 600, fontSize: 34, color: theme.inkLabel}}>{label}</span>
       </div>
-      {sub ? (
-        <div
-          style={{
-            fontFamily: fonts.mono,
-            fontSize: 18,
-            letterSpacing: '0.14em',
-            textTransform: 'uppercase',
-            color: theme.muted,
-          }}
-        >
-          {sub}
-        </div>
-      ) : null}
+      {sub ? <div style={monoStyle(20, 500)}>{sub}</div> : null}
     </div>
   );
 };

@@ -50,13 +50,14 @@ const Watermark: React.FC<{text: string}> = ({text}) => (
   <div
     style={{
       position: 'absolute',
-      top: 70,
-      right: 60,
+      top: 300,
+      left: 120,
       fontFamily: fonts.mono,
-      fontSize: 18,
-      letterSpacing: '0.3em',
-      color: theme.muted,
-      opacity: 0.6,
+      fontWeight: 600,
+      fontSize: 20,
+      letterSpacing: '0.14em',
+      color: theme.inkLabel,
+      opacity: 0.75,
     }}
   >
     {text}
@@ -68,7 +69,7 @@ export const Explainer: React.FC<ExplainerProps> = ({videoId}) => {
   const timeline = useMemo(() => timelineFor(videoId), [videoId]);
   const last = timeline.scenes.length - 1;
   return (
-    <AbsoluteFill style={{backgroundColor: theme.bg}}>
+    <AbsoluteFill style={{backgroundColor: theme.museum}}>
       {timeline.scenes.map((s, i) => {
         const Scene = SCENES[s.scene];
         if (!Scene) throw new Error(`Unknown scene "${s.scene}". Register it in src/scenes/index.ts.`);
@@ -78,7 +79,7 @@ export const Explainer: React.FC<ExplainerProps> = ({videoId}) => {
           <Sequence key={i} from={s.startFrame} durationInFrames={duration} name={`${i + 1}. ${s.scene}`}>
             <FadeIn enabled={i > 0}>
               <Scene durationInFrames={duration} {...s.props} />
-              {s.chip ? <Chip text={s.chip.text} color={s.chip.color} /> : null}
+              {s.chip ? <Chip {...s.chip} /> : null}
               {s.overlays.map((o, k) => (
                 <Sequence key={k} from={o.startFrame - s.startFrame} name={o.type}>
                   <Overlay o={o} />

@@ -1,91 +1,83 @@
 import React from 'react';
-import {interpolate, spring, useCurrentFrame, useVideoConfig} from 'remotion';
+import {interpolate, useCurrentFrame, useVideoConfig} from 'remotion';
 import {fonts} from '../fonts';
-import {theme} from '../theme';
+import {SAFE, theme} from '../theme';
+import {cardStyle, ease, monoStyle} from './card';
 
 export type SearchBarProps = {
   text: string;
-  /** Red tag on the right, e.g. "NEVER SEARCHED". Empty string hides it. */
+  /** Mono tag on the right, e.g. "NEVER SEARCHED". Empty string hides it. */
   tag?: string;
-  /** Vertical position as a fraction of the frame. */
+  /** Vertical centre as a fraction of the frame. */
   y?: number;
-  /** Strike the query through after this many frames (-1 = never). */
+  /** Strike the query through (in orange) after this many frames (-1 = never). */
   strikeAt?: number;
 };
 
-export const SearchBar: React.FC<SearchBarProps> = ({text, tag = 'NEVER SEARCHED', y = 0.62, strikeAt = 18}) => {
+/** A search query typed on a paper card, then struck through: "you never searched this". */
+export const SearchBar: React.FC<SearchBarProps> = ({text, tag = 'NEVER SEARCHED', y = 0.34, strikeAt = 18}) => {
   const frame = useCurrentFrame();
-  const {fps, height} = useVideoConfig();
-  const enter = spring({frame, fps, config: {damping: 14}});
+  const {width, height} = useVideoConfig();
+  const enter = ease(frame, 0, 10);
   const typed = Math.round(
-    interpolate(frame, [4, 4 + text.length * 1.5], [0, text.length], {extrapolateRight: 'clamp'}),
+    interpolate(frame, [4, 4 + text.length * 1.5], [0, text.length], {
+      extrapolateLeft: 'clamp',
+      extrapolateRight: 'clamp',
+    }),
   );
-  const strike =
-    strikeAt < 0
-      ? 0
-      : interpolate(frame, [strikeAt + 6, strikeAt + 14], [0, 1], {
-          extrapolateLeft: 'clamp',
-          extrapolateRight: 'clamp',
-        });
-  const tagIn = spring({frame: frame - strikeAt - 12, fps, config: {damping: 20}});
+  const strike = strikeAt < 0 ? 0 : ease(frame, strikeAt + 6, strikeAt + 14);
+  const tagIn = strikeAt < 0 ? 1 : ease(frame, strikeAt + 12, strikeAt + 22);
 
   return (
     <div
       style={{
         position: 'absolute',
         top: y * height,
-        left: 0,
-        right: 0,
+        left: 192,
+        right: width - SAFE.right,
         display: 'flex',
         justifyContent: 'center',
-        transform: `translateY(-50%) scale(${interpolate(enter, [0, 1], [0.85, 1])})`,
+        transform: `translateY(-50%) translateY(${interpolate(enter, [0, 1], [8, 0])}px)`,
         opacity: enter,
       }}
     >
       <div
         style={{
+          ...cardStyle,
           display: 'flex',
           alignItems: 'center',
-          gap: 18,
-          padding: '20px 30px',
-          minWidth: 600,
-          background: '#ffffff',
-          borderRadius: 999,
-          boxShadow: '0 20px 60px rgba(0,0,0,0.45)',
+          gap: 16,
+          padding: '16px 24px',
+          width: '100%',
         }}
       >
-        <svg width={34} height={34} viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth={2.4}>
+        <svg width={30} height={30} viewBox="0 0 24 24" fill="none" stroke={theme.inkMuted} strokeWidth={2.2}>
           <circle cx="11" cy="11" r="7" />
           <path d="M20 20l-3.5-3.5" strokeLinecap="round" />
         </svg>
-        <span style={{position: 'relative', fontFamily: fonts.sans, fontWeight: 600, fontSize: 36, color: '#111827'}}>
+        <span
+          style={{
+            position: 'relative',
+            fontFamily: fonts.serif,
+            fontWeight: 600,
+            fontSize: 30,
+            color: theme.inkLabel,
+            whiteSpace: 'nowrap',
+          }}
+        >
           {text.slice(0, typed)}
           <span
             style={{
               position: 'absolute',
-              left: 0,
+              left: -4,
               top: '54%',
-              height: 4,
-              width: `${strike * 100}%`,
-              background: theme.danger,
+              height: 3,
+              width: `calc(${strike * 100}% + ${strike * 8}px)`,
+              background: theme.orange,
             }}
           />
         </span>
-        {tag ? (
-          <span
-            style={{
-              marginLeft: 'auto',
-              opacity: tagIn,
-              fontFamily: fonts.mono,
-              fontWeight: 600,
-              fontSize: 20,
-              letterSpacing: '0.14em',
-              color: theme.danger,
-            }}
-          >
-            {tag} ✕
-          </span>
-        ) : null}
+        {tag ? <span style={{...monoStyle(18, 600), marginLeft: 'auto', opacity: tagIn}}>{tag}</span> : null}
       </div>
     </div>
   );

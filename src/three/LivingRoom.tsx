@@ -1,121 +1,97 @@
-import React from 'react';
-import {random} from 'remotion';
+import React, {useMemo} from 'react';
+import * as THREE from 'three';
 import {theme} from '../theme';
+import {BlobShadow, PlasterBox} from './MuseumStage';
+import {OrangeLight, OrangeWash} from './OrangePath';
+import {plaster, raw} from './plaster';
+import {WallPlate} from './WallPlate';
 
 type V3 = [number, number, number];
 
-const Box: React.FC<{p: V3; s: V3; color: string; emissive?: string; e?: number}> = ({
-  p,
-  s,
-  color,
-  emissive,
-  e = 0,
-}) => (
-  <mesh position={p} castShadow receiveShadow>
-    <boxGeometry args={s} />
-    <meshStandardMaterial color={color} roughness={0.8} emissive={emissive ?? '#000000'} emissiveIntensity={e} />
+// Positions other parts need (paths start/end here). Mannequins sit at SEATS.
+export const ROOM = {
+  seats: [
+    [-0.58, 0, -0.3],
+    [0.58, 0, -0.3],
+  ] as V3[],
+  /** Router body centre on the wall shelf. */
+  router: [0, 1.825, -0.8] as V3,
+  /** Wall surface z (front face of the wall slab). */
+  wallZ: -0.93,
+};
+
+const Cylinder: React.FC<{p: V3; args: [number, number, number, number]; color?: string}> = ({p, args, color}) => (
+  <mesh position={p} material={plaster(color)} castShadow receiveShadow>
+    <cylinderGeometry args={args} />
   </mesh>
 );
 
-// Positions other scenes need (arcs start/end here).
-export const ROOM = {
-  phoneA: [-0.38, 0.475, 1.25] as V3,
-  phoneB: [0.3, 0.475, 1.38] as V3,
-  router: [0, 1.6, -1.05] as V3,
-};
+/**
+ * Plaster living room on a museum plinth: couch with cushions, coffee table,
+ * rug, wall shelf with the router, and the exhibit's wall plate (left of the
+ * shelf). No people (add Mannequins at ROOM.seats).
+ */
+export const LivingRoom: React.FC<{
+  /** Router status LED, 0–1 (orange, blooms). */
+  led?: number;
+  /** Orange wash spreading on the wall behind the router, 0–1. Persistent stain. */
+  wash?: number;
+  /** Wall plate text. Omit for a bare wall. */
+  plate?: {number: string; title: string};
+}> = ({led = 0, wash = 0, plate}) => {
+  const ledMat = useMemo(
+    () => new THREE.MeshBasicMaterial({color: raw(theme.orange), transparent: true, opacity: 0}),
+    [],
+  );
+  ledMat.opacity = Math.max(0, Math.min(1, led));
+  const [rx, ry, rz] = ROOM.router;
 
-const STARS = new Array(46)
-  .fill(0)
-  .map((_, i) => [-1.05 + random(`sx${i}`) * 2.1, 1.98 + random(`sy${i}`) * 1.15, 0.006 + random(`ss${i}`) * 0.008]);
-
-/** Night-time living room: wall + window + moon, couch, coffee table, router shelf. */
-export const LivingRoom: React.FC<{screenGlow?: number}> = ({screenGlow = 0.6}) => (
-  <group>
-    {/* lights: cool moonlight through the window, warm lamp from the left */}
-    <ambientLight intensity={0.35} color="#8090ff" />
-    <directionalLight
-      position={[1.5, 4, -3]}
-      intensity={0.9}
-      color="#a9b8ff"
-      castShadow
-      shadow-mapSize-width={1024}
-      shadow-mapSize-height={1024}
-    />
-    <pointLight position={[-2.2, 1.9, 1.6]} intensity={9} distance={7} decay={1.6} color={theme.warm} />
-    <pointLight position={[0, 1.2, 3.5]} intensity={2.2} distance={6} color="#6d7cff" />
-
-    {/* floor + wall */}
-    <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-      <planeGeometry args={[20, 20]} />
-      <meshStandardMaterial color={theme.floor} roughness={1} />
-    </mesh>
-    <mesh position={[0, 5, -1.2]} receiveShadow>
-      <planeGeometry args={[20, 10]} />
-      <meshStandardMaterial color={theme.wall} roughness={1} />
-    </mesh>
-
-    {/* window: night sky, stars, moon, frame */}
-    <mesh position={[0, 2.55, -1.19]}>
-      <planeGeometry args={[2.3, 1.35]} />
-      <meshBasicMaterial color="#0c1640" />
-    </mesh>
-    {STARS.map(([x, y, r], i) => (
-      <mesh key={i} position={[x, y, -1.18]}>
-        <sphereGeometry args={[r, 6, 6]} />
-        <meshBasicMaterial color="#ffffff" toneMapped={false} />
-      </mesh>
-    ))}
-    <mesh position={[0.62, 2.95, -1.17]}>
-      <circleGeometry args={[0.13, 40]} />
-      <meshBasicMaterial color={theme.moon} toneMapped={false} />
-    </mesh>
-    <Box p={[0, 1.86, -1.15]} s={[2.42, 0.06, 0.08]} color="#2c3563" />
-    <Box p={[0, 3.24, -1.15]} s={[2.42, 0.06, 0.08]} color="#2c3563" />
-    <Box p={[-1.18, 2.55, -1.15]} s={[0.06, 1.44, 0.08]} color="#2c3563" />
-    <Box p={[1.18, 2.55, -1.15]} s={[0.06, 1.44, 0.08]} color="#2c3563" />
-    <Box p={[0, 2.55, -1.15]} s={[0.04, 1.36, 0.06]} color="#2c3563" />
-
-    {/* router on a wall shelf (between the two heads so it's never hidden) */}
-    <group position={[ROOM.router[0], 0, ROOM.router[2]]}>
-      <Box p={[0, 1.5, 0]} s={[0.6, 0.04, 0.24]} color={theme.wood} />
-      <Box p={[0, 1.555, 0]} s={[0.3, 0.07, 0.17]} color="#d9dcef" emissive={theme.glow} e={0.15} />
-      {[-0.1, 0.1].map((x) => (
-        <mesh key={x} position={[x, 1.66, -0.05]} rotation={[0, 0, x * 1.5]}>
-          <cylinderGeometry args={[0.008, 0.008, 0.16, 8]} />
-          <meshStandardMaterial color="#d9dcef" />
-        </mesh>
+  return (
+    <group>
+      {/* couch */}
+      {/* (bevel segments 5: the camera gets close to these, 3 reads faceted) */}
+      <PlasterBox size={[2.5, 0.42, 1.0]} radius={0.08} position={[0, 0.21, -0.35]} segments={5} />
+      <PlasterBox size={[2.5, 0.78, 0.26]} radius={0.08} position={[0, 0.75, -0.75]} segments={5} />
+      {[-1, 1].map((s) => (
+        <group key={s}>
+          <PlasterBox size={[0.26, 0.66, 1.0]} radius={0.08} position={[s * 1.25, 0.33, -0.35]} segments={5} />
+          <PlasterBox size={[1.14, 0.16, 0.86]} radius={0.06} position={[s * 0.59, 0.49, -0.3]} segments={5} />
+          <PlasterBox size={[1.14, 0.62, 0.16]} radius={0.06} position={[s * 0.59, 0.94, -0.58]} segments={5} />
+        </group>
       ))}
+
+      {/* coffee table, cup, book */}
+      <PlasterBox size={[1.5, 0.06, 0.66]} radius={0.02} position={[0, 0.44, 0.95]} />
+      {[-0.66, 0.66].flatMap((x) =>
+        [0.7, 1.2].map((z) => <Cylinder key={`${x}${z}`} p={[x, 0.205, z]} args={[0.025, 0.02, 0.41, 10]} />),
+      )}
+      <Cylinder p={[-0.4, 0.53, 0.9]} args={[0.06, 0.05, 0.12, 20]} />
+      <PlasterBox size={[0.3, 0.04, 0.22]} radius={0.01} position={[0.35, 0.49, 1.0]} rotation={[0, 0.3, 0]} />
+
+      {/* rug */}
+      <Cylinder p={[0, 0.006, 0.3]} args={[1.7, 1.7, 0.012, 48]} />
+
+      {/* wall shelf + router */}
+      <PlasterBox size={[0.95, 0.05, 0.28]} radius={0.01} position={[0, 1.75, -0.8]} />
+      <PlasterBox size={[0.46, 0.1, 0.2]} radius={0.03} position={ROOM.router} />
+      {[-0.16, 0.16].map((x) => (
+        <Cylinder key={x} p={[x, 2.02, -0.86]} args={[0.012, 0.012, 0.3, 8]} />
+      ))}
+      <mesh position={[rx, ry + 0.005, rz + 0.101]} material={ledMat} userData={{glow: true}} visible={led > 0.001}>
+        <planeGeometry args={[0.3, 0.025]} />
+      </mesh>
+      <OrangeLight position={[rx, ry + 0.15, rz + 0.35]} intensity={1.3 * led} reach={2.8} />
+      <OrangeWash position={[rx, ry + 0.2, ROOM.wallZ + 0.005]} size={[2.4, 1.8]} amount={wash} strength={0.4} />
+
+      {/* wall plate: left, at shelf height. The guide's seated-eye spot is behind the couch here;
+          this spot stays clear of the stain and inside the 'push' framing. */}
+      {plate ? (
+        <WallPlate number={plate.number} title={plate.title} position={[-0.96, 1.95, ROOM.wallZ]} size={[0.44, 0.24]} />
+      ) : null}
+
+      {/* contact shadows */}
+      <BlobShadow position={[0, 0.016, -0.3]} size={[3.4, 2.0]} opacity={0.55} />
+      <BlobShadow position={[0, 0.016, 0.95]} size={[2.1, 1.2]} opacity={0.44} />
     </group>
-
-    {/* couch */}
-    <Box p={[0, 0.22, 0]} s={[2.4, 0.44, 0.9]} color={theme.couch} />
-    <Box p={[0, 0.8, -0.36]} s={[2.4, 0.72, 0.22]} color={theme.couch} />
-    <Box p={[-1.3, 0.38, 0]} s={[0.22, 0.6, 0.92]} color="#253060" />
-    <Box p={[1.3, 0.38, 0]} s={[0.22, 0.6, 0.92]} color="#253060" />
-
-    {/* coffee table + props */}
-    <Box p={[0, 0.42, 1.3]} s={[1.6, 0.07, 0.72]} color={theme.wood} />
-    {[
-      [-0.72, 1.0],
-      [0.72, 1.0],
-      [-0.72, 1.6],
-      [0.72, 1.6],
-    ].map(([x, z]) => (
-      <Box key={`${x}${z}`} p={[x, 0.19, z]} s={[0.05, 0.38, 0.05]} color={theme.wood} />
-    ))}
-    {[ROOM.phoneA, ROOM.phoneB].map((p, i) => (
-      <group key={i} position={p} rotation={[0, i ? -0.4 : 0.3, 0]}>
-        <Box p={[0, 0, 0]} s={[0.09, 0.012, 0.18]} color="#151829" />
-        <mesh position={[0, 0.007, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <planeGeometry args={[0.078, 0.165]} />
-          <meshBasicMaterial color="#5a6cff" transparent opacity={0.25 + screenGlow * 0.75} toneMapped={false} />
-        </mesh>
-      </group>
-    ))}
-    <Box p={[0.5, 0.49, 1.22]} s={[0.36, 0.07, 0.26]} color="#a8262f" />
-    <mesh position={[-0.6, 0.53, 1.12]} castShadow>
-      <cylinderGeometry args={[0.055, 0.05, 0.16, 24]} />
-      <meshStandardMaterial color="#c9cbd8" roughness={0.4} />
-    </mesh>
-  </group>
-);
+  );
+};

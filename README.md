@@ -63,15 +63,42 @@ tooling), and `.claude/skills/` holds three workflows:
 
 ## What's included
 
-| Piece                                                                                                                                          | File              |
-| ---------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
-| Scenes: `phone` (CSS lock screen), `room` (couch, two mannequins, Wi-Fi arcs), `profiles` (two busts + data dots), `tiles` (colour-tile field) | `src/scenes/`     |
-| 3D parts: mannequin, head, living room, glowing arc, ripple, camera dolly                                                                      | `src/three/`      |
-| Overlays: chip, callout, search bar, ad card, counter, captions                                                                                | `src/components/` |
-| Colours, fonts, frame size, fade length                                                                                                        | `src/theme.ts`    |
-| Cue → frame resolution                                                                                                                         | `src/timeline.ts` |
+| Piece                                                                                                                                                                                                                                                                                 | File              |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
+| Scenes (all in the Plaster Museum look): `phone` (plaster phone on a pedestal, orange mic light), `room` (living room, two mannequins, orange network reveal), `profiles` (two busts on pedestals, orange link, data points), `tiles` (plaster tile field, matched tiles turn orange) | `src/scenes/`     |
+| Plaster Museum kit: `MuseumStage` (canvas + post), `MuseumLights`, `MuseumSet` (plinth, floor, wall), `PlasterBox`, `BlobShadow`, `WallPlate`, `plaster()`, `roundedBox()`, `roundedCylinder()`, `stainMaterial()`, `stainSurface()`, `raw()`                                         | `src/three/`      |
+| 3D parts: `Mannequin` (seated plaster figure with phone), `Bust` (faceless bust on a pedestal), `LivingRoom`, `OrangePath` / `OrangeLight` / `OrangeWash`, `CameraRig`; plain `Stage`, `Arc` (no bloom, for non-museum canvases)                                                      | `src/three/`      |
+| Post: `MuseumPost` (orange-only bloom, soft focus band, exposure + highlight roll-off, vignette, grain)                                                                                                                                                                               | `src/three/`      |
+| Overlays, all paper exhibit cards (`components/card.ts`): chip (exhibit label), callout, search bar, ad card, counter; captions (serif, current word orange)                                                                                                                          | `src/components/` |
+| Colours (plaster + one orange, style-guide token names), frame size, fade length, platform safe zone                                                                                                                                                                                  | `src/theme.ts`    |
+| Fonts: Fraunces (serif) + JetBrains Mono, `fontsReady()` for canvas drawing                                                                                                                                                                                                           | `src/fonts.ts`    |
+| Cue → frame resolution                                                                                                                                                                                                                                                                | `src/timeline.ts` |
 
-`room` props: `camera: 'wide' | 'push' | 'table'`, `arcs`, `arcsAt`, `facing`.
+`room` props:
+
+| Prop           | Type                                        | Default                    | What it does                                                                                                                                                                                 |
+| -------------- | ------------------------------------------- | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `camera`       | `'wide' \| 'push' \| 'table' \| CameraMove` | `'wide'`                   | Camera move: whole exhibit, people + router (starts exactly where `wide` ends, so wide → push crossfades invisibly), close on the phones, or a custom `{from, to, lookFrom, lookTo, focusY}` |
+| `arcs`         | `boolean`                                   | `false`                    | Reveal the network: orange route phone A → router → phone B, router LED, wall wash, data dots                                                                                                |
+| `arcsAt`       | `number` (s)                                | `0.3`                      | When the route starts drawing                                                                                                                                                                |
+| `pathDuration` | `number` (s)                                | `1.8`                      | How long the route takes to draw                                                                                                                                                             |
+| `tellAt`       | `number` (s)                                | `arcsAt - 1.5` when `arcs` | Phone A flickers orange, then holds (the tell). Negative = already lit. Works without `arcs`                                                                                                 |
+| `glowFor`      | `number` (s)                                | keep glowing               | Glow time after the route completes; then glow and dots fade, leaving the stain line on the wall                                                                                             |
+| `stained`      | `boolean`                                   | `false`                    | Start with the stains in place (wall stain, wall wash, LED): a later look at the room                                                                                                        |
+| `facing`       | `boolean`                                   | `false`                    | Heads turn toward each other (eased in over 0.8 s from `facingAt`)                                                                                                                           |
+| `facingAt`     | `number` (s)                                | `0`                        | When the heads start to turn                                                                                                                                                                 |
+| `plate`        | `{number, title}`                           | none                       | Engraved wall plate, e.g. `{number: 'No. 014', title: 'The Living Room'}`                                                                                                                    |
+
+`phone` props: `micDot` (`boolean`, `false`: orange mic light by the front camera), `micAt` (s, `0.6`: when it flickers on, then pulses slowly), `plate` (`{number, title}`, none).
+
+`profiles` props: `linkAt` (s, `0.3`), `linkDuration` (s, `1.2`), `glowFor` (s, keep glowing), `points` (data points, `16`), `spread` (half the distance between busts, `0.72`), `plate` (`{number, title}`, none).
+
+`tiles` props: `cols` (`12`), `rows` (`22`), `matched` (share of tiles that turn orange, `0.14`), `matchAt` (s, `1.0`), `matchDuration` (s, `2.4`: the wave crosses the field front to back).
+
+Overlays: `callout` takes `place: 'side' | 'above'` (card beside the anchor, or centred above it) and keeps its card inside x 120–888; `search` `y` is the bar's centre.
+
+Scene chips are exhibit labels: `chip: {title: 'No. 014 · The Living Room', text: 'One network'}` (title in serif, text in small mono).
+Keep all text inside the platform safe zone (`SAFE` in `theme.ts`: x 120–888, y 288–1248). Captions sit centred on y = 0.60.
 
 ## Adding a scene
 
@@ -83,7 +110,7 @@ tooling), and `.claude/skills/` holds three workflows:
 
 A good prompt for Claude: _"Add a scene called `router` to this Remotion
 project: a 3D router on a desk with packets flying out to 5 devices in a
-semicircle. Use the existing Stage, CameraRig, Arc and theme."_
+semicircle. Use MuseumStage, MuseumLights, MuseumSet, CameraRig, OrangePath and theme."_
 
 ## Troubleshooting
 

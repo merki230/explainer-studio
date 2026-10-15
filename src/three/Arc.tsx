@@ -7,7 +7,10 @@ type V3 = [number, number, number];
 const TUBULAR = 80;
 const RADIAL = 8;
 
-/** Glowing arc that draws itself from `from` to `to` as `progress` goes 0 → 1. */
+/**
+ * Simple arc that draws itself from `from` to `to` as `progress` goes 0 → 1.
+ * No bloom or stain: inside a MuseumStage use OrangePath instead.
+ */
 export const Arc: React.FC<{
   from: V3;
   to: V3;
@@ -17,7 +20,7 @@ export const Arc: React.FC<{
   color?: string;
   /** Show a bright packet travelling along the arc. */
   packet?: number;
-}> = ({from, to, lift = 0.8, progress, radius = 0.014, color = theme.glow, packet}) => {
+}> = ({from, to, lift = 0.8, progress, radius = 0.014, color = theme.orange, packet}) => {
   const {curve, geometry} = useMemo(() => {
     const a = new THREE.Vector3(...from);
     const b = new THREE.Vector3(...to);
@@ -43,7 +46,7 @@ export const Arc: React.FC<{
       {showHead ? (
         <mesh position={head}>
           <sphereGeometry args={[radius * 3.2, 16, 16]} />
-          <meshBasicMaterial color="#ffffff" toneMapped={false} />
+          <meshBasicMaterial color={theme.orangeDot} toneMapped={false} />
         </mesh>
       ) : null}
     </group>
@@ -54,7 +57,7 @@ export const Arc: React.FC<{
 export const Ripple: React.FC<{position: V3; t: number; color?: string; size?: number}> = ({
   position,
   t,
-  color = theme.glow,
+  color = theme.orange,
   size = 0.5,
 }) => (
   <group position={position} rotation={[-Math.PI / 2, 0, 0]}>

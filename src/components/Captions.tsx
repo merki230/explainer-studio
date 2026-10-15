@@ -31,8 +31,15 @@ export const buildPages = (words: Word[]): Page[] => {
   }));
 };
 
-/** Lower-third captions, a few words at a time, current word underlined. */
-export const Captions: React.FC<{words: Word[]; y?: number}> = ({words, y = 0.74}) => {
+const FONT_SIZE = 64;
+const LINE_HEIGHT = 1.12;
+
+/**
+ * Serif captions a few words at a time, current word in orange italic.
+ * Centred on `y` (fraction of the frame) with `margin` px each side, anchored by
+ * the bottom edge so a two-line page grows upward, never into the platform UI.
+ */
+export const Captions: React.FC<{words: Word[]; y?: number; margin?: number}> = ({words, y = 0.6, margin = 192}) => {
   const frame = useCurrentFrame();
   const {fps, height} = useVideoConfig();
   const pages = useMemo(() => buildPages(words), [words]);
@@ -41,31 +48,34 @@ export const Captions: React.FC<{words: Word[]; y?: number}> = ({words, y = 0.74
   if (!page) return null;
 
   const local = frame - Math.round(page.start * fps);
-  const pop = spring({frame: local, fps, config: {damping: 14, mass: 0.5}});
+  const pop = spring({frame: local, fps, config: {damping: 16, mass: 0.5}});
+  // Bottom of a single line centred on y.
+  const bottom = height - (y * height + (FONT_SIZE * LINE_HEIGHT) / 2);
 
   return (
     <div
       style={{
         position: 'absolute',
-        top: y * height,
-        left: 60,
-        right: 60,
+        bottom,
+        left: margin,
+        right: margin,
         display: 'flex',
         justifyContent: 'center',
       }}
     >
       <div
         style={{
-          padding: '10px 26px 16px',
-          borderRadius: 14,
-          background: 'rgba(10, 14, 35, 0.72)',
-          transform: `translateY(-50%) scale(${interpolate(pop, [0, 1], [0.9, 1])})`,
-          fontFamily: fonts.sans,
-          fontWeight: 800,
-          fontSize: 62,
-          lineHeight: 1.2,
-          color: theme.text,
+          transform: `translateY(${interpolate(pop, [0, 1], [8, 0])}px)`,
+          opacity: interpolate(pop, [0, 1], [0.4, 1]),
+          fontFamily: fonts.serif,
+          fontWeight: 600,
+          fontSize: FONT_SIZE,
+          lineHeight: LINE_HEIGHT,
+          color: theme.ink,
           textAlign: 'center',
+          textWrap: 'balance',
+          // A thin highlight, plus a plaster halo so the line stays legible over the scene.
+          textShadow: `0 1px 0 rgba(255,255,255,0.55), ${theme.textHalo}`,
         }}
       >
         {page.words.map((w, i) => {
@@ -75,10 +85,11 @@ export const Captions: React.FC<{words: Word[]; y?: number}> = ({words, y = 0.74
             <React.Fragment key={i}>
               <span
                 style={{
-                  opacity: spoken ? 1 : 0.45,
-                  textDecorationLine: active ? 'underline' : 'none',
-                  textDecorationThickness: 5,
-                  textUnderlineOffset: 10,
+                  color: active ? theme.orange : theme.ink,
+                  fontStyle: active ? 'italic' : 'normal',
+                  // Orange on an orange-lit wall needs an edge: a 1 px ink outline outside the glyph.
+                  WebkitTextStroke: active ? '2px rgba(31, 28, 24, 0.35)' : undefined,
+                  paintOrder: 'stroke fill',
                 }}
               >
                 {w.text}

@@ -1,68 +1,154 @@
-import React from 'react';
-import {interpolate, random, useCurrentFrame, useVideoConfig} from 'remotion';
+import React, {useMemo} from 'react';
+import {Easing, interpolate, random, useCurrentFrame, useVideoConfig} from 'remotion';
+import * as THREE from 'three';
 import {theme} from '../theme';
-import {Arc} from '../three/Arc';
-import {Head} from '../three/Mannequin';
-import {CameraRig, Stage} from '../three/Stage';
+import {Bust} from '../three/Mannequin';
+import {BlobShadow, MuseumLights, MuseumSet, MuseumStage} from '../three/MuseumStage';
+import {OrangeLight, OrangePath} from '../three/OrangePath';
+import {raw} from '../three/plaster';
+import {CameraRig} from '../three/Stage';
+import {WallPlate} from '../three/WallPlate';
 
-const DOTS = new Array(34).fill(0).map((_, i) => ({
-  x: -2.6 + random(`px${i}`) * 5.2,
-  y: 1.0 + random(`py${i}`) * 2.6,
-  z: -3 + random(`pz${i}`) * 2.6,
-  r: 0.05 + random(`pr${i}`) * 0.06,
-  ph: random(`pp${i}`) * 6.28,
-}));
+type V3 = [number, number, number];
 
-const Bust: React.FC<{x: number; color: string; turn: number}> = ({x, color, turn}) => (
-  <group position={[x, 0, 0]}>
-    <mesh position={[0, 0.03, 0]} receiveShadow>
-      <cylinderGeometry args={[0.95, 0.95, 0.06, 64]} />
-      <meshStandardMaterial color="#1c2a6a" roughness={0.6} />
-    </mesh>
-    <mesh position={[0, 0.6, 0]} scale={[1, 0.78, 0.8]} castShadow>
-      <sphereGeometry args={[0.8, 48, 48]} />
-      <meshStandardMaterial color={color} roughness={0.7} />
-    </mesh>
-    <Head p={[0, 1.55, 0]} radius={0.52} turn={turn} />
-  </group>
-);
+export type ProfilesSceneProps = {
+  durationInFrames: number;
+  /** Seconds into the scene when the link between the two people starts drawing. */
+  linkAt?: number;
+  /** Seconds the link takes to draw. */
+  linkDuration?: number;
+  /** Seconds the link glows after it completes before fading to its stain. Omit to keep it glowing. */
+  glowFor?: number;
+  /** Data points that drift in and gather on the link (0 for none). */
+  points?: number;
+  /** Half the distance between the two busts (world units). */
+  spread?: number;
+  /** Wall plate text. Omit for a bare wall. */
+  plate?: {number: string; title: string};
+};
 
-export type ProfilesSceneProps = {durationInFrames: number; leftColor?: string; rightColor?: string};
+const seg = (x: number, a: number, b: number) =>
+  interpolate(x, [a, b], [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+    easing: Easing.inOut(Easing.cubic),
+  });
 
-/** Two big busts linked by an arc; data points drift in — "what the ad company sees". */
+const PEDESTAL = 0.8;
+const SCALE = 1.2;
+/** Head centre height of a Bust with this pedestal and scale. */
+const HEAD_Y = PEDESTAL + 0.62 * SCALE;
+
+/**
+ * Two faceless busts on pedestals, linked by an orange route; data points drift
+ * in and gather on it. "To an ad company, that's one household."
+ */
 export const ProfilesScene: React.FC<ProfilesSceneProps> = ({
   durationInFrames,
-  leftColor = theme.red,
-  rightColor = theme.blue,
+  linkAt = 0.3,
+  linkDuration = 1.2,
+  glowFor,
+  points = 16,
+  spread = 0.72,
+  plate,
 }) => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
   const t = frame / fps;
-  const link = interpolate(t, [0.4, 1.4], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
-  const gather = interpolate(t, [0.6, 3.5], [0, 0.55], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+
+  const done = linkAt + linkDuration;
+  const p = seg(t, linkAt, done);
+  const glow = glowFor === undefined ? 1 : 1 - seg(t, done + glowFor, done + glowFor + 0.8);
+  const flow = p >= 1 ? (t - done) * 0.3 : undefined;
+
+  // The route: from one head, up over the gap, to the other.
+  const hy = HEAD_Y + 0.05;
+  const legs: V3[][] = [
+    [
+      [-spread + 0.2, hy, 0.05],
+      [-spread * 0.45, hy + 0.42, 0.05],
+      [spread * 0.45, hy + 0.42, 0.05],
+      [spread - 0.2, hy, 0.05],
+    ],
+  ];
+  // Its stain sits on the wall behind, a little higher (it's further away).
+  const w = -0.925;
+  const stainLegs: V3[][] = [
+    [
+      [-spread - 0.05, hy + 0.15, w],
+      [-spread * 0.5, hy + 0.62, w],
+      [spread * 0.5, hy + 0.62, w],
+      [spread + 0.05, hy + 0.15, w],
+    ],
+  ];
+  const hub: V3 = [0, hy + 0.45, 0.05];
+
+  // Data points: scattered around the busts, each drifts onto its own spot on
+  // the route once it is drawn and is absorbed there (the route carries them).
+  const routeKey = JSON.stringify(legs[0]);
+  const route = useMemo(
+    () => new THREE.CatmullRomCurve3((JSON.parse(routeKey) as V3[]).map((q) => new THREE.Vector3(...q))),
+    [routeKey],
+  );
+  const dots = useMemo(
+    () =>
+      new Array(points).fill(0).map((_, i) => {
+        const side = i % 2 === 0 ? -1 : 1;
+        return {
+          from: new THREE.Vector3(
+            side * (0.5 + random(`pd-x${i}`) * 1.0),
+            HEAD_Y - 0.5 + random(`pd-y${i}`) * 1.4,
+            -0.5 + random(`pd-z${i}`) * 1.0,
+          ),
+          to: route.getPointAt((i + 0.5) / points),
+          delay: random(`pd-d${i}`) * 0.9,
+          ph: random(`pd-p${i}`) * 6.28,
+        };
+      }),
+    [points, route],
+  );
+  const dotMat = useMemo(() => new THREE.MeshBasicMaterial({color: raw(theme.orange), transparent: true}), []);
+  const appear = seg(t, linkAt + 0.2, linkAt + 0.8);
+  dotMat.opacity = appear * glow;
 
   return (
-    <Stage background={theme.bgDeep} fov={45}>
-      <CameraRig from={[0, 2.1, 7.4]} to={[0, 1.95, 6.6]} lookFrom={[0, 1.45, 0]} durationInFrames={durationInFrames} />
-      <ambientLight intensity={0.45} color="#8896ff" />
-      <directionalLight position={[2, 5, 4]} intensity={1.4} castShadow />
-      <pointLight position={[-3, 2, 2]} intensity={6} distance={8} color={theme.warm} />
-      <gridHelper args={[24, 48, '#2a3a7a', '#18224d']} />
-      <Bust x={-1.15} color={leftColor} turn={0.35} />
-      <Bust x={1.15} color={rightColor} turn={-0.35} />
-      <Arc from={[-0.75, 1.75, 0.15]} to={[0.75, 1.75, 0.15]} lift={0.55} progress={link} radius={0.03} />
-      {DOTS.map((d, i) => {
-        // drift toward the arc's midpoint as the scene goes on
-        const x = d.x + (0 - d.x) * gather;
-        const y = d.y + (2.3 - d.y) * gather + Math.sin(t * 1.4 + d.ph) * 0.06;
-        const z = d.z + (0 - d.z) * gather;
+    <MuseumStage post={{focusY: 0.42}}>
+      <CameraRig
+        from={[-0.1, 1.75, 6.2]}
+        to={[0.1, 1.7, 5.75]}
+        lookFrom={[0, 1.32, 0]}
+        lookTo={[0, 1.32, -0.05]}
+        durationInFrames={durationInFrames}
+      />
+      <MuseumLights target={[0, 1.2, 0]} />
+      <MuseumSet />
+      {plate ? <WallPlate number={plate.number} title={plate.title} position={[-1.15, 0.98, -0.925]} /> : null}
+      <Bust position={[-spread, 0, 0]} pedestal={PEDESTAL} scale={SCALE} turn={0.45} />
+      <Bust position={[spread, 0, 0]} pedestal={PEDESTAL} scale={SCALE} turn={-0.45} />
+      <BlobShadow position={[-spread, 0.004, 0]} size={[1.0, 1.0]} opacity={0.44} />
+      <BlobShadow position={[spread, 0.004, 0]} size={[1.0, 1.0]} opacity={0.44} />
+
+      <OrangePath legs={legs} stainLegs={stainLegs} progress={p} glow={glow} flow={flow} radius={0.022} />
+      <OrangeLight position={hub} intensity={1.4 * seg(p, 0.4, 0.7) * glow} reach={2.4} />
+
+      {dots.map((d, i) => {
+        const g = seg(t, done - 0.4 + d.delay, done + 0.5 + d.delay);
+        const pos = d.from.clone().lerp(d.to, g);
+        pos.y += Math.sin(t * 1.3 + d.ph) * 0.04 * (1 - g);
+        const size = 1 - seg(g, 0.75, 1);
         return (
-          <mesh key={i} position={[x, y, z]}>
-            <sphereGeometry args={[d.r, 16, 16]} />
-            <meshStandardMaterial color="#3a6dff" emissive="#2a55ff" emissiveIntensity={0.6} />
+          <mesh
+            key={i}
+            position={pos}
+            scale={size}
+            material={dotMat}
+            userData={{glow: true}}
+            visible={appear * glow * size > 0.01}
+          >
+            <sphereGeometry args={[0.02, 12, 10]} />
           </mesh>
         );
       })}
-    </Stage>
+    </MuseumStage>
   );
 };

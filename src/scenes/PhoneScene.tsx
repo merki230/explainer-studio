@@ -1,140 +1,110 @@
 import React from 'react';
-import {AbsoluteFill, interpolate, spring, useCurrentFrame, useVideoConfig} from 'remotion';
-import {fonts} from '../fonts';
+import {Easing, interpolate, useCurrentFrame, useVideoConfig} from 'remotion';
+import * as THREE from 'three';
 import {theme} from '../theme';
+import {BlobShadow, MuseumLights, MuseumSet, MuseumStage, PlasterBox} from '../three/MuseumStage';
+import {OrangeLight} from '../three/OrangePath';
+import {plaster, raw, roundedBox, roundedCylinder} from '../three/plaster';
+import {CameraRig} from '../three/Stage';
+import {WallPlate} from '../three/WallPlate';
+
+type V3 = [number, number, number];
 
 export type PhoneSceneProps = {
   durationInFrames: number;
-  time?: string;
-  date?: string;
-  /** Orange "mic in use" dot next to the notch. */
+  /** Orange "mic in use" light by the phone's front camera. */
   micDot?: boolean;
+  /** Seconds into the scene when the mic light comes on (it flickers, then pulses slowly). */
+  micAt?: number;
+  /** Wall plate text. Omit for a bare wall. */
+  plate?: {number: string; title: string};
 };
 
-/** A tilted phone on a lock screen, done in CSS so the text stays razor sharp. */
-export const PhoneScene: React.FC<PhoneSceneProps> = ({
-  durationInFrames,
-  time = '9:41',
-  date = 'Tuesday, March 3',
-  micDot = false,
-}) => {
+// The phone, standing on a pedestal: a plaster sculpture of a phone.
+const PHONE = {w: 0.62, h: 1.25, d: 0.07};
+const PEDESTAL = {r: 0.42, h: 0.34};
+const LEAN = -0.12; // leans back a little
+const TURN = -0.22; // three-quarter view
+/** Mic light position in the phone's local space (top right, beside the camera). */
+const MIC_LOCAL: V3 = [0.12, PHONE.h / 2 - 0.075, PHONE.d / 2 + 0.01];
+
+const seg = (x: number, a: number, b: number) =>
+  interpolate(x, [a, b], [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+    easing: Easing.inOut(Easing.cubic),
+  });
+
+/**
+ * A phone as a museum exhibit: a plaster phone (no screen UI) standing on a
+ * pedestal in the gallery. The only colour is the orange mic light.
+ */
+export const PhoneScene: React.FC<PhoneSceneProps> = ({durationInFrames, micDot = false, micAt = 0.6, plate}) => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
-  const enter = spring({frame, fps, config: {damping: 18, mass: 0.9}});
-  const drift = interpolate(frame, [0, durationInFrames], [0, 1]);
-  const float = Math.sin(frame / 22) * 10;
-  const pulse = 0.5 + 0.5 * Math.abs(Math.sin((frame / fps) * Math.PI));
+  const t = frame / fps;
+
+  // Mic light: a short flicker (the tell), then a slow steady pulse.
+  let mic = 0;
+  if (micDot) {
+    const flicker =
+      (0.5 + 0.5 * Math.sin((t - micAt) * 16)) * seg(t, micAt, micAt + 0.15) * (1 - seg(t, micAt + 0.5, micAt + 0.6));
+    const steady = seg(t, micAt + 0.55, micAt + 0.9) * (0.75 + 0.25 * Math.cos((t - micAt) * Math.PI * 1.2));
+    mic = Math.max(flicker * 0.6, steady);
+  }
+
+  const micMat = React.useMemo(() => new THREE.MeshBasicMaterial({color: raw(theme.orange), transparent: true}), []);
+  micMat.opacity = mic;
+
+  const top = PEDESTAL.h;
+  const phoneY = top + PHONE.h / 2 + 0.02;
 
   return (
-    <AbsoluteFill style={{background: 'radial-gradient(120% 80% at 50% 30%, #3b3766 0%, #1d1b35 60%, #111024 100%)'}}>
-      {/* floor shadow */}
-      <div
-        style={{
-          position: 'absolute',
-          left: '50%',
-          top: 1490,
-          width: 640,
-          height: 90,
-          transform: 'translateX(-50%)',
-          borderRadius: '50%',
-          background: 'rgba(0,0,0,0.45)',
-          filter: 'blur(30px)',
-          opacity: enter,
-        }}
+    <MuseumStage post={{focusY: 0.42}}>
+      <CameraRig
+        from={[-0.15, 1.45, 4.6]}
+        to={[0.05, 1.42, 4.15]}
+        lookFrom={[0, 1.08, 0]}
+        lookTo={[0, 1.1, 0]}
+        durationInFrames={durationInFrames}
       />
-      <div
-        style={{
-          position: 'absolute',
-          left: '50%',
-          top: 330,
-          width: 600,
-          height: 1180,
-          transform: `translateX(-50%) translateY(${interpolate(enter, [0, 1], [220, 0]) + float}px) perspective(2400px) rotateX(${14 - drift * 4}deg) rotateY(${-16 + drift * 6}deg) rotateZ(-7deg)`,
-          opacity: enter,
-          borderRadius: 86,
-          border: '16px solid #16152b',
-          boxShadow: 'inset 0 0 0 3px #3e3c66, 30px 50px 90px rgba(0,0,0,0.55)',
-          background: 'linear-gradient(165deg, #6a63b8 0%, #4a4592 45%, #2c2862 100%)',
-          overflow: 'hidden',
-          fontFamily: fonts.sans,
-          color: '#fff',
-        }}
-      >
-        {/* glare */}
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            background: 'linear-gradient(120deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0) 40%)',
-          }}
+      <MuseumLights target={[0, 1.0, 0]} />
+      <MuseumSet />
+      {plate ? <WallPlate number={plate.number} title={plate.title} position={[-1.15, 0.98, -0.925]} /> : null}
+
+      {/* pedestal */}
+      <mesh
+        geometry={roundedCylinder(PEDESTAL.r, PEDESTAL.h, 0.04)}
+        material={plaster(theme.plasterShade, 0.95)}
+        position={[0, PEDESTAL.h / 2, 0]}
+        castShadow
+        receiveShadow
+      />
+      <BlobShadow position={[0, 0.004, 0]} size={[1.3, 1.3]} opacity={0.44} />
+
+      {/* the phone: body, a recessed screen, the camera hole, the mic light */}
+      <group position={[0, phoneY, 0]} rotation={[LEAN, TURN, 0]}>
+        <mesh geometry={roundedBox(PHONE.w, PHONE.h, PHONE.d, 0.06, 5)} material={plaster()} castShadow receiveShadow />
+        <PlasterBox
+          size={[PHONE.w - 0.07, PHONE.h - 0.07, 0.01]}
+          radius={0.004}
+          position={[0, 0, PHONE.d / 2 - 0.002]}
+          color={theme.plasterShade}
         />
-        <div
-          style={{
-            position: 'absolute',
-            top: 26,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            width: 170,
-            height: 46,
-            borderRadius: 23,
-            background: '#0d0c1c',
-          }}
+        <PlasterBox
+          size={[0.14, 0.04, 0.012]}
+          radius={0.005}
+          position={[0, PHONE.h / 2 - 0.075, PHONE.d / 2 + 0.004]}
         />
-        {micDot ? (
-          <div
-            style={{
-              position: 'absolute',
-              top: 41,
-              left: 'calc(50% + 105px)',
-              width: 16,
-              height: 16,
-              borderRadius: 8,
-              background: theme.accent,
-              opacity: pulse,
-              boxShadow: `0 0 18px ${theme.accent}`,
-            }}
-          />
-        ) : null}
-        <div style={{position: 'absolute', top: 34, left: 52, fontWeight: 600, fontSize: 30}}>{time}</div>
-        <div
-          style={{
-            position: 'absolute',
-            top: 210,
-            width: '100%',
-            textAlign: 'center',
-            fontWeight: 600,
-            fontSize: 38,
-            opacity: 0.9,
-          }}
-        >
-          {date}
-        </div>
-        <div
-          style={{
-            position: 'absolute',
-            top: 250,
-            width: '100%',
-            textAlign: 'center',
-            fontWeight: 400,
-            fontSize: 210,
-            letterSpacing: '-0.02em',
-          }}
-        >
-          {time}
-        </div>
-        <div
-          style={{
-            position: 'absolute',
-            bottom: 22,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            width: 200,
-            height: 9,
-            borderRadius: 5,
-            background: 'rgba(255,255,255,0.8)',
-          }}
+        <mesh position={MIC_LOCAL} material={micMat} userData={{glow: true}} visible={mic > 0.001}>
+          <circleGeometry args={[0.018, 24]} />
+        </mesh>
+        <OrangeLight
+          position={[MIC_LOCAL[0], MIC_LOCAL[1] + 0.02, MIC_LOCAL[2] + 0.15]}
+          intensity={0.35 * mic}
+          reach={0.7}
         />
-      </div>
-    </AbsoluteFill>
+      </group>
+    </MuseumStage>
   );
 };

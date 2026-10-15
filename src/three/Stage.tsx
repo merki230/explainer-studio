@@ -9,7 +9,7 @@ type V3 = [number, number, number];
 /** Full-frame three.js canvas. Everything inside animates from useCurrentFrame(). */
 export const Stage: React.FC<{children: React.ReactNode; background?: string; fov?: number}> = ({
   children,
-  background = theme.bg,
+  background = theme.museum,
   fov = 38,
 }) => {
   const {width, height} = useVideoConfig();
