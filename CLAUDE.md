@@ -10,6 +10,8 @@ script and a new `spec.ts`.
 src/
   videos/<slug>/        one folder per video
     script.txt          voiceover text (source of truth for words)
+    performance.txt     optional: same words + [audio tags] and ellipses, sent to TTS
+    voice.json          optional: {voiceId, modelId?, stability?, similarityBoost?}
     spec.ts             scene + overlay layout, keyed to cues in the script
     transcript.json     word timings, GENERATED, never hand-edit
     sources.md          every claim in the script, with its source and status
@@ -30,8 +32,13 @@ out/                    renders and stills (git-ignored)
 
 - `yarn new <slug>`: scaffold a video folder and register it
 - `yarn timings <slug>`: estimated word timings from script.txt (no audio)
-- `yarn voiceover <slug>`: ElevenLabs TTS + timings (costs money; needs `.env`, ask first)
-- `yarn from-whisper <slug> <whisper.json>`: timings from a human recording
+- `yarn voiceover <slug> [--take <name>]`: ElevenLabs v4 TTS + timings (costs money; needs `.env`, ask first).
+  Uses `performance.txt` (script words + `[tags]`/ellipses) when present, and `voice.json` for the voice.
+  `--take` writes to `out/voices/<slug>/` instead of the live files
+- `yarn voiceover:use <slug> <name>`: copy a saved take into place (free)
+- `yarn transcribe <slug> [audio]`: Scribe v2 timings from a human recording (costs money, ask first)
+- `yarn voices [--search x]`: list ElevenLabs voices (free)
+- `yarn from-whisper <slug> <whisper.json>`: legacy local-Whisper timings
 - `yarn check [slug]`: resolve all cues, flag stale transcripts and too-short scenes
 - `yarn stills <slug>`: one PNG per scene in `out/<slug>/stills/` (read them to review layout)
 - `yarn render <slug>`: final `out/<slug>.mp4`
@@ -127,12 +134,14 @@ behalf, doesn't dispatch a task whose brief depends on an unanswered owner decis
 ## Sources
 
 Every video has `src/videos/<slug>/sources.md` (format in `docs/sources-format.md`). Any specific number,
-named company, study, or "they do X" claim needs a ✅ verified source, unless it is hedged (🟡) or marked
+named company, study, or "they do X" claim needs a ✅ verified source, unless it is attributed or hedged as the source hedges (🟡) or marked
 illustrative (🎭, with the watermark on). Never invent a URL or quote. Sources go in the post description,
 not on screen. `yarn check` warns about a missing sources.md and any ❌ claims.
 
 ## Style of the videos
 
-- 150–170 words ≈ 60 s. Hook in the first sentence. Short, spoken sentences.
+- Writing follows `brand/brand.md` § Voice and tone and § Structure (the 7-step recipe; references in
+  `brand/research/script-references.md`). No word-count target: Shorts run as long as the idea needs,
+  about 25–45 s, never over 59 s. No padding, no AI patterns. Attribute claims instead of hedging them.
 - One idea per scene; a scene change roughly every 3–6 s.
 - Calm, factual tone. The "ILLUSTRATIVE" watermark stays on videos that use invented specifics.

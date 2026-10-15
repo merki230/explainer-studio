@@ -3,9 +3,24 @@
 Researcher draft, 2026-10-15. Fact-checked 2026-10-15 (statuses below are the fact-checker's final ones; the FTC report, Panoptispy paper, Experian pages, Northeastern article and RFC 5737 were opened directly).
 All sources were accessed 2026-10-15. All quotes are verbatim. Where a sentence was too long, it is quoted in pieces joined by "…".
 
-## Fact-check summary (current script, 147 words, plus on-screen text)
+## Fact-check summary (current script v0.5, 123 words, attribute-instead-of-hedge style)
 
-Re-check after script revision (137 words): **PASS**, no ❌ remains. The on-screen sub-line "In one ad company's graph · US" is still 🟡 ("data company" is safer). The original BLOCKED note follows for history: one line (final sentence, "only needs"). Rows marked 🟡 are allowed only with the hedged wording given; the 126 million line and the "Regulators" line should be reworded as shown.
+Verdict on the v0.5 script: **PASS**, no ❌. Two 🟡 items are noted (one recommended rewording). Earlier drafts were BLOCKED once ("It only needs…") and then PASS; the 126 million, screen-recording, regulators and mic-callout beats are no longer in the script, and their entries below are kept for future exhibits. On-screen text was not re-supplied for v0.5: any leftover counter "126,000,000" must be removed, and any invented specific (the coffee machine, the 203.0.113.42 callout) needs the ILLUSTRATIVE watermark.
+
+| Script line (v0.5) | Status | Entry | Note / fix |
+|---|---|---|---|
+| "Your friend spends the evening on your couch, scrolling coffee machines on her phone. The next morning, your phone shows you one." | 🎭 | 2 | Invented scenario narrated as fact. Needs only the ILLUSTRATIVE watermark. The ad itself is not claimed to be caused yet. |
+| "So is your phone listening?" | ✅ | 1 | Question, no claim. |
+| "In 2018, researchers studied more than 17,000 Android apps, and in their tests not one was caught sending audio." | ✅ | 1 | 17,260 apps in the dataset (all statically analysed, p. 33); about 9,100 were run (p. 39), so "studied" is fair and "in their tests" is the paper's own phrase ("no apps appeared to exfiltrate audio in our tests", p. 40). Year 2018 and "Android" are correct. The authors note blind spots (p. 46), so the script rightly does not say "proved". |
+| "A simpler answer sits on the shelf. Look at the router." | ✅ | 2 | Framing. "Simpler" is the writer's opinion, not a claim. |
+| "The FTC says devices on one home network often share a public address, and ad platforms use that to guess which ones belong to one household." | ✅ | 2, 3 | Attribution is accurate to printed p. 3: "Because devices on the same local network often have the same public IP address, the ad platform might infer that a computer, smartphone, and tablet … belong to the same household", and "A common method of probabilistic tracking is IP address matching." Minor: the source says "local network", not "home network", and it is a 2017 FTC **staff** report. Safest: "FTC staff said in 2017…". "Use that to guess" is fair to "common method" + "might infer". |
+| "So last night, you and your friend may have looked like one home" | ✅ | 2, 3 | "May" matches "might infer". |
+| "…and that's one way her search ends up on your phone." | 🟡 | 2 | No source documents a visiting guest's search reaching a host's device. The FTC (p. 7) has only a hypothetical about household members. The earlier "may" governs it, but the sentence is the least-supported in the script. Recommended: "…and that's one way her search could end up on your phone." |
+| "Next time an ad seems to read your mind, think about who was on your Wi-Fi." | ✅ | 6e | Advice, nothing stronger than a feeling implied. |
+
+Not used in v0.5 (entries kept, statuses unchanged for reuse): "Companies mix what you log into…" (6c), "Regulators have found…" (6b), the 126 million households line (4, Experian), screen-recording finding (6d), mic callout (1c), "It doesn't need your voice" / "Sharing a Wi-Fi can be enough" (2).
+
+Previous table (drafts before v0.5), retained for reference:
 
 | Script line / on-screen text | Status | Entry | Fix |
 |---|---|---|---|
@@ -33,8 +48,8 @@ Re-check after script revision (137 words): **PASS**, no ❌ remains. The on-scr
 
 ## 1. No published test has caught apps secretly recording audio
 
-- **Script:** "Your phone is not listening to you. Probably not." / "Researchers went looking for apps that secretly record what you say. They found none sending audio. They did find some apps recording the screen instead."
-- **Status:** 🟡 plausible. "Probably not" is the hedge the evidence calls for. Do not make it stronger. "Found none sending audio" is ✅ (verified in the PDF, p. 40). "Went looking for apps that secretly record what you say" is 🟡: the paper's goal is exfiltration of "images, video, and audio" (p. 33), not speech only. "Some apps recording the screen instead" is 🟡: see 6d.
+- **Script (v0.5):** "In 2018, researchers studied more than 17,000 Android apps, and in their tests not one was caught sending audio." (Older drafts, no longer used: "Your phone is not listening to you. Probably not." / "Researchers went looking for apps that secretly record what you say. They found none sending audio. They did find some apps recording the screen instead.")
+- **Status:** 🟡 plausible for older drafts; for v0.5 the single sentence is ✅ (see summary). "Probably not" is the hedge the evidence calls for. Do not make it stronger. "Found none sending audio" is ✅ (verified in the PDF, p. 40). "Went looking for apps that secretly record what you say" is 🟡: the paper's goal is exfiltration of "images, video, and audio" (p. 33), not speech only. "Some apps recording the screen instead" is 🟡: see 6d.
 - **Source:** [Panoptispy: Characterizing Audio and Video Exfiltration from Android Applications](https://petsymposium.org/popets/2018/popets-2018-0030.php) (PDF: https://petsymposium.org/popets/2018/popets-2018-0030.pdf), Pan, Ren, Lindorfer, Wilson, Choffnes (Northeastern University and UC Santa Barbara), Proceedings on Privacy Enhancing Technologies, 2018 issue 4, pp. 33–50 (accessed 2026-10-15)
 - **Quote:** "covering 17,260 apps from Google Play, AppChina, Mi.com, and Anzhi." / "We did not find any true positive audio files in our extracted dataset, i.e., no apps appeared to exfiltrate audio in our tests."
 - **Source (lay summary):** [Is your smartphone spying on you?](https://news.northeastern.edu/2018/07/06/is-your-smartphone-spying-on-you/), Bill Ibelle, Northeastern Global News, 2018-07-06 (accessed 2026-10-15)
@@ -200,7 +215,7 @@ Risk levels from the fact-checker (low / medium / high), for entries that will a
 
 | Name | Where | Risk | Why |
 |---|---|---|---|
-| Experian | 4, Legal | **Medium** | The only company the spoken 126 million line points at. Source is its own marketing. Risk is implying Experian matches households by Wi-Fi/IP, which its own sheet does not say. Describe as "Experian says its identity graph covers 126 million U.S. households". |
+| Experian | 4, Legal | **Medium if used; not named in v0.5** | The only company the spoken 126 million line points at. Source is its own marketing. Risk is implying Experian matches households by Wi-Fi/IP, which its own sheet does not say. Describe as "Experian says its identity graph covers 126 million U.S. households". |
 | Tapad (patent), Experian (owner) | 2, 3 | Low-medium | A patent is a claimed method, not proof of practice. Cite as "Tapad patent US11314838B2". |
 | US FTC | 2, 3, 6b | Low | Government report; quote accurately, say "staff report", date it 2017. |
 | Northeastern / UC Santa Barbara researchers (Pan, Ren, Lindorfer, Wilson, Choffnes) | 1, 6d | Low | Peer-reviewed. Do not say "proved". Android only, 2018. |

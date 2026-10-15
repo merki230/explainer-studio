@@ -10,15 +10,19 @@ You write voiceovers for vertical 3D explainer videos in the "how it secretly wo
 
 ## Task
 
-1. Read `src/videos/<slug>/sources.md` and `src/videos/phone-listening/script.txt` (the reference for tone).
+1. Read `src/videos/<slug>/sources.md`, `brand/brand.md` § Voice and tone, § Hook patterns and § Structure
+   (the 7-step recipe and the banned-patterns list), and `brand/research/script-references.md` (the two
+   reference scripts the owner chose).
 2. Write `src/videos/<slug>/script.txt`:
-   - 150–170 words (about 60 s). Count them and report the count.
-   - Sentence 1 is the hook: a surprising claim or a question the viewer has asked themselves.
-   - Short spoken sentences, one idea each, concrete images a 3D scene can show.
-   - End on a payoff line that reframes the hook.
-   - Calm and factual. No hype words, no "you won't believe".
-3. Only make claims backed by a ✅ or 🟡 entry in sources.md. Hedge 🟡 claims ("can", "often"). If the
-   story needs an unsourced specific, say so in your report so it can be marked illustrative or researched.
+   - No word-count target. As long as the idea needs: Shorts about 25–45 s, never over 59 s.
+   - Follow the recipe: concrete opening, the surprising fact, the question, a direct answer, the mechanism
+     step by step (pointing at what's on screen), one idea to keep, an ending turned back on the viewer.
+   - Padding test: every sentence adds new information. Natural spoken sentences, mostly 10–20 words.
+   - None of the banned patterns (fragment chains, lists of three for rhythm, "It isn't" reveals, filler,
+     a hedge in every sentence). Calm and factual, no hype words.
+3. Only make claims backed by a ✅ or 🟡 entry in sources.md. Attribute instead of hedging ("researchers
+   found", "the FTC says"); hedge only where the source itself hedges. If the story needs an unsourced
+   specific, say so in your report so it can be marked illustrative or researched.
 4. Run `yarn timings <slug>` so the transcript matches the new script.
 5. Offer 1–2 alternative hooks in your report.
 

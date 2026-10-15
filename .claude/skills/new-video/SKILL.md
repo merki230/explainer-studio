@@ -9,12 +9,11 @@ Input: a topic, an angle, or a draft script. Ask for the topic if none was given
 
 1. **Slug.** Pick a short kebab-case slug (e.g. `wifi-router-tracking`), then run `yarn new <slug>`.
 2. **Script** in `src/videos/<slug>/script.txt`:
-   - 150–170 words (≈60 s). Count them.
-   - Sentence 1 is the hook: a surprising claim or a question the viewer has had.
-   - Short spoken sentences, one idea each, concrete images ("same couch", not "proximity").
-   - End on a payoff line that reframes the hook.
+   - Follow `brand/brand.md` § Voice and tone and § Structure (the 7-step recipe). No word-count
+     target: Shorts about 25–45 s, never over 59 s. Every sentence adds new information; no banned
+     AI patterns.
    - Every factual claim needs an entry in `sources.md` (format: `docs/sources-format.md`). Make claims
-     only with ✅ sources, hedge 🟡 ones, and mark invented specifics 🎭 illustrative.
+     only with ✅ sources, attribute 🟡 ones ("the FTC says"), and mark invented specifics 🎭 illustrative.
    - If the user gave a draft, tighten it but keep their voice. Show the script and get approval
      before laying out scenes; it's the cheapest thing to change.
 3. **Timings:** `yarn timings <slug>` (estimated). Don't run `yarn voiceover` unless the user asks: it costs money.

@@ -2,6 +2,28 @@
 
 Every change to `brand.md` or `style-guide.md` gets a line here: date, what changed, why (pointing to a `feedback.md` entry or a research section). Nothing changes silently.
 
+## v0.5 · 2026-10-15 · New writing recipe and narrator delivery (owner feedback on the pilot script)
+
+The owner rejected the pilot script's style: "sounds too AI ... adding detail just to make it longer ... I find this style annoying when watching a video", shared two reference scripts, approved the 7-step recipe ("go"), and asked for an American narrator. No `feedback.md` entry (the pilot is not published); the material is in the new `research/script-references.md` (R§). The look is unchanged.
+
+**1. New research file** `research/script-references.md`: the owner's two reference transcripts (excerpts), the analysis, the recipe (R§3), the banned AI patterns (R§4) and the pilot redrafted in the new style (R§5, not fact-checked). Source: YouTube transcripts shared by the owner, 2026-10-15.
+
+**2. brand.md § Voice and tone rewritten.**
+- ✅ owner feedback: **no padding** (every sentence adds new information; padding test), **no AI patterns** (banned list 1 to 6: fragment chains, lists of three for rhythm, fake reveals, filler, a hedge in every sentence, every sentence 4 to 6 words).
+- 🧪: sentences mostly 10 to 20 words, short ones only to land a point (replaces "most under 10 words, fragments allowed"); one concrete story; talk to the viewer for their experience, narrate like a reporter for a story; point at what's on screen; answer straight; fairness; banned list 7 to 9 (signposts, slogan endings, loose comparisons).
+- **Attribute, don't hedge** replaces "Hedge when the source hedges": say who claims it; hedge only where the source hedges. A 🟡 claim can be spoken with its attribution, not only with "can/often". Sourcing policy and § What we never do updated to match.
+- **Numbers:** "one number per video at most, rounded" → any number that tells the story, each ✅ sourced. Same change in style-guide § 5 Counter.
+- New "sounds AI vs sounds human" pairs (pilot vs R§5); the 5 on-brand and 5 off-brand lines replaced. Reference text is now R§5, not the pilot's `script.txt`.
+- § Promise "calibrated honesty ('probably not')" and the § Naming platform-title example ("Your phone isn't listening. Probably not.") reworded: both used the hedge-and-fake-reveal pattern.
+
+**3. brand.md § Hook patterns.** Hook = recipe steps 1 to 3 (moment, surprising fact, question by ≈ 6 s). Patterns now: the lived moment, the dated event, the role, the finding, the wrong recipient. Dropped: "the gentle denial" ("…Probably not." is a fake reveal plus hedge) and "the exhibit card" (a fragment chain). Numbering 1 to 5 kept for `feedback.md`. All 🧪.
+
+**4. brand.md § Structure of a video.** The 5-part table with seconds and per-part word counts (8 to 14 / 20 to 30 / 40 to 55 / 45 to 55 / 12 to 20) and the 140-to-160-word target are removed. Now the 7 recipe steps, each mapped to what the exhibit does (plaster, orange reveal, stains, torch off). **No word-count target; Shorts ≈ 25 to 45 s**, ≤ 59 s kept (Open decision 3). Long-form later: 2 or 3 questions. Loop kept only where it reads naturally. All 🧪.
+
+**5. style-guide.md § 9 Sound.** Voice row split into: **Narrator: American English** (✅ owner feedback); model `eleven_v4` by default, stability 0.4 to 0.5 starting point (🧪); pacing from punctuation and ellipses (v4 has no `speed`); audio tags only where a human narrator would pause or react, at most ≈ 1 per 3 sentences, never comic tags (`[laughs]`, `[sarcastic]`); tags only in the performance text, never in captions; always audition 2 to 3 takes and pick by ear (all 🧪 except American).
+
+**Outside `brand/` (not changed here, reported):** `CLAUDE.md` § Style ("150–170 words ≈ 60 s", "Short, spoken sentences"), `.claude/agents/scriptwriter.md` and `.claude/skills/new-video/SKILL.md` (150–170 words, hedge 🟡 with "can/often"), `.claude/agents/researcher.md` ("about 160 words") and `docs/sources-format.md` (🟡 "Only with hedged wording") still state the old rules.
+
 ## v0.4 · 2026-10-15 · Reconciled with the Exhibit No. 001 build (scene-builder review round 2)
 
 Every value below was read in code (`theme.ts`, `MuseumPost.tsx`, `MuseumStage.tsx`, `LivingRoom.tsx`, `PhoneScene.tsx`, `RoomScene.tsx`, `ProfilesScene.tsx`, `Mannequin.tsx`, `Chip.tsx`, `AdCard.tsx`, `Explainer.tsx`, `phone-listening/spec.ts`). The look is unchanged; nothing new moves to ✅.

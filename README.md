@@ -38,8 +38,9 @@ Shared building blocks (`src/scenes`, `src/three`, `src/components`, `src/theme.
 2. **Write the script** in `script.txt`. 150–170 words is about 60 seconds. Put the hook in the first sentence.
 3. **Get word timings**, using one of these:
    - Preview without audio: `yarn timings my-topic`
-   - AI voice (ElevenLabs, key in `.env`): `yarn voiceover my-topic`
-   - Your own recording: see the comments in `scripts/whisper-to-transcript.mjs`
+   - AI voice (ElevenLabs `eleven_v4`, key in `.env`): `yarn voiceover my-topic`
+   - Your own recording: put it at `public/my-topic/voiceover.mp3`, then `yarn transcribe my-topic` (Scribe v2)
+   - Legacy local Whisper: `yarn from-whisper` (see `scripts/whisper-to-transcript.mjs`)
      Every factual claim gets a source in `sources.md` ([format](docs/sources-format.md)); the sources go in
      the post description.
 4. **Lay out scenes** in `spec.ts`. Each scene starts on a `cue`, which is the first words of a phrase in
@@ -50,6 +51,18 @@ Shared building blocks (`src/scenes`, `src/three`, `src/components`, `src/theme.
 6. **Render:** `yarn render my-topic` writes `out/my-topic.mp4`.
 
 `yarn verify` runs typecheck, lint and check together.
+
+## Voice
+
+- `yarn voices [--search american]` lists voices (the key needs `voices_read`; a 401 means enable it in the dashboard).
+- `src/videos/<slug>/voice.json` picks the voice per video: `{"voiceId": "...", "modelId": "eleven_v4", "stability": 0.5, "similarityBoost": 0.75}`
+  (only `voiceId` is needed). `ELEVENLABS_VOICE_ID` / `ELEVENLABS_MODEL_ID` in `.env` override it.
+- `src/videos/<slug>/performance.txt` is optional: the same words as `script.txt` plus audio tags (`[pause]`, `[curious]`)
+  and ellipses. `yarn voiceover` sends it instead of the script; the tags are stripped from `transcript.json`, and
+  `yarn check` warns if the words differ from `script.txt`. Eleven v4 takes only stability and similarity; use tags for pacing.
+- Auditions: `yarn voiceover <slug> --take warm` writes `out/voices/<slug>/warm.mp3` + `.transcript.json` without touching the live
+  files; `yarn voiceover:use <slug> warm` copies that take into place for free.
+- `yarn transcribe <slug> [audio]` runs Scribe v2 on a recording and writes `transcript.json`. `yarn from-whisper` is legacy.
 
 ## Working with Claude Code
 

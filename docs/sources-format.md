@@ -17,12 +17,12 @@ One section per claim, in script order:
 
 ## Statuses
 
-| Status          | Meaning                                                       | Allowed in the script?                               |
-| --------------- | ------------------------------------------------------------- | ---------------------------------------------------- |
-| ✅ verified     | A source the fact-checker opened supports the claim as worded | Yes                                                  |
-| 🟡 plausible    | Supported with caveats                                        | Only with hedged wording ("can", "often")            |
-| ❌ unsupported  | No source, or the source says otherwise                       | No. Cut it, or mark it illustrative                  |
-| 🎭 illustrative | Deliberately invented example (a fake IP, a round number)     | Yes, if the video shows the `ILLUSTRATIVE` watermark |
+| Status          | Meaning                                                       | Allowed in the script?                                           |
+| --------------- | ------------------------------------------------------------- | ---------------------------------------------------------------- |
+| ✅ verified     | A source the fact-checker opened supports the claim as worded | Yes                                                              |
+| 🟡 plausible    | Supported with caveats                                        | Only with attribution ("the FTC says") or the source's own hedge |
+| ❌ unsupported  | No source, or the source says otherwise                       | No. Cut it, or mark it illustrative                              |
+| 🎭 illustrative | Deliberately invented example (a fake IP, a round number)     | Yes, if the video shows the `ILLUSTRATIVE` watermark             |
 
 ## Rules
 

@@ -7,7 +7,7 @@ import {existsSync, readFileSync} from 'node:fs';
 import {FADE, FPS} from '../src/theme';
 import {resolveTimeline} from '../src/timeline';
 import {VIDEOS} from '../src/videos';
-import {listVideos} from './lib.mjs';
+import {listVideos, stripTags} from './lib.mjs';
 
 const norm = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '');
 const only = process.argv[2];
@@ -31,6 +31,14 @@ for (const [slug, {spec, transcript}] of Object.entries(VIDEOS)) {
     if (scriptWords.join(' ') !== said.join(' ')) {
       warnings.push(`script.txt and transcript.json differ. Run "yarn timings ${slug}" (or redo the voiceover).`);
     }
+  }
+
+  // performance.txt (audio tags + ellipses) must say the same words as script.txt.
+  const perfFile = `src/videos/${slug}/performance.txt`;
+  if (existsSync(perfFile) && existsSync(scriptFile)) {
+    const perf = stripTags(readFileSync(perfFile, 'utf8')).split(' ').map(norm).filter(Boolean).join(' ');
+    const script = readFileSync(scriptFile, 'utf8').split(/\s+/).map(norm).filter(Boolean).join(' ');
+    if (perf !== script) warnings.push('performance.txt (minus tags and ellipses) differs from script.txt.');
   }
 
   const sourcesFile = `src/videos/${slug}/sources.md`;

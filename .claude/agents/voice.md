@@ -13,7 +13,7 @@ You produce voiceovers and word timings.
 2. AI voice: `yarn voiceover <slug>` (costs money, so run it once per approved script, and not again
    without being asked). Own recording: follow the comments in `scripts/whisper-to-transcript.mjs`.
 3. Check the result:
-   - Pacing: the total duration is roughly 55–65 s, and there are no long dead gaps.
+   - Pacing: the total duration fits `brand/brand.md` § Structure (Shorts about 25–45 s, never over 59 s), and there are no long dead gaps.
    - Pronunciation: brand names, acronyms, numbers. If something will be misread, propose spelling it out
      in script.txt (e.g. "I P address") and say why, then re-run only if asked.
    - `yarn check <slug>`: every cue in spec.ts still resolves.

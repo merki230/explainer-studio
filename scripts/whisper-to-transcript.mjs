@@ -1,3 +1,4 @@
+// LEGACY: prefer `yarn transcribe <slug>` (ElevenLabs Scribe v2). Kept for offline use.
 // Use your OWN recording instead of TTS:
 //   1. Put your recording at public/<slug>/voiceover.mp3
 //   2. pip install -U openai-whisper
