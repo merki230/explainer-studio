@@ -4,7 +4,13 @@ import {theme} from '../theme';
 
 type V3 = [number, number, number];
 
-const Box: React.FC<{p: V3; s: V3; color: string; emissive?: string; e?: number}> = ({p, s, color, emissive, e = 0}) => (
+const Box: React.FC<{p: V3; s: V3; color: string; emissive?: string; e?: number}> = ({
+  p,
+  s,
+  color,
+  emissive,
+  e = 0,
+}) => (
   <mesh position={p} castShadow receiveShadow>
     <boxGeometry args={s} />
     <meshStandardMaterial color={color} roughness={0.8} emissive={emissive ?? '#000000'} emissiveIntensity={e} />
@@ -18,11 +24,9 @@ export const ROOM = {
   router: [0, 1.6, -1.05] as V3,
 };
 
-const STARS = new Array(46).fill(0).map((_, i) => [
-  -1.05 + random(`sx${i}`) * 2.1,
-  1.98 + random(`sy${i}`) * 1.15,
-  0.006 + random(`ss${i}`) * 0.008,
-]);
+const STARS = new Array(46)
+  .fill(0)
+  .map((_, i) => [-1.05 + random(`sx${i}`) * 2.1, 1.98 + random(`sy${i}`) * 1.15, 0.006 + random(`ss${i}`) * 0.008]);
 
 /** Night-time living room: wall + window + moon, couch, coffee table, router shelf. */
 export const LivingRoom: React.FC<{screenGlow?: number}> = ({screenGlow = 0.6}) => (

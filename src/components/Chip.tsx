@@ -1,6 +1,7 @@
 import React from 'react';
 import {interpolate, spring, useCurrentFrame, useVideoConfig} from 'remotion';
-import {fonts, theme} from '../theme';
+import {fonts} from '../fonts';
+import {theme} from '../theme';
 
 /** "● MIC ON · ALL DAY" label pinned near the top of the frame. */
 export const Chip: React.FC<{text: string; color?: string}> = ({text, color = theme.accent}) => {

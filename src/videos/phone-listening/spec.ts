@@ -1,13 +1,13 @@
-import {theme} from './theme';
-import type {VideoSpec} from './types';
+import {theme} from '../../theme';
+import type {VideoSpec} from '../../types';
 
 /**
- * THE FILE YOU EDIT FOR EACH VIDEO.
+ * Scene layout for this video.
  * Scenes start on a `cue` (first words of a phrase in the voiceover) and run
  * until the next scene. Overlays start on a `cue` or `at` seconds into the scene.
  * Overlay x/y are fractions of the 1080x1920 frame: find them in the Studio.
  */
-export const video: VideoSpec = {
+export const spec: VideoSpec = {
   watermark: 'ILLUSTRATIVE',
   scenes: [
     {
@@ -16,7 +16,16 @@ export const video: VideoSpec = {
       chip: {text: 'Mic: probably not'},
       props: {micDot: true},
       overlays: [
-        {type: 'callout', cue: 'Probably not', x: 0.54, y: 0.21, dx: 130, dy: -60, title: 'Mic in use', sub: 'This dot never lies'},
+        {
+          type: 'callout',
+          cue: 'Probably not',
+          x: 0.54,
+          y: 0.21,
+          dx: 130,
+          dy: -60,
+          title: 'Mic in use',
+          sub: 'This dot never lies',
+        },
       ],
     },
     {
@@ -31,7 +40,9 @@ export const video: VideoSpec = {
       cue: 'Same Wi-Fi',
       chip: {text: 'One network', color: theme.glow},
       props: {camera: 'push', arcs: true, facing: true},
-      overlays: [{type: 'callout', at: 0.5, x: 0.43, y: 0.385, dx: 110, dy: -150, title: 'Same Wi-Fi', sub: 'IP 84.112.7.20'}],
+      overlays: [
+        {type: 'callout', at: 0.5, x: 0.43, y: 0.385, dx: 110, dy: -150, title: 'Same Wi-Fi', sub: 'IP 84.112.7.20'},
+      ],
     },
     {
       scene: 'profiles',

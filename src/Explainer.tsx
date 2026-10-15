@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useMemo} from 'react';
 import {AbsoluteFill, Audio, interpolate, Sequence, staticFile, useCurrentFrame} from 'remotion';
 import {AdCard} from './components/AdCard';
 import {Callout} from './components/Callout';
@@ -6,15 +6,24 @@ import {Captions} from './components/Captions';
 import {Chip} from './components/Chip';
 import {Counter} from './components/Counter';
 import {SearchBar} from './components/SearchBar';
-import transcriptJson from './data/transcript.json';
 import {SCENES} from './scenes';
-import {FADE, fonts, FPS, theme} from './theme';
+import {fonts} from './fonts';
+import {FADE, FPS, theme} from './theme';
 import {resolveTimeline, type ResolvedOverlay} from './timeline';
-import type {Transcript} from './types';
-import {video} from './video';
+import {VIDEOS} from './videos';
 
-const transcript = transcriptJson as Transcript;
-export const timeline = resolveTimeline(video, transcript.words, FPS);
+export type ExplainerProps = {videoId: string};
+
+const getVideo = (videoId: string) => {
+  const entry = VIDEOS[videoId];
+  if (!entry) throw new Error(`Unknown video "${videoId}". Register it in src/videos/index.ts.`);
+  return entry;
+};
+
+export const timelineFor = (videoId: string) => {
+  const {spec, transcript} = getVideo(videoId);
+  return resolveTimeline(spec, transcript.words, FPS);
+};
 
 const FadeIn: React.FC<{children: React.ReactNode; enabled: boolean}> = ({children, enabled}) => {
   const frame = useCurrentFrame();
@@ -54,7 +63,9 @@ const Watermark: React.FC<{text: string}> = ({text}) => (
   </div>
 );
 
-export const Explainer: React.FC = () => {
+export const Explainer: React.FC<ExplainerProps> = ({videoId}) => {
+  const {spec: video, transcript} = getVideo(videoId);
+  const timeline = useMemo(() => timelineFor(videoId), [videoId]);
   const last = timeline.scenes.length - 1;
   return (
     <AbsoluteFill style={{backgroundColor: theme.bg}}>

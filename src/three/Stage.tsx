@@ -26,7 +26,11 @@ export const Stage: React.FC<{children: React.ReactNode; background?: string; fo
   );
 };
 
-const lerp3 = (a: V3, b: V3, p: number): V3 => [a[0] + (b[0] - a[0]) * p, a[1] + (b[1] - a[1]) * p, a[2] + (b[2] - a[2]) * p];
+const lerp3 = (a: V3, b: V3, p: number): V3 => [
+  a[0] + (b[0] - a[0]) * p,
+  a[1] + (b[1] - a[1]) * p,
+  a[2] + (b[2] - a[2]) * p,
+];
 
 /** Slow dolly from one camera position to another across `durationInFrames`. */
 export const CameraRig: React.FC<{

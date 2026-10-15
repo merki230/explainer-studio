@@ -1,6 +1,7 @@
 import React from 'react';
 import {Easing, interpolate, spring, useCurrentFrame, useVideoConfig} from 'remotion';
-import {fonts, theme} from '../theme';
+import {fonts} from '../fonts';
+import {theme} from '../theme';
 
 export type CounterProps = {
   from?: number;
@@ -37,13 +38,29 @@ export const Counter: React.FC<CounterProps> = ({from = 0, to, label, sub, x = 0
       }}
     >
       <div style={{display: 'flex', alignItems: 'baseline', gap: 14}}>
-        <span style={{fontFamily: fonts.sans, fontWeight: 800, fontSize: 84, color: theme.text, fontVariantNumeric: 'tabular-nums'}}>
+        <span
+          style={{
+            fontFamily: fonts.sans,
+            fontWeight: 800,
+            fontSize: 84,
+            color: theme.text,
+            fontVariantNumeric: 'tabular-nums',
+          }}
+        >
           {Math.round(value).toLocaleString('en-US')}
         </span>
         <span style={{fontFamily: fonts.sans, fontWeight: 600, fontSize: 34, color: theme.text}}>{label}</span>
       </div>
       {sub ? (
-        <div style={{fontFamily: fonts.mono, fontSize: 18, letterSpacing: '0.14em', textTransform: 'uppercase', color: theme.muted}}>
+        <div
+          style={{
+            fontFamily: fonts.mono,
+            fontSize: 18,
+            letterSpacing: '0.14em',
+            textTransform: 'uppercase',
+            color: theme.muted,
+          }}
+        >
           {sub}
         </div>
       ) : null}

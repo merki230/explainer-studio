@@ -1,6 +1,7 @@
 import React, {useMemo} from 'react';
 import {interpolate, spring, useCurrentFrame, useVideoConfig} from 'remotion';
-import {fonts, theme} from '../theme';
+import {fonts} from '../fonts';
+import {theme} from '../theme';
 import type {Word} from '../types';
 
 type Page = {words: Word[]; start: number; end: number};

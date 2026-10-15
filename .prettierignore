@@ -1,0 +1,8 @@
+node_modules
+out
+build
+.yarn
+yarn.lock
+*.mp4
+*.mp3
+src/videos/*/transcript.json

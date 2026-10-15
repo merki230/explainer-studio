@@ -30,7 +30,11 @@ const Bust: React.FC<{x: number; color: string; turn: number}> = ({x, color, tur
 export type ProfilesSceneProps = {durationInFrames: number; leftColor?: string; rightColor?: string};
 
 /** Two big busts linked by an arc; data points drift in — "what the ad company sees". */
-export const ProfilesScene: React.FC<ProfilesSceneProps> = ({durationInFrames, leftColor = theme.red, rightColor = theme.blue}) => {
+export const ProfilesScene: React.FC<ProfilesSceneProps> = ({
+  durationInFrames,
+  leftColor = theme.red,
+  rightColor = theme.blue,
+}) => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
   const t = frame / fps;

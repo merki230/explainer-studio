@@ -1,6 +1,7 @@
 import React from 'react';
 import {AbsoluteFill, interpolate, spring, useCurrentFrame, useVideoConfig} from 'remotion';
-import {fonts, theme} from '../theme';
+import {fonts} from '../fonts';
+import {theme} from '../theme';
 
 export type PhoneSceneProps = {
   durationInFrames: number;
@@ -11,7 +12,12 @@ export type PhoneSceneProps = {
 };
 
 /** A tilted phone on a lock screen, done in CSS so the text stays razor sharp. */
-export const PhoneScene: React.FC<PhoneSceneProps> = ({durationInFrames, time = '9:41', date = 'Tuesday, March 3', micDot = false}) => {
+export const PhoneScene: React.FC<PhoneSceneProps> = ({
+  durationInFrames,
+  time = '9:41',
+  date = 'Tuesday, March 3',
+  micDot = false,
+}) => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
   const enter = spring({frame, fps, config: {damping: 18, mass: 0.9}});
@@ -55,8 +61,25 @@ export const PhoneScene: React.FC<PhoneSceneProps> = ({durationInFrames, time = 
         }}
       >
         {/* glare */}
-        <div style={{position: 'absolute', inset: 0, background: 'linear-gradient(120deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0) 40%)'}} />
-        <div style={{position: 'absolute', top: 26, left: '50%', transform: 'translateX(-50%)', width: 170, height: 46, borderRadius: 23, background: '#0d0c1c'}} />
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'linear-gradient(120deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0) 40%)',
+          }}
+        />
+        <div
+          style={{
+            position: 'absolute',
+            top: 26,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: 170,
+            height: 46,
+            borderRadius: 23,
+            background: '#0d0c1c',
+          }}
+        />
         {micDot ? (
           <div
             style={{
@@ -73,11 +96,44 @@ export const PhoneScene: React.FC<PhoneSceneProps> = ({durationInFrames, time = 
           />
         ) : null}
         <div style={{position: 'absolute', top: 34, left: 52, fontWeight: 600, fontSize: 30}}>{time}</div>
-        <div style={{position: 'absolute', top: 210, width: '100%', textAlign: 'center', fontWeight: 600, fontSize: 38, opacity: 0.9}}>{date}</div>
-        <div style={{position: 'absolute', top: 250, width: '100%', textAlign: 'center', fontWeight: 400, fontSize: 210, letterSpacing: '-0.02em'}}>
+        <div
+          style={{
+            position: 'absolute',
+            top: 210,
+            width: '100%',
+            textAlign: 'center',
+            fontWeight: 600,
+            fontSize: 38,
+            opacity: 0.9,
+          }}
+        >
+          {date}
+        </div>
+        <div
+          style={{
+            position: 'absolute',
+            top: 250,
+            width: '100%',
+            textAlign: 'center',
+            fontWeight: 400,
+            fontSize: 210,
+            letterSpacing: '-0.02em',
+          }}
+        >
           {time}
         </div>
-        <div style={{position: 'absolute', bottom: 22, left: '50%', transform: 'translateX(-50%)', width: 200, height: 9, borderRadius: 5, background: 'rgba(255,255,255,0.8)'}} />
+        <div
+          style={{
+            position: 'absolute',
+            bottom: 22,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: 200,
+            height: 9,
+            borderRadius: 5,
+            background: 'rgba(255,255,255,0.8)',
+          }}
+        />
       </div>
     </AbsoluteFill>
   );

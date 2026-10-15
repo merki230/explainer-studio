@@ -1,6 +1,7 @@
 import React from 'react';
 import {interpolate, spring, useCurrentFrame, useVideoConfig} from 'remotion';
-import {fonts, theme} from '../theme';
+import {fonts} from '../fonts';
+import {theme} from '../theme';
 
 export type AdCardProps = {
   title: string;
@@ -33,12 +34,20 @@ export const AdCard: React.FC<AdCardProps> = ({title, label = 'SPONSORED · FOR 
         boxShadow: '0 24px 70px rgba(0,0,0,0.5)',
       }}
     >
-      <div style={{width: 64, height: 64, borderRadius: 12, background: '#1f2433', display: 'grid', placeItems: 'center'}}>
+      <div
+        style={{width: 64, height: 64, borderRadius: 12, background: '#1f2433', display: 'grid', placeItems: 'center'}}
+      >
         <div style={{width: 26, height: 34, borderRadius: 4, border: '4px solid #e5e7eb'}} />
       </div>
       <div>
-        <div style={{fontFamily: fonts.mono, fontWeight: 600, fontSize: 16, letterSpacing: '0.14em', color: theme.accent}}>{label}</div>
-        <div style={{fontFamily: fonts.sans, fontWeight: 600, fontSize: 34, color: '#111827', marginTop: 2}}>{title}</div>
+        <div
+          style={{fontFamily: fonts.mono, fontWeight: 600, fontSize: 16, letterSpacing: '0.14em', color: theme.accent}}
+        >
+          {label}
+        </div>
+        <div style={{fontFamily: fonts.sans, fontWeight: 600, fontSize: 34, color: '#111827', marginTop: 2}}>
+          {title}
+        </div>
       </div>
     </div>
   );

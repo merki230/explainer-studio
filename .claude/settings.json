@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(yarn typecheck)",
+      "Bash(yarn lint)",
+      "Bash(yarn lint *)",
+      "Bash(yarn format)",
+      "Bash(yarn check)",
+      "Bash(yarn check *)",
+      "Bash(yarn verify)",
+      "Bash(yarn timings *)",
+      "Bash(yarn new *)",
+      "Bash(yarn stills *)",
+      "Bash(yarn render *)",
+      "Bash(git status)",
+      "Bash(git diff *)",
+      "Bash(git log *)"
+    ],
+    "ask": ["Bash(yarn voiceover *)"],
+    "deny": ["Read(./.env)", "Read(./.env.*)", "Edit(./src/videos/*/transcript.json)"]
+  }
+}

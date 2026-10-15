@@ -1,15 +1,23 @@
 import React from 'react';
 import {Composition} from 'remotion';
-import {Explainer, timeline} from './Explainer';
+import {Explainer, timelineFor} from './Explainer';
 import {FPS, HEIGHT, WIDTH} from './theme';
+import {VIDEOS} from './videos';
 
+// One composition per video, named by its slug.
 export const Root: React.FC = () => (
-  <Composition
-    id="Explainer"
-    component={Explainer}
-    durationInFrames={timeline.durationInFrames}
-    fps={FPS}
-    width={WIDTH}
-    height={HEIGHT}
-  />
+  <>
+    {Object.keys(VIDEOS).map((id) => (
+      <Composition
+        key={id}
+        id={id}
+        component={Explainer}
+        defaultProps={{videoId: id}}
+        durationInFrames={timelineFor(id).durationInFrames}
+        fps={FPS}
+        width={WIDTH}
+        height={HEIGHT}
+      />
+    ))}
+  </>
 );

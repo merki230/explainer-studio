@@ -1,12 +1,13 @@
 // Generates approximate word timings from script.txt so you can preview and
 // lay out scenes BEFORE recording a voiceover. Real timings come later from
-// `npm run voiceover` (ElevenLabs) or `npm run from-whisper` (your own recording).
+// `yarn voiceover` (ElevenLabs) or `yarn from-whisper` (your own recording).
 //
-// usage: node scripts/fake-timings.mjs [script.txt]
+// usage: yarn timings <slug>
 import {readFileSync, writeFileSync} from 'node:fs';
+import {videoPaths} from './lib.mjs';
 
-const file = process.argv[2] ?? 'script.txt';
-const text = readFileSync(file, 'utf8').trim();
+const paths = videoPaths(process.argv[2], 'yarn timings <slug>');
+const text = readFileSync(paths.script, 'utf8').trim();
 
 const words = [];
 let t = 0.15;
@@ -19,5 +20,5 @@ for (const raw of text.split(/\s+/)) {
   else if (/[,;:]$/.test(raw)) t += 0.16;
 }
 
-writeFileSync('src/data/transcript.json', JSON.stringify({audio: null, words}, null, 2));
-console.log(`Wrote src/data/transcript.json — ${words.length} words, ~${t.toFixed(1)}s (no audio).`);
+writeFileSync(paths.transcript, JSON.stringify({audio: null, words}, null, 2));
+console.log(`Wrote ${paths.transcript} — ${words.length} words, ~${t.toFixed(1)}s (no audio).`);

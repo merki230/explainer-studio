@@ -30,7 +30,13 @@ export const TilesScene: React.FC<TilesSceneProps> = ({durationInFrames}) => {
 
   return (
     <Stage background={theme.bgDeep} fov={42}>
-      <CameraRig from={[2.5, 7.5, 9]} to={[1.2, 6.2, 6.5]} lookFrom={[0, 0, -2]} lookTo={[0, 0, -3]} durationInFrames={durationInFrames} />
+      <CameraRig
+        from={[2.5, 7.5, 9]}
+        to={[1.2, 6.2, 6.5]}
+        lookFrom={[0, 0, -2]}
+        lookTo={[0, 0, -3]}
+        durationInFrames={durationInFrames}
+      />
       <ambientLight intensity={0.5} />
       <directionalLight position={[4, 10, 6]} intensity={1.6} castShadow />
       <pointLight position={[-5, 4, 2]} intensity={10} distance={14} color={theme.warm} />

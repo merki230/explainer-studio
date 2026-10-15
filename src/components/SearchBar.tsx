@@ -1,6 +1,7 @@
 import React from 'react';
 import {interpolate, spring, useCurrentFrame, useVideoConfig} from 'remotion';
-import {fonts, theme} from '../theme';
+import {fonts} from '../fonts';
+import {theme} from '../theme';
 
 export type SearchBarProps = {
   text: string;
@@ -16,8 +17,16 @@ export const SearchBar: React.FC<SearchBarProps> = ({text, tag = 'NEVER SEARCHED
   const frame = useCurrentFrame();
   const {fps, height} = useVideoConfig();
   const enter = spring({frame, fps, config: {damping: 14}});
-  const typed = Math.round(interpolate(frame, [4, 4 + text.length * 1.5], [0, text.length], {extrapolateRight: 'clamp'}));
-  const strike = strikeAt < 0 ? 0 : interpolate(frame, [strikeAt + 6, strikeAt + 14], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+  const typed = Math.round(
+    interpolate(frame, [4, 4 + text.length * 1.5], [0, text.length], {extrapolateRight: 'clamp'}),
+  );
+  const strike =
+    strikeAt < 0
+      ? 0
+      : interpolate(frame, [strikeAt + 6, strikeAt + 14], [0, 1], {
+          extrapolateLeft: 'clamp',
+          extrapolateRight: 'clamp',
+        });
   const tagIn = spring({frame: frame - strikeAt - 12, fps, config: {damping: 20}});
 
   return (

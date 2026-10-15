@@ -1,6 +1,7 @@
 import React from 'react';
 import {Easing, interpolate, spring, useCurrentFrame, useVideoConfig} from 'remotion';
-import {fonts, theme} from '../theme';
+import {fonts} from '../fonts';
+import {theme} from '../theme';
 
 export type CalloutProps = {
   /** Anchor point (the thing being labelled), as fractions of the frame. */

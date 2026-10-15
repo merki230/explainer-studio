@@ -1,3 +1,19 @@
 node_modules
 out
+build
+.DS_Store
+
+# secrets
 .env
+.env.*
+!.env.example
+
+# yarn 4 (no zero-installs)
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+.pnp.*
+
+# Claude Code personal overrides
+.claude/settings.local.json

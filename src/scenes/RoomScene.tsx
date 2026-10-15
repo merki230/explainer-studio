@@ -26,7 +26,13 @@ export type RoomSceneProps = {
 };
 
 /** Two mannequins on a couch at night, phones on the table, router on the wall. */
-export const RoomScene: React.FC<RoomSceneProps> = ({durationInFrames, camera = 'wide', arcs = false, arcsAt = 0.3, facing = false}) => {
+export const RoomScene: React.FC<RoomSceneProps> = ({
+  durationInFrames,
+  camera = 'wide',
+  arcs = false,
+  arcsAt = 0.3,
+  facing = false,
+}) => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
   const t = frame / fps;
@@ -43,9 +49,23 @@ export const RoomScene: React.FC<RoomSceneProps> = ({durationInFrames, camera = 
       <Mannequin position={[0.58, 0, 0.02]} color={theme.blue} phase={2.1} look={facing ? -0.5 : 0} />
       {arcs ? (
         <>
-          <Arc from={ROOM.phoneA} to={ROOM.router} lift={1.0} progress={a} packet={a >= 1 ? (t * 0.7) % 1 : undefined} />
-          <Arc from={ROOM.phoneB} to={ROOM.router} lift={0.8} progress={b} packet={b >= 1 ? (t * 0.7 + 0.5) % 1 : undefined} />
-          {a > 0.9 ? <Ripple position={[ROOM.router[0], ROOM.router[1] - 0.02, ROOM.router[2] + 0.12]} t={t} size={0.45} /> : null}
+          <Arc
+            from={ROOM.phoneA}
+            to={ROOM.router}
+            lift={1.0}
+            progress={a}
+            packet={a >= 1 ? (t * 0.7) % 1 : undefined}
+          />
+          <Arc
+            from={ROOM.phoneB}
+            to={ROOM.router}
+            lift={0.8}
+            progress={b}
+            packet={b >= 1 ? (t * 0.7 + 0.5) % 1 : undefined}
+          />
+          {a > 0.9 ? (
+            <Ripple position={[ROOM.router[0], ROOM.router[1] - 0.02, ROOM.router[2] + 0.12]} t={t} size={0.45} />
+          ) : null}
         </>
       ) : null}
     </Stage>
