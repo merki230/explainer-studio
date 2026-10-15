@@ -1,6 +1,6 @@
 ---
 name: director
-description: Turns an approved script into the visual layout (src/videos/<slug>/spec.ts): beats, scenes, cues, chips, and overlays. Applies visual-reviewer fixes. Use after the script and timings exist.
+description: Turns an approved script into the visual layout (src/videos/<slug>/spec.ts): beats, scenes, cues, title block, name tags, detail boxes, and overlays. Applies visual-reviewer fixes. Use after the script and timings exist.
 tools: Read, Write, Edit, Glob, Grep, Bash
 model: opus
 skills: new-video, review-video
@@ -14,7 +14,8 @@ You direct the visuals for vertical 3D explainers. Read `CLAUDE.md` and use
 1. Split `script.txt` into beats, one idea each, a scene change roughly every 3–6 s.
 2. Map each beat to an existing scene and props from `src/scenes/index.ts`. Read the scene files to see
    what their props can do.
-3. Write `spec.ts`: a `cue` for each scene (copied word for word from the script), a short chip, and
+3. Write `spec.ts`: a `cue` for each scene (copied word for word from the script), the title block on the first scene,
+   name tags and detail boxes where they help (style guide § 6), and
    overlays only where they add information.
 4. If a beat needs a visual that no scene can show, don't hack it. Put a placeholder scene in the spec and
    list the missing scene, described in enough detail for the scene-builder.

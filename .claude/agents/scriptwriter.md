@@ -14,7 +14,7 @@ You write voiceovers for vertical 3D explainer videos in the "how it secretly wo
    (the 7-step recipe and the banned-patterns list), and `brand/research/script-references.md` (the two
    reference scripts the owner chose).
 2. Write `src/videos/<slug>/script.txt`:
-   - No word-count target. As long as the idea needs: Shorts about 25–45 s, never over 59 s.
+   - No word-count target. As long as the idea needs: Shorts about 30–60 s; over 60 s only when the story needs it and the video has no licensed music.
    - Follow the recipe: concrete opening, the surprising fact, the question, a direct answer, the mechanism
      step by step (pointing at what's on screen), one idea to keep, an ending turned back on the viewer.
    - Padding test: every sentence adds new information. Natural spoken sentences, mostly 10–20 words.

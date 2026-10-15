@@ -71,6 +71,11 @@ export type OrangePathProps = {
    * and never as a cable in front of the figures. Drawn with the same `progress`.
    */
   stainLegs?: V3[][];
+  /**
+   * 0–1: how much of the stain line is there, if not `progress` (e.g. 1 to open with the stain of an
+   * earlier reveal already on the wall while the glowing route draws again).
+   */
+  stainProgress?: number;
   /** Stain line radius (world units). A soft edge 3× wider surrounds it. */
   stainRadius?: number;
   /** Core radius in world units (halo is 2.6×). */
@@ -96,6 +101,7 @@ export const OrangePath: React.FC<OrangePathProps> = ({
   glow = 1,
   stain = true,
   stainLegs,
+  stainProgress,
   stainRadius = 0.01,
   radius = 0.02,
   runner = true,
@@ -127,8 +133,9 @@ export const OrangePath: React.FC<OrangePathProps> = ({
   const g = clamp01(glow);
   reveal(coreGeo, p);
   reveal(haloGeo, p);
-  reveal(stainGeo, p);
-  reveal(stainSoftGeo, p);
+  const sp = stainProgress === undefined ? p : clamp01(stainProgress);
+  reveal(stainGeo, sp);
+  reveal(stainSoftGeo, sp);
   mats.core.opacity = g;
   mats.halo.opacity = 0.2 * g;
   // Dots belong to the live system: they shrink and fade with the glow (no "stickers").
@@ -139,7 +146,7 @@ export const OrangePath: React.FC<OrangePathProps> = ({
 
   return (
     <group>
-      {stain && p > 0 ? (
+      {stain && sp > 0 ? (
         <>
           <mesh geometry={stainSoftGeo} material={stainSoftMaterial()} frustumCulled={false} renderOrder={1} />
           <mesh geometry={stainGeo} material={stainMaterial()} frustumCulled={false} renderOrder={1} />
@@ -152,7 +159,11 @@ export const OrangePath: React.FC<OrangePathProps> = ({
         </>
       ) : null}
       {runner ? (
-        <OrangeLight position={[head.x, head.y, head.z]} intensity={drawing ? 1.2 * Math.max(g, 0.3) : 0} reach={1.8} />
+        <OrangeLight
+          position={[head.x, head.y, head.z]}
+          intensity={drawing && g > 0.001 ? 1.2 * Math.max(g, 0.3) : 0}
+          reach={1.8}
+        />
       ) : null}
       {flow !== undefined && p >= 1 && g > 0.001
         ? new Array(dots).fill(0).map((_, i) => {

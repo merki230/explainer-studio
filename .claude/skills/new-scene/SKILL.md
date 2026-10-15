@@ -12,9 +12,9 @@ description: Build a new reusable scene (3D or 2D) for the explainer videos and 
    - Props: `{durationInFrames: number, ...}` with defaults, exported as `<Name>SceneProps`, and a
      one-line doc comment on what it shows.
    - All motion from `useCurrentFrame()` + `interpolate`/`spring`. Seeded `random('…')` only.
-   - Colours from `theme`, fonts from `fonts`. Simple shapes and soft lighting, matching the
-     low-poly mannequin look.
-   - Leave room for the top chip and the captions band (y ≈ 0.70–0.80 of 1920).
+   - Colours from `theme`, fonts from `fonts`. Match `brand/style-guide.md` v0.8 ("The Section"):
+     a cut-open slice seen from outside, both moods (Night/Day), orange only for the hidden system.
+   - Leave room for the title block, captions and safe zone (style guide § 6–7).
 3. Register it in `src/scenes/index.ts` in both `SCENES` and `SceneName`.
 4. Show it: temporarily use it in a video's spec (or the one that needs it), run `yarn verify` and
    `yarn stills <slug>`, and look at the frame. For motion, use `--frames=` to grab start/middle/end.

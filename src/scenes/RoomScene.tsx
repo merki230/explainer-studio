@@ -1,14 +1,21 @@
 import React, {useMemo} from 'react';
 import * as THREE from 'three';
 import {Easing, interpolate, useCurrentFrame, useVideoConfig} from 'remotion';
+import {DustMotes} from '../three/Atmosphere';
 import {LivingRoom, ROOM} from '../three/LivingRoom';
 import {Mannequin, phoneWorld} from '../three/Mannequin';
 import {MuseumLights, MuseumSet, MuseumStage} from '../three/MuseumStage';
 import {OrangePath} from '../three/OrangePath';
+import type {Gesture, PoseName} from '../three/rig';
 import {CameraRig} from '../three/Stage';
 import {HEIGHT, SAFE, WIDTH} from '../theme';
+import {clickOffFrame, clickOffLevel, type ClickOff} from './clickOff';
 
 type V3 = [number, number, number];
+
+/** A gesture for one of the two figures: 'friend' (left seat, phone A) or 'you' (right seat, phone B). */
+export type RoomGesture = Gesture & {figure: 'friend' | 'you'};
+export type {PoseName};
 
 export type CameraMove = {from: V3; to: V3; lookFrom: V3; lookTo: V3; focusY: number};
 
@@ -64,16 +71,37 @@ export type RoomSceneProps = {
   glowFor?: number;
   /** Start with the stains already there (route stain, wall wash, router LED): a later look at the same room. */
   stained?: boolean;
-  /** Heads lean toward each other (eased in over 0.8 s from `facingAt`, so a cut from a non-facing shot stays clean). */
+  /**
+   * Shortcut: both figures `turn-to` each other from `facingAt` (a 0.8 s blend), the same as two
+   * `turn-to` gestures. Combine with `gestures` freely (they blend in time order).
+   */
   facing?: boolean;
-  /** Seconds into the scene when the heads start to turn. */
+  /** Seconds into the scene when the figures start to turn (negative: already turned). */
   facingAt?: number;
+  /**
+   * Cue-driven poses for the two figures, blended in time order with eased (cubic in-out) transitions:
+   * `{figure: 'friend' | 'you', pose, at, target?, hold?, blend?}`. Poses: 'idle', 'scroll', 'lean-in',
+   * 'lift-phone', 'look-up', 'turn-to', 'glance-down'. `at` is seconds into the scene (negative: already
+   * in the pose); `hold` seconds before easing back (omit to hold); `blend` seconds (default 0.6).
+   * Targets default to the router (`look-up`) and the other figure's head (`turn-to`).
+   */
+  gestures?: RoomGesture[];
+  /** Breathing, weight shifts, head drift and thumb scrolling on both figures (default on). */
+  life?: boolean;
+  /** Dust motes drifting in the key light's beam (default on). */
+  dust?: boolean;
+  /** Steam from the cup on the coffee table (default on). */
+  steam?: boolean;
+  /** Very slow drift of the key light, in world units of sway (0 = still; 0.3 is plenty). Shadows move with it. */
+  keyDrift?: number;
+  /** The scene's first frame in the video (set by Explainer): keeps idle motion continuous across cuts. */
+  startFrame?: number;
   /**
    * Seconds into the scene when each device lights up, in order [phone B ("you"), the laptop, phone A
    * (the friend)]: a short flicker, then it holds. When set, it drives all three screens (it overrides
-   * `tellAt` and the reveal's screen). Negative: already lit.
+   * `tellAt` and the reveal's screen). Negative: already lit. `null`: that device stays dark.
    */
-  devicesAt?: [number, number, number];
+  devicesAt?: [number | null, number | null, number | null];
   /** Seconds into the scene when the router LED and the wall wash brighten ("One home"). */
   householdAt?: number;
   /** Wall plate text, e.g. {number: 'No. 014', title: 'The Living Room'}. Omit for a bare wall. */
@@ -83,6 +111,12 @@ export type RoomSceneProps = {
    * stays inside x 120–888 and clear of the label for this camera move (close moves get the upper-left spot).
    */
   plateAt?: [number, number];
+  /**
+   * Torch click-off for the loop point: screens, LED, route glow and the orange bleed drop to zero in
+   * 2 frames; the stain line and wall wash stay; the camera has stopped. `true` = the scene's last
+   * 6 frames (2 off + 4 held, for a video's last scene); a number = seconds into the scene.
+   */
+  clickOff?: ClickOff;
 };
 
 /**
@@ -127,7 +161,8 @@ const seg = (x: number, a: number, b: number) =>
   });
 
 /** A device coming on: a short flicker (≈ 0.5 s), then a 0.3 s ramp to full, held. */
-const deviceOn = (t: number, at: number) => {
+const deviceOn = (t: number, at: number | null) => {
+  if (at === null) return 0;
   const flicker =
     (0.2 + 0.6 * (0.5 + 0.5 * Math.sin((t - at) * 16))) * seg(t, at, at + 0.15) * (1 - seg(t, at + 0.45, at + 0.6));
   return Math.max(flicker, seg(t, at + 0.45, at + 0.75));
@@ -149,12 +184,22 @@ export const RoomScene: React.FC<RoomSceneProps> = ({
   householdAt,
   plate,
   plateAt,
+  clickOff,
+  gestures = [],
+  life = true,
+  dust = true,
+  steam = true,
+  keyDrift = 0,
+  startFrame = 0,
 }) => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
   const t = frame / fps;
+  const offAt = clickOffFrame(clickOff, durationInFrames, fps);
+  const on = clickOffLevel(frame, offAt);
   const cam = typeof camera === 'string' ? (ROOM_CAMERAS[camera] ?? ROOM_CAMERAS.wide) : camera;
-  const look = facing ? 0.5 * seg(t, facingAt, facingAt + 0.8) : 0;
+  const clockOffset = startFrame / fps;
+  const clock = t + clockOffset;
   const camKey = JSON.stringify(cam);
   const plateSpot = useMemo(() => pickPlateSpot(JSON.parse(camKey)), [camKey]);
 
@@ -186,8 +231,45 @@ export const RoomScene: React.FC<RoomSceneProps> = ({
     screenA = deviceOn(t, devicesAt[2]);
   }
   const household = householdAt === undefined ? 0 : seg(t, householdAt, householdAt + 0.5);
+  // Click-off: the system's light goes out; wash and stain line (and `household`'s wash) stay.
+  screenA *= on;
+  screenB *= on;
+  laptop *= on;
 
   const [seatA, seatB] = ROOM.seats;
+  // Gestures per figure, with the room's default targets.
+  const headOf = (seat: V3): V3 => [seat[0], seat[1] + 1.32, seat[2]];
+  const routerLook: V3 = [ROOM.router[0], ROOM.router[1] + 0.03, ROOM.router[2] + 0.1];
+  const all: RoomGesture[] = [
+    ...(facing
+      ? (['friend', 'you'] as const).map((figure) => ({figure, pose: 'turn-to' as const, at: facingAt, blend: 0.8}))
+      : []),
+    ...gestures,
+  ];
+  const forFigure = (figure: 'friend' | 'you'): Gesture[] =>
+    all
+      .filter((g) => g.figure === figure)
+      .map((g) => ({
+        pose: g.pose,
+        at: g.at,
+        hold: g.hold,
+        blend: g.blend,
+        target:
+          g.target ??
+          (g.pose === 'look-up'
+            ? routerLook
+            : g.pose === 'turn-to'
+              ? headOf(figure === 'friend' ? seatB : seatA)
+              : undefined),
+      }));
+  // Very slow key-light drift (a slow Lissajous loop on the clock).
+  const KEY: V3 = [1.3, 5.8, 4.6];
+  const keyPos: V3 = [
+    KEY[0] + keyDrift * Math.sin((clock / 23) * Math.PI * 2),
+    KEY[1],
+    KEY[2] + keyDrift * 0.6 * Math.sin((clock / 31) * Math.PI * 2 + 1),
+  ];
+  const KEY_TARGET: V3 = [0, 1.1, -0.5];
   const a = phoneWorld(seatA);
   const b = phoneWorld(seatB);
   const r: V3 = [ROOM.router[0], ROOM.router[1] + 0.07, ROOM.router[2]];
@@ -220,22 +302,39 @@ export const RoomScene: React.FC<RoomSceneProps> = ({
         to={cam.to}
         lookFrom={cam.lookFrom}
         lookTo={cam.lookTo}
-        durationInFrames={durationInFrames}
+        durationInFrames={offAt === undefined ? durationInFrames : Math.min(durationInFrames, offAt)}
       />
       {/* key aimed at the figures and wall rather than the table: an even wall, no hot table top */}
-      <MuseumLights target={[0, 1.1, -0.5]} keyPosition={[1.3, 5.8, 4.6]} intensity={0.84} />
+      <MuseumLights target={KEY_TARGET} keyPosition={keyPos} intensity={0.84} />
+      {dust ? <DustMotes from={keyPos} to={KEY_TARGET} clockOffset={clockOffset} /> : null}
       <MuseumSet />
       <LivingRoom
-        led={led}
+        led={led * on}
         wash={wash}
         household={household}
         laptop={laptop}
         plate={plate}
         plateAt={plateAt ?? plateSpot}
+        steam={steam}
+        clockOffset={clockOffset}
       />
-      <Mannequin position={seatA} phase={0} look={look} screen={screenA} />
-      <Mannequin position={seatB} phase={2.1} look={-look} screen={screenB} />
-      <OrangePath legs={legs} stainLegs={stainLegs} progress={p} glow={glow} flow={flow} />
+      <Mannequin
+        position={seatA}
+        seed="friend"
+        screen={screenA}
+        gestures={forFigure('friend')}
+        life={life}
+        clockOffset={clockOffset}
+      />
+      <Mannequin
+        position={seatB}
+        seed="you"
+        screen={screenB}
+        gestures={forFigure('you')}
+        life={life}
+        clockOffset={clockOffset}
+      />
+      <OrangePath legs={legs} stainLegs={stainLegs} progress={p} glow={glow * on} flow={flow} />
     </MuseumStage>
   );
 };

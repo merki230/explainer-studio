@@ -22,10 +22,11 @@ One section per claim, in script order:
 | ✅ verified     | A source the fact-checker opened supports the claim as worded | Yes                                                              |
 | 🟡 plausible    | Supported with caveats                                        | Only with attribution ("the FTC says") or the source's own hedge |
 | ❌ unsupported  | No source, or the source says otherwise                       | No. Cut it, or mark it illustrative                              |
-| 🎭 illustrative | Deliberately invented example (a fake IP, a round number)     | Yes, if the video shows the `ILLUSTRATIVE` watermark             |
+| 🎭 illustrative | Deliberately invented example (a fake IP, a round number)     | Yes, with an "Illustrative: …" line in the post description      |
 
 ## Rules
 
 - Any specific number, named company or person, study, or "they do X" claim needs a ✅ entry.
 - Never invent a URL or quote. A claim with no source stays ❌.
-- Sources appear in the post description, not on screen.
+- Full sources appear in the post description. Up to 2 short attribution lines (publisher/author + year)
+  may appear on screen for ✅ claims (`brand/style-guide.md` § 5).

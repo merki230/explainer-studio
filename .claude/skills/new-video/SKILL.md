@@ -10,7 +10,7 @@ Input: a topic, an angle, or a draft script. Ask for the topic if none was given
 1. **Slug.** Pick a short kebab-case slug (e.g. `wifi-router-tracking`), then run `yarn new <slug>`.
 2. **Script** in `src/videos/<slug>/script.txt`:
    - Follow `brand/brand.md` § Voice and tone and § Structure (the 7-step recipe). No word-count
-     target: Shorts about 25–45 s, never over 59 s. Every sentence adds new information; no banned
+     target: Shorts about 30–60 s; over 60 s only when the story needs it and the video has no licensed music. Every sentence adds new information; no banned
      AI patterns.
    - Every factual claim needs an entry in `sources.md` (format: `docs/sources-format.md`). Make claims
      only with ✅ sources, attribute 🟡 ones ("the FTC says"), and mark invented specifics 🎭 illustrative.
@@ -21,7 +21,8 @@ Input: a topic, an angle, or a draft script. Ask for the topic if none was given
    - Split the script into beats; one scene per beat, each starting on a `cue` copied from the script.
    - Reuse existing scenes (`src/scenes/index.ts`) and their props first. If a beat truly needs a new
      scene, list it and use the `new-scene` skill rather than squeezing it in.
-   - A `chip` per scene (short, mono label). Overlays only where they add information.
+   - Title block on the first scene only; name tags, detail boxes and overlays only where they add
+     information, one idea per frame (`brand/style-guide.md` § 6).
 5. **Verify:** `yarn verify`, then `yarn stills <slug>` and look at every PNG (see `review-video`).
    Fix overlaps and placement by adjusting `x`/`y`/`dx`/`dy`, then re-run stills.
 6. Report: the script, the beat → scene table, and anything still placeholder.

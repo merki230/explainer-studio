@@ -212,3 +212,16 @@ export const scanTexture = () =>
     tex.needsUpdate = true;
     return tex;
   });
+
+/** Soft white disc (smooth falloff to the edge), for steam and other airborne wisps. */
+export const softTexture = () =>
+  radialTexture(
+    'soft',
+    [255, 255, 255],
+    [
+      [0, 0.85],
+      [0.35, 0.5],
+      [0.7, 0.14],
+      [1, 0],
+    ],
+  );

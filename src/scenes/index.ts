@@ -2,6 +2,7 @@ import type React from 'react';
 import {PhoneScene} from './PhoneScene';
 import {ProfilesScene} from './ProfilesScene';
 import {RoomScene} from './RoomScene';
+import {SectionRoomScene} from './SectionRoomScene';
 import {TilesScene} from './TilesScene';
 
 /**
@@ -14,6 +15,7 @@ export const SCENES: Record<string, React.FC<any>> = {
   room: RoomScene,
   profiles: ProfilesScene,
   tiles: TilesScene,
+  'section-room': SectionRoomScene,
 };
 
-export type SceneName = 'phone' | 'room' | 'profiles' | 'tiles';
+export type SceneName = 'phone' | 'room' | 'profiles' | 'tiles' | 'section-room';

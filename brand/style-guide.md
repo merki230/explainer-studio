@@ -1,167 +1,190 @@
-# Secretly Works: style guide (The Plaster Museum)
+# Secretly Works: style guide (The Section)
 
-v0.5, 2026-10-15. Owner: brand-director. Frame: **1080 × 1920, 30 fps**. v0.1 came from the direction board (`museumScene`, three.js r149 units); v0.2 is reconciled with the R3F build in `src/` (scene-builder review round 1), so every value here is one you can read in code; v0.3 records the owner's approval of the built brightness; v0.4 is reconciled with the Exhibit No. 001 build (review round 2) and makes the whites rule measurable; v0.5 adds narrator delivery rules (§ 9) and drops "one number per video" (§ 5). Every colour names its `theme.ts` token. The only inline values left are three alpha effects written out where they are used (caption highlight and ink edge in § 5, card inset highlight in § 7); don't copy them elsewhere. Research citations: `brand/research/platforms.md` (P§), `brand/research/landscape.md` (L§). Status: 🧪 testing, ✅ proven (by feedback, or a platform rule).
+v0.8, 2026-10-15. Owner: brand-director. Frame: **1080 × 1920, 30 fps**.
 
-The look in one line: everything is matte off-white plaster lit like a museum; the hidden system is the only colour, it glows, bleeds light onto the plaster, and leaves a stain where it has been. Stains stay.
+> **Every value in this guide is 🧪 until the pilot's stills (`yarn stills`) in this look are judged by the owner.** The *decisions* marked ✅ (the Section frame, the orange rule, the cast, phones facing their owners, etc.) are approved; the numbers that implement them were set on a browser mock-up (`section-frame.html`, three.js r149 units, before the R3F `× π` light convention) and will move when the build is reviewed.
 
-## 1. Palette (`src/theme.ts`)
+History: v0.1 to v0.7 described **The Plaster Museum** (matte plaster, one orange, numbered exhibits); see `CHANGELOG.md`. v0.8 replaces it with **The Section**, approved by the owner from `proposals/visual-identity-v1.md` (rev. 2). Research citations: `brand/research/platforms.md` (P§), `brand/research/landscape.md` (L§). Status: 🧪 testing, ✅ proven (by feedback, an owner decision, or a platform rule).
 
-| Token (`theme.*`) | Hex | Used for |
+The look in one line: every place is **cut open and seen from outside**, with warm off-white cut faces; inside it is a realistic, everyday-coloured world with a recurring cast; the hidden system is the only orange, and it runs through the walls and the ground, out of the room and back.
+
+## 1. Palette
+
+Proposed `theme.ts` tokens (the scene-builder adds them; no inline colours in videos or scenes, ✅ studio rule). The old plaster/museum/plate/label tokens are retired.
+
+**Constant in both moods**
+
+| Token | Hex | Used for |
 |---|---|---|
-| `plaster` | `#e8e3da` | Walls, furniture, people, device bodies, the guard: everything; the mug's fill in the ad-card icon |
-| `plasterShade` | `#dad3c7` | Plinth, pedestals, recessed details (phone earpiece, home bar and lens ring, laptop keyboard well), the ad-card icon square |
-| `plasterGlass` | `#fcf7ee` | Device screen glass (phone, laptop), roughness 0.7: lit, it reads **+9.3%** over the body plaster (measured, round 2), so the screen reads as glass with no UI. New in v0.4; the screen is no longer `plasterShade` |
-| `plasterFloor` | `#cdc6b9` | The museum floor beyond the plinth; the phone's front-camera lens (roughness 0.6) |
-| `museum` | `#d6d0c5` | Scene background, fog colour, and the composition's backdrop |
-| `plate` / `plateBorder` | `#d6cfc2` / `#a79d8d` | Engraved wall plate: slab and texture fill / its rule |
-| `labelCard` / `labelBorder` | `#f8f4ed` / `#d3cbbd` | Every 2D card (exhibit label, callout, search bar, ad card, counter) and the callout ring fill |
-| `cardShadow` | `0 5px 16px rgba(60,50,30,0.12)` | Shadow under every 2D card |
-| `textHalo` | `0 0 16px rgba(232,227,218,0.85)` | Plaster halo behind captions (plaster at 85%) |
-| `orange` | `#ff5b14` | The hidden system: path halo, screens, LEDs, mic light, bleed lights, wall wash, the current caption word, the search-bar strike |
-| `orangeCore` | `#ffb27a` | Hot centre of a glowing path |
-| `orangeStain` | `#e8702a` | A lit matte surface the system has claimed (`stainSurface()`), not yet used in a scene |
-| `orangeStainLine` | `#dc8250` | The thin stain line a path leaves on the wall: flat, translucent (new in v0.2) |
+| `orange` | `#ff5b14` | The hidden system: path halo, node dots, its light, active LEDs and screens' glow, its mark on a screen (✅ owner decision) |
+| `orangeCore` | `#ffb27a` | Hot core of the path in Night |
 | `orangeDot` | `#fff0e0` | Travelling dots on an active path |
-| `ink` | `#1f1c18` | Captions; also the caption outline at 35% alpha |
-| `inkLabel` / `inkMuted` | `#2a2622` / `#7a7064` | Card titles, numbers, watermark / sub-lines, callout leaders and rings, icons (the ad-card mug outline) |
-| `inkPlate` / `inkPlateMuted` | `#2b2722` / `#5c5449` | Plate number / plate title (3D texture) |
-| `lightSky` / `lightGround` | `#fff9f1` / `#cbc2b4` | Skylight (hemisphere) sky and ground. Light colours: `MuseumLights` only, never a surface (tokened in v0.4) |
-| `lightKey` / `lightFill` / `lightRim` | `#fff3e3` / `#dfe6f2` / `#ffffff` | Warm key spot / cool fill / back rim. `MuseumLights` only, never a surface |
+| `cut` | `#efe9df` | **Every cut face**: wall tops and ends, floor slab, the ground block's cut sides. Also the overlay ink in Night |
+| `eye` | `#1d1d1f` | Characters' eye dots |
 
-Every 3D colour goes through `raw()` (`src/three/plaster.ts`), which keeps the hex display-referred so it lights as it did in the mock-up.
+**Per mood** (§ 4 for lights)
 
-| Rule | Why | Status |
+| Token | Night | Day |
 |---|---|---|
-| **One accent per video, and it is always `orange`.** Data, money, heat, sound, pressure: all orange. No cyan, no red, no green | One colour is the identity (L§3); multi-accent was the rejected navy direction | 🧪 |
-| Nothing in the frame is pure white `#ffffff` or pure black `#000000` (`lightRim` is a light, not a surface; glow cores may clip) | Plaster world; § 2 whites rule | ✅ owner feedback ("too bright") |
-| New colours go in `src/theme.ts`, never inline in a video or scene (CLAUDE.md) | The shared look is the brand; this table is the check | ✅ studio rule |
+| `bg` (outside the slice, fog) | `#0d1322` (never darker) | `#cfe3f5` |
+| `sky` (gradient behind the slice) | `#070b18` → `#141c36` → `#232c4c` | `#9cc8f2` → `#d4e8f8` → `#eef4f8` |
+| `wall` / `floor` | `#2a3550` / `#3a3b4a` | `#f3eee6` / `#c9a982` |
+| `soft` (couch) / `softLight` (cushions) | `#33405f` / `#3e4d72` | `#6f8fd1` / `#86a2dd` |
+| `wood` / `trim` (shelves) / `device` | `#5a4636` / `#404a62` / `#1b1d22` | `#8a6a4e` / `#f7f6f2` / `#2a2c31` |
+| `earth` (ground block's uncut sides) | `#2b2a33` | `#b9a68e` |
+| `ink` (overlay text, rules, leaders) | `#efe9df` (= `cut`) | `#1b1d22` |
+| `paper` (overlay fills, halos) | `#121828` | `#f6f2ea` |
+| `inkSub` (sub-lines, attribution) | `rgba(239,233,223,0.7)` | `rgba(27,29,34,0.65)` |
+| `capBg` (caption block) | `rgba(12,16,28,0.86)` | `rgba(246,242,234,0.94)` |
 
-## 2. Light (`MuseumLights`, `MuseumStage`, `MuseumPost`)
+| Rule | Value | Why | Status |
+|---|---|---|---|
+| **The orange rule** | The hidden system is always `orange`, in both moods; never blue, green or any other hue | One hue, one meaning; the reference colours each idea differently | ✅ owner decision |
+| **Reserved band** | Nothing but the system may have HSL hue **8 to 40°**, saturation **≥ 60%**, lightness **35 to 75%**: no surface, clothing, UI element, overlay or practical light. Wood, skin and beige pass (low saturation) | Makes "everything else any colour" checkable; `#ff5b14` = 18°, 100%, 54% | ✅ owner decision (the band); 🧪 (its edges) |
+| Never orange | People, cut faces, captions, tags, cards, statements, attribution, title block, background | The system keeps the colour to itself | ✅ owner decision |
+| No pure white or black surfaces | Nothing at `#ffffff` / `#000000` except lights and glow cores | Carried over: clipping and crushed blacks | 🧪 |
 
-Every light is multiplied by `intensity × π` (`MuseumLights intensity`, default **0.9**; the living room uses **0.84** because its key is closer). The table gives the pre-multiplier values, so the ratios are what to keep.
+## 2. Light and finish
 
-| Light | Type | Colour | Value | Position → target | Notes |
+| Rule | Value | Status |
+|---|---|---|
+| Rig | Hemisphere + one shadow-casting directional key + one fill; Night adds the practicals (lamp, screens). Values § 4 | 🧪 |
+| Shadows | Key only; PCF soft, 1024 map, radius 4, bias −0.0006, shadow camera ±3 units around the slice | 🧪 |
+| Cut faces read in both moods | `cut` must read as off-white in Night: lit by the key/hemisphere, luma ≥ 70% on the front cut face | 🧪 |
+| Whites (Day) | On a full-scale still with overlays, screens and glow masked: **brightest near-neutral pixel ≤ 96%** (≤ 244), **zero pixels at 255,255,255**. Do not raise brightness to fix a dull still without the owner (the "too bright" lesson, v0.3) | ✅ owner feedback (the lesson); 🧪 (thresholds) |
+| Night floor | The subject (the character or object the line is about) has p50 luma ≥ 30%; nothing darker than `bg` | 🧪 |
+| Vignette | Night `rgba(0,0,0,0.45)`, Day `rgba(30,40,60,0.18)` at the corners | 🧪 |
+| Bloom | Selective: only meshes with `userData.glow` (the system). Lamps and screens never bloom | ✅ (rule) 🧪 (values) |
+| Grain | Monochrome, 1 px, strength 0.035, seeded from `useCurrentFrame()` | 🧪 |
+| Shallow focus | Focus line on the subject's height; sharp ±0.14 of frame height; light (the slice should read sharp, like a drawing) | 🧪 |
+| The post pass | The post-processing component is the **single documented `useFrame` exception**; no other `useFrame` anywhere | ✅ studio rule |
+
+## 3. The slice (geometry and materials)
+
+| Rule | Value | Why | Status |
+|---|---|---|---|
+| **The Section** | Every location is a slice block seen **from outside**: near wall and ceiling removed, the cut faces visible. The camera never enters it | Seeing inside is the brand ("how things *secretly* work"); the reference's frame is an eye-level interior | ✅ owner decision |
+| Block | ≈ **3.4 wide × 2.4 deep**, walls **2.7 high, 0.18 thick** (back and left walls standing, cut on top and at the front edge), ground block **2.2 deep** under the floor, cut on its front and right faces | One readable room per slice | 🧪 |
+| Outside the block | `sky` gradient plane behind, `bg` elsewhere; **no floor plane, no horizon**: the slice floats like a section drawing | 🧪 |
+| Other locations | Same grammar: a car cut along its length, a street cut through the road to the ducts under it, a data centre cut through a rack row. Services (ducts, cables, pipes) in neutral greys until the system uses them | New slices every video (P§4) | 🧪 |
+| Materials | Matte `MeshStandardMaterial`, metalness 0: `cut` and walls 0.95, fabrics and hair 0.9, wood 0.7, skin 0.75, device bodies 0.4 | 🧪 |
+| Rounded edges | `roundedBox` radius ≈ 3 to 8% of the smallest dimension, bevel segments 3 (5 on anything the camera gets close to); limbs are capsules. Cut faces stay **flat and sharp** (they are the drawing) | 🧪 |
+| Blob shadows | Under props and figures, as before (radial alpha 0.55 → 0) | 🧪 |
+| **Phones face their owners** | A held phone's screen faces the holder's eyes (screen normal within ≈ 30° of the line to the eyes), held naturally (≈ 0.75 rad tilt in the hand). **Never turned to the camera.** The slice shows the phone's back or edge and the screen's light on the face; screens are read only in the detail box (§ 6) | ✅ owner decision |
+| Screen light | Each lit screen has a point light `#dbe6ff`, 0.6, reach 0.9, on the holder's face (0.15 when locked) | 🧪 |
+
+## 4. Moods: Night and Day
+
+Same slice, cast, orange and cut colour; light, palette (§ 1) and sky change.
+
+| Light | Night | Day |
+|---|---|---|
+| Hemisphere | `#8aa0d8` / `#141a2a`, 0.55 | `#ffffff` / `#a8b4c8`, 0.85 |
+| Key (directional, shadows) | `#ffc58a`, 0.85, from (−2, 3.4, 2.4) | `#ffffff`, 0.95, from (−2.5, 4.2, 2.5) |
+| Fill | `#6f86c9`, 0.35, from (3, 2, 3) | `#cfe0ff`, 0.3, from (3, 2, 3) |
+| Practicals | Lamp: point `#ffd29a`, 1.2, reach 4; shade emissive `#ffd9a0` at 0.8 (both outside the reserved band, no bloom) | None |
+| Rim (only if figures merge with the wall) | `#9fb3e8`, 0.4, from behind | — |
+
+| Rule | Value | Status |
+|---|---|---|
+| Which mood | The story decides: the moment happens at night → Night; daytime, "the next morning", scale, infrastructure by day → Day. **Default Day** | ✅ owner decision (both moods); 🧪 (default) |
+| The system's mood | The path takes the mood of the slice it is in | 🧪 |
+| Changing mood | Only on a location change (§ 8), or **one "time passes" beat per video** in the same slice: sky, palette and lights blend Night → Day over 1.5 s, cubic in-out | 🧪 |
+| Night guard rails | Night is a **lit room** (practicals, cut faces glowing off-white), never arcs on a dark void (the rejected navy look, L§1, L§5) | 🧪 |
+
+## 5. The orange system
+
+| State | Spec | Status |
+|---|---|---|
+| **Glow** (the system) | A path from device to device: tube core r **0.018** (Night `orangeCore`; Day `orange`, since the pale core vanishes on light walls), halo r **0.055** `orange` at **25%**, both in the bloom layer. **Node dots** (r 0.035, core colour) at every device it touches, from the moment the route starts. Draw 1.3 to 2.1 s per leg, cubic in-out; a runner light (`orange`, 1.2, reach 1.6) rides the head. Dots travel the finished path | 🧪 |
+| **Route through the section** | In the room: a soft curve phone → router. Out of the room: straight segments with right-angle turns, **inside the wall** (X-ray, below), down into the ground, then along the ground's **front cut face** (25 mm proud), out of the frame edge. The way back runs parallel, 0.2 units lower. Underground runs sit on the cut face so they read like a line on a section drawing | 🧪 |
+| **Bleed** | Screens and LEDs turn `orange` while the system is active; the screen tell (flicker ≈ 2.5 Hz between 20 and 80% for ≈ 1 s, ramp 0.5 s) starts 1.5 s before the route draws | 🧪 |
+| **X-ray** (reveal technique) | While the route runs inside a wall or a device body, that surface fades to **30% opacity** over 0.5 s (no depth write while see-through), and back after. **At most once per video**, on objects inside the slice, never as the opening image | ✅ owner decision (technique); 🧪 (values) |
+| **Trace** | After the reveal, what the system touched keeps a mark for the rest of that slice: node dots stay lit, the router LED stays on, a delivered ad keeps its 5 px orange edge in the detail box. No wall stain, no wash. The next slice opens clean | ✅ owner decision |
+| Only the system moves fast | Everything else moves slowly (§ 8) | 🧪 |
+
+## 6. Overlays
+
+Fonts (`fonts.ts`): **Inter** 500 to 800 (captions, tags, callouts, counters, every phone UI), **Archivo** 800 (statement cards, the title), **JetBrains Mono** 600 to 700 (title sub-line, attribution, the DETAIL tab). Fraunces is retired. All OFL. ✅ owner decision (faces); 🧪 (sizes).
+
+All overlays use the mood's `ink`, `paper` and `inkSub` (§ 1); **square corners everywhere**, no pills, no rounded boxes. Left-aligned elements start at **x 120**; nothing readable past **x 888** or below **y 1248**.
+
+| Element | Spec | Status |
+|---|---|---|
+| **Captions: the margin note** | Block: `capBg`, square corners, padding 13 / 26 / 15 / 28 px, a **12 px `ink` rule on the left edge**. Inter 700, **50 px / 1.22**, `ink`, **left-aligned**. Left edge x 120, max right edge x 888, bottom edge **y 1188** (2 lines grow up to ≈ 1045). **Words appear one by one as spoken** (each fades in over 4 frames); **no highlight, no underline, no dimmed preview, never orange**. ≤ 5 words a page, ≤ 2 lines. Off while a statement card is up | ✅ owner decision (style); 🧪 (values) |
+| **Name tags: drawing labels** | A **26 px colour square** (the character's top colour, 3 px `paper` outline), 12 px gap, the role in Inter 700 **26 px**, uppercase, letter-spacing 0.08em, `ink`, no fill. Leader: 2 px `ink`, from the top of the head **straight up, then horizontal** (one right angle) to the tag in the margin outside the slice (left tags start at x 120, right tags end at x 888). Text ≤ 12 characters: YOU, FRIEND, MOM. On a character's first appearance and on re-entering in a new slice; hold ≥ 1.5 s, fade 10 frames; ≤ 2 at once; never with a card or statement | ✅ owner decision (style); 🧪 (values) |
+| Callouts (objects) | Same as a tag without the square: elbow leader to the thing, ≤ 3 words, Inter 700 26 px uppercase | 🧪 |
+| **Detail box** (how screens are read) | Square-cornered frame, 4 px `ink` border, `paper` fill, shadow `0 13px 32px rgba(0,0,0,0.25)`; a **DETAIL** tab top-left (Mono 700, 17 px, 0.16em, `paper` on `ink`). Holds a **flat, crisp 2D crop of the screen part that matters** (the search field, the ad). Default **324 to 360 px square**, max 696 × 620, inside the focal band (≈ top y 710); left edge x 120 or right edge x 888, on the holder's side. 2 px `ink` elbow leader to the phone. In over 10 frames (opacity, 8 px rise). Text inside ≥ 28 px. Counts as the frame's one card; captions continue. A **full-frame screen** (the box enlarged to the whole safe area) at most twice per video | 🧪 |
+| **Statement card** | Archivo 800, **88 px / 0.95**, letter-spacing −0.03em, `ink` with a 32 px `paper` halo, no box; **left-aligned at x 120**, ≤ 2 lines, ≤ 14 characters a line; sentence case, a full stop: "One household." Low (default): bottom edge y 1000; high: top edge y 500. ≤ 2 per video, ≥ 6 s apart, never in the first 3 s, never with another card. Hold from its first spoken word to 0.8 s after its last (or the next word), 1.2 to 3.0 s. In: opacity 12 frames, 6 px rise, cubic in-out; out: 12 frames, no movement. Captions off while up | ✅ owner decision (card, rules); 🧪 (values) |
+| **Attribution line** | JetBrains Mono 600, **24 px**, letter-spacing 0.18em, uppercase, `inkSub`, left-aligned at x 120. Who + year ("FTC STAFF REPORT, 2017"), ≤ 36 characters, no URL. Under a statement: 24 px below its last line, enters 6 frames after it, leaves with it. Alone: bottom edge y 1024, holds its claim's sentence (≥ 2.0 s). ≤ 2 per video; ✅ claims, or 🟡 spoken with that attribution; never 🎭. Fade 10 frames, no movement | ✅ owner decision (line, rules); 🧪 (values) |
+| **Title block** | First scene only: enters at ≈ 1.0 s, holds ≈ 2.5 s, fades 10 frames. Top edge **y 340**, left edge x 120. `paper` fill, 3 px `ink` border, padding 13 / 24 / 15 px. Line 1: "No. 001 · The Living Room", Archivo 800, 37 px, `ink`. Line 2: "SECTION A–A · 9:47 PM", Mono 600, 19 px, 0.18em, `inkSub`: the story's time, matching the mood (never "9:41") | 🧪 |
+| Counter | Same frame as the title block: Archivo 800 digits 80 px, Inter 600 unit 34 px, Mono sub 20 px | 🧪 |
+
+**One idea per frame** (✅ owner decision). Besides the title block and captions, **at most one card at a time**: detail box, callout, counter or statement card. Name tags don't count but never share the frame with a card; the attribution line belongs to its claim. The next card enters only after the previous has left. The subject spans ≤ 60% of the focal band's width; nothing readable within 48 px of it except its own leader.
+
+## 7. Layout and safe zones (`theme.SAFE`)
+
+Combined safe rectangle: **x 120 to 888, y 288 to 1248** (P§1, ✅ platform rule). Everything readable stays inside it; set (the slice, sky, ground) may run under the rails and the bottom.
+
+| Element | Position | Status |
+|---|---|---|
+| Title block | Top y 340, left x 120 (clears YouTube's 288 px top reserve, P§2) | ✅ platform rule (inside the zone); 🧪 (values) |
+| The slice's room interior | Focal band **y 420 to 1040** | 🧪 |
+| Detail box | Inside the focal band, on the holder's side | 🧪 |
+| Statement card | Low: bottom y 1000; high: top y 500; x 120 to 888 | 🧪 |
+| Attribution line | Under the statement, or alone with bottom edge y 1024 | 🧪 |
+| Captions | Left x 120, bottom y 1188, right ≤ 888 | ✅ platform rule (inside the zone); 🧪 (values) |
+| Name tags | Margins outside the slice, x 120 to 888, inside the focal band | 🧪 |
+| Cover frame text | Inside the safe rectangle (3:4 grid crop, P§2) | ✅ platform rule |
+
+## 8. Camera, transitions and motion
+
+| Rule | Value | Why | Status |
+|---|---|---|---|
+| **Outside, always** | The camera never enters a slice: no eye-level interior, over-the-shoulder or handheld shots | Those are the reference's frame | ✅ owner decision |
+| Angle | **One fixed 3/4 view per video**, from the front-right: camera at ≈ (4.6, 3.6, 8.6) looking at (0.05, 0.75, −0.15) for the living-room slice: ≈ **28° yaw** off the cut face, ≈ **16° down**. Never rotates within a video | A constant angle is recognisable | 🧪 |
+| Lens | Perspective, **fov 26°** (long lens: flattens toward a drawing, keeps it real) | Between orthographic and the reference's wide interior | 🧪 |
+| Moves | Truck, crane and slow push only, sine in-out, one move per scene; idle drift ≤ ±0.15 units, push ≤ 0.06 units/s. A push stops when a figure fills **40%** of frame height | The slice is calm; the orange moves | 🧪 |
+| Same slice, next idea | The camera keeps moving through the scene change; no dissolve, no cut | One continuous look into one place | 🧪 |
+| **Follow the line** (linked locations) | The camera cranes or trucks along the orange path to the next slice, stacked below, above or beside the current one, 18 to 30 frames, sine in-out; the path is visible crossing the seam | The journey out of the room is a camera move | ✅ owner decision (approach); 🧪 (values) |
+| **Section slide** (unlinked locations) | The next slice slides in from below as the current leaves at the top, 18 frames, cubic in-out | Like scrolling a drawing | 🧪 |
+| Cuts and dissolves | No cut within 1.5 s of the previous one. The 12-frame dissolve is retired between locations; allowed only for the loop and the "time passes" beat | 🧪 |
+| Scene length | 3 to 6 s, one idea per scene | 🧪 |
+| Easing | Cubic in-out for reveals, cards and routes; sine in-out for camera; overdamped springs for captions; no linear, no overshoot, no bounce | 🧪 |
+| Determinism | Every value a function of `useCurrentFrame()`; `random('seed')`, never `Math.random`; no `useFrame` outside the post pass | ✅ studio rule |
+
+**Motion principles** (owner feedback 2026-10-15, "everything feels static except the camera").
+1. **Something is always alive.** Figures breathe (±0.012 units, phase-offset per person), blink (eye scale y → 0.1 and back over 4 frames, every 3 to 5 s, seeded per character), glance (head turns up to 0.5 rad toward what the line points at), lean in to a screen, lift a phone when it lights.
+2. **The set:** Night: screen light flickers on faces, the lamp breathes ±3%. Day: leaves pass the window, dust in the sun. Orange ambient life (LED pulse) only while the system is active.
+3. **Calm and slow;** the orange is the only fast thing.
+
+### The cast (✅ owner decision; values 🧪)
+
+`Mannequin` rig, **adult proportions** (head r 0.165, about 1/7 of standing height): never chibi. Faces: **two dot eyes** (`eye`, r 0.018, at ±0.055 across, slightly below centre), no mouth, no brows. Hair: a cap sphere (r 0.172) plus the detail. Never a realistic face (L§4).
+
+| Tag | Top | Bottom | Skin | Hair | One detail |
 |---|---|---|---|---|---|
-| Skylight | Hemisphere | `lightSky`, `lightGround` | **0.42** (v0.1: 0.34) | | The wide shot read muddy at the top and sides at 0.34. ✅ owner feedback: part of the approved brightness (rule below) |
-| Key spot | Spot | `lightKey` | 1.0 | default (1.5, 7, 3.5) → (0, 0.7, −0.1); living room (1.3, 5.8, 4.6) → (0, 1.1, −0.5); tiles (2, 9, 5) → (0, −0.5, −1) | Cone half-angle 0.5 rad (≈ 29°), penumbra **0.75** (0.95 dims everything off-axis; penumbra is cone falloff, not shadow softness). The only shadow caster. Aim it at the figures and wall, never at a table top |
-| Fill | Directional | `lightFill` (cool) | 0.15 | from (−4, 3, 4) | Opens the shadow side without flattening |
-| Rim | Directional | `lightRim` | 0.2 | from (0, 4, −5) | Separates figures from the back wall |
-| Fog | Linear | `museum` | 9 → 18 units (tiles 8 → 24) | | Camera sits ≈ 6.2 units from the subject, so fog touches only the far floor |
+| YOU | Cobalt hoodie `#2f55c9` | `#2a2d3a` | `#c58c63` | Short crop `#2a1d14` | The hood |
+| FRIEND | Green sweater `#2e9a63` | `#4a4038` | `#a8734f` | Bun `#1a120c` (sphere r 0.075) | The bun |
+| MOM | Plum cardigan `#7d4e8f` | `#3b3a40` | `#f1c9a5` | Grey bob `#8c8a86` | Round glasses, `#2a2b30` frames |
+| extras | Slate `#8a909c` | `#5b606b` | any in range | Short `#3a3532` | Never tagged |
 
-Ratio key : skylight : rim : fill ≈ **1 : 0.42 : 0.2 : 0.15**.
+Skin range: `#f1c9a5`, `#d9a77f`, `#c58c63`, `#a8734f`, `#6e4630` (all below 60% saturation, outside the reserved band). Clothes stay cool or mid hues: a red top reads orange under the Night lamp.
 
-| Rule | Value | Why | Status |
-|---|---|---|---|
-| Brightness, as built (the look) | Skylight **0.42**, exposure **0.86**, shoulder **0.82**, vignette **0.34**, light intensities as above. The approved stills are the reference. **Do not raise brightness.** A change to any one of these that makes a still brighter needs the owner's approval first | Owner looked at the built renders on 2026-10-15 and approved them as is (after rejecting a brighter version as "too bright" in v0.1) | ✅ owner feedback |
-| Shadows | Key spot only; PCF soft (`shadows="percentage"`), 2048 map, **radius 9, bias −0.0008, normalBias 0.02**, shadow camera 1 → 20. Soft-edged, never hard; no hatching on curved plaster | Museum skylight feel; v0.1's radius 5 / bias −0.0004 gave acne on curved parts | 🧪 |
-| Exposure | `MuseumPost`: multiply by **0.86**, then above **0.82** keep 45% of the excess (`col -= max(col − 0.82, 0) × 0.55`), display-referred (no sRGB curve). The roll-off is linear, **not an asymptote**: a lit value of 1.0 lands at 0.838 (214), but plaster under the full rig renders brighter than 1.0 before exposure (the approved 95.7% needs ≈ 1.31), and 255 is reached at ≈ **1.42**. So the shoulder does not guarantee no clipping; the measured check below does. (v0.3's "pure white lands at ≈ 0.90" was wrong: 0.90 needs ≈ 1.16 in) | Owner rejected a brighter version as "too bright"; approved as built 2026-10-15 | ✅ owner feedback |
-| Whites (the check) | On a **full-scale still** (1080 × 1920 PNG from `yarn stills`) with the cards, captions and glow (orange halo, dots, bloom) **masked out**, luminance = Rec. 709 luma of the 8-bit RGB: (a) **p95 of all remaining pixels ≤ 90%** (≤ 229); (b) the **brightest near-neutral pixel** (max − min channel ≤ 30, i.e. plaster, not orange bleed) **≤ 96%** (≤ 244); (c) **zero pixels at 255, 255, 255**. The approved build: p95 ≈ 88%, brightest plaster 242 to 244 (94.9 to 95.7%), no 255. Headroom: ≈ 8% more light on the brightest plaster (1.31 → 1.42) before it clips | v0.3's "85 to 90% (RGB 217 to 230)" named no method: it matched the p95, not the brightest pixel, and the approved stills break it at the top. Thresholds set on that one build | 🧪 thresholds (the look they protect: ✅ owner feedback) |
-| Vignette | Strength **0.34** (v0.1: 0.46), falloff smoothstep(0.35, 0.95) of the distance from centre in frame-height units: 0 inside a circle of radius ≈ 672 px, about **11% darker at the corners** | 0.46 closed the plaster corners down toward grey; the eye still lands on the exhibit at 0.34. Part of the approved brightness (2026-10-15) | ✅ owner feedback |
-| Grain | Monochrome, 1 px, strength 0.035 (±1.75% luminance), new pattern every frame, seeded from `useCurrentFrame()` (`(frame % 97) × 13.37`), never `Math.random` | Hides banding on flat plaster; CLAUDE.md determinism | 🧪 |
-| Shallow focus | Focus line `focusY` as a fraction of the frame from the top, per camera: wide 0.45 (y ≈ 864), push and table 0.5, phone 0.42, tiles 0.5. Sharp within ±0.14 of frame height (≈ ±269 px), blending up to 75% of a half-res blur at the top and bottom | Tilt-shift makes the room read as an exhibit model | 🧪 |
-| Bloom | Selective: only meshes with `userData.glow`. Half-res, 2 blur passes (spread 1.7 px, 3.4 px), added at 1.0 | Plaster must never bloom | 🧪 |
-| The post pass | `src/three/MuseumPost.tsx` is the **single documented `useFrame` exception** (with an `eslint-disable` line): R3F only lets a priority > 0 `useFrame` take over drawing. It only draws; no motion reads the clock. **No other `useFrame` anywhere**, ever | CLAUDE.md determinism; ESLint blocks the import everywhere else | ✅ studio rule |
+### Phone-screen kit (✅ owner decision: realistic, full colour, generic; values 🧪)
 
-## 3. Materials and geometry (`src/three/plaster.ts`)
-
-| Rule | Value | Why | Status |
-|---|---|---|---|
-| Plaster | `plaster(colour, roughness)`: `MeshStandardMaterial`, **roughness 0.92, metalness 0**. Pedestals `plasterShade` at 0.95. Floor roughness 1.0. Matched tiles 0.9 | Matte, no specular hot spots | 🧪 |
-| One material | People, furniture, devices, walls, the guard: the same plaster. Only the plate texture, the orange, and screen glass (`plasterGlass`, roughness 0.7: plaster a step brighter, not a different material) carry anything else | The orange rule only works if nothing else differs | 🧪 |
-| No textures, no wood, no fabric, **no screens with UI**. Devices are plaster sculptures with `plasterGlass` screens. The pedestal phone (0.62 × 1.25 × 0.07, leaning back 0.12 rad, turned −0.22 rad): glass inset 35 mm; `plasterShade` earpiece 0.14 × 0.035 (casts no shadow: on the glass it drew a hard outline), home bar 0.17 × 0.014; front camera = `plasterShade` lens ring r 0.022 around a `plasterFloor` lens r 0.012; side button 0.17 tall on the camera-facing side; one mic light. The laptop on the room's table: plaster, lid open ≈ 0.36 rad past upright, screen facing the camera, `plasterShade` keyboard well | Detail is shape, never markings: it makes the object read without competing with the orange | 🧪 |
-| Rounded edges on all geometry | `roundedBox`: radius ≈ **3 to 8% of the smallest dimension**, minimum 0.005. Built radii: couch 0.08, cushions 0.06, pedestal phone 0.06, plinth 0.05, wall slab 0.04, feet and router 0.03, table 0.02, shelf 0.01, hand phone 0.008, plate slab 0.006. Bevel segments **3** by default, **5** on anything the camera gets close to (couch, cushions, the pedestal phone): 3 reads faceted there. Limbs are capsules | Bevels catch the key light; that is most of what makes simple 3D look finished | 🧪 |
-| Blob shadows | `BlobShadow`: radial gradient alpha 0.55 at centre → 0.18 at 55% → 0 at edge, 4 to 16 mm above the surface; plane opacity 0.55 (0.44 for secondary pieces and pedestals) | Cheap contact shadow; reads as ambient occlusion | 🧪 |
-| Figures | Faceless. `Mannequin`: sphere head r 0.165 (scaled 0.95, 1.06, 1), torso capsule r 0.2, upper arm r 0.07, forearm r 0.062, thigh r 0.1, shin r 0.085; seated, slouched, both hands on the phone; breathes ±0.008 units and nods ±0.03 rad, phase-offset per person. `Bust` for a person as an exhibit: rebuilt in v0.4 from the Mannequin's own parts cut at mid-chest (torso capsule, shoulder capsule, upper-arm stubs, neck, head), so exhibit people match the room's figures; on a **0.7** pedestal (was 0.8: the shoulders sat across the caption line), scale 1.2. The guard: same build at ≈ 1/3 scale, standing, torch in one hand (not built yet) | L§4: non-uncanny, no AI-slop association | 🧪 |
-| The set | `MuseumSet`: `plasterShade` plinth 3.8 × 0.5 × 3.2, top at y 0, centred at z 0.15; wall slab 3.8 × 3.3 × 0.12 at z −0.99 (front face z −0.93); `plasterFloor` plane at y −0.5 running into fog. Tiles: no plinth, no wall | Same frame for every exhibit; the room inside changes every time | 🧪 |
-
-## 4. The orange system (`src/three/OrangePath.tsx`)
-
-Three states. Each video goes through all three in order: glow → bleed → stain.
-
-| State | Spec (as built) | Why | Status |
-|---|---|---|---|
-| **Glow** (the system itself) | `OrangePath`: tube core radius **0.02** in `orangeCore` for a route seen from ≈ 6 units (the room); **0.012** for the phone exhibit's edge and outbound route (seen from ≈ 3.5): scale the core with camera distance so it reads the same width on screen. Halo **2.6 × core** (0.052 in the room) in `orange` at **20%** opacity, both in the bloom layer. The route draws over **1.7 to 3 s** (`pathDuration`, default 1.8; use 3 s only for a route that crosses the whole frame), cubic in-out. Once complete, 5 `orangeDot` dots (r 1.9 × core; 3 on the phone's outbound route) travel it at 0.3 of its length per second; they shrink and fade with the glow | The system is a flow, not an object (L takeaway 1) | 🧪 |
-| **Bleed** (light on plaster) | `OrangeLight` in `orange`, 0–1 scale (× 0.45 internally), decay 2: phone screen 0.3 (reach 1.4), laptop screen 0.3 (reach 1.2), router hub 1.3 (reach 2.8; ×1.35 on "one home", below), the moving head of the path 1.2 (reach 1.8), mic light 0.35 (reach 0.7). Lit plaster must stay under 90%. Screens and LEDs turn `orange` while the system is active. **The tell:** a screen flickers at ≈ 2.5 Hz between 20 and 80% for ≈ 1 s, then ramps to 100% over 0.5 s, starting **1.5 s before the route draws**. **Devices one by one** (`devicesAt`, room): each screen flickers ≈ 0.5 s, ramps to full over 0.3 s, and holds | The plaster shows the colour it cannot have itself; the flicker is a tell before the words | 🧪 |
-| **Stain** (what remains) | **Wall wash** (`OrangeWash`): radial `orange` rgba(255,91,20,0.9) → 0.35 at 45% → 0, plane 2.4 × 1.8 behind the hub, growing from 60 to 100% size, opacity rising to **0.40** (v0.1: 0.55) while the route is 50 to 85% drawn. **Stain line**: tube radius **0.010** in `orangeStainLine`, flat (`MeshBasicMaterial`) at **0.7** opacity, with a soft second tube at 3 × radius (0.03) at **0.12**; it runs **on the wall plane behind the figures** (`stainLegs`, 4 mm in front of the wall), never along the glowing route in front of them, and draws with the same progress. Router LED comes on at 46 to 54% of the draw. After `glowFor` seconds the glow fades over 0.8 s and the stain is all that is left. **"One home"** (`householdAt`): over 0.5 s the router bleed rises ×1.35, the wash 0.40 → **0.50** and the LED strip grows; it only ever brightens, never dims. **Stains never fade within a video.** The next exhibit opens clean | A lit stain read as a cable; flat pigment on the wall reads as a mark. 0.55 wash blew the wall past the ceiling. "Stains stay" is the owner's rule | 🧪 |
-| **Screen recording** (phone exhibit, `screenRec`) | Glow → stain on a screen. From `screenRecAt`: an `orange` path traces the screen's edge over **1.2 s** (clockwise from the top centre, core 0.012, no runner light), the screen bleed (0.3) rises over 0.4 s, and an orange scan band (`scanTexture`, 0.16 tall, 65% opacity) sweeps down the glass every **1.5 s**; then the outbound route leaves the top of the phone over **0.8 s** and runs off the top of the frame (3 dots, **no stain**: it ends off-frame). The edge glow holds **1.0 s**, then fades over 0.8 s to a **stain frame** on the glass (`orangeStainLine`, radius 0.007, 4 mm proud). `screenStain` opens a later shot with the stain frame only: no glow, no scan, no bleed | The screen is the wall of this exhibit: the stain goes on the surface the system used, and it stays (scene 9a keeps scene 3's frame) | 🧪 |
-
-| May be orange | Never orange |
+| Rule | Value |
 |---|---|
-| The hidden system (paths, signals, flows), its halo and dots | People, furniture, walls, floor, plinth |
-| Light cast by the system onto plaster; the wall wash and stain line | The exhibit label, the wall plate, callout cards, counters, the `ILLUSTRATIVE` watermark |
-| Device screens (incl. the scan band on a recorded screen), LEDs, the mic light while the system is active | The night guard (his torch beam may be) |
-| The current caption word; the strike-through on the search bar (the system's mark on the query) | Any second colour, tint, or gradient to another hue |
-| The torch beam and what it lights | The background or fog |
+| Generic | Invented one-word app names ("Shop", "Feed"), invented products; no real logo, icon, brand colour or trade dress (no iOS blue `#0b84ff`, no green bubbles, no Dynamic Island); clock matches the story's time, never "9:41" |
+| Mode follows mood | Night: dark UI (`#121318`, text `#e9ecf2`); Day: light UI (`#fafafa`, text `#15171a`) |
+| Accents | Neutral: buttons `#15171a` / `#3a3f4b`; bubbles `#3a3f4b` sent, `#e6e7ea` received; never in the reserved band |
+| The system's mark | Where the system shows on a screen (the targeted ad), a 5 px `orange` edge |
+| Where it's read | Only in the detail box (§ 6). Phones in the slice face their owners (§ 3) |
+| Readable | ≥ 28 px in the 1080 frame; one readable thing per screen |
 
-**The glass lens (optional reveal technique, 🧪, not built).** Brass rim `#c9a35a` (no token until built), magnification 1.15, colour fringe 0.012, ring width ≈ 0.4% of frame height, soft drop shadow. The orange exists only inside the glass until it opens to full frame at the reveal. At most once per video, never in two consecutive exhibits, never as the opening image. It is a technique, not the identity.
+### Intro and loop
 
-## 5. Type (`src/fonts.ts`)
-
-Fonts: **Fraunces** (`fonts.serif`: captions, card titles, digits, plate number) and **JetBrains Mono** (`fonts.mono`: sub-lines, callout titles, tags, watermark, plate title). No third face.
-
-| Element | Face | Size / leading | Colour | Rules | Status |
-|---|---|---|---|---|---|
-| Captions | Fraunces 600 | **64 px / 1.12** (≈ 72 px line; v0.1: 62) | `ink`; text-shadow `0 1px 0 rgba(255,255,255,0.55)` plus `textHalo` | Max **3 words per page**, max 2 lines, centred, balanced wrap. **Current word: `orange`, italic**, with a 1 px `ink` edge (`-webkit-text-stroke 2px rgba(31,28,24,0.35)`, `paint-order: stroke fill`, so 1 px shows outside the glyph). No background box. Page enters with an overdamped spring (8 px rise, opacity 0.4 → 1) | 🧪 |
-| Exhibit label title | Fraunces 600 | 30 px, letter-spacing 0.02em | `inkLabel` | "No. 014 · The Living Room" | 🧪 |
-| Exhibit label sub-line | JetBrains Mono 500 | 20 px, letter-spacing 0.2em, uppercase | `inkMuted` | "EXHIBIT · EVENING", ≤ 18 characters; names a place, time or category and stays the same across consecutive scenes of the same type (brand.md § Naming) | 🧪 |
-| Callout title / sub | JetBrains Mono 600 / 500 | 26 / 20 px, letter-spacing 0.12em, uppercase (`monoStyle`) | `inkLabel` / `inkMuted` | ≤ 3 words, never a sentence, never a number that is not ✅ verified | 🧪 |
-| Search bar | Fraunces 600 query, Mono 600 tag | 30 / 18 px | `inkLabel` / `inkMuted`; strike 3 px `orange` | Query types in at 1.5 frames per character | 🧪 |
-| Ad card | Mono 500 label, Fraunces 600 title | 18 / 34 px | `inkMuted` / `inkLabel` | 64 px `plasterShade` square (2 px `labelBorder`) holding a 40 px **outlined plaster mug** (SVG: `plaster` fill, `inkMuted` 2 to 2.4 px stroke): an icon, never a picture, never orange | 🧪 |
-| Counter | Fraunces 600 digits and unit, Mono 500 sub | 80 / 34 / 20 px, tabular lining digits | `inkLabel` / `inkMuted` | Any number that tells the story, each ✅ verified (brand.md § Voice, Numbers). | 🧪 |
-| `ILLUSTRATIVE` watermark | JetBrains Mono 600 | 20 px, letter-spacing 0.14em | `inkLabel` at 0.75 opacity | Only when `sources.md` has a 🎭 claim (CLAUDE.md) | ✅ studio rule |
-| Plate number / title (3D texture) | Fraunces 600 / JetBrains Mono 500 | 86 px / 30 px, letters separated by thin spaces (U+2009) | `inkPlate` / `inkPlateMuted` | See § 7 | 🧪 |
-
-Caption pacing: narration runs ≈ 2.5 to 2.8 words/s, so a 3-word page lasts about 1.1 s; well under TikTok's 5 to 10 words/s ceiling for on-screen text (P§4).
-
-## 6. Layout and safe zones (`theme.SAFE`)
-
-Combined safe rectangle, strictest edge of TikTok, Shorts and Reels: **x 120 to 888, y 288 to 1248** (`SAFE`, 768 × 960 px). For centred elements use symmetric 192 px side margins (x 192 to 888, 696 px wide). (P§1, ✅ platform rule.)
-
-| Element | Position (px, 1080 × 1920) | Why | Status |
-|---|---|---|---|
-| Exhibit label (`Chip`) | Centred between x 120 and 888, **top 340** | Clears YouTube's 288 px top reserve (P§2) | ✅ platform rule |
-| `ILLUSTRATIVE` watermark | **top 300, left 120**, left-aligned | Off the right rail; above the label (P§2) | ✅ platform rule |
-| Focal action (the 3D subject, the orange) | **y 420 to 1040**, x 120 to 888 | Between label and captions (P§2) | 🧪 |
-| Callout cards | Anchored on the thing (fractions of the frame); `place: 'side'` (card beside the anchor, `dx`/`dy` to its near edge) or `'above'` (card centred over the anchor). The card is **clamped to x 120 to 888 automatically** (`clampToSafe`); the leader follows it | Nothing readable past the rails, without hand-tuning | ✅ studio rule |
-| Night guard | Lower-left or lower-right of the focal band, never over the focal action | brand.md § Mascot | 🧪 |
-| Captions | Centred, 696 px wide, anchored by the bottom edge: a single line is centred on **y 1152** (bottom edge ≈ 1188); a 2-line page grows upward to ≈ 1045 | Inside 1248 (P§2) | ✅ platform rule |
-| Wall plate | Set dressing in 3D, **only on wide shots** (No. 001: room scenes 4a and 9b; phone scenes none). Inside x 120 to 888 and off the label (§ 7). It never carries information that is not also on the exhibit label | Texture, not UI. On close shots it fell half off-frame or behind the label; on a move that continues from the previous shot it would pop in | 🧪 |
-| Cover frame text | Inside the safe rectangle | Survives the 3:4 grid crop (P§2) | ✅ platform rule |
-
-Stays out of the **right 192 px (x > 888)**: everything readable, the guard, the end of any orange path that matters. Stays out of the **bottom 672 px (y > 1248)**: everything readable. The plinth edge and floor may run under both; they are set, not content.
-
-## 7. Cards, exhibit label and wall plate
-
-**One card style** (`cardStyle` in `src/components/card.ts`) for every 2D overlay: callout, search bar, ad card, counter, exhibit label. Paper, not plaster: `labelCard` fill, 2 px `labelBorder`, **square corners**, 1 px inset white highlight at the top (rgba(255,255,255,0.7)), `cardShadow`. Cards enter over 10 to 12 frames with an 8 to 10 px rise, cubic in-out (`ease`). Never orange, except the search-bar strike.
-
-**Callout** (`Callout`): a hollow ring on the thing (radius 6 px, 2 px `inkMuted` stroke, `labelCard` fill, scales in over 8 frames), a **2 px `inkMuted` leader** drawn over frames 4 to 16, then the card (frames 12 to 24; padding 12 / 20 / 13 px).
-
-**Exhibit label** (`Chip`): padding 16 px top, 32 px sides, 18 px bottom; title and sub-line stacked, centred, 3 px apart. With a `title`, line 1 is the serif title and line 2 the mono sub-line; without one, the text alone in serif. Timing: one label per scene, entering with its scene (overdamped spring from frame 4 + `delay`, 10 px slide) and leaving with its crossfade. **No label text in the first second**: the first scene's label uses `chip.delay: 1.0` (enters ≈ 1.1 s; brand.md § Structure). When a scene's label is identical to the previous one (title, sub-line, dot), it does not re-enter (`animate: false`), so the dissolve shows one steady label.
-
-**Known limit (crossfade).** The outgoing scene stays at full opacity under the incoming one, so for 12 frames both labels are drawn. Identical labels coincide and read as one; a label that differs (even only in the sub-line) slides in over the old one and the two **draw over each other**. Rule for the director: **prefer identical label text across a crossfade**: consecutive scenes may (and should) share the title, and the sub-line changes only where the scene type changes (brand.md § Naming). 🧪
-
-**Wall plate** (`WallPlate`, 3D, on the back wall of every exhibit):
-
-| Property | Value |
-|---|---|
-| Default size and place | 0.56 × 0.31 units at (−1.15, 0.98) on the wall face: seated-eye height, left of centre (used by the phone exhibit) |
-| Per exhibit | Where the camera can see it and the stain will not cross it. Living room: size **0.40 × 0.22**, two spots in `ROOM.plateSpots`: standard **(−0.87, 1.95)** (left of the shelf) and upper-left **(−0.68, 2.3)** (above the route's left arch, for closer cameras). `RoomScene` **picks per shot**: the first spot that stays inside x 120 to 888 and off the label (x 270 to 810, y 324 to 461) at both ends of the camera move, else at its end; `plateAt` overrides. The phone's default spot is behind the couch in the room |
-| Build | `plate` slab 0.024 thick, radius 0.006, with a 512 × 280 texture inset 6 mm: `plate` fill, 3 px `plateBorder` rule inset 14 px, number Fraunces 600 86 px at y 108, title Mono 500 30 px thin-spaced at y 196 |
-| Material | Standard, roughness 0.8, no emissive. It receives the orange bleed like everything else. Rendering waits for the fonts (`delayRender`) |
-
-## 8. Camera and motion
-
-| Rule | Value | Why | Status |
-|---|---|---|---|
-| Lens | Perspective, **fov 40°**, height ≈ 2.0 units looking at (0, 1.0, 0): slightly above seated eye level | Museum visitor's eye, not a drone | 🧪 |
-| Move | One slow dolly per scene (`CameraRig`), sine in-out across the whole scene. Living-room presets: **wide** (−0.2, 2.0, 6.3) → (0.15, 1.95, 5.75); **push** starts exactly where wide ends and goes to (0.3, 1.95, 4.9) looking at (0.05, 1.45, −0.2), so wide → push on consecutive scenes reads as one move; **table** (0.15, 1.8, 4.3) → (0.05, 1.7, 3.9); **devices** low and far (−0.05, 1.18, 7.7) → (0.1, 1.15, 7.4) looking at (0.05, 0.7, 0) → (0.08, 0.68, 0), both phones, the laptop and the router between label and captions. Phone presets (`PHONE_CAMERAS`), **each starting where the previous ends**, so front → close → screen on consecutive scenes is one slow push: **front** (−0.15, 1.45, 4.6) → (0.05, 1.42, 4.15); **close** → (0.14, 1.43, 3.8); **screen** → (0.22, 1.45, 3.48), look-at rising 1.08 → 1.13, focus 0.42. A custom move that follows a preset starts at that preset's end. No pans faster than these, no handheld shake | The room is still; the orange moves. Sine is gentler than cubic at the start and end of a move that lasts a whole scene | 🧪 |
-| Scene length | **3 to 6 s** (90 to 180 frames), one idea per scene (CLAUDE.md) | Pacing benchmark from L§2, unverified against our retention | 🧪 |
-| Cuts | No cut faster than **1.5 s** (45 frames) after the previous one. No cuts inside the reveal | Calm register | 🧪 |
-| Transitions | Dissolve only: the next scene fades in over the previous one, which keeps running underneath, for **12 frames (0.4 s), cubic in-out** (`theme.FADE` 12, `Easing.inOut(Easing.cubic)` in `FadeIn`; reconciled in v0.4, code and guide agree). Labels across a dissolve: § 7 known limit. No wipes, no zoom transitions | One transition type keeps the museum quiet; 8 frames read as a softened cut | 🧪 |
-| Easing | Cubic in-out for reveals, opacity, card entries and the route (`ease`, `seg`); sine in-out for the camera dolly; overdamped springs (no overshoot) for captions and the label. No linear, no overshoot, no bounce | Mock-up value | 🧪 |
-| The reveal | Route draws over 1.7 to 3 s; the screen tell starts 1.5 s before it; LED at mid-draw; wall wash during the second half; glow holds `glowFor` then fades to the stain over 0.8 s | § 4 | 🧪 |
-| Torch sting | Click-on: beam at full in 2 frames. Click-off at the loop point: orange and beam to zero in 2 frames, plaster and stains remain, 4 frames hold, then the first frame of the video. The guard is never in frame in the first 3 s; the beam may be (not built) | brand.md § Mascot; L§3 | 🧪 |
-| Determinism | Every value is a function of `useCurrentFrame()`; `random('seed')` from Remotion, never `Math.random`; no `useFrame` outside `MuseumPost` (§ 2) | Renders must be reproducible | ✅ studio rule |
+No intro, no title card, no logo: the first frame is the slice at the story's moment, already lit, cast in place. **Loop:** in the last 0.5 s the phone in the slice locks (its screen light drops to 0 in 2 frames, one dry click), 4-frame hold, then frame 1; with no phone in the last shot, the camera returns to the opening framing and dissolves (12 frames) into frame 1.
 
 ## 9. Sound
 
@@ -174,8 +197,8 @@ Stays out of the **right 192 px (x > 888)**: everything readable, the guard, the
 | Performance text vs captions | Tags and pause marks live **only in the performance text** sent to the voice; never in `script.txt` words shown as captions, never on screen | Captions show what is said, not stage directions | 🧪 |
 | Takes | Always generate **2 to 3 takes** of the same text and pick by ear (listen for flat stretches, odd stress, rushed numbers). Note the chosen take in the report | The same text and settings give different reads; the ear is the check | 🧪 |
 | Music | Optional, one quiet bed per video, enters after the hook (≥ 3 s), sits 16 to 20 dB under the voice, no drums, no melody that competes with speech | Voice-first mix | 🧪 |
-| SFX | Torch click (one dry mechanical click, CC0) at the loop point; optional low hum while the orange is active, 20 dB under the voice. Nothing else | The museum is quiet | 🧪 |
-| Licensing | Only music and SFX we hold a multi-platform licence for: **Epidemic Sound Creator plan** (YouTube channel safelisted) and **Freesound CC0**. No in-app library sounds, no CC BY-NC, no track with Content ID risk (P§5, P rule 16) | Platform libraries are licensed per app; claims block Shorts over 1 min (P§3) | ✅ platform rule |
+| SFX | One dry click (CC0) when the phone locks at the loop point; optional low hum while the orange is active, 20 dB under the voice. Nothing else | A quiet world; the sound marks the loop | 🧪 |
+| Licensing | Only music and SFX we hold a multi-platform licence for: **Epidemic Sound Creator plan** (YouTube channel safelisted) and **Freesound CC0**, or **music we make ourselves** (own composition, or a generator whose terms grant commercial multi-platform rights and that registers nothing in Content ID; P§5). Only our own music or none in a video over 60 s (§ 10 Length). No in-app library sounds, no CC BY-NC, no track with Content ID risk (P§5, P rule 16) | Platform libraries are licensed per app; claims block Shorts over 1 min (P§3) | ✅ platform rule |
 | Loudness | **−14 LUFS integrated, −1 dBTP** true peak (house choice, P rule 9) | No platform documents a target | 🧪 |
 
 ## 10. Export and upload
@@ -188,21 +211,25 @@ From P rules 7 to 15 (✅ platform rule unless noted).
 | Frame | 1080 × 1920, 30 fps |
 | Bitrate | 8 to 12 Mbps VBR (YouTube recommends 8; Instagram caps at 25). File < 300 MB |
 | Audio | AAC-LC, 48 kHz, stereo, ≥ 128 kbps |
-| Length | **≤ 59 s** (🧪, see brand.md Open decision 3). Over 60 s only with zero-Content-ID music |
+| Length | Follows the idea, most Shorts **around 30 to 60 s** (brand.md § Structure, ✅ owner decision). **Over 60 s only with no licensed (Content ID-claimable) music**: our own music or none (§ 9 Licensing), or YouTube blocks the Short (P§3) |
 | Upload | The clean master to each platform. Never a file downloaded from another app |
 | AI label | On: TikTok "AI-generated", YouTube "altered or synthetic content", Instagram AI label |
 | Title (YouTube) | ≤ 100 chars, hook in the first 40 |
 | Hashtags | 3 to 5 on every platform (Instagram caps at 5) |
-| Description | Hook line, one "Sources:" line, "Full sources: link in profile". ≤ 2,200 chars so one text works everywhere |
+| Description | Hook line; if `sources.md` has a 🎭 claim, "Illustrative: [what is invented]." (brand.md § Sourcing policy; owner decision); one "Sources:" line; "Full sources: link in profile". ≤ 2,200 chars so one text works everywhere |
 | Cover | Custom cover on Instagram and TikTok (desktop, 3:4-safe); on YouTube pick a frame until YPP. Cover text inside the safe rectangle |
 
 ## Review checklist (one still per scene, `yarn stills <slug>`)
 
-1. Whites (§ 2), measured on the full-scale PNG with cards, captions and glow masked, Rec. 709 luma: p95 ≤ 90%, brightest near-neutral pixel ≤ 96% (≤ 244), zero pixels at 255, 255, 255. Lit plaster near an orange light under 90%. A colour picker is not the check.
-2. Only one hue in the frame, and it is `#ff5b14` or a bleed of it (matched tiles: `orange` × 0.62 albedo, so they land on `#ff5b14` under the key light after bloom).
-3. Label at top 340, captions centred at y 1152, nothing readable past x 888 or y 1248.
-4. Current caption word is orange italic with its ink edge; ≤ 3 words on the page.
-5. Rounded edges everywhere; no texture other than plate and stain; no screen UI (glass is `plasterGlass`). Wall plate only on wide shots, inside x 120 to 888, off the label.
-6. Stain line on the wall behind the figures (not in front of them) and the wash present in every scene after the reveal; on the phone, the stain frame on every shot after the recording.
-7. No guard and no label text in the first second; no guard in the first 3 s.
-8. Across each crossfade the label text is identical, or the sub-line changes only where the scene type changes (§ 7).
+1. **Outside, always:** every shot looks into a slice from outside at the video's one fixed angle; cut faces visible in `cut` off-white; no interior, eye-level or over-the-shoulder shot.
+2. **Orange:** the only pixels in the reserved band (hue 8 to 40°, sat ≥ 60%, lightness 35 to 75%) are the system (path, nodes, dots, its light, active LEDs, its mark on a screen). Captions, tags, cards, people and cut faces are never orange.
+3. **Phones face their owners:** no screen turned to the camera in the slice; every readable screen is in a detail box (or one of ≤ 2 full-frame screens); phone UI generic (no real app, logo, brand colour, "9:41").
+4. **Mood:** one mood per slice (or the single time-passes beat); Night: subject p50 ≥ 30%, cut faces read off-white; Day: brightest near-neutral ≤ 96%, zero pixels at 255,255,255 (overlays, screens, glow masked).
+5. **Frame:** title block only in the first scene (≈ 1 s, top y 340); nothing readable past x 888 or below y 1248; left-aligned elements start at x 120.
+6. **Captions:** margin note (square, left rule, `capBg`), Inter 700 50 px, words appear as spoken, no highlight or underline, bottom y 1188, ≤ 5 words; off while a statement is up.
+7. **Tags:** colour square + role, elbow leader, in the margin outside the slice; ≤ 2; never with a card; first appearance only (and on re-entry).
+8. **One idea per frame:** at most one card (detail box, callout, counter, statement) besides title block and captions.
+9. **Statement cards and attribution:** ≤ 2 each, Archivo 88 px left-aligned / Mono 24 px who + year, at the § 7 positions.
+10. **System:** route leaves through the wall and ground on the cut face; node dots at devices; X-ray at most once; trace present on every later shot of that slice; next slice opens clean.
+11. **Cast:** dot eyes, no mouth; adult proportions; colours as § 8; something alive in every shot (breath, blink, glance).
+12. **No intro:** no title card, logo or text in the first second; the last 0.5 s is the phone-lock loop.

@@ -24,16 +24,24 @@ if (!entry) {
   process.exit(1);
 }
 
-const tl = resolveTimeline(entry.spec, entry.transcript.words, FPS);
-const shots: {name: string; frame: number}[] = flag('frames')
-  ? flag('frames')!
-      .split(',')
-      .map((f) => ({name: `frame-${f}`, frame: Number(f)}))
-  : tl.scenes.map((s, i) => {
-      const lastOverlay = Math.max(s.startFrame + FADE, ...s.overlays.map((o) => o.startFrame + 20));
-      const frame = Math.min(lastOverlay, s.endFrame - 1);
-      return {name: `${String(i + 1).padStart(2, '0')}-${s.scene}`, frame};
-    });
+// A broken video still renders (as an error card), so a timeline error is not fatal here.
+let tl: ReturnType<typeof resolveTimeline> | undefined;
+try {
+  tl = resolveTimeline(entry.spec, entry.transcript.words, FPS);
+} catch (e) {
+  console.warn(`Timeline error (rendering the error card): ${e instanceof Error ? e.message : e}`);
+}
+const shots: {name: string; frame: number}[] = !tl
+  ? (flag('frames')?.split(',') ?? ['0']).map((f) => ({name: `frame-${f}`, frame: Number(f)}))
+  : flag('frames')
+    ? flag('frames')!
+        .split(',')
+        .map((f) => ({name: `frame-${f}`, frame: Number(f)}))
+    : tl.scenes.map((s, i) => {
+        const lastOverlay = Math.max(s.startFrame + FADE, ...s.overlays.map((o) => o.startFrame + 20));
+        const frame = Math.min(lastOverlay, s.endFrame - 1);
+        return {name: `${String(i + 1).padStart(2, '0')}-${s.scene}`, frame};
+      });
 
 const outDir = `out/${slug}/stills`;
 rmSync(outDir, {recursive: true, force: true});

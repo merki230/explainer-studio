@@ -5,7 +5,7 @@ tools: Read, Write, Edit, Glob, Grep, WebSearch, WebFetch
 model: opus
 ---
 
-You research topics for vertical "how it secretly works" explainer videos (Shorts about 25–45 s, never over 59 s).
+You research topics for vertical "how it secretly works" explainer videos (Shorts about 30–60 s; over 60 s only when the story needs it and the video has no licensed music).
 
 ## Task
 

@@ -1,6 +1,8 @@
 import React, {useMemo} from 'react';
+import {useCurrentFrame, useVideoConfig} from 'remotion';
 import * as THREE from 'three';
 import {theme} from '../theme';
+import {Steam} from './Atmosphere';
 import {BlobShadow, PlasterBox} from './MuseumStage';
 import {OrangeLight, OrangeWash} from './OrangePath';
 import {plaster, raw, roundedBox} from './plaster';
@@ -29,6 +31,8 @@ export const ROOM = {
   plateSize: [0.4, 0.22] as [number, number],
   /** Laptop on the coffee table in front of seat B: the hinge centre (base top, back edge). */
   laptop: [0.36, 0.488, 0.9] as V3,
+  /** The cup on the coffee table: centre of its rim (steam leaves here). */
+  cup: [-0.4, 0.59, 0.9] as V3,
   /** Wall surface z (front face of the wall slab). */
   wallZ: -0.93,
 };
@@ -117,12 +121,34 @@ export const LivingRoom: React.FC<{
   plate?: {number: string; title: string};
   /** Where the plate hangs [x, y] on the wall face. Default: the first of ROOM.plateSpots. */
   plateAt?: [number, number];
-}> = ({led = 0, wash = 0, household = 0, laptop = 0, plate, plateAt = ROOM.plateSpots[0]}) => {
+  /** Steam rising from the cup (default on). */
+  steam?: boolean;
+  /** Once lit, the router LED breathes gently (±8%, ≈ 3.4 s) instead of holding flat (default on). */
+  ledBreath?: boolean;
+  /** Seconds added to the scene time for the steam and the LED breathing (the scene's start in the video). */
+  clockOffset?: number;
+}> = ({
+  led = 0,
+  wash = 0,
+  household = 0,
+  laptop = 0,
+  plate,
+  plateAt = ROOM.plateSpots[0],
+  steam = true,
+  ledBreath = true,
+  clockOffset = 0,
+}) => {
+  const frame = useCurrentFrame();
+  const {fps} = useVideoConfig();
+  const clock = frame / fps + clockOffset;
   const ledMat = useMemo(
     () => new THREE.MeshBasicMaterial({color: raw(theme.orange), transparent: true, opacity: 0}),
     [],
   );
-  ledMat.opacity = Math.max(0, Math.min(1, led));
+  // breathing: dips to 84% and back, never above the lit level (so the whites stay as built)
+  const breathe = ledBreath ? 1 - 0.16 * (0.5 - 0.5 * Math.cos((clock / 3.4) * Math.PI * 2)) : 1;
+  const ledLevel = Math.max(0, Math.min(1, led)) * breathe;
+  ledMat.opacity = ledLevel;
   const h = Math.max(0, Math.min(1, household));
   const [rx, ry, rz] = ROOM.router;
   const [lx, ly, lz] = ROOM.laptop;
@@ -147,6 +173,7 @@ export const LivingRoom: React.FC<{
         [0.7, 1.2].map((z) => <Cylinder key={`${x}${z}`} p={[x, 0.205, z]} args={[0.025, 0.02, 0.41, 10]} />),
       )}
       <Cylinder p={[-0.4, 0.53, 0.9]} args={[0.06, 0.05, 0.12, 20]} />
+      {steam ? <Steam position={ROOM.cup} clockOffset={clockOffset} /> : null}
       {laptop === null ? null : (
         <group position={[lx, ly, lz]} rotation={[0, LAPTOP.yaw, 0]}>
           <Laptop screen={laptop} material={plaster()} />
@@ -171,7 +198,7 @@ export const LivingRoom: React.FC<{
       >
         <planeGeometry args={[0.3, 0.025]} />
       </mesh>
-      <OrangeLight position={[rx, ry + 0.15, rz + 0.35]} intensity={1.3 * led * (1 + 0.35 * h)} reach={2.8} />
+      <OrangeLight position={[rx, ry + 0.15, rz + 0.35]} intensity={1.3 * ledLevel * (1 + 0.35 * h)} reach={2.8} />
       <OrangeWash
         position={[rx, ry + 0.2, ROOM.wallZ + 0.005]}
         size={[2.4, 1.8]}

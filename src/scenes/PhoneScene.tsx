@@ -2,11 +2,13 @@ import React, {useMemo} from 'react';
 import {Easing, interpolate, useCurrentFrame, useVideoConfig} from 'remotion';
 import * as THREE from 'three';
 import {theme} from '../theme';
+import {DustMotes} from '../three/Atmosphere';
 import {BlobShadow, MuseumLights, MuseumSet, MuseumStage, PlasterBox} from '../three/MuseumStage';
 import {OrangeLight, OrangePath} from '../three/OrangePath';
 import {plaster, raw, roundedBox, roundedCylinder, scanTexture} from '../three/plaster';
 import {CameraRig} from '../three/Stage';
 import {WallPlate} from '../three/WallPlate';
+import {clickOffFrame, clickOffLevel, type ClickOff} from './clickOff';
 
 type V3 = [number, number, number];
 
@@ -49,6 +51,16 @@ export type PhoneSceneProps = {
   screenStain?: boolean;
   /** Wall plate text. Omit for a bare wall. */
   plate?: {number: string; title: string};
+  /** Torch click-off for the loop point (see RoomScene): mic light, scan, edge glow, route and bleed off in 2 frames; the stain frame stays. */
+  clickOff?: ClickOff;
+  /** Turntable: the phone (and its pedestal) turns slowly, in degrees per second (0 = still; 2–4 is calm). */
+  turntable?: number;
+  /** Turntable angle at the scene's start (degrees), to continue a turn from the previous shot. */
+  turntableFrom?: number;
+  /** Dust motes drifting in the key light's beam (default on). */
+  dust?: boolean;
+  /** The scene's first frame in the video (set by Explainer): keeps the dust continuous across cuts. */
+  startFrame?: number;
 };
 
 // The phone, standing on a pedestal: a plaster sculpture of a phone.
@@ -141,10 +153,17 @@ export const PhoneScene: React.FC<PhoneSceneProps> = ({
   screenRecAt = 0.3,
   screenStain = false,
   plate,
+  clickOff,
+  turntable = 0,
+  turntableFrom = 0,
+  dust = true,
+  startFrame = 0,
 }) => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
   const t = frame / fps;
+  const offAt = clickOffFrame(clickOff, durationInFrames, fps);
+  const on = clickOffLevel(frame, offAt);
   const cam = typeof camera === 'string' ? (PHONE_CAMERAS[camera] ?? PHONE_CAMERAS.front) : camera;
 
   // Mic light: a short flicker (the tell), then a slow steady pulse.
@@ -153,20 +172,20 @@ export const PhoneScene: React.FC<PhoneSceneProps> = ({
     const flicker =
       (0.5 + 0.5 * Math.sin((t - micAt) * 16)) * seg(t, micAt, micAt + 0.15) * (1 - seg(t, micAt + 0.5, micAt + 0.6));
     const steady = seg(t, micAt + 0.55, micAt + 0.9) * (0.75 + 0.25 * Math.cos((t - micAt) * Math.PI * 1.2));
-    mic = Math.max(flicker * 0.6, steady);
+    mic = Math.max(flicker * 0.6, steady) * on;
   }
 
   // Screen recording: trace the edge → send → edge glow fades to a stain; the scan keeps sweeping.
   const r0 = screenRecAt;
   const edge = screenRec ? seg(t, r0, r0 + TRACE) : screenStain ? 1 : 0;
-  const edgeGlow = screenRec ? 1 - seg(t, r0 + TRACE + GLOW_HOLD, r0 + TRACE + GLOW_HOLD + 0.8) : 0;
+  const edgeGlow = screenRec ? (1 - seg(t, r0 + TRACE + GLOW_HOLD, r0 + TRACE + GLOW_HOLD + 0.8)) * on : 0;
   const send = screenRec ? seg(t, r0 + TRACE, r0 + TRACE + SEND) : 0;
   const sendFlow = screenRec && send >= 1 ? (t - (r0 + TRACE + SEND)) * 0.45 : undefined;
-  const live = screenRec ? seg(t, r0, r0 + 0.4) : 0;
+  const live = screenRec ? seg(t, r0, r0 + 0.4) * on : 0;
   // The scan starts as the trace closes; each sweep fades in and out at the screen's ends.
   const scanT = t - (r0 + TRACE - 0.2);
   const scanPhase = (((scanT / SCAN_PERIOD) % 1) + 1) % 1;
-  const scanOn = screenRec && scanT > 0 ? seg(scanT, 0, 0.3) : 0;
+  const scanOn = screenRec && scanT > 0 ? seg(scanT, 0, 0.3) * on : 0;
   const scan = scanOn * Math.min(1, scanPhase / 0.12, (1 - scanPhase) / 0.12);
   const scanY = SCREEN.h / 2 - SCAN_H / 2 - scanPhase * (SCREEN.h - SCAN_H);
 
@@ -181,22 +200,28 @@ export const PhoneScene: React.FC<PhoneSceneProps> = ({
   mats.scan.opacity = 0.65 * scan;
 
   const top = PEDESTAL.h;
+  // Turntable: whole exhibit turns around the pedestal's axis (the outbound route turns with it).
+  const spin = ((turntableFrom + turntable * t) * Math.PI) / 180;
   const phoneY = top + PHONE.h / 2 + 0.02;
 
   // The outbound route, in world space: it continues from the top of the traced edge,
   // over the phone's top edge, then up and right past the label, off the top of the frame.
   const send0 = useMemo(() => {
-    const m = new THREE.Matrix4().compose(
-      new THREE.Vector3(0, phoneY, 0),
-      new THREE.Quaternion().setFromEuler(new THREE.Euler(LEAN, TURN, 0)),
-      new THREE.Vector3(1, 1, 1),
-    );
+    const m = new THREE.Matrix4()
+      .makeRotationY(spin)
+      .multiply(
+        new THREE.Matrix4().compose(
+          new THREE.Vector3(0, phoneY, 0),
+          new THREE.Quaternion().setFromEuler(new THREE.Euler(LEAN, TURN, 0)),
+          new THREE.Vector3(1, 1, 1),
+        ),
+      );
     const w = (p: V3): V3 => {
       const v = new THREE.Vector3(...p).applyMatrix4(m);
       return [v.x, v.y, v.z];
     };
     return [w([0, SCREEN.h / 2, EDGE[0][0][2]]), w([0, PHONE.h / 2 + 0.06, PHONE.d / 2 + 0.02])];
-  }, [phoneY]);
+  }, [phoneY, spin]);
   const [s0, s1] = send0;
   const sendLegs: V3[][] = [
     [
@@ -216,9 +241,10 @@ export const PhoneScene: React.FC<PhoneSceneProps> = ({
         to={cam.to}
         lookFrom={cam.lookFrom}
         lookTo={cam.lookTo}
-        durationInFrames={durationInFrames}
+        durationInFrames={offAt === undefined ? durationInFrames : Math.min(durationInFrames, offAt)}
       />
       <MuseumLights target={[0, 1.0, 0]} />
+      {dust ? <DustMotes from={[1.5, 7, 3.5]} to={[0, 1.0, 0]} clockOffset={startFrame / fps} /> : null}
       <MuseumSet />
       {plate ? <WallPlate number={plate.number} title={plate.title} position={[-1.15, 0.98, -0.925]} /> : null}
 
@@ -233,78 +259,85 @@ export const PhoneScene: React.FC<PhoneSceneProps> = ({
       <BlobShadow position={[0, 0.004, 0]} size={[1.3, 1.3]} opacity={0.44} />
 
       {/* the phone: body, glass, earpiece, lens, side button, home bar, mic light */}
-      <group position={[0, phoneY, 0]} rotation={[LEAN, TURN, 0]}>
-        <mesh geometry={roundedBox(PHONE.w, PHONE.h, PHONE.d, 0.06, 5)} material={plaster()} castShadow receiveShadow />
-        {/* screen glass: a step brighter and a little smoother than the body */}
-        <mesh
-          geometry={roundedBox(SCREEN.w, SCREEN.h, 0.01, 0.004)}
-          material={plaster(theme.plasterGlass, 0.7)}
-          position={[0, 0, SCREEN.z - 0.005]}
-          receiveShadow
-        />
-        {/* earpiece (no shadow: on the glass it drew a hard outline) */}
-        <mesh
-          geometry={roundedBox(0.14, 0.035, 0.008, 0.004)}
-          material={plaster(theme.plasterShade)}
-          position={[0, TOP_Y, SCREEN.z + 0.002]}
-          receiveShadow
-        />
-        {/* front camera: a recessed ring with a darker lens */}
-        <mesh
-          geometry={roundedCylinder(0.022, 0.008, 0.003, 24)}
-          material={plaster(theme.plasterShade, 0.95)}
-          position={LENS_LOCAL}
-          rotation={[Math.PI / 2, 0, 0]}
-        />
-        <mesh
-          geometry={roundedCylinder(0.012, 0.01, 0.003, 24)}
-          material={plaster(theme.plasterFloor, 0.6)}
-          position={[LENS_LOCAL[0], LENS_LOCAL[1], LENS_LOCAL[2] + 0.002]}
-          rotation={[Math.PI / 2, 0, 0]}
-        />
-        {/* side button (the side that faces the camera) */}
-        <PlasterBox size={[0.016, 0.17, 0.026]} radius={0.006} position={[PHONE.w / 2 + 0.002, 0.26, 0]} />
-        {/* home bar */}
-        <PlasterBox
-          size={[0.17, 0.014, 0.006]}
-          radius={0.0025}
-          position={[0, -SCREEN.h / 2 + 0.045, SCREEN.z + 0.002]}
-          color={theme.plasterShade}
-        />
-        <mesh position={MIC_LOCAL} material={mats.mic} userData={{glow: true}} visible={mic > 0.001}>
-          <circleGeometry args={[0.018, 24]} />
-        </mesh>
-        <OrangeLight
-          position={[MIC_LOCAL[0], MIC_LOCAL[1] + 0.02, MIC_LOCAL[2] + 0.15]}
-          intensity={0.35 * mic}
-          reach={0.7}
-        />
-
-        {/* screen recording: the traced edge (glow, then its stain), the scan band, the bleed */}
-        {edge > 0 ? (
-          <OrangePath
-            legs={EDGE}
-            stainLegs={EDGE_STAIN}
-            progress={edge}
-            glow={edgeGlow}
-            radius={EDGE_R}
-            stainRadius={0.007}
-            runner={false}
+      <group rotation={[0, spin, 0]}>
+        <group position={[0, phoneY, 0]} rotation={[LEAN, TURN, 0]}>
+          <mesh
+            geometry={roundedBox(PHONE.w, PHONE.h, PHONE.d, 0.06, 5)}
+            material={plaster()}
+            castShadow
+            receiveShadow
           />
-        ) : null}
-        <mesh
-          position={[0, scanY, SCREEN.z + 0.002]}
-          material={mats.scan}
-          userData={{glow: true}}
-          visible={scan > 0.001}
-          renderOrder={2}
-        >
-          <planeGeometry args={[SCREEN.w - 0.03, SCAN_H]} />
-        </mesh>
-        <OrangeLight position={[0, 0.1, SCREEN.z + 0.45]} intensity={0.3 * live} reach={1.4} />
+          {/* screen glass: a step brighter and a little smoother than the body */}
+          <mesh
+            geometry={roundedBox(SCREEN.w, SCREEN.h, 0.01, 0.004)}
+            material={plaster(theme.plasterGlass, 0.7)}
+            position={[0, 0, SCREEN.z - 0.005]}
+            receiveShadow
+          />
+          {/* earpiece (no shadow: on the glass it drew a hard outline) */}
+          <mesh
+            geometry={roundedBox(0.14, 0.035, 0.008, 0.004)}
+            material={plaster(theme.plasterShade)}
+            position={[0, TOP_Y, SCREEN.z + 0.002]}
+            receiveShadow
+          />
+          {/* front camera: a recessed ring with a darker lens */}
+          <mesh
+            geometry={roundedCylinder(0.022, 0.008, 0.003, 24)}
+            material={plaster(theme.plasterShade, 0.95)}
+            position={LENS_LOCAL}
+            rotation={[Math.PI / 2, 0, 0]}
+          />
+          <mesh
+            geometry={roundedCylinder(0.012, 0.01, 0.003, 24)}
+            material={plaster(theme.plasterFloor, 0.6)}
+            position={[LENS_LOCAL[0], LENS_LOCAL[1], LENS_LOCAL[2] + 0.002]}
+            rotation={[Math.PI / 2, 0, 0]}
+          />
+          {/* side button (the side that faces the camera) */}
+          <PlasterBox size={[0.016, 0.17, 0.026]} radius={0.006} position={[PHONE.w / 2 + 0.002, 0.26, 0]} />
+          {/* home bar */}
+          <PlasterBox
+            size={[0.17, 0.014, 0.006]}
+            radius={0.0025}
+            position={[0, -SCREEN.h / 2 + 0.045, SCREEN.z + 0.002]}
+            color={theme.plasterShade}
+          />
+          <mesh position={MIC_LOCAL} material={mats.mic} userData={{glow: true}} visible={mic > 0.001}>
+            <circleGeometry args={[0.018, 24]} />
+          </mesh>
+          <OrangeLight
+            position={[MIC_LOCAL[0], MIC_LOCAL[1] + 0.02, MIC_LOCAL[2] + 0.15]}
+            intensity={0.35 * mic}
+            reach={0.7}
+          />
+
+          {/* screen recording: the traced edge (glow, then its stain), the scan band, the bleed */}
+          {edge > 0 ? (
+            <OrangePath
+              legs={EDGE}
+              stainLegs={EDGE_STAIN}
+              progress={edge}
+              glow={edgeGlow}
+              radius={EDGE_R}
+              stainRadius={0.007}
+              runner={false}
+            />
+          ) : null}
+          <mesh
+            position={[0, scanY, SCREEN.z + 0.002]}
+            material={mats.scan}
+            userData={{glow: true}}
+            visible={scan > 0.001}
+            renderOrder={2}
+          >
+            <planeGeometry args={[SCREEN.w - 0.03, SCAN_H]} />
+          </mesh>
+          <OrangeLight position={[0, 0.1, SCREEN.z + 0.45]} intensity={0.3 * live} reach={1.4} />
+        </group>
       </group>
       {screenRec ? (
-        <OrangePath legs={sendLegs} progress={send} stain={false} flow={sendFlow} dots={3} radius={EDGE_R} />
+        <OrangePath legs={sendLegs} progress={send} glow={on} stain={false} flow={sendFlow} dots={3} radius={EDGE_R} />
       ) : null}
     </MuseumStage>
   );

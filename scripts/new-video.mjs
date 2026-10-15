@@ -33,7 +33,6 @@ writeFileSync(
  * script.txt) and run until the next scene.
  */
 export const spec: VideoSpec = {
-  watermark: 'ILLUSTRATIVE',
   scenes: [
     {
       scene: 'phone',

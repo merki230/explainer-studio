@@ -1,12 +1,15 @@
 import React, {useMemo} from 'react';
 import {interpolate, spring, useCurrentFrame, useVideoConfig} from 'remotion';
 import {fonts} from '../fonts';
-import {theme} from '../theme';
+import type {Mood} from '../theme';
 import type {Word} from '../types';
+import {ease} from './card';
+import {LEFT, overlayInk, RIGHT} from './sectionStyle';
 
 type Page = {words: Word[]; start: number; end: number};
 
-const MAX_WORDS = 3;
+/** v0.8: ≤ 5 words a page (style guide § 6). */
+const MAX_WORDS = 5;
 const MAX_GAP = 0.3; // seconds of silence that forces a new page
 
 export const buildPages = (words: Word[]): Page[] => {
@@ -31,73 +34,74 @@ export const buildPages = (words: Word[]): Page[] => {
   }));
 };
 
-const FONT_SIZE = 64;
-const LINE_HEIGHT = 1.12;
+/** Bottom edge of the caption block (style guide § 6–7). */
+const BOTTOM = 1188;
+/** Frames each word takes to fade in as it is spoken. */
+const WORD_IN = 4;
 
 /**
- * Serif captions a few words at a time, current word in orange italic.
- * Centred on `y` (fraction of the frame) with `margin` px each side, anchored by
- * the bottom edge so a two-line page grows upward, never into the platform UI.
+ * Captions as a margin note (style guide v0.8 § 6): a square `capBg` block with a 12 px `ink` rule
+ * on its left edge, Inter 700 50 px, left-aligned at x 120, bottom edge y 1188, ≤ 5 words a page.
+ * Words appear one by one as they are spoken (4-frame fade); no highlight, never orange. The block
+ * grows to the right with the words (a block sized for the whole page sat mostly empty behind the
+ * first word). Colours follow the mood of the scene on screen.
  */
-export const Captions: React.FC<{words: Word[]; y?: number; margin?: number}> = ({words, y = 0.6, margin = 192}) => {
+export const Captions: React.FC<{
+  words: Word[];
+  /** Mood per stretch of the video: `{from}` is the first frame where `mood` applies. Default Day. */
+  moods?: {from: number; mood: Mood}[];
+  /**
+   * Frame ranges [from, to) when captions are off (a statement card is up). A page that starts
+   * inside a range stays off; captions resume with the next page.
+   */
+  suppress?: [number, number][];
+}> = ({words, moods = [], suppress = []}) => {
   const frame = useCurrentFrame();
   const {fps, height} = useVideoConfig();
   const pages = useMemo(() => buildPages(words), [words]);
   const t = frame / fps;
   const page = pages.find((p) => t >= p.start && t < p.end);
   if (!page) return null;
+  const inQuiet = (f: number) => suppress.some(([a, b]) => f >= a && f < b);
+  if (inQuiet(frame) || inQuiet(Math.round(page.start * fps))) return null;
 
+  const mood = [...moods].reverse().find((m) => frame >= m.from)?.mood ?? 'day';
+  const {ink, capBg} = overlayInk(mood);
   const local = frame - Math.round(page.start * fps);
-  const pop = spring({frame: local, fps, config: {damping: 16, mass: 0.5}});
-  // Bottom of a single line centred on y.
-  const bottom = height - (y * height + (FONT_SIZE * LINE_HEIGHT) / 2);
+  // overdamped (no overshoot): the block settles 6 px into place
+  const pop = spring({frame: local, fps, config: {damping: 26, mass: 0.6}});
 
   return (
-    <div
-      style={{
-        position: 'absolute',
-        bottom,
-        left: margin,
-        right: margin,
-        display: 'flex',
-        justifyContent: 'center',
-      }}
-    >
+    <div style={{position: 'absolute', left: LEFT, bottom: height - BOTTOM, maxWidth: RIGHT - LEFT}}>
       <div
         style={{
-          transform: `translateY(${interpolate(pop, [0, 1], [8, 0])}px)`,
-          opacity: interpolate(pop, [0, 1], [0.4, 1]),
-          fontFamily: fonts.serif,
-          fontWeight: 600,
-          fontSize: FONT_SIZE,
-          lineHeight: LINE_HEIGHT,
-          color: theme.ink,
-          textAlign: 'center',
-          textWrap: 'balance',
-          // A thin highlight, plus a plaster halo so the line stays legible over the scene.
-          textShadow: `0 1px 0 rgba(255,255,255,0.55), ${theme.textHalo}`,
+          display: 'inline-block',
+          background: capBg,
+          borderLeft: `12px solid ${ink}`,
+          borderRadius: 0,
+          padding: '13px 26px 15px 28px',
+          fontFamily: fonts.sans,
+          fontWeight: 700,
+          fontSize: 50,
+          lineHeight: 1.22,
+          color: ink,
+          textAlign: 'left',
+          opacity: interpolate(pop, [0, 1], [0.6, 1]),
+          transform: `translateY(${interpolate(pop, [0, 1], [6, 0])}px)`,
         }}
       >
-        {page.words.map((w, i) => {
-          const spoken = t >= w.start;
-          const active = spoken && (t < w.end || i === page.words.length - 1 || t < page.words[i + 1].start);
-          return (
-            <React.Fragment key={i}>
-              <span
-                style={{
-                  color: active ? theme.orange : theme.ink,
-                  fontStyle: active ? 'italic' : 'normal',
-                  // Orange on an orange-lit wall needs an edge: a 1 px ink outline outside the glyph.
-                  WebkitTextStroke: active ? '2px rgba(31, 28, 24, 0.35)' : undefined,
-                  paintOrder: 'stroke fill',
-                }}
-              >
-                {w.text}
-              </span>
-              {i < page.words.length - 1 ? ' ' : ''}
-            </React.Fragment>
-          );
-        })}
+        {page.words
+          .filter((w) => Math.round(w.start * fps) <= frame)
+          .map((w, i) => {
+            const at = Math.round(w.start * fps);
+            const o = ease(frame, at, at + WORD_IN);
+            return (
+              <React.Fragment key={i}>
+                {i > 0 ? ' ' : ''}
+                <span style={{opacity: o}}>{w.text}</span>
+              </React.Fragment>
+            );
+          })}
       </div>
     </div>
   );

@@ -52,8 +52,11 @@ out/                    renders and stills (git-ignored)
 - **Cues, not seconds.** Scenes start on a `cue` (the first words of a phrase, as spoken). Overlays use
   `cue` or `at` (seconds into the scene). Cues survive re-recording; absolute times don't.
 - After editing `script.txt`, regenerate timings (`yarn timings <slug>`) or `yarn check` will warn.
-- Overlay `x`/`y` are fractions of the frame (0.5, 0.5 = centre). Keep text clear of the captions band
-  (around y 0.70–0.80) and the top chip.
+- Overlay `x`/`y` are fractions of the frame (0.5, 0.5 = centre). Keep text inside the safe zone and clear of
+  the captions and the first-scene title block (`brand/style-guide.md` § 6–7).
+- The look is "The Section" (`brand/style-guide.md` v0.8): every location is a cut-open slice seen from
+  outside, phones face their owners, and screens are read through the detail box. Orange is reserved for the
+  hidden system.
 - Colours come from `theme`, fonts from `fonts`. Don't hard-code new colours in a video; add them to the
   theme if they're truly needed, since the shared look is the brand.
 - New scene: `src/scenes/XScene.tsx` taking `{durationInFrames, ...props}`, register in
@@ -135,13 +138,14 @@ behalf, doesn't dispatch a task whose brief depends on an unanswered owner decis
 
 Every video has `src/videos/<slug>/sources.md` (format in `docs/sources-format.md`). Any specific number,
 named company, study, or "they do X" claim needs a ✅ verified source, unless it is attributed or hedged as the source hedges (🟡) or marked
-illustrative (🎭, with the watermark on). Never invent a URL or quote. Sources go in the post description,
-not on screen. `yarn check` warns about a missing sources.md and any ❌ claims.
+illustrative (🎭, disclosed with an "Illustrative: …" line in the post description). Never invent a URL or quote.
+Full sources go in the post description; up to 2 short attribution lines may appear on screen
+(`brand/style-guide.md` § 5). `yarn check` warns about a missing sources.md and any ❌ claims.
 
 ## Style of the videos
 
 - Writing follows `brand/brand.md` § Voice and tone and § Structure (the 7-step recipe; references in
   `brand/research/script-references.md`). No word-count target: Shorts run as long as the idea needs,
-  about 25–45 s, never over 59 s. No padding, no AI patterns. Attribute claims instead of hedging them.
+  about 30–60 s; over 60 s only when the story needs it and the video has no licensed music. No padding, no AI patterns. Attribute claims instead of hedging them.
 - One idea per scene; a scene change roughly every 3–6 s.
-- Calm, factual tone. The "ILLUSTRATIVE" watermark stays on videos that use invented specifics.
+- Calm, factual tone. One idea per frame. No on-screen watermark; invented specifics are disclosed in the post.

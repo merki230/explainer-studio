@@ -2,12 +2,14 @@ import React, {useMemo} from 'react';
 import {Easing, interpolate, random, useCurrentFrame, useVideoConfig} from 'remotion';
 import * as THREE from 'three';
 import {theme} from '../theme';
+import {DustMotes} from '../three/Atmosphere';
 import {Bust} from '../three/Mannequin';
 import {BlobShadow, MuseumLights, MuseumSet, MuseumStage} from '../three/MuseumStage';
-import {OrangeLight, OrangePath} from '../three/OrangePath';
+import {OrangeLight, OrangePath, OrangeWash} from '../three/OrangePath';
 import {raw} from '../three/plaster';
 import {CameraRig} from '../three/Stage';
 import {WallPlate} from '../three/WallPlate';
+import {clickOffFrame, clickOffLevel, type ClickOff} from './clickOff';
 
 type V3 = [number, number, number];
 
@@ -25,6 +27,23 @@ export type ProfilesSceneProps = {
   spread?: number;
   /** Wall plate text. Omit for a bare wall. */
   plate?: {number: string; title: string};
+  /**
+   * Open with the stain already on the wall (stain line + wall wash at full): a look at the busts
+   * after the reveal. Stains never fade within a video. The link still draws over it unless `link` is false.
+   */
+  stained?: boolean;
+  /** Draw the glowing link (default true). With `stained` and `link: false`, only the stains are there. */
+  link?: boolean;
+  /** Torch click-off for the loop point (see RoomScene): glow, dots and bleed off in 2 frames; stains stay. */
+  clickOff?: ClickOff;
+  /** Turntable: both busts (and pedestals) turn slowly, in degrees per second (0 = still; 2–4 is calm). */
+  turntable?: number;
+  /** Turntable angle at the scene's start (degrees), to continue a turn from the previous shot. */
+  turntableFrom?: number;
+  /** Dust motes drifting in the key light's beam (default on). */
+  dust?: boolean;
+  /** The scene's first frame in the video (set by Explainer): keeps the dust continuous across cuts. */
+  startFrame?: number;
 };
 
 const seg = (x: number, a: number, b: number) =>
@@ -52,15 +71,27 @@ export const ProfilesScene: React.FC<ProfilesSceneProps> = ({
   points = 16,
   spread = 0.72,
   plate,
+  stained = false,
+  link = true,
+  clickOff,
+  turntable = 0,
+  turntableFrom = 0,
+  dust = true,
+  startFrame = 0,
 }) => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
   const t = frame / fps;
+  const offAt = clickOffFrame(clickOff, durationInFrames, fps);
+  const on = clickOffLevel(frame, offAt);
 
   const done = linkAt + linkDuration;
-  const p = seg(t, linkAt, done);
-  const glow = glowFor === undefined ? 1 : 1 - seg(t, done + glowFor, done + glowFor + 0.8);
+  const p = link ? seg(t, linkAt, done) : 0;
+  const glow = (glowFor === undefined ? 1 : 1 - seg(t, done + glowFor, done + glowFor + 0.8)) * on;
   const flow = p >= 1 ? (t - done) * 0.3 : undefined;
+  // The stain: the line and the wall wash (wash spreads over the second half of the draw, as in the room).
+  const stain = stained ? 1 : p;
+  const wash = stained ? 1 : seg(p, 0.5, 0.85);
 
   // The route: from one head, up over the gap, to the other.
   const hy = HEAD_Y + 0.05;
@@ -111,6 +142,8 @@ export const ProfilesScene: React.FC<ProfilesSceneProps> = ({
   const dotMat = useMemo(() => new THREE.MeshBasicMaterial({color: raw(theme.orange), transparent: true}), []);
   const appear = seg(t, linkAt + 0.2, linkAt + 0.8);
   dotMat.opacity = appear * glow;
+  const washY = hy + 0.4;
+  const spin = ((turntableFrom + turntable * t) * Math.PI) / 180;
 
   return (
     <MuseumStage post={{focusY: 0.42}}>
@@ -119,17 +152,31 @@ export const ProfilesScene: React.FC<ProfilesSceneProps> = ({
         to={[0.1, 1.7, 5.75]}
         lookFrom={[0, 1.32, 0]}
         lookTo={[0, 1.32, -0.05]}
-        durationInFrames={durationInFrames}
+        durationInFrames={offAt === undefined ? durationInFrames : Math.min(durationInFrames, offAt)}
       />
       <MuseumLights target={[0, 1.2, 0]} />
+      {dust ? <DustMotes from={[1.5, 7, 3.5]} to={[0, 1.2, 0]} clockOffset={startFrame / fps} /> : null}
       <MuseumSet />
       {plate ? <WallPlate number={plate.number} title={plate.title} position={[-1.15, 0.98, -0.925]} /> : null}
-      <Bust position={[-spread, 0, 0]} pedestal={PEDESTAL} scale={SCALE} turn={0.45} />
-      <Bust position={[spread, 0, 0]} pedestal={PEDESTAL} scale={SCALE} turn={-0.45} />
+      <Bust position={[-spread, 0, 0]} pedestal={PEDESTAL} scale={SCALE} turn={0.45} spin={spin} />
+      <Bust position={[spread, 0, 0]} pedestal={PEDESTAL} scale={SCALE} turn={-0.45} spin={spin} />
       <BlobShadow position={[-spread, 0.004, 0]} size={[1.0, 1.0]} opacity={0.44} />
       <BlobShadow position={[spread, 0.004, 0]} size={[1.0, 1.0]} opacity={0.44} />
 
-      <OrangePath legs={legs} stainLegs={stainLegs} progress={p} glow={glow} flow={flow} radius={0.022} />
+      {/* the wall wash behind the busts, under the stain line: the same stain as the room's (§ 4) */}
+      <OrangeWash position={[0, washY, w - 0.001]} size={[2.4, 1.8]} amount={wash} strength={0.4} />
+      <OrangePath
+        legs={legs}
+        stainLegs={stainLegs}
+        progress={p}
+        stainProgress={stain}
+        glow={glow}
+        flow={flow}
+        radius={0.022}
+        // No light at the drawing head: the route starts on a head, and a light that close burns a
+        // near-white fleck into the plaster (review round 3). The hub light below gives the bleed.
+        runner={false}
+      />
       <OrangeLight position={hub} intensity={1.4 * seg(p, 0.4, 0.7) * glow} reach={2.4} />
 
       {dots.map((d, i) => {

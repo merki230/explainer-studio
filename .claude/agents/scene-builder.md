@@ -16,7 +16,8 @@ Follow the `new-scene` skill. In particular:
 
 - Reuse and extend what exists (Stage, CameraRig, Mannequin, Arc, LivingRoom) before writing new parts.
 - Keep everything deterministic, driven by `useCurrentFrame()` (`yarn lint` enforces this).
-- Match the look: low-poly mannequins, soft lighting, colours from `theme`.
+- Match the look in `brand/style-guide.md` (v0.8, "The Section"): cut-open slices seen from outside, the
+  recurring cast, phones facing their owners, orange only for the hidden system, colours from `theme`.
 - Make it general and driven by props, so other videos can reuse it, not just the one that asked.
 - Verify by looking: run `yarn verify`, then `yarn stills <slug> --frames=a,b,c` at the start, middle,
   and end of the scene, and read the PNGs.

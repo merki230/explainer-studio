@@ -14,11 +14,11 @@ Research citations: `brand/research/platforms.md` (P§), `brand/research/landsca
 
 ## Template
 
-### No. 000 · Exhibit Title (`<slug>`)
+### No. 000 · Title (`<slug>`)
 
 - **Published:** YYYY-MM-DD
 - **Length:** 00 s · **Words:** 000 · **Hook pattern:** (brand.md § Hook patterns, 1 to 5)
-- **Mascot:** guard present / absent · **Lens used:** yes / no
+- **Slices:** how many, which moods (Night / Day) · **Cast:** who appeared · **X-ray used:** yes / no
 - **Anything new tried:** (a rule bent on purpose, a new scene, a new hook)
 
 **Owner's notes**

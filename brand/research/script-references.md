@@ -84,7 +84,7 @@ Avoid: references to "our previous videos"; repetition; the "the question isn't 
 7. End by turning it back on the viewer: a consequence or something to notice, not a slogan.
 Talk *to* the viewer when it's their experience; narrate like a reporter when it's a story.
 Numbers: any that tell the story, each sourced (replaces "one number per video").
-No word-count target: length follows the idea (Shorts ≈ 25–45 s).
+No word-count target: length follows the idea (Shorts ≈ 25–45 s; since brand v0.7, ≈ 30–60 s, over 60 s allowed without licensed music, brand.md § Structure).
 
 ## R§4 AI patterns the owner disliked in the pilot (to ban)
 - Chains of fragments: "Same Wi-Fi. Same evening. Same couch." / "Your phone. Your laptop. Your
