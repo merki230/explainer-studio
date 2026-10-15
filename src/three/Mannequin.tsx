@@ -118,32 +118,23 @@ export const Mannequin: React.FC<{
   );
 };
 
-// Bust: a turned chest (classical bust silhouette, flattened front to back),
-// a neck, the head.
-const CHEST = (() => {
-  const profile = new THREE.SplineCurve(
-    [
-      [0.0, 0.0],
-      [0.27, 0.0],
-      [0.3, 0.08],
-      [0.3, 0.17],
-      [0.26, 0.26],
-      [0.15, 0.32],
-      [0.06, 0.345],
-      [0.0, 0.35],
-    ].map(([x, y]) => new THREE.Vector2(x, y)),
-  ).getPoints(40);
-  const g = new THREE.LatheGeometry(profile, 48);
-  g.computeVertexNormals();
-  return g;
-})();
-const BUST_PARTS: Part[] = [{geometry: CHEST, position: V(0, 0, 0)}, limb(V(0, 0.28, -0.01), V(0, 0.46, 0), 0.07)];
-const CHEST_SCALE: V3 = [1, 1, 0.55];
+// Bust: the Mannequin's own parts cut at mid-chest (torso capsule, shoulders,
+// upper-arm stubs, neck, head), so a person as an exhibit matches the room's figures.
+// Origin at the cut (the pedestal top).
+const BUST_TORSO = limb(V(0, 0.1, 0), V(0, 0.2, 0), 0.2);
+const BUST_PARTS: (Part & {scale?: V3})[] = [
+  {...BUST_TORSO, scale: [1.08, 1, 0.66]},
+  // shoulder line: a short capsule across the top of the chest
+  {...limb(V(-0.2, 0.31, -0.01), V(0.2, 0.31, -0.01), 0.085), scale: [1, 1, 0.8]},
+  ...[-1, 1].map((s) => limb(V(s * 0.27, 0.3, -0.01), V(s * 0.31, 0.085, 0.0), 0.075)), // upper-arm stubs
+  limb(V(0, 0.3, -0.01), V(0, 0.47, 0), 0.07), // neck
+];
 
 /**
- * Faceless plaster bust (shoulders, neck, head) on a rounded pedestal: a person
- * as an exhibit. Origin on the ground under the pedestal; the bust is ≈ 0.8
- * tall before `scale` (head centre at pedestal + 0.62 × scale).
+ * Faceless plaster bust (chest, shoulders, upper-arm stubs, neck, head) on a
+ * rounded pedestal: a person as an exhibit, built like the seated Mannequin.
+ * Origin on the ground under the pedestal; the bust is ≈ 0.8 tall before
+ * `scale` (head centre at pedestal + 0.62 × scale).
  */
 export const Bust: React.FC<{
   position?: V3;
@@ -176,7 +167,7 @@ export const Bust: React.FC<{
             material={material}
             position={p.position}
             quaternion={p.quaternion}
-            scale={i === 0 ? CHEST_SCALE : 1}
+            scale={p.scale ?? 1}
             castShadow
             receiveShadow
           />

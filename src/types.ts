@@ -27,8 +27,11 @@ export type SceneSpec = {
   scene: SceneName;
   cue?: string;
   start?: number;
-  /** Exhibit label at the top of the frame: serif `title` plus a small mono `text` line. */
-  chip?: {text: string; title?: string; color?: string};
+  /**
+   * Exhibit label at the top of the frame: serif `title` plus a small mono `text` line.
+   * `delay`: seconds into the scene before it enters (default 0; ≈ 1.0 on the first scene).
+   */
+  chip?: {text: string; title?: string; color?: string; delay?: number};
   /** Passed straight to the scene component. */
   props?: Record<string, unknown>;
   overlays?: OverlaySpec[];

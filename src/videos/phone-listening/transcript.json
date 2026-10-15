@@ -47,219 +47,644 @@
       "end": 3.82
     },
     {
-      "text": "So",
+      "text": "Researchers",
       "start": 4.18,
-      "end": 4.4
+      "end": 4.85
     },
     {
-      "text": "how",
-      "start": 4.44,
-      "end": 4.71
+      "text": "went",
+      "start": 4.89,
+      "end": 5.21
+    },
+    {
+      "text": "looking",
+      "start": 5.25,
+      "end": 5.72
+    },
+    {
+      "text": "for",
+      "start": 5.76,
+      "end": 6.03
+    },
+    {
+      "text": "apps",
+      "start": 6.07,
+      "end": 6.39
+    },
+    {
+      "text": "that",
+      "start": 6.43,
+      "end": 6.75
+    },
+    {
+      "text": "secretly",
+      "start": 6.79,
+      "end": 7.31
+    },
+    {
+      "text": "record",
+      "start": 7.35,
+      "end": 7.77
+    },
+    {
+      "text": "you.",
+      "start": 7.81,
+      "end": 8.08
+    },
+    {
+      "text": "They",
+      "start": 8.44,
+      "end": 8.76
+    },
+    {
+      "text": "found",
+      "start": 8.8,
+      "end": 9.17
+    },
+    {
+      "text": "none",
+      "start": 9.21,
+      "end": 9.53
+    },
+    {
+      "text": "sending",
+      "start": 9.57,
+      "end": 10.04
+    },
+    {
+      "text": "audio.",
+      "start": 10.08,
+      "end": 10.45
+    },
+    {
+      "text": "They",
+      "start": 10.81,
+      "end": 11.13
     },
     {
       "text": "did",
-      "start": 4.75,
-      "end": 5.02
+      "start": 11.17,
+      "end": 11.44
     },
     {
-      "text": "it",
-      "start": 5.06,
-      "end": 5.28
+      "text": "find",
+      "start": 11.48,
+      "end": 11.8
     },
     {
-      "text": "know",
-      "start": 5.32,
-      "end": 5.64
+      "text": "analytics",
+      "start": 11.84,
+      "end": 12.41
     },
     {
-      "text": "about",
-      "start": 5.68,
-      "end": 6.05
+      "text": "code",
+      "start": 12.45,
+      "end": 12.77
+    },
+    {
+      "text": "inside",
+      "start": 12.81,
+      "end": 13.23
+    },
+    {
+      "text": "some",
+      "start": 13.27,
+      "end": 13.59
+    },
+    {
+      "text": "apps",
+      "start": 13.63,
+      "end": 13.95
+    },
+    {
+      "text": "recording",
+      "start": 13.99,
+      "end": 14.56
     },
     {
       "text": "the",
-      "start": 6.09,
-      "end": 6.36
+      "start": 14.6,
+      "end": 14.87
     },
     {
-      "text": "coffee",
-      "start": 6.4,
-      "end": 6.82
+      "text": "screen.",
+      "start": 14.91,
+      "end": 15.33
     },
     {
-      "text": "machine?",
-      "start": 6.86,
-      "end": 7.33
+      "text": "So",
+      "start": 15.69,
+      "end": 15.91
     },
     {
-      "text": "You",
-      "start": 7.69,
-      "end": 7.96
+      "text": "how",
+      "start": 15.95,
+      "end": 16.22
     },
     {
-      "text": "never",
-      "start": 8,
-      "end": 8.37
-    },
-    {
-      "text": "searched",
-      "start": 8.41,
-      "end": 8.93
-    },
-    {
-      "text": "it.",
-      "start": 8.97,
-      "end": 9.19
-    },
-    {
-      "text": "Your",
-      "start": 9.55,
-      "end": 9.87
-    },
-    {
-      "text": "friend",
-      "start": 9.91,
-      "end": 10.33
-    },
-    {
-      "text": "did.",
-      "start": 10.37,
-      "end": 10.64
-    },
-    {
-      "text": "Same",
-      "start": 11,
-      "end": 11.32
-    },
-    {
-      "text": "Wi-Fi.",
-      "start": 11.36,
-      "end": 11.68
-    },
-    {
-      "text": "Same",
-      "start": 12.04,
-      "end": 12.36
-    },
-    {
-      "text": "evening.",
-      "start": 12.4,
-      "end": 12.87
-    },
-    {
-      "text": "Same",
-      "start": 13.23,
-      "end": 13.55
-    },
-    {
-      "text": "couch.",
-      "start": 13.59,
-      "end": 13.96
-    },
-    {
-      "text": "To",
-      "start": 14.32,
-      "end": 14.54
-    },
-    {
-      "text": "an",
-      "start": 14.58,
-      "end": 14.8
-    },
-    {
-      "text": "ad",
-      "start": 14.84,
-      "end": 15.06
-    },
-    {
-      "text": "company,",
-      "start": 15.1,
-      "end": 15.57
-    },
-    {
-      "text": "that",
-      "start": 15.77,
-      "end": 16.09
-    },
-    {
-      "text": "looks",
-      "start": 16.13,
-      "end": 16.5
-    },
-    {
-      "text": "like",
-      "start": 16.54,
-      "end": 16.86
-    },
-    {
-      "text": "one",
-      "start": 16.9,
-      "end": 17.17
-    },
-    {
-      "text": "household.",
-      "start": 17.21,
-      "end": 17.78
-    },
-    {
-      "text": "Multiply",
-      "start": 18.14,
-      "end": 18.66
-    },
-    {
-      "text": "that",
-      "start": 18.7,
-      "end": 19.02
-    },
-    {
-      "text": "by",
-      "start": 19.06,
-      "end": 19.28
-    },
-    {
-      "text": "millions",
-      "start": 19.32,
-      "end": 19.84
-    },
-    {
-      "text": "of",
-      "start": 19.88,
-      "end": 20.1
-    },
-    {
-      "text": "homes,",
-      "start": 20.14,
-      "end": 20.51
-    },
-    {
-      "text": "and",
-      "start": 20.71,
-      "end": 20.98
+      "text": "did",
+      "start": 16.26,
+      "end": 16.53
     },
     {
       "text": "it",
-      "start": 21.02,
-      "end": 21.24
+      "start": 16.57,
+      "end": 16.79
     },
     {
-      "text": "feels",
-      "start": 21.28,
-      "end": 21.65
+      "text": "know",
+      "start": 16.83,
+      "end": 17.15
+    },
+    {
+      "text": "about",
+      "start": 17.19,
+      "end": 17.56
+    },
+    {
+      "text": "the",
+      "start": 17.6,
+      "end": 17.87
+    },
+    {
+      "text": "coffee",
+      "start": 17.91,
+      "end": 18.33
+    },
+    {
+      "text": "machine?",
+      "start": 18.37,
+      "end": 18.84
+    },
+    {
+      "text": "You",
+      "start": 19.2,
+      "end": 19.47
+    },
+    {
+      "text": "never",
+      "start": 19.51,
+      "end": 19.88
+    },
+    {
+      "text": "searched",
+      "start": 19.92,
+      "end": 20.44
+    },
+    {
+      "text": "it.",
+      "start": 20.48,
+      "end": 20.7
+    },
+    {
+      "text": "Your",
+      "start": 21.06,
+      "end": 21.38
+    },
+    {
+      "text": "friend",
+      "start": 21.42,
+      "end": 21.84
+    },
+    {
+      "text": "did.",
+      "start": 21.88,
+      "end": 22.15
+    },
+    {
+      "text": "Same",
+      "start": 22.51,
+      "end": 22.83
+    },
+    {
+      "text": "Wi-Fi.",
+      "start": 22.87,
+      "end": 23.19
+    },
+    {
+      "text": "Same",
+      "start": 23.55,
+      "end": 23.87
+    },
+    {
+      "text": "evening.",
+      "start": 23.91,
+      "end": 24.38
+    },
+    {
+      "text": "Same",
+      "start": 24.74,
+      "end": 25.06
+    },
+    {
+      "text": "couch.",
+      "start": 25.1,
+      "end": 25.47
+    },
+    {
+      "text": "Every",
+      "start": 25.83,
+      "end": 26.2
+    },
+    {
+      "text": "device",
+      "start": 26.24,
+      "end": 26.66
+    },
+    {
+      "text": "on",
+      "start": 26.7,
+      "end": 26.92
+    },
+    {
+      "text": "your",
+      "start": 26.96,
+      "end": 27.28
+    },
+    {
+      "text": "Wi-Fi",
+      "start": 27.32,
+      "end": 27.64
+    },
+    {
+      "text": "often",
+      "start": 27.68,
+      "end": 28.05
+    },
+    {
+      "text": "shares",
+      "start": 28.09,
+      "end": 28.51
+    },
+    {
+      "text": "the",
+      "start": 28.55,
+      "end": 28.82
+    },
+    {
+      "text": "same",
+      "start": 28.86,
+      "end": 29.18
+    },
+    {
+      "text": "public",
+      "start": 29.22,
+      "end": 29.64
+    },
+    {
+      "text": "address.",
+      "start": 29.68,
+      "end": 30.15
+    },
+    {
+      "text": "To",
+      "start": 30.51,
+      "end": 30.73
+    },
+    {
+      "text": "an",
+      "start": 30.77,
+      "end": 30.99
+    },
+    {
+      "text": "ad",
+      "start": 31.03,
+      "end": 31.25
+    },
+    {
+      "text": "company,",
+      "start": 31.29,
+      "end": 31.76
+    },
+    {
+      "text": "that",
+      "start": 31.96,
+      "end": 32.28
+    },
+    {
+      "text": "can",
+      "start": 32.32,
+      "end": 32.59
+    },
+    {
+      "text": "look",
+      "start": 32.63,
+      "end": 32.95
     },
     {
       "text": "like",
-      "start": 21.69,
-      "end": 22.01
+      "start": 32.99,
+      "end": 33.31
+    },
+    {
+      "text": "one",
+      "start": 33.35,
+      "end": 33.62
+    },
+    {
+      "text": "household.",
+      "start": 33.66,
+      "end": 34.23
+    },
+    {
+      "text": "Your",
+      "start": 34.59,
+      "end": 34.91
+    },
+    {
+      "text": "phone.",
+      "start": 34.95,
+      "end": 35.32
+    },
+    {
+      "text": "Your",
+      "start": 35.68,
+      "end": 36
+    },
+    {
+      "text": "laptop.",
+      "start": 36.04,
+      "end": 36.46
+    },
+    {
+      "text": "Your",
+      "start": 36.82,
+      "end": 37.14
+    },
+    {
+      "text": "friend's",
+      "start": 37.18,
+      "end": 37.65
+    },
+    {
+      "text": "phone.",
+      "start": 37.69,
+      "end": 38.06
+    },
+    {
+      "text": "One",
+      "start": 38.42,
+      "end": 38.69
+    },
+    {
+      "text": "home.",
+      "start": 38.73,
+      "end": 39.05
+    },
+    {
+      "text": "Your",
+      "start": 39.41,
+      "end": 39.73
+    },
+    {
+      "text": "friend's",
+      "start": 39.77,
+      "end": 40.24
+    },
+    {
+      "text": "search",
+      "start": 40.28,
+      "end": 40.7
+    },
+    {
+      "text": "can",
+      "start": 40.74,
+      "end": 41.01
+    },
+    {
+      "text": "become",
+      "start": 41.05,
+      "end": 41.47
+    },
+    {
+      "text": "your",
+      "start": 41.51,
+      "end": 41.83
+    },
+    {
+      "text": "ad.",
+      "start": 41.87,
+      "end": 42.09
+    },
+    {
+      "text": "Companies",
+      "start": 42.45,
+      "end": 43.02
+    },
+    {
+      "text": "mix",
+      "start": 43.06,
+      "end": 43.33
+    },
+    {
+      "text": "what",
+      "start": 43.37,
+      "end": 43.69
+    },
+    {
+      "text": "you",
+      "start": 43.73,
+      "end": 44
+    },
+    {
+      "text": "log",
+      "start": 44.04,
+      "end": 44.31
+    },
+    {
+      "text": "into",
+      "start": 44.35,
+      "end": 44.67
+    },
+    {
+      "text": "with",
+      "start": 44.71,
+      "end": 45.03
+    },
+    {
+      "text": "what",
+      "start": 45.07,
+      "end": 45.39
+    },
+    {
+      "text": "they",
+      "start": 45.43,
+      "end": 45.75
+    },
+    {
+      "text": "guess.",
+      "start": 45.79,
+      "end": 46.16
+    },
+    {
+      "text": "Now",
+      "start": 46.52,
+      "end": 46.79
+    },
+    {
+      "text": "zoom",
+      "start": 46.83,
+      "end": 47.15
+    },
+    {
+      "text": "out.",
+      "start": 47.19,
+      "end": 47.46
+    },
+    {
+      "text": "One",
+      "start": 47.82,
+      "end": 48.09
+    },
+    {
+      "text": "data",
+      "start": 48.13,
+      "end": 48.45
+    },
+    {
+      "text": "company",
+      "start": 48.49,
+      "end": 48.96
+    },
+    {
+      "text": "says",
+      "start": 49,
+      "end": 49.32
+    },
+    {
+      "text": "it",
+      "start": 49.36,
+      "end": 49.58
+    },
+    {
+      "text": "has",
+      "start": 49.62,
+      "end": 49.89
+    },
+    {
+      "text": "126",
+      "start": 49.93,
+      "end": 50.2
+    },
+    {
+      "text": "million",
+      "start": 50.24,
+      "end": 50.71
+    },
+    {
+      "text": "US",
+      "start": 50.75,
+      "end": 50.97
+    },
+    {
+      "text": "households",
+      "start": 51.01,
+      "end": 51.63
+    },
+    {
+      "text": "on",
+      "start": 51.67,
+      "end": 51.89
+    },
+    {
+      "text": "its",
+      "start": 51.93,
+      "end": 52.2
+    },
+    {
+      "text": "map.",
+      "start": 52.24,
+      "end": 52.51
+    },
+    {
+      "text": "It",
+      "start": 52.87,
+      "end": 53.09
+    },
+    {
+      "text": "feels",
+      "start": 53.13,
+      "end": 53.5
+    },
+    {
+      "text": "like",
+      "start": 53.54,
+      "end": 53.86
     },
     {
       "text": "mind",
-      "start": 22.05,
-      "end": 22.37
+      "start": 53.9,
+      "end": 54.22
     },
     {
       "text": "reading.",
-      "start": 22.41,
-      "end": 22.88
+      "start": 54.26,
+      "end": 54.73
+    },
+    {
+      "text": "It",
+      "start": 55.09,
+      "end": 55.31
+    },
+    {
+      "text": "isn't.",
+      "start": 55.35,
+      "end": 55.67
+    },
+    {
+      "text": "It",
+      "start": 56.03,
+      "end": 56.25
+    },
+    {
+      "text": "doesn't",
+      "start": 56.29,
+      "end": 56.71
+    },
+    {
+      "text": "need",
+      "start": 56.75,
+      "end": 57.07
+    },
+    {
+      "text": "your",
+      "start": 57.11,
+      "end": 57.43
+    },
+    {
+      "text": "voice.",
+      "start": 57.47,
+      "end": 57.84
+    },
+    {
+      "text": "Sharing",
+      "start": 58.2,
+      "end": 58.67
+    },
+    {
+      "text": "a",
+      "start": 58.71,
+      "end": 58.88
+    },
+    {
+      "text": "Wi-Fi",
+      "start": 58.92,
+      "end": 59.24
+    },
+    {
+      "text": "can",
+      "start": 59.28,
+      "end": 59.55
+    },
+    {
+      "text": "be",
+      "start": 59.59,
+      "end": 59.81
+    },
+    {
+      "text": "enough.",
+      "start": 59.85,
+      "end": 60.27
     }
   ]
 }

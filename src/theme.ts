@@ -17,6 +17,22 @@ export const theme = {
   /** `plate` / `plate-border`: the engraved wall plate. */
   plate: '#d6cfc2',
   plateBorder: '#a79d8d',
+  /**
+   * Phone screen glass: plaster a step brighter than the body (≈ 8–10% once lit),
+   * so the screen reads as glass without UI. Review round 2.
+   */
+  plasterGlass: '#fcf7ee',
+
+  // --- gallery lights (MuseumLights only; a light colour, never a surface) ---
+  /** Skylight (hemisphere) sky and ground colours. */
+  lightSky: '#fff9f1',
+  lightGround: '#cbc2b4',
+  /** Warm key spot. */
+  lightKey: '#fff3e3',
+  /** Cool fill from the front left. */
+  lightFill: '#dfe6f2',
+  /** Back rim. */
+  lightRim: '#ffffff',
 
   // --- the one accent ---
   /** Signal orange: the hidden system. The only colour in the frame. */
@@ -53,8 +69,8 @@ export const theme = {
 export const FPS = 30;
 export const WIDTH = 1080;
 export const HEIGHT = 1920;
-// Frames of crossfade between scenes.
-export const FADE = 8;
+// Frames of crossfade between scenes (style guide § 8: 12 frames, cubic in-out).
+export const FADE = 12;
 
 /**
  * Area no platform UI (TikTok, Shorts, Reels) covers, in px of the 1080x1920 frame.

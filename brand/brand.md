@@ -1,16 +1,15 @@
-# WORKING TITLE: brand
+# Secretly Works: brand
 
-v0.1, 2026-10-15. Owner: brand-director. Changes go through `feedback.md` and are logged in `CHANGELOG.md`.
+v0.3, 2026-10-15. Owner: brand-director. Changes go through `feedback.md` and are logged in `CHANGELOG.md`.
 
 Every rule is a current default, not a law. **🧪 testing** = not yet confirmed by feedback or numbers. **✅ proven** = confirmed by feedback or numbers, or fixed by a platform rule we can't test around (marked "platform rule"). Each rule has a one-line why. Research citations point to `brand/research/landscape.md` (L§) and `brand/research/platforms.md` (P§).
 
 ## Open decisions
 
-Defaults written into this document that the owner has **not** confirmed. Each is tagged 🧪 below.
+Defaults written into this document that the owner has **not** confirmed. Each is tagged 🧪 below. Numbers are stable: 1 (channel name) was settled on 2026-10-15 (§ Name) and is not reused.
 
 | # | Decision | Default in this doc | What would settle it |
 |---|---|---|---|
-| 1 | Channel name | "WORKING TITLE" everywhere | Owner picks from the candidate table (§ Name); handles checked in-app on all three platforms |
 | 2 | Mascot | The night guard (§ Mascot); alternative: no mascot | Build one exhibit with and one without; compare swipe-away and comments |
 | 3 | Length | ≤ 59 s | Revisit when TikTok Creator Rewards (≥ 1 min) is in reach, and only with zero-Content-ID music (P§3, rule 10) |
 | 4 | AI-voice label | On, on all three platforms | Platform rule on Instagram; safe reading on TikTok and YouTube (P§6) |
@@ -20,7 +19,7 @@ Defaults written into this document that the owner has **not** confirmed. Each i
 
 ## Promise and positioning
 
-**One sentence.** WORKING TITLE shows how everyday things secretly work: each video is one numbered exhibit in a silent plaster museum where the hidden system is the only thing with colour.
+**One sentence.** Secretly Works shows how everyday things secretly work: each video is one numbered exhibit in a silent plaster museum where the hidden system is the only thing with colour.
 
 | Element | Rule | Why | Status |
 |---|---|---|---|
@@ -114,8 +113,10 @@ The last line must read naturally when followed by the first line. Test: read pa
 |---|---|---|
 | Format | `No. 014 · The Living Room` | Mock-up value; reads as a museum label |
 | Number | Three digits, zero-padded, in publication order. Starts at 001. Never reused, even if a video is pulled. | Makes the catalogue browsable; a gap is honest |
+| The pilot | `phone-listening` is **No. 001**. Numbering starts there, in publication order. ✅ owner decision, 2026-10-15 | The first exhibit sets the count; "No. 014" in the rows above and in the style guide is a mock-up value, not the pilot's number |
 | Title | The place or object where the hidden system lives, 1 to 3 words, Title Case, usually "The …". The living room, the receipt, the elevator, the loyalty card. Never the system itself ("Cross-device tracking") and never a question. | The title is the exhibit; the system is the surprise |
-| Sub-line (on the exhibit label) | `EXHIBIT · 2 A.M.` style: the word EXHIBIT, a middle dot, then one short context (time of day or one-word category), uppercase, ≤ 18 characters | Mock-up value |
+| Sub-line (on the exhibit label) | `EXHIBIT · EVENING` style: the word EXHIBIT, a middle dot, then one short context that names a **place, time or category**, uppercase, ≤ 18 characters. It **stays the same across consecutive scenes of the same type** (what the shot is about: the phone, the evening room, the household, the scale; not the scene component, so 6a `profiles` and 6b `room` share `ONE HOME`) and changes only where the type changes. No. 001: scenes 1 to 3 `A PHONE`, 4a to 5b `EVENING`, 6a to 7 `ONE HOME`, 8 `SCALE`, 9a `A PHONE`, 9b `EVENING` | A sub-line that changes on every cut draws over the old one mid-dissolve (style-guide § 7); one context per stretch reads as a museum room, not a caption |
+| Label timing | The first scene's label enters at **≈ 1 s** (`chip.delay: 1.0`), never in the first second; every other scene's label enters with its scene. The title stays the same through the whole video | § Structure, Hook: the first frame is the exhibit, not text |
 | Video slug | `src/videos/<slug>/` keeps its plain-English slug (`phone-listening`); the exhibit number lives in `spec.ts` / `publish.md` | Slugs are for the team; numbers are for viewers |
 | Platform title | YouTube title ≤ 100 chars, hook in the first 40, number optional at the end: "Your phone isn't listening. Probably not. · No. 014" | P§3 title limit; P rules 13 |
 
@@ -127,26 +128,29 @@ The last line must read naturally when followed by the first line. Test: read pa
 - AI-voice label on, on all three platforms (P§6; Instagram lists "a reel narrated with a realistic AI-generated voiceover" as requiring a label). ✅ platform rule.
 - Never invent a URL, a quote, or a study. A claim with no source does not get spoken.
 
-## Name candidates 🧪
+## Name
 
-Do not check handles from this document; the landscape check was YouTube-only and dated 2026-10-15 (L§6). TikTok could not be verified at all. Check all three in-app before choosing.
+**Secretly Works.** Handle **`@secretlyworks`** on every platform. ✅ owner decision, 2026-10-15. The name states the promise ("how everyday things secretly work"); the museum is carried by the look, not the name. The accounts found in the landscape check (L§6, rows 1 and 2) are the owner's own.
 
-| Candidate | Fit with the museum | Availability (L§6) |
+| Platform | Handle | Status |
 |---|---|---|
-| How Things Secretly Work | Clearest promise; says nothing about the museum, which is fine as the look says it | Free on YouTube, probably free on IG; TikTok unverified |
-| Moonlit Mechanics | Written for the rejected navy "night shift" look; "mechanics" points at machines, our lane is systems | Free on YouTube, probably free on IG; TikTok unverified |
-| Backstage of Everything | Good promise, but "backstage" is a theatre image, not a museum | Free on YouTube, probably free on IG; TikTok unverified |
-| The Hidden Exhibit | Names the device directly; each video *is* a hidden exhibit; risks sounding like an art account | **Unchecked** |
-| Museum of Everyday Things | Says museum and topic in one breath; long handle (`@museumofeverydaythings` is 23 chars) | **Unchecked** |
+| Instagram | `@secretlyworks` | ✅ owned (existing account, display name "Secretly Works \| Tech in 3D", 3 followers) |
+| YouTube | `@secretlyworks` | ✅ owned (existing channel "Secretly Works") |
+| YouTube, spare | `@howitsecretlyworks` | ✅ owned. Not the channel name; keep it parked so nobody else takes it |
+| TikTok | `@secretlyworks` | ⏳ **to check in-app** (L§6: TikTok could not be verified from outside). The one open item. If taken, fall back to `@howitsecretlyworks` and say so here |
 
-Avoid: Hidden Mechanics (existing brand with a domain, L§6). Confirm whether `@secretlyworks` and `@howitsecretlyworks` are the owner's own placeholders (L§6).
+**Instagram bio to update.** Current: "Everyday tech, opened up in 3D" (too narrow: the topic is everyday things, not only tech, § Promise). Proposed, 83 characters, 🧪 until the owner approves:
+
+> How everyday things secretly work. One 3D exhibit at a time, sources in every post.
+
+The display-name tag "Tech in 3D" narrows the topic the same way; "Secretly Works" alone, or "Secretly Works | Hidden systems in 3D", would fit the positioning. Owner's call, not blocking.
 
 ## What we never do
 
 | Never | Why | Status |
 |---|---|---|
 | A second accent colour. Orange is the only colour in the frame, whatever the system (data, money, heat). | One colour is the identity; multi-accent was the rejected navy direction | 🧪 |
-| Clipped whites. Plaster peaks at 85 to 90%. | Owner rejected a brighter version as "too bright"; style-guide § Light | ✅ owner feedback |
+| Clipped whites. Measured per style-guide § 2: p95 ≤ 90%, brightest plaster ≤ 96%, no pixel at 255. Brightness is not raised from the built values. | Owner rejected a brighter version as "too bright", then approved the built renders on 2026-10-15 (p95 ≈ 88%, brightest plaster 94.9 to 95.7%, nothing at 255) | ✅ owner feedback (the look); 🧪 thresholds |
 | A title card, logo sting, or the guard in the first 3 s. | L§3: branded intros hurt swipe rate | 🧪 |
 | A mascot that talks, or a script line addressed to it. | Silent witness only | 🧪 |
 | Realistic humans or faces. Figures are faceless plaster. | L§4: sidestep the uncanny and the AI-slop association | 🧪 |

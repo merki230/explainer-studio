@@ -185,3 +185,30 @@ export const washTexture = () =>
       [1, 0],
     ],
   );
+
+/**
+ * Soft horizontal band for a scan line: a 1 × 64 alpha ramp, transparent at the
+ * top, rising to full near the bottom edge (the leading edge of a downward
+ * sweep), then a short fade. Orange; computed, so identical on every render.
+ */
+export const scanTexture = () =>
+  memo('scan', () => {
+    const N = 64;
+    const data = new Uint8Array(N * 4);
+    for (let j = 0; j < N; j++) {
+      // v = 0 at the bottom row of the texture
+      const v = (j + 0.5) / N;
+      const lead = Math.min(1, v / 0.14);
+      const trail = Math.pow(Math.max(0, 1 - (v - 0.14) / 0.86), 2.2);
+      const a = v < 0.14 ? lead * lead * (3 - 2 * lead) : trail;
+      data[j * 4] = 255;
+      data[j * 4 + 1] = 91;
+      data[j * 4 + 2] = 20;
+      data[j * 4 + 3] = Math.round(a * 255);
+    }
+    const tex = new THREE.DataTexture(data, 1, N, THREE.RGBAFormat);
+    tex.magFilter = THREE.LinearFilter;
+    tex.minFilter = THREE.LinearFilter;
+    tex.needsUpdate = true;
+    return tex;
+  });

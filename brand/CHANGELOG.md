@@ -2,6 +2,43 @@
 
 Every change to `brand.md` or `style-guide.md` gets a line here: date, what changed, why (pointing to a `feedback.md` entry or a research section). Nothing changes silently.
 
+## v0.4 · 2026-10-15 · Reconciled with the Exhibit No. 001 build (scene-builder review round 2)
+
+Every value below was read in code (`theme.ts`, `MuseumPost.tsx`, `MuseumStage.tsx`, `LivingRoom.tsx`, `PhoneScene.tsx`, `RoomScene.tsx`, `ProfilesScene.tsx`, `Mannequin.tsx`, `Chip.tsx`, `AdCard.tsx`, `Explainer.tsx`, `phone-listening/spec.ts`). The look is unchanged; nothing new moves to ✅.
+
+**1. Whites rule made measurable** (style-guide § 2, checklist 1; brand.md § What we never do)
+- v0.3's "brightest plaster 85 to 90% (RGB 217 to 230), nothing clipped" named no method. Measured with numpy on the approved build (scene-builder): p95 ≈ 88%, but the brightest near-neutral plaster is 242 to 244 (94.9 to 95.7%), and no pixel is 255. The old number was a p95, not a maximum, so the approved stills broke the rule as written.
+- New rule, on a full-scale still with cards, captions and glow masked, Rec. 709 luma: **p95 ≤ 90%, brightest near-neutral pixel (max − min channel ≤ 30) ≤ 96%, zero pixels at 255,255,255**. The look stays ✅ owner feedback; the thresholds are 🧪 (set on one build).
+- Checked in `MuseumPost`: the shoulder is linear (keeps 45% above 0.82 after × 0.86), not an asymptote, so it does not stop clipping. Lit 1.0 → 0.838; the approved 95.7% needs ≈ 1.31 in; 255 needs ≈ 1.42 (≈ 8% headroom). v0.3's "pure white lands at ≈ 0.90" was wrong and is removed.
+
+**2. Tokens** (§ 1, § 2, § 3): `plasterGlass #fcf7ee` (screen glass, roughness 0.7, lit +9.3% over body plaster; the screen is no longer `plasterShade`); `lightSky`, `lightGround`, `lightKey`, `lightFill`, `lightRim` (closes the v0.2 "guide wins" item). Every colour in the guide now names a token. `plasterFloor` also used for the phone lens; `plasterShade` for earpiece, home bar, lens ring, keyboard well.
+
+**3. Phone exhibit** (§ 3, § 4, § 8): phone detail (lens ring, earpiece without shadow, side button, home bar); camera presets `front` → `close` → `screen`, each starting where the previous ends; route core **0.012** at phone distance (0.02 is for the room at ≈ 6 units: scale with distance); new § 4 row **Screen recording**: edge trace 1.2 s, scan band every 1.5 s, outbound route 0.8 s with no stain, edge glow holds 1 s then fades to a stain frame (radius 0.007) that `screenStain` carries into later shots.
+
+**4. Living room** (§ 3, § 4, § 6, § 7, § 8): plaster laptop on the table (lid open, screen to camera, bleed 0.3); `devicesAt` (flicker ≈ 0.5 s, ramp 0.3 s, hold); `householdAt` (router bleed ×1.35, wash 0.40 → 0.50, LED grows; only brightens); camera `devices`. Plate 0.40 × 0.22 at two `ROOM.plateSpots` (−0.87, 1.95) and (−0.68, 2.3), auto-picked per shot to stay inside x 120 to 888 and off the label. Plate only on wide shots (No. 001: 4a, 9b), 🧪.
+
+**5. Overlays and figures** (§ 1, § 3, § 5, § 7): ad-card icon is an outlined plaster mug (SVG, `plaster` fill, `inkMuted` stroke) on the `plasterShade` square; `Chip` `delay` (scene 1 uses 1.0 s, so "no label text in the first second" is now built; closes the v0.2 item); `Chip` skips its entry when the label equals the previous scene's; `Bust` rebuilt from Mannequin parts, pedestal 0.8 → 0.7.
+
+**6. Crossfade reconciled** (§ 8): `FADE` 12 and `Easing.inOut(Easing.cubic)` now in code; closes the v0.2 item. Known limit recorded in § 7: the outgoing scene stays opaque under the dissolve, so two different labels draw over each other for 12 frames. Rule for the director, 🧪: prefer identical label text across a crossfade (checklist 8).
+
+**7. Label sub-line** (brand.md § Naming; style-guide § 5): the sub-line names a place, time or category and **stays the same across consecutive scenes of the same type**, changing only where the type changes (No. 001: 1 to 3 `A PHONE`, 4a to 5b `EVENING`, 6a to 7 `ONE HOME`, 8 `SCALE`, 9a `A PHONE`, 9b `EVENING`), as the director aligned it. New row: the first scene's label enters at ≈ 1 s. Both 🧪. Example sub-line in the guide changed from "2 A.M." to "EVENING".
+
+## v0.3 · 2026-10-15 · Three owner decisions: name, brightness, pilot number
+
+All three came from the owner directly (no `feedback.md` entry yet; the pilot is not published).
+
+**1. Name: Secretly Works, `@secretlyworks`** (brand.md title, § Promise, § Name, Open decisions; style-guide.md title)
+- "WORKING TITLE" replaced by "Secretly Works" everywhere in `brand/` except the v0.1 history below, which describes the placeholder as it was.
+- § Name candidates replaced by a short § Name: the chosen name, handles per platform with status. The Instagram account (`@secretlyworks`, "Secretly Works | Tech in 3D") and both YouTube channels (`@secretlyworks`, `@howitsecretlyworks`) are the owner's own, so the "possibly the owner's placeholder" rows in `research/landscape.md` §6 are confirmed. **One open item: the TikTok handle still needs an in-app check** (it could not be verified from outside, L§6).
+- Proposed Instagram bio, 🧪 until approved: "How everyday things secretly work. One 3D exhibit at a time, sources in every post." (83 characters; the current "Everyday tech, opened up in 3D" narrows the topic to tech).
+- Open decisions: row 1 removed; rows keep their numbers so "Open decision 3 / 5" references in both documents still resolve.
+
+**2. Brightness as built is approved** (style-guide.md § 2; brand.md § What we never do)
+- Owner looked at the current renders (walls ≈ 70 to 80%, plaster highlights ≈ 88 to 90%, nothing clipped) and said it is right. Skylight 0.42, exposure 0.86, shoulder 0.82, vignette 0.34 and the 85 to 90% ceiling move from 🧪 to **✅ owner feedback**, as one rule "Brightness, as built", plus the vignette and skylight rows. **Don't raise brightness in future.** Every other rule stays 🧪.
+
+**3. Pilot approved as Exhibit No. 001** (brand.md § Naming of exhibits)
+- `phone-listening` is No. 001; numbering starts there in publication order. "No. 014" stays in the examples as a mock-up value. The pilot's `spec.ts` (chip and plate) still says No. 014; that is the director's change, listed in the report.
+
 ## v0.2 · 2026-10-15 · Reconciled with the R3F build (scene-builder review round 1)
 
 The scene-builder ported the Plaster Museum to `src/` and had to tune several values by eye. Every value below was verified in code before the guide changed. Where the built value won it is adopted (🧪); where the guide wins, the code change is listed at the end for the scene-builder. No owner feedback yet, so nothing moves to ✅ except studio rules.

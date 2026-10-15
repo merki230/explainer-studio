@@ -61,10 +61,10 @@ export const MuseumLights: React.FC<{
   const lights = useMemo(() => {
     const k = intensity * Math.PI;
     // Skylight 0.42 (guide: 0.34): the wide shot read muddy at the top and sides.
-    const hemi = new THREE.HemisphereLight(raw('#fff9f1'), raw('#cbc2b4'), 0.42 * k);
+    const hemi = new THREE.HemisphereLight(raw(theme.lightSky), raw(theme.lightGround), 0.42 * k);
     // Penumbra here is the cone's light falloff, not shadow softness: keep 0.75
     // (0.95 dims everything off-axis). Soft shadow edges come from shadow.radius.
-    const key = new THREE.SpotLight(raw('#fff3e3'), 1.0 * k, 0, 0.5, 0.75, 0);
+    const key = new THREE.SpotLight(raw(theme.lightKey), 1.0 * k, 0, 0.5, 0.75, 0);
     key.castShadow = true;
     key.shadow.mapSize.set(2048, 2048);
     // Soft edges, and no shadow acne (hatching) on curved plaster.
@@ -73,9 +73,9 @@ export const MuseumLights: React.FC<{
     key.shadow.normalBias = 0.02;
     key.shadow.camera.near = 1;
     key.shadow.camera.far = 20;
-    const fill = new THREE.DirectionalLight(raw('#dfe6f2'), 0.15 * k);
+    const fill = new THREE.DirectionalLight(raw(theme.lightFill), 0.15 * k);
     fill.position.set(-4, 3, 4);
-    const rim = new THREE.DirectionalLight(raw('#ffffff'), 0.2 * k);
+    const rim = new THREE.DirectionalLight(raw(theme.lightRim), 0.2 * k);
     rim.position.set(0, 4, -5);
     return {hemi, key, fill, rim};
   }, [intensity]);

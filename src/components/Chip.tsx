@@ -13,13 +13,17 @@ export type ChipProps = {
   color?: string;
   /** Distance from the top of the frame in px. */
   top?: number;
+  /** Seconds into the scene before the label enters (e.g. 1.0 on a video's first scene: no text in the first second). */
+  delay?: number;
+  /** Play the slide/fade entry. Set false when the previous scene shows the same label, so a crossfade doesn't double it. */
+  animate?: boolean;
 };
 
 /** Exhibit label: a small plaster card pinned near the top, inside the platform safe zone. */
-export const Chip: React.FC<ChipProps> = ({text, title, color, top = 340}) => {
+export const Chip: React.FC<ChipProps> = ({text, title, color, top = 340, delay = 0, animate = true}) => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
-  const enter = spring({frame: frame - 4, fps, config: {damping: 20}});
+  const enter = animate ? spring({frame: frame - 4 - Math.round(delay * fps), fps, config: {damping: 20}}) : 1;
 
   const mono = (
     <span

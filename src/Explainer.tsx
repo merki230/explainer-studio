@@ -1,5 +1,5 @@
 import React, {useMemo} from 'react';
-import {AbsoluteFill, Audio, interpolate, Sequence, staticFile, useCurrentFrame} from 'remotion';
+import {AbsoluteFill, Audio, Easing, interpolate, Sequence, staticFile, useCurrentFrame} from 'remotion';
 import {AdCard} from './components/AdCard';
 import {Callout} from './components/Callout';
 import {Captions} from './components/Captions';
@@ -27,7 +27,9 @@ export const timelineFor = (videoId: string) => {
 
 const FadeIn: React.FC<{children: React.ReactNode; enabled: boolean}> = ({children, enabled}) => {
   const frame = useCurrentFrame();
-  const opacity = enabled ? interpolate(frame, [0, FADE], [0, 1], {extrapolateRight: 'clamp'}) : 1;
+  const opacity = enabled
+    ? interpolate(frame, [0, FADE], [0, 1], {extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)})
+    : 1;
   return <AbsoluteFill style={{opacity}}>{children}</AbsoluteFill>;
 };
 
@@ -64,6 +66,11 @@ const Watermark: React.FC<{text: string}> = ({text}) => (
   </div>
 );
 
+type ChipSpec = {text: string; title?: string; color?: string};
+/** Same visible label (delay doesn't change what's shown). */
+const sameChip = (a?: ChipSpec, b?: ChipSpec) =>
+  !!a && !!b && a.text === b.text && a.title === b.title && a.color === b.color;
+
 export const Explainer: React.FC<ExplainerProps> = ({videoId}) => {
   const {spec: video, transcript} = getVideo(videoId);
   const timeline = useMemo(() => timelineFor(videoId), [videoId]);
@@ -79,7 +86,7 @@ export const Explainer: React.FC<ExplainerProps> = ({videoId}) => {
           <Sequence key={i} from={s.startFrame} durationInFrames={duration} name={`${i + 1}. ${s.scene}`}>
             <FadeIn enabled={i > 0}>
               <Scene durationInFrames={duration} {...s.props} />
-              {s.chip ? <Chip {...s.chip} /> : null}
+              {s.chip ? <Chip {...s.chip} animate={!sameChip(timeline.scenes[i - 1]?.chip, s.chip)} /> : null}
               {s.overlays.map((o, k) => (
                 <Sequence key={k} from={o.startFrame - s.startFrame} name={o.type}>
                   <Overlay o={o} />

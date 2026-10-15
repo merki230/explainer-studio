@@ -34,7 +34,8 @@ const seg = (x: number, a: number, b: number) =>
     easing: Easing.inOut(Easing.cubic),
   });
 
-const PEDESTAL = 0.8;
+// 0.7 (was 0.8): the shoulders sit below the caption line, not across it (review round 2).
+const PEDESTAL = 0.7;
 const SCALE = 1.2;
 /** Head centre height of a Bust with this pedestal and scale. */
 const HEAD_Y = PEDESTAL + 0.62 * SCALE;
