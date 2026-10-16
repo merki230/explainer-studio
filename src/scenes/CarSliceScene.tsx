@@ -16,7 +16,7 @@ import {SectionLights, SectionStage} from '../three/section/SectionStage';
 import {skyTexture} from '../three/section/textures';
 import {useFontsLoaded} from '../three/section/useFontsLoaded';
 import {RadioPulse, WireWind} from '../three/TirePieces';
-import {ease, integrateSpeed, type SpeedKey} from './keyframes';
+import {ease, framingAtKeys, integrateSpeed, type CameraKey, type SpeedKey} from './keyframes';
 
 type V3 = [number, number, number];
 export type WheelId = 'FL' | 'FR' | 'RL' | 'RR';
@@ -62,6 +62,12 @@ export type CarSliceSceneProps = {
   framing?: CarFraming;
   /** A custom move instead of a preset (look-at + distance at the fixed angle). */
   camera?: {from: Framing; to?: Framing};
+  /**
+   * Camera keyframes: from the scene's starting framing (`camera.from` or the preset) the camera eases
+   * to each key's framing, arriving at its `at` (s), and holds after the last. Overrides `camera`,
+   * `push` and the glide in (`cameraFrom`, `cameraGlide`).
+   */
+  cameraKeys?: CameraKey[];
   /** Push toward the subject, units/s (default 0.04). */
   push?: number;
   /** Idle sideways drift, ± units (default 0.08). */
@@ -100,7 +106,17 @@ export type CarSliceSceneProps = {
   cameraGlide?: number;
 };
 
-const carCameraMove = (p: Partial<CarSliceSceneProps>, durationInFrames: number, fps: number) => {
+const carCameraMove = (
+  p: Partial<CarSliceSceneProps>,
+  durationInFrames: number,
+  fps: number,
+  frame?: number,
+): {from: Framing; to: Framing; pre?: {from: Framing; hold: number; move: number; ease: 'cubic'}} => {
+  if (p.cameraKeys && p.cameraKeys.length) {
+    const base = p.camera?.from ?? CAR_FRAMINGS[p.framing ?? 'wide'] ?? CAR_FRAMINGS.wide;
+    const f = framingAtKeys(p.cameraKeys, base, frame === undefined ? Infinity : frame / fps);
+    return {from: f, to: f};
+  }
   const push = p.push ?? 0.04;
   const pre =
     p.cameraGlide && p.cameraFrom
@@ -116,11 +132,11 @@ const carCameraMove = (p: Partial<CarSliceSceneProps>, durationInFrames: number,
 };
 
 export const carCameraStart = (p: Partial<CarSliceSceneProps>, d: number, fps: number): Framing =>
-  carCameraMove({...p, cameraFrom: undefined, cameraGlide: undefined}, d, fps).from;
+  carCameraMove({...p, cameraFrom: undefined, cameraGlide: undefined}, d, fps, 0).from;
 export const carCameraEnd = (p: Partial<CarSliceSceneProps>, d: number, fps: number): Framing => carCameraMove(p, d, fps).to;
 
 const cameraAtFrame = (p: Partial<CarSliceSceneProps>, o: {frame: number; fps: number; durationInFrames: number}) => {
-  const {from, to, pre} = carCameraMove(p, o.durationInFrames, o.fps);
+  const {from, to, pre} = carCameraMove(p, o.durationInFrames, o.fps, o.frame);
   return sectionCameraAt({
     from,
     to,
@@ -192,7 +208,10 @@ const sensorNode = (p: Partial<CarSliceSceneProps>, id: WheelId, t: number): V3 
 const routeFor = (id: WheelId, from: V3): V3[][] => {
   const w = WHEELS[id];
   const [rx, ry, rz] = C.receiver;
-  return [[from, [w.x * 0.92, 0.95, w.z * 0.75], [(w.x + rx) / 2, 1.0, (w.z + rz) / 2], [rx, ry + 0.035, rz]]];
+  // a low arc through the body and along the cabin floor, under the seat cushions, so the route's glow
+  // stays on the system and off the seats (§ 5): out of the wheel arch, along the floor, up to the receiver
+  if (w.x > 0) return [[from, [1.02, 0.62, w.z * 0.8], [(1.02 + rx) / 2 + 0.05, 0.56, (w.z * 0.8 + rz) / 2], [rx, ry + 0.035, rz]]];
+  return [[from, [-0.8, 0.55, w.z * 0.8], [0.0, 0.48, (w.z * 0.8 + rz) / 2], [rx, ry + 0.035, rz]]];
 };
 
 /** A pulse's state at t: route progress, glow, and whether it's live. */
@@ -307,7 +326,7 @@ export const CarSliceScene: React.FC<CarSliceSceneProps> = (props) => {
   const t = frame / fps;
   const m = MOODS[mood];
   const sensors = variant === 'sensors';
-  const {from, to, pre} = carCameraMove(props, durationInFrames, fps);
+  const {from, to, pre} = carCameraMove(props, durationInFrames, fps, frame);
 
   const mats = useMemo(() => {
     const road = new THREE.MeshStandardMaterial({color: raw('#ffffff'), roughness: 0.92, map: roadTexture(mood)});
@@ -402,6 +421,8 @@ export const CarSliceScene: React.FC<CarSliceSceneProps> = (props) => {
         {(Object.keys(WHEELS) as WheelId[]).map((id) => {
           const w = WHEELS[id];
           const spin = wheelRevs(props, id, t) * Math.PI * 2;
+          // the turn while the shutter is open (half a frame): the wheel's motion blur
+          const blur = (wheelRevs(props, id, t + 0.25 / fps) - wheelRevs(props, id, t - 0.25 / fps)) * Math.PI * 2;
           const cutNear = w.near && sensors;
           return (
             <RealWheel
@@ -412,6 +433,7 @@ export const CarSliceScene: React.FC<CarSliceSceneProps> = (props) => {
               radius={R}
               cut={cutNear ? 'mid' : 'none'}
               spin={w.near ? -spin : spin}
+              motionBlur={w.near ? -blur : blur}
               pressure={lowWheel === id ? 1 - 0.25 * lowK : 1}
               low={!w.near}
               axle

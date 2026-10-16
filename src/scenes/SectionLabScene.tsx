@@ -46,9 +46,10 @@ export type SectionLabSceneProps = {
   dressing?: 'apps' | 'tire-bay';
   /**
    * The tire bay: `rows` ({label, low: wheel indices 0–7, lowAt: s}, top shelf first), `gaugeAt` (s, or
-   * null), `lowPressure` (default 0.7). Default rows: "WITHOUT THE WARNING" with wheels 2 and 6 low,
-   * "WITH THE WARNING" with wheel 4 low (🎭 2 of 8 vs 1 of 8); they sag only at the 'bench' framing,
-   * at 0.6 s and 2.9 s, unless `rows` sets `lowAt`.
+   * null), `lowPressure` (default 0.7). Default rows: "WITHOUT THE WARNING" with wheels 2 and 5 low,
+   * "WITH THE WARNING" with wheel 4 low (🎭 2 of 8 vs 1 of 8); they sag only in the result beat (the
+   * 'bench' framing, or a tire-bay scene continuing from the previous one), at 0.6 s and 2.9 s,
+   * unless `rows` sets `lowAt`.
    */
   tireBay?: Partial<TireBayProps>;
   /** Screen-space ambient occlusion (N8AO) at the mood's strength. Default: follows `realism`. */
@@ -161,15 +162,17 @@ export const SectionLabScene: React.FC<SectionLabSceneProps> = ({
         realism={realism}
         dressing={dressing}
         tireBay={{
+          // the result beat: the 'bench' framing, or any tire-bay scene that continues from the one
+          // before it (a custom move gliding in from the first Lab scene)
           rows:
-            camera === 'bench'
+            camera === 'bench' || cameraFrom !== undefined
               ? [
                   {...DEFAULT_ROWS[0], lowAt: 0.6},
                   {...DEFAULT_ROWS[1], lowAt: 2.9},
                 ]
               : DEFAULT_ROWS,
           // the extras are already at the valves after the first Lab scene
-          gaugeAt: camera === 'bench' ? -1 : 0.4,
+          gaugeAt: camera === 'bench' || cameraFrom !== undefined ? -1 : 0.4,
           ...tireBay,
         }}
       />

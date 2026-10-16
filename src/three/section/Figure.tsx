@@ -142,7 +142,16 @@ export type FigureProps = {
    * steering wheel, a gauge. The arms solve to them (two-bone IK).
    */
   hands?: [V3, V3];
+  /**
+   * 'sit' (default: the rest pose, seat height ≈ 0.57) or 'stand': the legs straighten under the
+   * hips (a slight knee bend), the body rises by the thigh's length, the feet flat on the ground.
+   * `hands` stay figure-local (origin on the ground), so they follow.
+   */
+  stance?: 'sit' | 'stand';
 };
+
+/** How far the body rises standing up (the thigh's length): the seated hip at 0.6 → 1.07. */
+export const STAND_LIFT = 0.47;
 
 /**
  * A member of the cast, seated (style guide v0.8 § 8): the Mannequin rig (rig.ts) in everyday
@@ -165,8 +174,11 @@ export const Figure: React.FC<FigureProps> = ({
   life = true,
   clockOffset = 0,
   hands,
+  stance = 'sit',
 }) => {
   const frame = useCurrentFrame();
+  const stand = stance === 'stand';
+  const lift = stand ? STAND_LIFT : 0;
   const {fps} = useVideoConfig();
   const t = frame / fps;
   const clock = t + clockOffset;
@@ -252,7 +264,7 @@ export const Figure: React.FC<FigureProps> = ({
       .applyQuaternion(spineQ.clone().invert())
       .sub(REST.chest.clone().sub(REST.spine))
       .applyQuaternion(chestQ.clone().invert());
-  const grips = hands ? [toChest(hands[0]), toChest(hands[1])] : ph.grips;
+  const grips = hands ? [toChest([hands[0][0], hands[0][1] - lift, hands[0][2]]), toChest([hands[1][0], hands[1][1] - lift, hands[1][2]])] : ph.grips;
   const arms = [0, 1].map((i) => {
     const s = i === 0 ? -1 : 1;
     const shoulder = REST.shoulder(s)
@@ -278,13 +290,17 @@ export const Figure: React.FC<FigureProps> = ({
   const c = REST.headCentre;
   return (
     <group position={position} rotation={[0, rotationY, 0]}>
-      <group position={REST.pelvis}>
+      <group position={[REST.pelvis.x, REST.pelvis.y + lift, REST.pelvis.z]}>
         {P.side.map((side) => (
-          <group key={side.s} position={rel(REST.hip(side.s), REST.pelvis)} rotation={[0, idle.hipYaw * L, 0]}>
+          <group
+            key={side.s}
+            position={rel(REST.hip(side.s), REST.pelvis)}
+            rotation={[stand ? Math.PI / 2 - 0.06 : 0, idle.hipYaw * L * (stand ? 0.3 : 1), 0]}
+          >
             <PartMesh part={side.thigh} material={mats.bottom} />
-            <group position={rel(REST.knee(side.s), REST.hip(side.s))}>
+            <group position={rel(REST.knee(side.s), REST.hip(side.s))} rotation={[stand ? -Math.PI / 2 + 0.12 : 0, 0, 0]}>
               <PartMesh part={side.shin} material={mats.bottom} />
-              <group position={rel(REST.ankle(side.s), REST.knee(side.s))}>
+              <group position={rel(REST.ankle(side.s), REST.knee(side.s))} rotation={[stand ? -0.06 : 0, 0, 0]}>
                 <PartMesh part={side.foot} material={mats.shoe} />
               </group>
             </group>

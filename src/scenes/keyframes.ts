@@ -38,3 +38,44 @@ export const keyed = (keys: {at: number; value: number}[] | undefined, t: number
   }
   return ks[ks.length - 1].value;
 };
+
+type V3 = [number, number, number];
+
+/**
+ * A camera keyframe (wheel and car slices): the camera eases from the previous framing to this one,
+ * arriving at `at` seconds into the scene, then holds until the next key. `ease`: 'inOut' (cubic,
+ * default), 'out' (cubic ease-out: moves from the first frame, settles gently) or 'sine' (sine in-out).
+ */
+export type CameraKey = {at: number; look: V3; distance: number; ease?: 'out' | 'inOut' | 'sine'};
+
+const EASES = {
+  inOut: Easing.inOut(Easing.cubic),
+  out: Easing.out(Easing.cubic),
+  sine: Easing.inOut(Easing.sin),
+};
+
+/**
+ * The framing at `t` from camera keys. The first segment starts at 0 from `base` (the scene's own
+ * starting framing); a key at ≤ 0 is where the scene starts. After the last key the camera holds.
+ */
+export const framingAtKeys = (keys: CameraKey[], base: {look: V3; distance: number}, t: number): {look: V3; distance: number} => {
+  const ks = [...keys].sort((a, b) => a.at - b.at);
+  let prev = {look: base.look, distance: base.distance};
+  let t0 = 0;
+  for (const k of ks) {
+    if (k.at <= t0 + 1e-6 && k.at <= 0) {
+      prev = {look: k.look, distance: k.distance};
+      continue;
+    }
+    if (t < k.at) {
+      const u = interpolate(t, [t0, k.at], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: EASES[k.ease ?? 'inOut']});
+      return {
+        look: prev.look.map((v, i) => v + (k.look[i] - v) * u) as V3,
+        distance: prev.distance + (k.distance - prev.distance) * u,
+      };
+    }
+    prev = {look: k.look, distance: k.distance};
+    t0 = k.at;
+  }
+  return prev;
+};

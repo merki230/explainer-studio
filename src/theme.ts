@@ -360,11 +360,22 @@ export const REAL = {
   tire: '#2b2c30',
   liner: '#3a3c41',
   rim: '#b3b7bd',
-  rotor: '#7c8087',
+  rotor: '#8c9097',
   valve: '#1d1e21',
   brass: '#a8955f',
+  /** Two-tone alloy (polish round 1): the machined spoke faces and lip, the painted gunmetal pockets. */
+  rimMachined: '#c8ccd2',
+  rimPaint: '#6b7078',
+  /** The brake caliper (painted, fixed) and the lug nuts' chrome. */
+  caliper: '#383b41',
+  chrome: '#c4c8cd',
+  /** The valve stem's anodised aluminium (clamp-in TPMS stem) and its rubber grommet. */
+  stemAlu: '#9ea3aa',
+  grommet: '#202124',
   /** The tire sensor: grey plastic housing, steel coin cell, its label ink, the tone ring's dark steel. */
   sensor: '#80868f',
+  /** The housing's moulded details (ribs, the screw boss, the vent) a shade darker; the potting gasket. */
+  sensorDark: '#646a72',
   coinCell: '#c3c6cb',
   toneRing: '#4a4d53',
   /** The air chuck's steel head and its black hose. */

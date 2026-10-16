@@ -1,6 +1,6 @@
 import React, {useMemo} from 'react';
 import {AbsoluteFill, useCurrentFrame, useVideoConfig} from 'remotion';
-import {ease, integrateSpeed, keyed, type SpeedKey} from './keyframes';
+import {ease, framingAtKeys, integrateSpeed, keyed, type CameraKey, type SpeedKey} from './keyframes';
 import * as THREE from 'three';
 import {MOODS, section, type Mood} from '../theme';
 import {raw} from '../three/plaster';
@@ -20,6 +20,8 @@ export type SensorState = 'asleep' | 'awake' | 'quiet';
 const W = {position: [0, 0, 0] as V3, radius: 1, yaw: -1.8};
 /** Where the valve sits when the wheel stops (radians past the top cut, into the kept half). */
 const VALVE_HOME = 0.13;
+/** Shutter, in frames: how much of a frame's turn the motion blur smears (0.5 = a 180° shutter). */
+const SHUTTER = 0.5;
 /** The opened sensor's size multiplier. */
 const TEARDOWN_SCALE = 4.2;
 /** The sensor's size on the rim (× life size, so it reads at frame 0's framing). */
@@ -58,6 +60,13 @@ export type WheelSliceSceneProps = {
   framing?: WheelFraming;
   /** A custom move instead of a preset (look-at + distance at the fixed angle). */
   camera?: {from: Framing; to?: Framing};
+  /**
+   * Camera keyframes: from the scene's starting framing (`camera.from` or the preset) the camera eases
+   * to each key's framing, arriving at its `at` (s), and holds after the last. A key at 0 sets the
+   * start. When set, it overrides `camera`, `push`, and the glide in from the previous scene
+   * (`cameraFrom`, `cameraGlide`). E.g. the hook's push-in with `ease: 'out'` (moves from frame 1).
+   */
+  cameraKeys?: CameraKey[];
   /** Push toward the subject, units/s (default 0: the loop needs the same picture at both ends). */
   push?: number;
   /** Idle sideways drift, ± units (default 0, for the loop). */
@@ -105,8 +114,20 @@ export type WheelSliceSceneProps = {
 };
 
 /** The camera move from the props (a preset or custom, continuing or gliding from the last scene). */
-const wheelCameraMove = (p: Partial<WheelSliceSceneProps>, durationInFrames: number, fps: number) => {
+const wheelCameraMove = (
+  p: Partial<WheelSliceSceneProps>,
+  durationInFrames: number,
+  fps: number,
+  frame?: number,
+): {from: Framing; to: Framing; pre?: {from: Framing; hold: number; move: number; ease: 'cubic'}} => {
   const F = wheelFramings(p.valveAt ?? VALVE_HOME);
+  if (p.cameraKeys && p.cameraKeys.length) {
+    const base = p.camera?.from ?? F[p.framing ?? 'whole'];
+    // a fixed framing for this frame (or the end framing when no frame is given)
+    const t = frame === undefined ? Infinity : frame / fps;
+    const f = framingAtKeys(p.cameraKeys, base, t);
+    return {from: f, to: f};
+  }
   const push = p.push ?? 0;
   const pre =
     p.cameraGlide && p.cameraFrom
@@ -129,7 +150,7 @@ const wheelCameraMove = (p: Partial<WheelSliceSceneProps>, durationInFrames: num
 };
 
 export const wheelCameraStart = (p: Partial<WheelSliceSceneProps>, d: number, fps: number): Framing =>
-  wheelCameraMove({...p, cameraFrom: undefined, cameraGlide: undefined}, d, fps).from;
+  wheelCameraMove({...p, cameraFrom: undefined, cameraGlide: undefined}, d, fps, 0).from;
 export const wheelCameraEnd = (p: Partial<WheelSliceSceneProps>, d: number, fps: number): Framing =>
   wheelCameraMove(p, d, fps).to;
 
@@ -153,6 +174,7 @@ export const wheelSpinAt = (p: Partial<WheelSliceSceneProps>, t: number, duratio
  */
 const openAt = (p: Partial<WheelSliceSceneProps>, frame: number, fps: number) => {
   if (p.open !== undefined) return p.open ? 1 : 0;
+  if (p.cameraKeys && p.cameraKeys.length) return !p.camera && p.framing === 'teardown' ? 1 : 0;
   const F = wheelFramings(p.valveAt ?? VALVE_HOME);
   const target = !p.camera && p.framing === 'teardown' ? 1 : 0;
   let start = target;
@@ -167,7 +189,7 @@ const openAt = (p: Partial<WheelSliceSceneProps>, frame: number, fps: number) =>
 };
 
 const cameraAtFrame = (p: Partial<WheelSliceSceneProps>, frame: number, fps: number, durationInFrames: number) => {
-  const {from, to, pre} = wheelCameraMove(p, durationInFrames, fps);
+  const {from, to, pre} = wheelCameraMove(p, durationInFrames, fps, frame);
   return sectionCameraAt({
     from,
     to,
@@ -219,12 +241,14 @@ export const WheelSliceScene: React.FC<WheelSliceSceneProps> = (props) => {
   const t = frame / fps;
   const m = MOODS[mood];
   const home = props.valveAt ?? VALVE_HOME;
-  const {from, to, pre} = wheelCameraMove(props, durationInFrames, fps);
+  const {from, to, pre} = wheelCameraMove(props, durationInFrames, fps, frame);
 
   const sky = useMemo(() => new THREE.MeshBasicMaterial({map: skyTexture(mood), fog: false}), [mood]);
   sky.color.setScalar(1 / m.exposure);
 
   const spin = wheelSpinAt(props, t, durationInFrames / fps);
+  // the angle turned while the shutter is open (half a frame), for the wheel's motion blur
+  const motionBlur = ((wheelSpinAt(props, t + 0.5 / fps, durationInFrames / fps) - wheelSpinAt(props, t - 0.5 / fps, durationInFrames / fps)) * SHUTTER);
   const pressure = keyed(props.pressure, t, 1);
 
   // the sensor: state, wake flash, pulses
@@ -241,7 +265,10 @@ export const WheelSliceScene: React.FC<WheelSliceSceneProps> = (props) => {
   }
   const woke = state !== 'asleep' && prev === 'asleep' && since > 0;
   const wake = woke ? Math.max(0, 1 - Math.abs(t - since - 0.25) / 0.25) : 0;
-  const rest = state === 'awake' ? (woke ? ease(t, since + 0.3, since + 0.6) : 1) : state === 'asleep' && dimDot ? 0.35 : 0;
+  // waking from a dim sleep, the dot brightens from the dim level (it never drops to grey on the way)
+  const DIM = 0.35;
+  const dotFrom = dimDot ? DIM : 0;
+  const rest = state === 'awake' ? (woke ? dotFrom + (1 - dotFrom) * ease(t, since + 0.1, since + 0.45) : 1) : state === 'asleep' && dimDot ? DIM : 0;
   const ages = pulses.map((p) => t - p).filter((a) => a >= 0 && a < PULSE_LIFE + 0.2);
   const flash = ages.reduce((mx, a) => Math.max(mx, a < 0.35 ? 1 - a / 0.35 : 0), 0);
   const dot = Math.max(rest, flash);
@@ -313,6 +340,7 @@ export const WheelSliceScene: React.FC<WheelSliceSceneProps> = (props) => {
           radius={W.radius}
           cut="axle"
           spin={spin}
+          motionBlur={motionBlur}
           pressure={pressure}
           sensor={lifted ? null : sensorEl}
           sensorScale={SENSOR_SCALE}

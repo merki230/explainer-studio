@@ -36,6 +36,30 @@ type V3 = [number, number, number];
  */
 const HOOK = {look: [-0.22, -0.18, 0.11] as V3, distance: 10.3};
 const WHOLE = {camera: {from: HOOK}} as const;
+/**
+ * Scene 1's push-in target (owner feedback: frame 0 held still for 3 s): the tire's top cut profile and
+ * the sensor, about 1.9× closer, the sensor at ≈ (560, 800) px, the profile's top clear of the title
+ * block (≈ y 450). Derived from the sensor's position on the HOOK still; check on stills.
+ */
+const SENSOR_CLOSE = {look: [-0.167, 0.436, -0.118] as V3, distance: 5.5};
+/**
+ * Scene 1's camera (`cameraKeys`): HOOK at frame 0 (the loop's picture) → an ease-out push to
+ * SENSOR_CLOSE that moves from frame 1 and lands on "tire" (2.8 s) → hold through "wakes up" and
+ * "drive away" → a sine pull back to HOOK from "So why" (6.19) to just before the cut (9.28), so the
+ * spinning wheel and its first pulse (7.56) read.
+ */
+const OPENING_KEYS = [
+  {at: 0, ...HOOK},
+  {at: 2.8, ...SENSOR_CLOSE, ease: 'out'},
+  {at: 6.19, ...SENSOR_CLOSE},
+  {at: 9.1, ...HOOK, ease: 'sine'},
+];
+/**
+ * Scene 5's close valve framing (the `valve` preset was too wide to read the stem): the stem from its
+ * cap outside the rim to the sensor inside, ≈ 1.7× closer than the preset. Reached by a 0.8 s glide
+ * from HOOK, where scene 4 ends (cameraKeys replace the auto glide).
+ */
+const VALVE_CLOSE = {look: [-0.184, 0.339, 0.044] as V3, distance: 3.8};
 
 /** A glide into a scene (§ 8): an eased camera move to a new framing in the same location. */
 // The scene prop `transition` is not a CSS transition; the Remotion rule can't tell them apart.
@@ -54,7 +78,7 @@ const FULL = [{at: 0, value: 1}];
 // Callout anchors (fractions of the frame), from stills.
 const AT = {
   sensorWhole: {x: 0.58, y: 0.325},
-  valveCap: {x: 0.41, y: 0.36},
+  valveCap: {x: 0.394, y: 0.443},
   tdAntenna: {x: 0.47, y: 0.31},
   tdPressure: {x: 0.4, y: 0.4},
   tdMotion: {x: 0.5, y: 0.4},
@@ -73,7 +97,7 @@ export const spec: VideoSpec = {
       cue: 'In many cars',
       props: {
         ...DAY,
-        ...WHOLE,
+        cameraKeys: OPENING_KEYS, // TIMED: frame 0 is still HOOK (the loop's picture)
         drift: 0, // loop: frame 0 must match the last frame
         spin: [
           {at: 0, speed: 0},
@@ -155,6 +179,10 @@ export const spec: VideoSpec = {
         ...DAY,
         ...GLIDE,
         framing: 'valve',
+        cameraKeys: [
+          {at: 0, ...HOOK},
+          {at: 0.8, ...VALVE_CLOSE, ease: 'inOut'},
+        ],
         spin: [{at: 0, speed: 0}],
         pressure: FULL,
         sensor: [{at: 0, state: 'awake'}],
@@ -416,6 +444,14 @@ export const spec: VideoSpec = {
         ...GLIDE,
         dressing: 'tire-bay',
         camera: {from: {look: [-0.25, 0.8, -0.7], distance: 10.6}, to: {look: [-0.25, 0.8, -0.7], distance: 10.45}},
+        // 🎭 illustrative: 2 of 8 sag without the warning, 1 of 8 with. TIMED: on "with the warning"
+        // (69.36) and "half" (70.44)
+        tireBay: {
+          rows: [
+            {label: 'WITHOUT THE WARNING', low: [2, 5], lowAt: 0.6},
+            {label: 'WITH THE WARNING', low: [4], lowAt: 2.9},
+          ],
+        },
       },
     },
     // 18 · Next time you fill a tire (A/V 13a + the start of 13b): the chuck on the valve, the tire
