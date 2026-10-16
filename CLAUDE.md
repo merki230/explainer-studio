@@ -81,7 +81,7 @@ out/                    renders and stills (git-ignored)
 | fact-checker    | statuses in `sources.md` (read-only on everything else)  |
 | voice           | voiceover and timings                                    |
 | director        | `spec.ts`                                                |
-| scene-builder   | `src/scenes`, `src/three`, `src/components`              |
+| scene-builder   | `src/scenes`, `src/three`, `src/components`, `src/brand` (brand-asset generator; exports to `brand/assets/` from the brand-director's spec in `brand/channel-kit.md`) |
 | visual-reviewer | nothing (renders stills and reports)                     |
 | publisher       | `publish.md` and the cover frame                         |
 | tooling         | `scripts/`, deps, config                                 |
