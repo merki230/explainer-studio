@@ -148,6 +148,11 @@ export type FigureProps = {
    * `hands` stay figure-local (origin on the ground), so they follow.
    */
   stance?: 'sit' | 'stand';
+  /**
+   * Walking (standing only): the step cycle's phase (cycles; drive it from the distance walked) and
+   * how much of a stride to show, 0 (standing still) to 1. The legs swing opposite, the body bobs.
+   */
+  walk?: {phase: number; amount: number};
 };
 
 /** How far the body rises standing up (the thigh's length): the seated hip at 0.6 → 1.07. */
@@ -175,10 +180,17 @@ export const Figure: React.FC<FigureProps> = ({
   clockOffset = 0,
   hands,
   stance = 'sit',
+  walk,
 }) => {
   const frame = useCurrentFrame();
   const stand = stance === 'stand';
-  const lift = stand ? STAND_LIFT : 0;
+  const wa = stand && walk ? Math.max(0, Math.min(1, walk.amount)) : 0;
+  const wp = walk ? walk.phase * Math.PI * 2 : 0;
+  // the body dips a little at each passing step (twice a cycle)
+  const lift = stand ? STAND_LIFT - 0.015 * wa * (1 - Math.cos(2 * wp)) * 0.5 : 0;
+  /** A leg's swing (radians, forward +) and knee bend for the step cycle. */
+  const swing = (s: number) => 0.32 * wa * Math.sin(wp + (s > 0 ? Math.PI : 0));
+  const kneeBend = (s: number) => 0.45 * wa * Math.max(0, Math.sin(wp + (s > 0 ? Math.PI : 0) + Math.PI / 2));
   const {fps} = useVideoConfig();
   const t = frame / fps;
   const clock = t + clockOffset;
@@ -295,12 +307,12 @@ export const Figure: React.FC<FigureProps> = ({
           <group
             key={side.s}
             position={rel(REST.hip(side.s), REST.pelvis)}
-            rotation={[stand ? Math.PI / 2 - 0.06 : 0, idle.hipYaw * L * (stand ? 0.3 : 1), 0]}
+            rotation={[stand ? Math.PI / 2 - 0.06 - swing(side.s) : 0, idle.hipYaw * L * (stand ? 0.3 : 1), 0]}
           >
             <PartMesh part={side.thigh} material={mats.bottom} />
-            <group position={rel(REST.knee(side.s), REST.hip(side.s))} rotation={[stand ? -Math.PI / 2 + 0.12 : 0, 0, 0]}>
+            <group position={rel(REST.knee(side.s), REST.hip(side.s))} rotation={[stand ? -Math.PI / 2 + 0.12 + kneeBend(side.s) : 0, 0, 0]}>
               <PartMesh part={side.shin} material={mats.bottom} />
-              <group position={rel(REST.ankle(side.s), REST.knee(side.s))} rotation={[stand ? -0.06 : 0, 0, 0]}>
+              <group position={rel(REST.ankle(side.s), REST.knee(side.s))} rotation={[stand ? -0.06 + swing(side.s) - kneeBend(side.s) : 0, 0, 0]}>
                 <PartMesh part={side.foot} material={mats.shoe} />
               </group>
             </group>

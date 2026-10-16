@@ -443,7 +443,7 @@ export const spec: VideoSpec = {
         ...DAY,
         ...GLIDE,
         dressing: 'tire-bay',
-        camera: {from: {look: [-0.25, 0.8, -0.7], distance: 10.6}, to: {look: [-0.25, 0.8, -0.7], distance: 10.45}},
+        camera: {from: {look: [-0.25, 0.8, -0.7], distance: 11.9}, to: {look: [-0.25, 0.8, -0.7], distance: 11.75}},
         // 🎭 illustrative: 2 of 8 sag without the warning, 1 of 8 with. TIMED: on "with the warning"
         // (69.36) and "half" (70.44)
         tireBay: {
