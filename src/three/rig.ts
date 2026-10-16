@@ -80,8 +80,18 @@ export const PHONE_PITCH_TO_FACE = 0.75;
 
 // ---------------------------------------------------------------- poses
 
-export type PoseName = 'idle' | 'scroll' | 'lean-in' | 'lift-phone' | 'look-up' | 'turn-to' | 'glance-down';
-export const POSE_NAMES: PoseName[] = ['idle', 'scroll', 'lean-in', 'lift-phone', 'look-up', 'turn-to', 'glance-down'];
+export type PoseName = 'idle' | 'scroll' | 'lean-in' | 'lift-phone' | 'look-up' | 'turn-to' | 'glance-down' | 'drive' | 'gauge';
+export const POSE_NAMES: PoseName[] = [
+  'idle',
+  'scroll',
+  'lean-in',
+  'lift-phone',
+  'look-up',
+  'turn-to',
+  'glance-down',
+  'drive',
+  'gauge',
+];
 
 /** Every joint as a delta from rest. Angles in radians, Euler [x pitch (forward +), y yaw (to +x), z roll]. */
 export type PoseParams = {
@@ -146,6 +156,10 @@ const FIXED: Record<Exclude<PoseName, 'look-up' | 'turn-to'>, PoseParams> = {
   }),
   // A look down from whatever came before (e.g. back to the phone after a look up).
   'glance-down': base({neck: [0.05, 0, 0], head: [0.2, 0, 0], scroll: 0.1}),
+  // Driving (No. 002): sitting up, eyes on the road ahead (hands: Figure `hands`, on the wheel).
+  drive: base({spine: [-0.05, 0, 0], chest: [-0.03, 0, 0], neck: [-0.04, 0, 0], head: [-0.24, 0, 0], scroll: 0, eyesUp: 0.06}),
+  // Leaning in to read a tire gauge (No. 002's Lab extras; hands: Figure `hands`, at the valve).
+  gauge: base({spine: [0.16, 0, 0], chest: [0.08, 0, 0], neck: [0.04, 0, 0], head: [0.08, 0, 0], scroll: 0}),
 };
 
 const clamp = (x: number, a: number, b: number) => Math.max(a, Math.min(b, x));

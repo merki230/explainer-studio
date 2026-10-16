@@ -136,6 +136,12 @@ export type FigureProps = {
   life?: boolean;
   /** Seconds added to the scene time for the idle life (the scene's start in the video). */
   clockOffset?: number;
+  /**
+   * Where the hands go instead of the phone (figure-local points: origin on the floor under the
+   * pelvis, facing +z, +x the figure's left): [right hand, left hand]. Use with `phone: false`: on a
+   * steering wheel, a gauge. The arms solve to them (two-bone IK).
+   */
+  hands?: [V3, V3];
 };
 
 /**
@@ -158,6 +164,7 @@ export const Figure: React.FC<FigureProps> = ({
   phoneModel = 'simple',
   life = true,
   clockOffset = 0,
+  hands,
 }) => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
@@ -236,12 +243,22 @@ export const Figure: React.FC<FigureProps> = ({
   const shrug = pose.shrug + 0.006 * b;
 
   const ph = phoneInChest(pose, swipe, PHONE_PITCH_TO_FACE);
+  // hand targets in the chest's frame: undo the spine and chest turns
+  const spineQ = new THREE.Quaternion().setFromEuler(spineE);
+  const chestQ = new THREE.Quaternion().setFromEuler(chestE);
+  const toChest = (p: V3) =>
+    V(...p)
+      .sub(REST.spine)
+      .applyQuaternion(spineQ.clone().invert())
+      .sub(REST.chest.clone().sub(REST.spine))
+      .applyQuaternion(chestQ.clone().invert());
+  const grips = hands ? [toChest(hands[0]), toChest(hands[1])] : ph.grips;
   const arms = [0, 1].map((i) => {
     const s = i === 0 ? -1 : 1;
     const shoulder = REST.shoulder(s)
       .sub(REST.chest)
       .add(V(0, shrug, 0));
-    return {s, shoulder, ...solveArm(s, shoulder, ph.grips[i])};
+    return {s, shoulder, ...solveArm(s, shoulder, grips[i])};
   });
   const thumbDir = V(-0.6, 0.55 + 0.55 * swipe, -0.12 - 0.25 * swipe).normalize();
   const thumbPos = THUMB_BASE.clone().addScaledVector(thumbDir, THUMB_L / 2 + THUMB_R);

@@ -9,6 +9,7 @@ import {CutOutline, cutMaterial} from './cutLook';
 import {CUT_EDGES, CUT_RECTS, SLICE} from './LivingRoomSlice';
 import {skyTexture} from './textures';
 import {useFontsLoaded} from './useFontsLoaded';
+import {TireBay, type TireBayProps} from './TireBay';
 import {
   RealBench,
   RealConveyor,
@@ -87,6 +88,10 @@ export type LabSliceProps = {
    * the meter as wall devices behind glass). Same layout and motion. Default false.
    */
   realism?: boolean;
+  /** What the Lab is dressed as: 'apps' (default: the phone bench, arms, counter, meter) or 'tire-bay'. */
+  dressing?: 'apps' | 'tire-bay';
+  /** The tire bay's rows, low tires and gauges (see `TireBayProps`). */
+  tireBay?: Partial<TireBayProps>;
 };
 
 /**
@@ -106,7 +111,10 @@ export const LabSlice: React.FC<LabSliceProps> = ({
   running = true,
   realism = false,
   clock: clockIn,
+  dressing = 'apps',
+  tireBay,
 }) => {
+  const bay = dressing === 'tire-bay';
   const clock = clockIn ?? t;
   const m = MOODS[mood];
   const lab = LAB[mood];
@@ -274,6 +282,10 @@ export const LabSlice: React.FC<LabSliceProps> = ({
       </mesh>
       <CutOutline rects={CUT_RECTS} edges={CUT_EDGES} />
 
+      {bay ? (
+        <TireBay mood={mood} t={t} {...(tireBay ?? {})} />
+      ) : (
+        <>
       {/* the counter built into the back wall */}
       {realism ? null : (
         <mesh
@@ -448,6 +460,8 @@ export const LabSlice: React.FC<LabSliceProps> = ({
           {/* contact shadows: under the bench and the rig */}
           <BlobShadow position={[0, 0.004, L.bench.z]} size={[3.0, 0.9]} opacity={0.3} />
           <BlobShadow position={[L.rig[0], 0.004, L.rig[2]]} size={[0.9, 0.9]} opacity={0.3} />
+        </>
+      )}
         </>
       )}
     </group>

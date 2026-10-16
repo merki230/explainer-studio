@@ -6,10 +6,24 @@ import type {CastName, Mood} from '../theme';
 import {ease} from './card';
 import {drawScreen, focusRect, screenKey, SCREEN_H, SCREEN_W} from './screenKit';
 import {LEFT, overlayInk, RIGHT} from './sectionStyle';
+import {drawCluster} from './dashboardKit';
+import {carHeadBoxOnScreen, clusterOnScreen, type CarSliceSceneProps} from '../scenes/CarSliceScene';
 
 export type DetailBoxProps = {
-  /** Whose phone it magnifies (the scene's `ui` script for them drives what it shows). */
+  /** Whose phone it magnifies (the scene's `ui` script for them drives what it shows); for 'dashboard', the driver. */
   who: CastName;
+  /**
+   * What it shows: 'phone' (default: the holder's screen, `section-room` only) or 'dashboard' (the
+   * instrument cluster of a `car-slice`: speed, a trip timer counting on, the tire-pressure light, off or
+   * lit in warning yellow from the scene's `warningAt`).
+   */
+  content?: 'phone' | 'dashboard';
+  /** 'dashboard': force the tire light on or off (default: the scene's `warningAt`). */
+  warning?: boolean;
+  /** 'dashboard': the trip timer's value at the scene's start, seconds (default 760, "12:40"); it counts on. */
+  trip?: number;
+  /** 'dashboard': the speed shown, mph (default 38). */
+  speed?: number;
   /** 'auto' (default): the part of the screen that matters (the field, the ad); 'full': the whole screen. */
   crop?: 'auto' | 'full';
   /** Inner width in px (default 336; the box is 344 wide with its border, inside the guide's 324–360). */
@@ -38,10 +52,15 @@ const BORDER = 4;
  * else an elbow that drops from the box (on the side away from the head) and runs across to it.
  * In over 10 frames (opacity, 8 px rise). Only in a `section-room` scene.
  */
-export const DetailBox: React.FC<
+type SceneCtx = {props: Partial<SectionRoomSceneProps>; durationInFrames: number; offset: number; name?: string};
+
+export const DetailBox: React.FC<DetailBoxProps & {mood?: Mood; scene: SceneCtx}> = (p) =>
+  p.content === 'dashboard' ? <DashboardBox {...p} /> : <PhoneBox {...p} />;
+
+const PhoneBox: React.FC<
   DetailBoxProps & {
     mood?: Mood;
-    scene: {props: Partial<SectionRoomSceneProps>; durationInFrames: number; offset: number};
+    scene: SceneCtx;
   }
 > = ({who, crop = 'auto', size = 336, side, top, left: leftAt, leader = true, mood = 'day', scene}) => {
   const frame = useCurrentFrame();
@@ -165,6 +184,123 @@ export const DetailBox: React.FC<
           <canvas ref={ref} width={innerW} height={innerH} style={{display: 'block', width: innerW, height: innerH}} />
         </div>
       </div>
+    </div>
+  );
+};
+
+/** The tab and frame shared by both contents. */
+const Frame: React.FC<{left: number; top: number; w: number; h: number; ink: string; paper: string; rise: number; children: React.ReactNode}> = ({
+  left,
+  top,
+  w,
+  h,
+  ink,
+  paper,
+  rise,
+  children,
+}) => (
+  <div style={{position: 'absolute', left, top, transform: `translateY(${rise}px)`}}>
+    <div
+      style={{
+        position: 'absolute',
+        left: 0,
+        bottom: '100%',
+        background: ink,
+        color: paper,
+        fontFamily: fonts.mono,
+        fontWeight: 700,
+        fontSize: 17,
+        letterSpacing: '0.16em',
+        padding: '4px 10px 3px',
+        lineHeight: 1.2,
+      }}
+    >
+      DETAIL
+    </div>
+    <div
+      style={{
+        width: w,
+        height: h,
+        boxSizing: 'border-box',
+        border: `${BORDER}px solid ${ink}`,
+        background: paper,
+        boxShadow: '0 13px 32px rgba(0,0,0,0.25)',
+        overflow: 'hidden',
+      }}
+    >
+      {children}
+    </div>
+  </div>
+);
+
+/**
+ * The dashboard detail box (No. 002): the car's instrument cluster as a flat 2D crop (the same drawing
+ * as the cluster in the car), read like a phone screen; a 2 px ink elbow leader to the cluster.
+ * Only in a `car-slice` scene.
+ */
+const DashboardBox: React.FC<DetailBoxProps & {mood?: Mood; scene: SceneCtx}> = ({
+  who,
+  size = 360,
+  side,
+  top,
+  left: leftAt,
+  leader = true,
+  warning,
+  trip = 760,
+  speed = 38,
+  mood = 'day',
+  scene,
+}) => {
+  const frame = useCurrentFrame();
+  const {fps, width, height} = useVideoConfig();
+  const ref = useRef<HTMLCanvasElement>(null);
+  const sceneFrame = frame + scene.offset;
+  const t = sceneFrame / fps;
+  const carProps = scene.props as Partial<CarSliceSceneProps>;
+  const warnAt = carProps.warningAt ?? null;
+  const on = warning ?? (warnAt !== null && t >= warnAt);
+  const secs = Math.floor(trip + t);
+  const tripText = `TRIP ${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`;
+  const innerW = size;
+  const innerH = Math.round(size * 0.58);
+  const key = `${on}|${tripText}|${speed}|${innerW}`;
+  useLayoutEffect(() => {
+    const handle = delayRender('Drawing the dashboard box');
+    fontsReady().then(() => {
+      const cx = ref.current?.getContext('2d');
+      if (cx) drawCluster(cx, innerW, innerH, {warning: on, speed, trip: tripText});
+      continueRender(handle);
+    });
+    // `key` captures everything the drawing depends on
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
+  const o = {frame: sceneFrame, fps, durationInFrames: scene.durationInFrames};
+  const target = clusterOnScreen(carProps, o);
+  const headBox = carHeadBoxOnScreen(carProps, who, o);
+  const {ink, paper} = overlayInk(mood);
+  const outerW = innerW + 2 * BORDER;
+  const outerH = innerH + 2 * BORDER;
+  const onLeft = (side ?? (target[0] > width / 2 ? 'left' : 'right')) === 'left';
+  const left = leftAt ?? (onLeft ? LEFT : RIGHT - outerW);
+  // above the head (or the cluster), inside the safe zone
+  const above = Math.min(target[1], headBox ? headBox[2] : target[1]);
+  const boxTop = top ?? Math.max(328, Math.min(1248 - outerH, above - 70 - outerH));
+  const enter = ease(frame, 0, DETAIL_FADE);
+  const rise = interpolate(enter, [0, 1], [8, 0]);
+  const by = boxTop + outerH;
+  const lx = onLeft ? left + outerW - 28 : left + 28;
+  const px = target[0] + (lx < target[0] ? -12 : 12);
+  const points = `${lx},${by} ${lx},${target[1]} ${px},${target[1]}`;
+  return (
+    <div style={{position: 'absolute', inset: 0, opacity: enter}}>
+      {leader ? (
+        <svg width={width} height={height} style={{position: 'absolute', inset: 0}}>
+          <polyline points={points} fill="none" stroke={ink} strokeWidth={2} strokeLinejoin="miter" />
+        </svg>
+      ) : null}
+      <Frame left={left} top={boxTop} w={outerW} h={outerH} ink={ink} paper={paper} rise={rise}>
+        <canvas ref={ref} width={innerW} height={innerH} style={{display: 'block', width: innerW, height: innerH}} />
+      </Frame>
     </div>
   );
 };

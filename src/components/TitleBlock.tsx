@@ -18,6 +18,14 @@ export type TitleBlockProps = {
   hold?: number;
   /** Top edge in px: default 300, in the sky band above the cut wall tops (the guide's 340 sat on them). */
   top?: number;
+  /**
+   * No. 002 mode (v0.11 § 6): line 1 is the video's question (≤ 2 lines; `\n` forces the break, else it
+   * wraps at ≈ 32 characters), line 2 `NO. 002 · THE TIRE · 7:58 AM`. It is already up at frame 0 (no
+   * entry move) unless `enter` is set. Without `question`, No. 001's block, unchanged.
+   */
+  question?: string;
+  /** Fade and rise in over 10 frames (default: true for No. 001's block, false with `question`). */
+  enter?: boolean;
 };
 
 /** Frames the title block takes to fade in and out. */
@@ -36,10 +44,13 @@ export const TitleBlock: React.FC<TitleBlockProps & {mood?: Mood}> = ({
   section = 'A–A',
   top = 300,
   mood = 'day',
+  question,
+  enter,
 }) => {
   const frame = useCurrentFrame();
   const {ink, paper, inkSub} = overlayInk(mood);
-  const o = ease(frame, 0, TITLE_FADE);
+  const o = (enter ?? !question) ? ease(frame, 0, TITLE_FADE) : 1;
+  const lines = question ? wrapQuestion(question) : null;
   return (
     <div
       style={{
@@ -64,7 +75,7 @@ export const TitleBlock: React.FC<TitleBlockProps & {mood?: Mood}> = ({
           whiteSpace: 'nowrap',
         }}
       >
-        {number} · {title}
+        {lines ? lines.map((l, i) => <div key={i}>{l}</div>) : `${number} · ${title}`}
       </div>
       <div
         style={{
@@ -78,8 +89,27 @@ export const TitleBlock: React.FC<TitleBlockProps & {mood?: Mood}> = ({
           whiteSpace: 'nowrap',
         }}
       >
-        Section {section} · {time}
+        {question ? `${number} · ${title} · ${time}` : `Section ${section} · ${time}`}
       </div>
     </div>
   );
+};
+
+/** Two even lines of ≤ 32 characters (a `\n` in the text wins). */
+const wrapQuestion = (q: string): string[] => {
+  if (q.includes('\n')) return q.split('\n');
+  if (q.length <= 32) return [q];
+  const words = q.split(' ');
+  let best: string[] = [q];
+  let score = Infinity;
+  for (let i = 1; i < words.length; i++) {
+    const a = words.slice(0, i).join(' ');
+    const b = words.slice(i).join(' ');
+    const s = Math.max(a.length, b.length);
+    if (s < score) {
+      score = s;
+      best = [a, b];
+    }
+  }
+  return best;
 };
