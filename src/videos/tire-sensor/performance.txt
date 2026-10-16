@@ -7,7 +7,7 @@ When you're parked, it's asleep, and the motion sensor wakes it up once the whee
 Then, every minute or so, it sends the car a quick radio message with the pressure.
 The car can tell which wheel is talking because each message carries the sensor's own ID.
 It stays quiet most of the time to save power, and that's how the battery lasts up to about ten years.
-Once a tire's about a quarter low, US rules say the warning light's gotta come on within 20 minutes of driving.
+Once a tire's about a quarter low... US rules say the warning light's gotta come on within 20 minutes of driving.
 [pause] Some cars don't have tire sensors at all... and they spot a soft tire because it spins slightly faster.
 When US safety officials checked mid-2000s cars, the ones with the warning were about half as likely to have a badly low tire.
 [pause] Next time you fill a tire, there's probably a little radio behind that valve... waiting for the wheel to turn.

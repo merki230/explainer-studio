@@ -5,6 +5,11 @@ Living document: update it whenever a step causes rework, so the next video does
 
 ## How a video is built (owner-approved, 2026-10-15)
 
+0. **Picture before voice** (owner, 2026-10-16): before recording, the director writes an A/V script
+   (`src/videos/<slug>/av-script.md`, one row per sentence: on screen, motion, transition, overlay, new or
+   existing part). Lines that are hard to show, too long for one shot or rushed get reworded, and the
+   pauses in `performance.txt` are placed on the cuts. Changing words after the paid voice take is the
+   expensive way.
 1. **Rough cut:** the whole video with the real voice, the right beats and camera moves, simple
    placeholders where effects aren't finished. The owner reviews it in Remotion Studio for structure
    and pacing.
