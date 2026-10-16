@@ -1,54 +1,64 @@
 import type {VideoSpec} from '../../types';
 
 /**
- * LAB: previews of the Section kit (v0.8, stages 1–2a), so the slice, the cast, gestures and the
- * overlays can be judged as stills without touching a real video. Not for publishing; the
- * attribution text is a sample.
+ * LAB: previews of the Section kit (stages 1–3, polish 2): the phone cut-away (the wake-word beat)
+ * and the Lab slice (the 17,000-apps study), with the transitions between them and the living room.
+ * Not for publishing.
  */
 export const spec: VideoSpec = {
   watermark: null,
   scenes: [
-    // Night, wide: the title block at 1.0 s; FRIEND leans in to her screen, YOU's phone is locked,
-    // then YOU looks up at the router.
+    // 1 · The living room, Day, wide: FRIEND scrolls and leans in.
     {
       scene: 'section-room',
-      props: {
-        mood: 'night',
-        camera: 'wide',
-        gestures: [
-          {figure: 'friend', pose: 'lean-in', at: 1.0},
-          {figure: 'you', pose: 'look-up', at: 4.0, hold: 1.5},
-        ],
-        screens: {you: 0},
-      },
-      overlays: [{type: 'title', at: 1.0, number: 'No. 001', title: 'The Living Room', time: '9:47 PM'}],
-    },
-    // Day, same framing: the same room the next morning, with a statement card and its attribution.
-    {
-      scene: 'section-room',
-      cue: 'The next morning',
-      props: {mood: 'day', camera: 'wide', screens: {you: 0}},
-      overlays: [
-        {type: 'statement', cue: 'the same room', text: 'The same room.', attribution: 'FTC staff report, 2017'},
-      ],
-    },
-    // Day, on the couch: name tags; YOU's phone lights, YOU lifts it to look; FRIEND turns to YOU.
-    {
-      scene: 'section-room',
-      cue: 'Your phone lights',
       props: {
         mood: 'day',
-        camera: 'couch',
-        screens: {you: {at: 0.6}},
-        gestures: [
-          {figure: 'you', pose: 'lift-phone', at: 1.0},
-          {figure: 'friend', pose: 'turn-to', at: 1.6},
-        ],
+        camera: 'wide',
+        screens: {you: 0},
+        ui: {friend: [{at: 0, app: 'feed', adAt: 99}], you: [{at: 0, app: 'lock'}]},
+        gestures: [{figure: 'friend', pose: 'lean-in', at: 0.5}],
       },
-      overlays: [
-        {type: 'tag', who: 'friend', at: 0.1},
-        {type: 'tag', who: 'you', at: 0.1},
-      ],
+    },
+    // 2 · The phone cut-away: the camera glides into a phone, its front comes off; waves from the room
+    // fade into the listening chip; a "Hey…" wave lights it; the hatch to the network stays shut.
+    {
+      scene: 'phone-cutaway',
+      cue: 'It does listen',
+      // the scene prop `transition` is not a CSS transition (the Remotion rule can't tell them apart)
+      // eslint-disable-next-line @remotion/non-pure-animation
+      props: {mood: 'day', transition: 'cut', glideIn: 1.0, cutAt: 0.9, wavesAt: 1.6, waveEvery: 0.9, wakeAt: 8.0},
+    },
+    // 3 · Back in the living room (a new location: it slides in).
+    {
+      scene: 'section-room',
+      cue: 'Her phone keeps',
+      props: {
+        mood: 'day',
+        camera: 'wide',
+        screens: {you: 0},
+        ui: {friend: [{at: -1, app: 'feed', adAt: 99}], you: [{at: 0, app: 'lock'}]},
+        gestures: [{figure: 'friend', pose: 'lean-in', at: -1}],
+      },
+    },
+    // 4 · The Lab: follow the line down from the living room. Phones tapped by robot arms, icons on
+    // the conveyor, the counter to 17,000 on "studied … 17,000", the "0" stamp on "not one".
+    {
+      scene: 'section-lab',
+      cue: 'As for other apps',
+      props: {
+        mood: 'day',
+        camera: 'wide',
+        follow: {direction: 'down', at: 0.12},
+        countAt: 2.0,
+        countFor: 1.4,
+        zeroAt: 6.1,
+      },
+    },
+    // 5 · Back to the living room (slides in).
+    {
+      scene: 'section-room',
+      cue: 'A simpler answer',
+      props: {mood: 'day', camera: 'wide', screens: {you: 0}, ui: {friend: [{at: -1, app: 'feed', adAt: 99}]}},
     },
   ],
 };

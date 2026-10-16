@@ -5,6 +5,8 @@ import {spec as phoneListening} from './phone-listening/spec';
 import phoneListeningTranscript from './phone-listening/transcript.json';
 import {spec as labSection} from './lab-section/spec';
 import labSectionTranscript from './lab-section/transcript.json';
+import {spec as labRealism} from './lab-realism/spec';
+import labRealismTranscript from './lab-realism/transcript.json';
 // </imports>
 
 export type VideoEntry = {spec: VideoSpec; transcript: Transcript};
@@ -17,5 +19,6 @@ export const VIDEOS: Record<string, VideoEntry> = {
   // <entries>
   'phone-listening': {spec: phoneListening, transcript: phoneListeningTranscript as Transcript},
   'lab-section': {spec: labSection, transcript: labSectionTranscript as Transcript},
+  'lab-realism': {spec: labRealism, transcript: labRealismTranscript as Transcript},
   // </entries>
 };

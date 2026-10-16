@@ -62,6 +62,8 @@ export const Captions: React.FC<{
   const t = frame / fps;
   const page = pages.find((p) => t >= p.start && t < p.end);
   if (!page) return null;
+  // nothing until the first word has started to appear (no empty block)
+  if (frame <= Math.round(page.words[0].start * fps)) return null;
   const inQuiet = (f: number) => suppress.some(([a, b]) => f >= a && f < b);
   if (inQuiet(frame) || inQuiet(Math.round(page.start * fps))) return null;
 

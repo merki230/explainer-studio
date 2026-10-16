@@ -1,234 +1,338 @@
 import type {VideoSpec} from '../../types';
 
 /**
- * Exhibit No. 001 · The Living Room (v0.5 script, 7-step recipe).
+ * Exhibit No. 001 · The Living Room, in The Section (style guide v0.8.1). Rough cut (stage 3).
  *
- * Scenes start on a `cue` (first words of a phrase in the voiceover) and run
- * until the next scene. Overlays start on a `cue`. Overlay x/y are fractions of
- * the 1080x1920 frame; readable text stays inside x 120–888, y 288–1248 and off
- * the captions band (y ≈ 1045–1188).
+ * One slice, the living room, seen from outside at the fixed angle. The video opens black on
+ * FRIEND's phone, which wakes on her search, and the camera pulls back into the Night slice (the
+ * `wake` bookend); it ends by pushing into YOUR phone, which locks to black (the `sleep` bookend),
+ * so the last frame loops into the first. One "time passes" beat (Night → Day) at "The next
+ * morning"; Day to the end. The orange route runs once, out and back with the one X-ray, on the FTC
+ * sentence.
  *
- * Timed to the `directed` take (45.8 s). Props marked `// TIMED` are seconds into their scene,
- * set from transcript.json: re-check them if the voiceover is redone.
+ * Transitions (§ 8): same slice and mood → the camera continues; a framing change too far for a
+ * push glides (eased move, ≈ 0.8 s); a new location slides in (the phone cut-away, the Lab, and back
+ * to the living room). No hard cut except the closing lock.
+ *
+ * Scenes start on a `cue` copied from script.txt; overlays start on cues where possible. Timed to
+ * the live `directed` take (≈ 54.4 s). Props marked `// TIMED` (scene boundaries for the camera
+ * runs, `route`, `ui` steps, `gestures`, bookends) are seconds set from transcript.json: re-check
+ * them if the voiceover is redone.
  */
 
-const EXHIBIT = 'No. 001 · The Living Room';
-// Sub-lines change only where the scene type changes: two different sub-lines draw over
-// each other mid-dissolve, so neighbouring scenes share one.
-const COUCH = 'EXHIBIT · COUCH';
-const PHONE = 'EXHIBIT · A PHONE';
-const ROUTER = 'EXHIBIT · ROUTER';
-const HOME = 'EXHIBIT · ONE HOME';
-// No wall plate in this video (round 3): every room shot chains into a close one (router, table)
-// where no plate spot stays inside x 120–888 and clear of the label, and a plate that appears or
-// vanishes inside a continuous move reads as a glitch. It repeats the label, so nothing is lost.
+type V3 = [number, number, number];
+type Framing = {look: V3; distance: number};
 
-// Camera keyframes: every room shot starts where the previous room shot ended.
-const OPEN_START = {from: [-0.2, 2.0, 6.3], lookFrom: [0, 1.16, 0]} as const; // also the last frame (loop)
-const OPEN_END = {to: [0.15, 1.95, 5.75], lookTo: [0, 1.26, -0.1]} as const;
-const ROUTER_END = {to: [-0.02, 1.95, 3.6], lookTo: [0, 1.84, -0.8]} as const;
-// 'devices', closer and looking higher (round 3): router clear of the label, less empty floor.
-const DEVICES_END = {to: [0.1, 2.15, 6.4], lookTo: [0.06, 1.18, -0.1]} as const;
-const REVEAL_END = {to: [0.12, 2.13, 6.15], lookTo: [0.06, 1.2, -0.1]} as const;
-// 'table' with the look-at raised 0.36 (round 3): the router clears the label.
-const TABLE = {
-  from: [0.15, 1.8, 4.3],
-  lookFrom: [0, 1.36, -0.1],
-  to: [0.05, 1.7, 3.9],
-  lookTo: [0, 1.34, -0.1],
-} as const;
+// Scene boundaries, seconds (first word of each scene's cue in transcript.json). // TIMED
+const T = {
+  open: 0, // "Your friend spends"
+  morning: 4.76, // "The next morning"
+  question: 7.76, // "So is your phone"
+  listen: 10.16, // "It does listen"
+  apps: 18.72, // "As for other apps"
+  tests: 24.56, // "and in their tests"
+  shelf: 28.24, // "A simpler answer"
+  ftc: 32.08, // "FTC staff said"
+  guess: 38.48, // "and ad platforms"
+  lastNight: 43.08, // "So last night"
+  oneWay: 46.8, // "and that's one way"
+  next: 50.0, // "Next time"
+  end: 55.6, // last word 54.40 + the 1.2 s tail
+};
 
-// The room after the reveal: route drawn long ago, glow gone; stains, LED, both phones and the laptop on.
-const STAINED = {arcs: true, arcsAt: -3, glowFor: 0, devicesAt: [-1, -1, -1]};
+const lerp = (a: number, b: number, k: number) => a + (b - a) * k;
+const between = (a: Framing, b: Framing, k: number): Framing => ({
+  look: [lerp(a.look[0], b.look[0], k), lerp(a.look[1], b.look[1], k), lerp(a.look[2], b.look[2], k)],
+  distance: lerp(a.distance, b.distance, k),
+});
+/**
+ * One slow, continuous camera run across several scenes: each scene gets the piece of the move
+ * between its start and its end, so the camera never jumps where one scene continues the next.
+ */
+const run = (a: Framing, b: Framing, t0: number, t1: number) => (start: number, end: number) => ({
+  from: between(a, b, (start - t0) / (t1 - t0)),
+  to: between(a, b, (end - t0) / (t1 - t0)),
+});
+
+// The couch push on "So is your phone?" (the only couch scene before the cut-away). COUCH_END is
+// where the living room picks up again at "A simpler answer".
+const COUCH_END: Framing = {look: [0.3, 0.95, -0.45], distance: 8.0};
+const couchRun = run({look: [0.05, 0.95, -0.45], distance: 8.8}, {look: [0.15, 0.95, -0.45], distance: 8.7}, T.question, T.listen);
+// "Look at the router": from the couch run's last framing, a crane up the back wall to the router
+// (same distance), the router high in frame over the two heads.
+const ROUTER_VIEW: Framing = {look: [0.35, 1.5, -0.7], distance: 8.0};
+// The wide run (Day, "FTC staff said" → "and that's one way"): a very slow push.
+const WIDE: Framing = {look: [-0.2, 1.36, 0], distance: 12.75};
+const wideRun = run({...WIDE, distance: 13.3}, {...WIDE, distance: 12.85}, T.ftc, T.oneWay);
+// The last couch run ("and that's one way" → the end), before the push into YOUR phone.
+const endRun = run({look: [0.15, 0.95, -0.45], distance: 8.4}, {look: [0.15, 0.95, -0.45], distance: 8.15}, T.oneWay, T.end);
+
+// The route (§ 5): FRIEND's phone → router → down inside the back wall (the X-ray cut-away) → the
+// cut ground → out of frame, and back the same way to YOU's phone. It spans two scenes, so its times
+// are kept in absolute seconds and shifted into each. // TIMED
+const ROUTE = {
+  out: 35.58, // leaves her phone on "home" (35.60): router by "network", out of frame on "public address"
+  outDuration: 2.1,
+  back: 39.6, // comes back on "use that" (39.60), arrives at YOU's phone on "one household" (41.60)
+  backDuration: 2.0,
+  glowFor: 0.6,
+};
+const routeIn = (sceneStart: number) => ({
+  outAt: ROUTE.out - sceneStart,
+  outDuration: ROUTE.outDuration,
+  backAt: ROUTE.back - sceneStart,
+  backDuration: ROUTE.backDuration,
+  glowFor: ROUTE.glowFor,
+});
+// Both look up at the router from "Look at the router" through the route; the phones' positions
+// (the route's ends) depend on these, so the two route scenes share them. // TIMED
+const LOOK_UP = 30.24; // lands on "Look at" (30.72)
+const routeGestures = (sceneStart: number) => [
+  {figure: 'friend' as const, pose: 'look-up' as const, at: LOOK_UP - sceneStart},
+  {figure: 'you' as const, pose: 'look-up' as const, at: LOOK_UP - sceneStart},
+];
+
+/** A glide into a scene (§ 8): an eased camera move to a new framing in the same slice (owner, polish 1). */
+// The scene prop `transition` is not a CSS transition; the Remotion rule can't tell them apart.
+// eslint-disable-next-line @remotion/non-pure-animation
+const GLIDE = {transition: 'glide'} as const;
+
+// Day screens: her phone locked; YOU's feed with the ad already in.
+const LOCKED = {at: -60, app: 'lock' as const};
+const AD_IN = {at: -60, app: 'feed' as const, adAt: 0};
 
 export const spec: VideoSpec = {
-  watermark: 'ILLUSTRATIVE',
+  watermark: null, // no watermark: the invented coffee machine is disclosed in the post ("Illustrative: …")
   scenes: [
-    // 1 · Open on something concrete. The friend's phone flickers on "scrolling"; her search appears.
-    // Starts on the last frame's camera (scene 11), so the loop has no hop.
+    // 1 · Open on something concrete. Frame 0 black; FRIEND's phone wakes full-frame and her search
+    // starts on it (the opening line is spoken over the screen), then the camera pulls back into the
+    // Night slice, wide. Title block and name tags once the slice is there. Her search was read on the
+    // full screen, so no detail box here.
     {
-      scene: 'room',
+      scene: 'section-room',
       cue: 'Your friend spends',
-      chip: {title: EXHIBIT, text: COUCH, delay: 1.0},
       props: {
-        camera: {...OPEN_START, ...OPEN_END, focusY: 0.45},
-        tellAt: 2.4, // TIMED: "scrolling" (2.40 s)
-      },
-      // Her search, pointed at her phone. A callout, not the search bar: a bar on her side has no room
-      // between the label, the shelf and her head, and its leader would run through her head.
-      overlays: [
-        {
-          type: 'callout',
-          cue: 'coffee machines',
-          until: 'The next morning',
-          x: 0.261,
-          y: 0.579,
-          // card between the two heads, above both (round 4): off her torso and his head
-          dx: 240,
-          dy: -325,
-          place: 'side',
-          title: 'Coffee machine',
-          sub: 'Her search',
+        realism: true, // objects realistic, people stylized (owner)
+        mood: 'night',
+        camera: 'wide',
+        wake: {who: 'friend', pullAt: 1.4, pullDuration: 1.4}, // TIMED: pulls out after "evening"; lands on "scrolling"
+        screens: {you: 0},
+        ui: {
+          friend: [
+            {at: 0, app: 'lock'},
+            {at: 0.5, app: 'search', query: 'coffee machine', typeFor: 0.9}, // TIMED: typed by ≈ 1.6 s
+            {at: 2.85, app: 'results', query: 'coffee machine'}, // TIMED: results on "coffee machines"
+          ],
+          you: [{at: 0, app: 'lock'}],
         },
+        gestures: [{figure: 'friend', pose: 'lean-in', at: 1.4}], // TIMED: into the phone as the pull starts
+      },
+      overlays: [
+        {type: 'title', at: 2.8, number: 'No. 001', title: 'The Living Room', time: '9:47 PM'},
+        {type: 'tag', who: 'friend', cue: 'coffee machines'},
+        // 48 px above the head, not 120: at 120 the tag sits on the router (§ 6 value)
+        {type: 'tag', who: 'you', cue: 'coffee machines', rise: 48},
       ],
     },
-    // 2 · The surprising fact. Next morning: your phone lights, with the ad.
+    // 2 · The surprising fact. Time passes (Night → Day over 1.5 s, the camera still pushing on the
+    // wide framing); YOU's phone lights with the ad, read in the detail box.
     {
-      scene: 'room',
+      scene: 'section-room',
       cue: 'The next morning',
-      chip: {title: EXHIBIT, text: COUCH},
       props: {
-        camera: {
-          from: OPEN_END.to,
-          lookFrom: OPEN_END.lookTo,
-          to: [0.3, 1.93, 5.2],
-          lookTo: [0.12, 1.36, -0.1], // raised 0.12: the router drops below the ad card
-          focusY: 0.45,
+        realism: true, // objects realistic, people stylized (owner)
+        mood: 'day',
+        moodFrom: 'night',
+        moodAt: 0.1, // TIMED: blends over "The next morning,"
+        camera: 'wide',
+        screens: {friend: 0, you: {at: 0.9}}, // TIMED: lights just before "your phone" (5.76)
+        ui: {
+          friend: [LOCKED],
+          you: [
+            {at: 0, app: 'lock'},
+            {at: 0.9, app: 'feed', adAt: 0.1}, // TIMED: the ad slides in as the box opens on "your phone" (5.76)
+          ],
         },
-        // TIMED: your phone flickers on "shows" (6.60 s), full on "one"; the laptop and her phone stay off
-        devicesAt: [1.65, null, null],
+        gestures: [{figure: 'you', pose: 'lift-phone', at: 0.9}], // TIMED
       },
-      overlays: [
-        {type: 'ad', cue: 'shows you one', until: 'So is your phone', title: 'Coffee machine', x: 0.5, y: 0.265},
-      ],
+      overlays: [{type: 'detail', who: 'you', cue: 'your phone', until: 'So is your phone'}],
     },
-    // 3 · The question. The phone on its pedestal; the mic light comes on with "listening?".
+    // 3 · The question. Glide to the couch (a new sentence); YOU leans into the phone on "listening?".
     {
-      scene: 'phone',
+      scene: 'section-room',
       cue: 'So is your phone',
-      chip: {title: EXHIBIT, text: PHONE},
-      props: {camera: 'front', micDot: true, micAt: 1.3}, // TIMED micAt: "listening?" (9.52 s)
-      overlays: [
-        {
-          type: 'callout',
-          cue: 'listening',
-          // anchored on the mic light; the card sits above the phone
-          x: 0.561,
-          y: 0.355,
-          dx: 0,
-          dy: -46,
-          place: 'above',
-          title: 'Mic in use',
-          sub: 'Shows when an app uses the mic',
-        },
-      ],
+      props: {
+        realism: true, // objects realistic, people stylized (owner)
+        mood: 'day',
+        ...GLIDE,
+        camera: couchRun(T.question, T.listen),
+        screens: {friend: 0},
+        ui: {friend: [LOCKED], you: [AD_IN]},
+        gestures: [
+          {figure: 'you', pose: 'lift-phone', at: -1},
+          {figure: 'you', pose: 'lean-in', at: 1.0}, // TIMED: on "listening?" (9.12)
+        ],
+      },
     },
-    // 4 · The study. 'close' starts where 'front' ends; the mic light is still on (already lit).
+    // 4 · The wake word, and that the check runs on the phone: the phone cut open (a new location, it
+    // slides in). Sound waves drift in from the room and are discarded by the listening chip; a "Hey…"
+    // wave lights the chip on "thinks it hears the phrase"; the hatch to the network stays shut.
+    // Replaces the full-frame assistant screen (one idea per frame); no full-frame screen is used now.
     {
-      scene: 'phone',
-      cue: 'researchers in 2018',
-      chip: {title: EXHIBIT, text: PHONE},
-      props: {camera: 'close', micDot: true, micAt: -2},
+      scene: 'phone-cutaway',
+      cue: 'It does listen',
+      props: {
+        realism: true, // objects realistic, people stylized (owner)
+        mood: 'day',
+        glideIn: 1.0,
+        cutAt: 0.9,
+        wavesAt: 1.3, // TIMED: first wave on "wake word" (11.28)
+        waveEvery: 0.9,
+        wakeAt: 5.95, // TIMED: "Hey…" sets off on "until it" (16.11); the chip lights ≈ 17.3, "hears the phrase"
+        doorShut: true,
+      },
     },
-    // 5 · Its answer: the mic goes dark on "not one was caught". 'screen' starts where 'close' ends.
+    // 5 · The study (The Lab, a second location; slides in): the wall counter runs to 17,000 as it is
+    // spoken; the arms tap and the conveyor runs.
     {
-      scene: 'phone',
+      scene: 'section-lab',
+      cue: 'As for other apps',
+      props: {
+        realism: true, // objects realistic, people stylized (owner)
+        mood: 'day',
+        camera: 'wide',
+        count: 17000,
+        countAt: 1.3, // TIMED: starts on "researchers" (20.04)
+        countFor: 2.6, // TIMED: lands on "17,000" (22.32–22.72)
+      },
+    },
+    // 6 · Its result: the camera moves in on the bench (same slice); the audio meter stays flat and the
+    // "0" stamp lands on "not one was caught".
+    {
+      scene: 'section-lab',
       cue: 'and in their tests',
-      chip: {title: EXHIBIT, text: PHONE},
-      props: {camera: 'screen', micDot: false},
+      props: {
+        realism: true, // objects realistic, people stylized (owner)
+        mood: 'day',
+        // the bench framing trucked right (look x 0.05 → 0.35) so the "0" stamp sits inside x 888
+        camera: {from: {look: [0.35, 1.45, -0.55], distance: 8.6}, to: {look: [0.35, 1.45, -0.55], distance: 8.45}},
+        count: 17000,
+        countAt: -10, // already counted
+        zeroAt: 1.05, // TIMED: "not one was caught" (25.60)
+      },
     },
-    // 6 · "A simpler answer sits on the shelf. Look at the router." The camera rises to the router.
+    // 7 · The turn: "A simpler answer sits on the shelf. Look at the router." Back in the living room (it
+    // slides in), the camera cranes from the couch up to the router; both look up at it as it is named.
     {
-      scene: 'room',
+      scene: 'section-room',
       cue: 'A simpler answer',
-      chip: {title: EXHIBIT, text: ROUTER},
       props: {
-        camera: {
-          from: [0.1, 1.95, 4.5],
-          lookFrom: [0, 1.4, -0.5],
-          ...ROUTER_END, // round 3: x −0.07 and look-at +0.12 push the laptop edge out of frame
-          focusY: 0.42,
-        },
+        realism: true, // objects realistic, people stylized (owner)
+        mood: 'day',
+        camera: {from: COUCH_END, to: ROUTER_VIEW},
+        screens: {friend: 0},
+        ui: {friend: [LOCKED], you: [AD_IN]},
+        gestures: routeGestures(T.shelf),
       },
     },
-    // 7 · Mechanism, in physical order: the camera pulls back from the router to the whole room as each
-    // device on the network lights, then one shared address.
+    // 8 · The mechanism (FTC): glide to wide (a new sentence; router → wide is too far for a push), so
+    // the whole path shows. The route leaves FRIEND's phone, through the router, down inside the back
+    // wall (the X-ray cut-away, the video's only one), along the cut ground and out of frame.
     {
-      scene: 'room',
+      scene: 'section-room',
       cue: 'FTC staff said',
-      chip: {title: EXHIBIT, text: ROUTER},
       props: {
-        camera: {from: ROUTER_END.to, lookFrom: ROUTER_END.lookTo, ...DEVICES_END, focusY: 0.45},
-        devicesAt: [2.85, 3.5, 4.15], // TIMED: "devices" 26.04, "home" 26.88, "network" 27.36
+        realism: true, // objects realistic, people stylized (owner)
+        mood: 'day',
+        ...GLIDE,
+        camera: wideRun(T.ftc, T.guess),
+        screens: {friend: 0},
+        ui: {friend: [LOCKED], you: [AD_IN]},
+        gestures: routeGestures(T.ftc),
+        route: routeIn(T.ftc),
       },
-      overlays: [
-        {
-          type: 'callout',
-          cue: 'public address',
-          // anchored on the router body's right end; card to its right, clear of the shelf (round 3)
-          x: 0.55,
-          y: 0.36,
-          dx: 100,
-          dy: -25,
-          place: 'side',
-          title: 'Same Wi-Fi',
-          sub: 'IP 203.0.113.42',
-        },
-      ],
     },
-    // 8 · The reveal: the route draws friend → router → you as the platform "guesses", then stains.
+    // 9 · The guess: the way back arrives at YOU's phone; the idea to keep in the sky band.
     {
-      scene: 'room',
+      scene: 'section-room',
       cue: 'and ad platforms',
-      chip: {title: EXHIBIT, text: ROUTER},
       props: {
-        camera: {from: DEVICES_END.to, lookFrom: DEVICES_END.lookTo, ...REVEAL_END, focusY: 0.45},
-        arcs: true,
-        // TIMED: draws from "use that" (30.88 s) to "household" (33.04 s), stain by the cut (34.20 s)
-        arcsAt: 0.95,
-        pathDuration: 2.2,
-        glowFor: 0.4,
-        devicesAt: [-1, -1, -1],
-        facing: true,
+        realism: true, // objects realistic, people stylized (owner)
+        mood: 'day',
+        camera: wideRun(T.guess, T.lastNight),
+        screens: {friend: 0},
+        ui: {friend: [LOCKED], you: [AD_IN]},
+        gestures: routeGestures(T.guess),
+        route: routeIn(T.guess),
       },
-    },
-    // 9 · One idea to keep: to the platform, two people are one household.
-    {
-      scene: 'profiles',
-      cue: 'So last night',
-      chip: {title: EXHIBIT, text: HOME},
-      props: {points: 0, glowFor: 1.2, stained: true}, // stains persist after the reveal
-    },
-    // 10 · Her search ends up on your phone: the ad, between the two of them.
-    {
-      scene: 'room',
-      cue: "and that's one way",
-      chip: {title: EXHIBIT, text: HOME},
-      props: {camera: {...TABLE, focusY: 0.5}, ...STAINED, facing: true, facingAt: -1},
-      // between the two heads, pointing down at your phone (right figure): the leader runs clear of the head
       overlays: [
         {
-          type: 'ad',
-          cue: 'your phone',
-          until: 'Next time',
-          title: 'Coffee machine',
-          // right edge at 756 px, above-left of your head: the leader drops steeply past the head to the
-          // phone's top edge and crosses the caption line right of the words
-          x: 0.7,
-          align: 'right',
-          y: 0.41,
-          pointTo: [0.83, 0.632],
+          type: 'statement',
+          cue: 'one household',
+          text: 'One household.',
+          // no attribution line (owner decision): sources go in the post description only
         },
       ],
     },
-    // 11 · Turn it back on the viewer, and the last frame: the stained room. Dollies back from the
-    // table shot to scene 1's first camera, so the loop is one continuous room.
-    // Click-off on the last 6 frames (style guide § 8): orange to zero, stains stay, 4-frame hold.
-    // The label stays on through the click-off: the label layer has no exit at the video's end (see report).
+    // 10 · One home: the trace (node dots on both phones and the router, LED on); they turn to each
+    // other on "you and your friend". No card.
     {
-      scene: 'room',
-      cue: 'Next time',
-      chip: {title: EXHIBIT, text: HOME},
+      scene: 'section-room',
+      cue: 'So last night',
       props: {
-        camera: {
-          from: TABLE.to,
-          lookFrom: TABLE.lookTo,
-          to: OPEN_START.from,
-          lookTo: OPEN_START.lookFrom,
-          focusY: 0.45,
-        },
-        ...STAINED,
-        clickOff: true,
+        realism: true, // objects realistic, people stylized (owner)
+        mood: 'day',
+        camera: wideRun(T.lastNight, T.oneWay),
+        trace: true,
+        screens: {friend: 0},
+        ui: {friend: [LOCKED], you: [AD_IN]},
+        gestures: [
+          ...routeGestures(T.lastNight),
+          {figure: 'friend', pose: 'turn-to', at: 0.8}, // TIMED: "you and your friend" (44.00)
+          {figure: 'you', pose: 'turn-to', at: 0.8},
+        ],
+      },
+    },
+    // 11 · Her search ends up on your phone: glide to the couch (at the wide framing the detail box's
+    // leader drops through a head); YOU's ad, now with the system's orange edge.
+    {
+      scene: 'section-room',
+      cue: "and that's one way",
+      props: {
+        realism: true, // objects realistic, people stylized (owner)
+        mood: 'day',
+        ...GLIDE,
+        camera: endRun(T.oneWay, T.next),
+        trace: true,
+        screens: {friend: 0},
+        ui: {friend: [LOCKED], you: [{at: -60, app: 'feed', adAt: 0, markAt: 1.55}]}, // TIMED: edge on "end up" (48.32)
+        gestures: [
+          {figure: 'friend', pose: 'turn-to', at: -1},
+          {figure: 'you', pose: 'turn-to', at: -1},
+          {figure: 'you', pose: 'scroll', at: 0.2}, // TIMED: back to the phone before "her search" (47.64)
+        ],
+      },
+      overlays: [{type: 'detail', who: 'you', cue: 'her search', until: 'Next time'}],
+    },
+    // 12 · Turn it back on the viewer. YOU turns to FRIEND on "who was on your Wi-Fi", back to the phone,
+    // and the camera pushes into YOUR phone (the marked ad), which locks to black: the last frame is
+    // black like frame 0 (the loop).
+    {
+      scene: 'section-room',
+      cue: 'Next time',
+      props: {
+        realism: true, // objects realistic, people stylized (owner)
+        mood: 'day',
+        camera: endRun(T.next, T.end),
+        trace: true,
+        screens: {friend: 0},
+        ui: {friend: [LOCKED], you: [{at: -60, app: 'feed', adAt: 0, markAt: -59}]},
+        gestures: [
+          {figure: 'friend', pose: 'turn-to', at: -1},
+          {figure: 'you', pose: 'scroll', at: -1},
+          {figure: 'you', pose: 'turn-to', at: 2.7, hold: 0.8}, // TIMED: lands on "who was" (52.96), then back
+        ],
+        sleep: {who: 'you', pushAt: 4.2, pushDuration: 1.0}, // TIMED: after "Wi-Fi." (54.40); locks 6 frames before the end
       },
     },
   ],

@@ -32,21 +32,60 @@ export const sectionCameraAt = (o: {
   to: Framing;
   frame: number;
   fps: number;
+  /** The frame where the main move ends (it holds after, or the `post` move takes over). */
   durationInFrames: number;
   drift?: number;
   clockOffset?: number;
+  /** Before the main move: hold on `pre.from` for `hold` frames, then move to `from` over `move` frames. */
+  pre?: {from: Framing; hold: number; move: number; ease?: 'sine' | 'cubic'};
+  /** After the main move: from frame `at`, move to `post.to` over `move` frames, then hold. */
+  post?: {to: Framing; at: number; move: number};
 }): {position: THREE.Vector3; look: THREE.Vector3} => {
-  const p = interpolate(o.frame, [0, Math.max(1, o.durationInFrames)], [0, 1], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-    easing: Easing.inOut(Easing.sin),
+  const sine = Easing.inOut(Easing.sin);
+  const q = (x: number) =>
+    interpolate(x, [0, 1], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: sine});
+  // pre/post moves go in and out of a phone: distance on a log scale reads as a steady dolly
+  const mix = (a: Framing, b: Framing, k: number, logDistance: boolean) => ({
+    look: a.look.map((x, i) => x + (b.look[i] - x) * k) as V3,
+    distance: logDistance
+      ? Math.exp(Math.log(a.distance) + (Math.log(b.distance) - Math.log(a.distance)) * k)
+      : a.distance + (b.distance - a.distance) * k,
   });
-  const look = o.from.look.map((x, i) => x + (o.to.look[i] - x) * p) as V3;
-  const distance = o.from.distance + (o.to.distance - o.from.distance) * p;
+  const start = o.pre ? o.pre.hold + o.pre.move : 0;
+  const end = o.post ? o.post.at : Math.max(start + 1, o.durationInFrames);
+  let f: Framing;
+  if (o.pre && o.frame < start) {
+    const u = (o.frame - o.pre.hold) / Math.max(1, o.pre.move);
+    // a glide (cubic, linear distance) or a pull out of a phone (sine, log distance)
+    f =
+      o.pre.ease === 'cubic'
+        ? mix(
+            o.pre.from,
+            o.from,
+            interpolate(u, [0, 1], [0, 1], {
+              extrapolateLeft: 'clamp',
+              extrapolateRight: 'clamp',
+              easing: Easing.inOut(Easing.cubic),
+            }),
+            false,
+          )
+        : mix(o.pre.from, o.from, q(u), true);
+  } else if (o.post && o.frame >= end) {
+    f = mix(o.to, o.post.to, q((o.frame - o.post.at) / Math.max(1, o.post.move)), true);
+  } else {
+    f = mix(o.from, o.to, q((o.frame - start) / Math.max(1, end - start)), false);
+  }
   const side = new THREE.Vector3(SECTION_ANGLE[2], 0, -SECTION_ANGLE[0]).normalize();
-  const sway = (o.drift ?? 0) * Math.sin(((o.frame / o.fps + (o.clockOffset ?? 0)) / 25) * Math.PI * 2);
-  const lookV = new THREE.Vector3(...look).addScaledVector(side, sway);
-  return {position: new THREE.Vector3(...cameraAt({look: [lookV.x, lookV.y, lookV.z], distance})), look: lookV};
+  // the idle drift shrinks with the distance (close to a phone it would swing the frame)
+  const sway =
+    (o.drift ?? 0) *
+    Math.min(1, f.distance / 10) *
+    Math.sin(((o.frame / o.fps + (o.clockOffset ?? 0)) / 25) * Math.PI * 2);
+  const lookV = new THREE.Vector3(...f.look).addScaledVector(side, sway);
+  return {
+    position: new THREE.Vector3(...cameraAt({look: [lookV.x, lookV.y, lookV.z], distance: f.distance})),
+    look: lookV,
+  };
 };
 
 /** Project a world point to frame pixels for a Section camera state (fov 26°, 1080 × 1920). */
@@ -71,11 +110,13 @@ export const SectionCamera: React.FC<{
   durationInFrames: number;
   drift?: number;
   clockOffset?: number;
-}> = ({from, to, durationInFrames, drift = 0, clockOffset = 0}) => {
+  pre?: {from: Framing; hold: number; move: number; ease?: 'sine' | 'cubic'};
+  post?: {to: Framing; at: number; move: number};
+}> = ({from, to, durationInFrames, drift = 0, clockOffset = 0, pre, post}) => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
   const camera = useThree((s) => s.camera);
-  const {position, look} = sectionCameraAt({from, to, frame, fps, durationInFrames, drift, clockOffset});
+  const {position, look} = sectionCameraAt({from, to, frame, fps, durationInFrames, drift, clockOffset, pre, post});
   camera.position.copy(position);
   camera.lookAt(look);
   camera.updateProjectionMatrix();

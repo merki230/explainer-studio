@@ -16,6 +16,8 @@ export type TitleBlockProps = {
   section?: string;
   /** Seconds it holds after entering (default 2.5); it then fades over 10 frames (Explainer). */
   hold?: number;
+  /** Top edge in px: default 300, in the sky band above the cut wall tops (the guide's 340 sat on them). */
+  top?: number;
 };
 
 /** Frames the title block takes to fade in and out. */
@@ -24,7 +26,7 @@ export const TITLE_HOLD = 2.5;
 
 /**
  * Title block (v0.8 § 6), first scene only: a `paper` box with a 3 px `ink` border, square corners,
- * top edge y 340, left edge x 120. Line 1 "No. 001 · The Living Room" in Archivo 800 37 px; line 2
+ * top edge y 300 (the sky band), left edge x 120. Line 1 "No. 001 · The Living Room" in Archivo 800 37 px; line 2
  * "SECTION A–A · 9:47 PM" in Mono 600 19 px, 0.18em, `inkSub`. Start it at ≈ 1.0 s (`at: 1`).
  */
 export const TitleBlock: React.FC<TitleBlockProps & {mood?: Mood}> = ({
@@ -32,6 +34,7 @@ export const TitleBlock: React.FC<TitleBlockProps & {mood?: Mood}> = ({
   title,
   time,
   section = 'A–A',
+  top = 300,
   mood = 'day',
 }) => {
   const frame = useCurrentFrame();
@@ -42,7 +45,7 @@ export const TitleBlock: React.FC<TitleBlockProps & {mood?: Mood}> = ({
       style={{
         position: 'absolute',
         left: LEFT,
-        top: 340,
+        top,
         background: paper,
         border: `3px solid ${ink}`,
         borderRadius: 0,

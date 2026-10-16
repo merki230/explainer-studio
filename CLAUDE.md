@@ -139,8 +139,8 @@ behalf, doesn't dispatch a task whose brief depends on an unanswered owner decis
 Every video has `src/videos/<slug>/sources.md` (format in `docs/sources-format.md`). Any specific number,
 named company, study, or "they do X" claim needs a ✅ verified source, unless it is attributed or hedged as the source hedges (🟡) or marked
 illustrative (🎭, disclosed with an "Illustrative: …" line in the post description). Never invent a URL or quote.
-Full sources go in the post description; up to 2 short attribution lines may appear on screen
-(`brand/style-guide.md` § 5). `yarn check` warns about a missing sources.md and any ❌ claims.
+Sources go in the post description only, never on screen. Name a company in the voice only when the story is
+about its own product, never as a citation. `yarn check` warns about a missing sources.md and any ❌ claims.
 
 ## Style of the videos
 

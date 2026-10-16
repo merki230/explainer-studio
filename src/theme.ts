@@ -143,8 +143,30 @@ export const MOODS: Record<
     appliance: string;
     ceramic: string;
     shelf: string;
+    /** Inside the back wall, seen through the X-ray cut-away (dark, so the cut-away reads). */
+    cavity: string;
     /** Lamp shade colour (lit from inside in Night). */
     shade: string;
+    /**
+     * A narrow cool spot on the people (Night: lifts the subjects to the ≥ 30% floor without touching
+     * the wall tops; the guide's rim colour), or null.
+     */
+    figureLight: {
+      color: string;
+      intensity: number;
+      position: [number, number, number];
+      target: [number, number, number];
+    } | null;
+    /**
+     * Strength of the studio reflections on realistic objects (realism pass): 1 in Day; lower in Night
+     * (its exposure is ≈ 2.2× Day's, and a dark room shouldn't read as a lit studio).
+     */
+    env: number;
+    /**
+     * Albedo scale for realistic objects' fixed colours (realism pass): 1 in Day; lower in Night,
+     * whose exposure (≈ 2.2× Day's) would otherwise make a phone's label or a chip glare.
+     */
+    albedo: number;
     /** Extra soft light on the walls (Day: whiter walls without hotter tops), or null. */
     bounce: {color: string; intensity: number; position: [number, number, number]} | null;
   }
@@ -174,11 +196,15 @@ export const MOODS: Record<
     shoulder: 0.88,
     ui: '#121318',
     rug: '#4a4a5c',
+    cavity: '#0a0e1a',
     appliance: '#b9b9b5',
     ceramic: '#bdb9b1',
     shelf: '#404a62',
     shade: '#c4ae8a',
+    env: 0.22,
+    albedo: 0.55,
     bounce: null,
+    figureLight: {color: '#9fb3e8', intensity: 0.8, position: [1.6, 3.2, 2.2], target: [0, 0.95, -0.5]},
   },
   day: {
     bg: '#cfe3f5',
@@ -205,12 +231,122 @@ export const MOODS: Record<
     shoulder: 0.74,
     ui: '#fafafa',
     rug: '#cbbfae',
+    cavity: '#7d7870',
     appliance: '#d2d2ce',
     ceramic: '#e2ded6',
     shelf: '#d2d2ce',
     shade: '#e4dccd',
+    env: 1,
+    albedo: 1,
     bounce: {color: '#fff7ee', intensity: 0.7, position: [4, 1.5, 3]},
+    figureLight: null,
   },
+};
+
+/** The Lab slice's own surfaces (a test room), per mood. Neutral; never orange. */
+export const LAB: Record<
+  Mood,
+  {
+    floor: string;
+    bench: string;
+    rig: string;
+    arm: string;
+    joint: string;
+    panel: string;
+    panelInk: string;
+    segOff: string;
+    segLow: string;
+    /** App icon colours on the conveyor (cool and mid hues, outside the reserved band). */
+    icons: string[];
+  }
+> = {
+  day: {
+    floor: '#d3d6d4',
+    bench: '#e4e4e0',
+    rig: '#c3c8cf',
+    arm: '#dfe1e4',
+    joint: '#3a3f4b',
+    panel: '#1f2229',
+    panelInk: '#e9ecf2',
+    segOff: '#363b46',
+    segLow: '#8f97a5',
+    icons: ['#5b7bd5', '#3fa37a', '#8a5cc2', '#3b9bb0', '#c9b54a', '#7d8796'],
+  },
+  night: {
+    floor: '#3a3d47',
+    bench: '#4a5068',
+    rig: '#454b5e',
+    arm: '#5a6178',
+    joint: '#1b1d22',
+    panel: '#12151c',
+    panelInk: '#e9ecf2',
+    segOff: '#2a2f3a',
+    segLow: '#7d8696',
+    icons: ['#5b7bd5', '#3fa37a', '#8a5cc2', '#3b9bb0', '#c9b54a', '#7d8796'],
+  },
+};
+
+/**
+ * Realistic objects (realism test, owner rule "objects realistic, people stylized"): the phone's
+ * physical materials, the same in both moods (the lights change, the object doesn't). Neutral
+ * metals, glass and electronics; nothing in the reserved orange band (hue 8–40°, sat ≥ 60%), so the
+ * flex cables are black, not the usual amber polyimide.
+ */
+export const REAL = {
+  /** Graphite aluminium frame and buttons (dark enough to hold its shape against the Day sky). */
+  frame: '#5f6268',
+  /** The plastic antenna bands across the frame. */
+  antenna: '#4a4c51',
+  /** Front glass over the black display border. */
+  glass: '#0a0b0d',
+  /** Frosted back glass. */
+  back: '#6a6e75',
+  /** Camera bump: lens cover glass, the lens's inner rings, the flash diffuser. */
+  lens: '#060708',
+  lensRing: '#2b2d31',
+  flash: '#d8d3c4',
+  /** Display off (behind the glass, around the active area and when the screen is dark). */
+  panelOff: '#0f1013',
+  /** Inside: the magnesium midframe, the logic board, its traces, silkscreen, gold pads. */
+  midframe: '#5a5d63',
+  pcb: '#14261b',
+  trace: '#21412c',
+  silk: '#d4d6ca',
+  pad: '#b49f5e',
+  /** Chip packages and their laser-etched legends. */
+  chip: '#151619',
+  chipInk: '#8b8e94',
+  /** Tin-plated RF shield cans, screws, brackets. */
+  shield: '#b9bdc2',
+  screw: '#a7abb1',
+  /** Battery foil and its printed label ink; the black adhesive pull tabs. */
+  battery: '#2a2c31',
+  batteryInk: '#d8d9d3',
+  tab: '#121315',
+  /** Rubber (antennas, feet) and a neutral status LED (never orange: the system's LED is `orange`). */
+  rubber: '#26282c',
+  statusLed: '#a9d8ff',
+  /** Living room (realism): coffee, potting soil, the glazed pot, snake-plant leaf green and its pale edge. */
+  coffee: '#3a2a22',
+  soil: '#3b3029',
+  pot: '#cfcbc3',
+  leafDeep: '#2f4f33',
+  leafEdge: '#c3c68c',
+  /** The Lab (realism): steel, aluminium, dark anodised parts, the ESD bench mat, the arms' shells, cables, belt, cabinet. */
+  steel: '#9a9ea5',
+  alu: '#b8bcc2',
+  labDark: '#2c2f35',
+  esdMat: '#3c4a57',
+  armShell: '#d6d8d6',
+  cable: '#1e1f22',
+  belt: '#3a3b3f',
+  cabinet: '#5d636c',
+  /** Flex ribbon cables (black coverlay). */
+  flex: '#1b1c1f',
+  /** Small parts: ceramic capacitors, resistors, inductors. */
+  cap: '#8f8166',
+  resistor: '#1d1d20',
+  inductor: '#5d6066',
 };
 
 export type CastName = 'you' | 'friend' | 'mom' | 'extra';

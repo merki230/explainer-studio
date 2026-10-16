@@ -155,11 +155,15 @@ const clamp = (x: number, a: number, b: number) => Math.max(a, Math.min(b, x));
 const aimAt = (
   target: THREE.Vector3,
   body: number,
+  /** Share of the turn toward the target (1: all of it). Less turn reads more as "up" from a 3/4 view. */
+  turn = 1,
+  /** Extra lift on the look up (1: as computed). */
+  lift = 1,
 ): Pick<PoseParams, 'spine' | 'chest' | 'neck' | 'head' | 'headShift'> => {
   const d = target.clone().sub(EYE);
-  const yaw = clamp(Math.atan2(d.x, d.z), -1.45, 1.45);
+  const yaw = clamp(Math.atan2(d.x, d.z), -1.45, 1.45) * turn;
   const pitch = Math.atan2(d.y, Math.hypot(d.x, d.z));
-  const up = clamp(pitch - REST_GAZE_PITCH, -0.4, 1.15);
+  const up = clamp((pitch - REST_GAZE_PITCH) * lift, -0.4, 1.3);
   const side = clamp(yaw / 1.2, -1, 1);
   return {
     // sit up out of the slouch to look up; lean the body toward what it turns to
@@ -178,7 +182,9 @@ const aimAt = (
  */
 export const poseParams = (pose: PoseName, target?: THREE.Vector3): PoseParams => {
   if (pose === 'look-up') {
-    const aim = aimAt(target ?? V(0, 2.6, 1.2), 0.7);
+    // A target behind and above (the router on the wall) would turn the head away from a front 3/4
+    // camera and read as "to the side": turn a third of the way, lift more, so it reads as "up there".
+    const aim = aimAt(target ?? V(0, 2.6, 1.2), 0.5, 0.35, 1.25);
     return base({...aim, phonePos: [0, -0.07, -0.02], phoneRot: [-0.3, 0, 0], scroll: 0});
   }
   if (pose === 'turn-to') {
@@ -341,4 +347,19 @@ export const phoneInChest = (p: PoseParams, swipe: number, restPitch = REST.phon
     return g.clone().add(extra).applyQuaternion(q).add(pos);
   }) as [THREE.Vector3, THREE.Vector3];
   return {pos, euler, grips};
+};
+
+/**
+ * The phone's position in figure-local space for a pose (spine and chest rotations applied; idle
+ * life ignored, it moves the phone by millimetres). For things that start or end at the phone:
+ * the route's node dot, the detail box's leader.
+ */
+export const phoneLocalAt = (p: PoseParams, restPitch = REST.phonePitch): THREE.Vector3 => {
+  const e = (v: V3) => new THREE.Euler(v[0], v[1], v[2], 'YXZ');
+  const inChest = phoneInChest(p, 0, restPitch).pos;
+  const inSpine = REST.chest
+    .clone()
+    .sub(REST.spine)
+    .add(inChest.applyEuler(e(p.chest)));
+  return REST.spine.clone().add(inSpine.applyEuler(e(p.spine)));
 };

@@ -10,26 +10,34 @@ export type StatementProps = {
   /** The key phrase exactly as said, sentence case, with a full stop: "One household." ≤ 4 words, ≤ 2 lines. */
   text: string;
   /**
-   * 'low' (default): the block's bottom edge at y 1000, growing upward. 'high': its top edge at
-   * y 500 (when the subject fills the lower focal band).
+   * 'sky' (default): in the sky band above the cut wall tops, top edge at y 300 (inside the safe
+   * zone). 'low': bottom edge at y 1000, growing upward, for frames without sky (close framings).
+   * 'high': top edge at y 500.
    */
-  place?: 'low' | 'high';
+  place?: 'sky' | 'low' | 'high';
   /** Optional attribution line under the card (who + year, e.g. "FTC staff report, 2017"). */
   attribution?: string;
 };
+
+/**
+ * Top edge of a card in the sky band: the safe zone's top (y 288), so a one-line statement and its
+ * attribution (≈ y 288–425) stay clear of the cut wall tops (≈ y 430) on the wide framing. A
+ * two-line statement does not fit the sky band: use 'low'.
+ */
+export const SKY_TOP = 288;
 
 /** Frames the statement card fades in (and out, see Explainer). Style guide § 6. */
 export const STATEMENT_FADE = 12;
 
 /**
- * Statement card (v0.8 § 6): the key phrase set large over the scene, Archivo 800 88 px / 0.95,
+ * Statement card (v0.8 § 6, placed in the sky band by default): the key phrase set large over the scene, Archivo 800 88 px / 0.95,
  * −0.03em, `ink` with a 32 px `paper` halo, no box, left-aligned at x 120. Calm: opacity over
  * 12 frames with a 6 px rise. The attribution line sits 24 px under its last line and enters
  * 6 frames later. Captions are off while it is up (Explainer).
  */
 export const Statement: React.FC<StatementProps & {mood?: Mood}> = ({
   text,
-  place = 'low',
+  place = 'sky',
   attribution,
   mood = 'day',
 }) => {
@@ -63,7 +71,7 @@ export const Statement: React.FC<StatementProps & {mood?: Mood}> = ({
           position: 'absolute',
           left: LEFT,
           maxWidth: RIGHT - LEFT,
-          ...(low ? {bottom: 1920 - 1000} : {top: 500}),
+          ...(low ? {bottom: 1920 - 1000} : {top: place === 'sky' ? SKY_TOP : 500}),
           opacity: enter,
           transform: `translateY(${rise}px)`,
         }}

@@ -88,6 +88,12 @@ export type OrangePathProps = {
    */
   flow?: number;
   dots?: number;
+  /** Core colour (default `orangeCore`; the Section uses `orange` in Day, where the pale core vanishes). */
+  coreColor?: string;
+  /** Halo radius as a multiple of `radius` (default 2.6) and its opacity (default 0.2). */
+  halo?: {scale: number; opacity: number};
+  /** Runner light strength (default 1.2) and reach (default 1.8). */
+  runnerLight?: {intensity: number; reach: number};
 };
 
 /**
@@ -107,6 +113,9 @@ export const OrangePath: React.FC<OrangePathProps> = ({
   runner = true,
   flow,
   dots = 5,
+  coreColor = theme.orangeCore,
+  halo = {scale: 2.6, opacity: 0.2},
+  runnerLight = {intensity: 1.2, reach: 1.8},
 }) => {
   const key = JSON.stringify(legs);
   const stainKey = JSON.stringify(stainLegs ?? legs);
@@ -115,17 +124,17 @@ export const OrangePath: React.FC<OrangePathProps> = ({
   const stainCurve = useMemo(() => toCurve(JSON.parse(stainKey)), [stainKey]);
 
   const coreGeo = useTube(curve, radius);
-  const haloGeo = useTube(curve, radius * 2.6);
+  const haloGeo = useTube(curve, radius * halo.scale);
   const stainGeo = useTube(stainCurve, stainRadius);
   const stainSoftGeo = useTube(stainCurve, stainRadius * 3);
 
   const mats = useMemo(
     () => ({
-      core: new THREE.MeshBasicMaterial({color: raw(theme.orangeCore), transparent: true}),
+      core: new THREE.MeshBasicMaterial({color: raw(coreColor), transparent: true}),
       halo: new THREE.MeshBasicMaterial({color: raw(theme.orange), transparent: true, depthWrite: false}),
       dot: new THREE.MeshBasicMaterial({color: raw(theme.orangeDot), transparent: true}),
     }),
-    [],
+    [coreColor],
   );
   useEffect(() => () => Object.values(mats).forEach((m) => m.dispose()), [mats]);
 
@@ -137,7 +146,7 @@ export const OrangePath: React.FC<OrangePathProps> = ({
   reveal(stainGeo, sp);
   reveal(stainSoftGeo, sp);
   mats.core.opacity = g;
-  mats.halo.opacity = 0.2 * g;
+  mats.halo.opacity = halo.opacity * g;
   // Dots belong to the live system: they shrink and fade with the glow (no "stickers").
   mats.dot.opacity = g;
 
@@ -161,8 +170,8 @@ export const OrangePath: React.FC<OrangePathProps> = ({
       {runner ? (
         <OrangeLight
           position={[head.x, head.y, head.z]}
-          intensity={drawing && g > 0.001 ? 1.2 * Math.max(g, 0.3) : 0}
-          reach={1.8}
+          intensity={drawing && g > 0.001 ? runnerLight.intensity * Math.max(g, 0.3) : 0}
+          reach={runnerLight.reach}
         />
       ) : null}
       {flow !== undefined && p >= 1 && g > 0.001

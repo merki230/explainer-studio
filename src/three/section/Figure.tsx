@@ -1,8 +1,10 @@
 import React, {useMemo} from 'react';
 import {random, useCurrentFrame, useVideoConfig} from 'remotion';
 import * as THREE from 'three';
+import {drawScreen, drawScreenFit, SCREEN_H, SCREEN_W, screenKey, type ScreenState} from '../../components/screenKit';
 import {CAST, MOODS, section, type CastName, type Mood} from '../../theme';
 import {limb, plaster as matte, raw, roundedBox} from '../plaster';
+import {REAL_DISPLAY, REAL_PHONE, RealPhone} from '../real/RealPhone';
 import {
   breath,
   idleOffsets,
@@ -110,8 +112,18 @@ export type FigureProps = {
   phone?: boolean;
   /** Screen on, 0 (locked: dark, a faint light) to 1 (on: lit UI, its light on the face). */
   screenOn?: number;
-  /** The system's orange on the screen and its light, 0–1 (stage 2 wires it). */
+  /** The system's orange on the screen's light (the bleed on the face), 0–1. */
   system?: number;
+  /**
+   * What the screen shows (phone-screen kit). Drawn into the phone's screen texture with the same
+   * function as the detail box, so they match. Omit for a plain lit screen.
+   */
+  screen?: ScreenState;
+  /**
+   * Which phone: 'simple' (default, the stylized slab) or 'real' (the realistic phone of the realism
+   * test: aluminium frame, glass, camera bump, studio reflections), at the same height (0.22).
+   */
+  phoneModel?: 'simple' | 'real';
   /** Breathing, weight shifts, head drift, thumb and blinks (default on). */
   life?: boolean;
   /** Seconds added to the scene time for the idle life (the scene's start in the video). */
@@ -134,6 +146,8 @@ export const Figure: React.FC<FigureProps> = ({
   phone: holdsPhone = true,
   screenOn = 1,
   system = 0,
+  screen,
+  phoneModel = 'simple',
   life = true,
   clockOffset = 0,
 }) => {
@@ -157,11 +171,42 @@ export const Figure: React.FC<FigureProps> = ({
     [look, mood],
   );
   const screenMat = useMemo(() => new THREE.MeshBasicMaterial({color: raw(MOODS[mood].ui)}), [mood]);
+  // the screen texture: a small canvas, redrawn only when what it shows changes
+  const real = phoneModel === 'real';
+  const tex = useMemo(() => {
+    const c = document.createElement('canvas');
+    c.width = SCREEN_W / 2;
+    // the realistic phone's display is taller (1 : 2.13): the kit is fitted to it, not squashed
+    c.height = Math.round(real ? (c.width * REAL_DISPLAY.h) / REAL_DISPLAY.w : SCREEN_H / 2);
+    const t = new THREE.CanvasTexture(c);
+    return {c, t, key: ''};
+  }, [real]);
   const on = Math.max(0, Math.min(1, screenOn));
   const sys = Math.max(0, Math.min(1, system));
   const dark = raw('#0f1116');
-  const lit = raw(MOODS[mood].ui);
-  screenMat.color.copy(dark).lerp(lit, on).lerp(raw(section.orange), sys);
+  if (screen) {
+    const k = screenKey(screen);
+    if (k !== tex.key) {
+      const cx = tex.c.getContext('2d');
+      if (cx && real) {
+        drawScreenFit(cx, screen, tex.c.width, tex.c.height);
+        tex.t.needsUpdate = true;
+        tex.key = k;
+      } else if (cx) {
+        cx.setTransform(0.5, 0, 0, 0.5, 0, 0);
+        drawScreen(cx, screen);
+        tex.t.needsUpdate = true;
+        tex.key = k;
+      }
+    }
+    if (screenMat.map !== tex.t) {
+      screenMat.map = tex.t;
+      screenMat.needsUpdate = true;
+    }
+    screenMat.color.copy(dark).lerp(new THREE.Color(1, 1, 1), on);
+  } else {
+    screenMat.color.copy(dark).lerp(raw(MOODS[mood].ui), on);
+  }
   const lifeK = useMemo(() => lifeSeed(key), [key]);
 
   const toLocal = (p: V3) =>
@@ -195,7 +240,14 @@ export const Figure: React.FC<FigureProps> = ({
   const thumbQ = new THREE.Quaternion().setFromUnitVectors(V(0, 1, 0), thumbDir);
   // light on the face from the screen (§ 3: 0.6 on, 0.15 locked), × 0.15 for three's inverse-square
   // falloff over the ≈ 0.3 units to the face (the mock-up's legacy light had none)
-  const faceLight = holdsPhone ? (0.15 + 0.45 * on) * 0.15 : 0;
+  // Night: the screen's light flickers a little on the face as what's on it changes (seeded steps)
+  const step = Math.floor(clock / 0.32);
+  const blend = clock / 0.32 - step;
+  const flick =
+    mood === 'night' && life
+      ? (random(`${key}-flick-${step}`) - 0.5) * (1 - blend) + (random(`${key}-flick-${step + 1}`) - 0.5) * blend
+      : 0;
+  const faceLight = holdsPhone ? (0.15 + 0.45 * on) * 0.15 * (1 + 0.3 * flick * on) : 0;
 
   const P = PARTS;
   const c = REST.headCentre;
@@ -295,16 +347,28 @@ export const Figure: React.FC<FigureProps> = ({
             })}
             {holdsPhone ? (
               <group position={ph.pos} rotation={ph.euler}>
-                <mesh geometry={PHONE_BODY} material={mats.device} castShadow receiveShadow />
-                {/* the screen is on the back (−z) face: toward the holder's eyes */}
-                <mesh position={[0, 0, -PHONE.d / 2 - 0.0006]} rotation={[0, Math.PI, 0]} material={screenMat}>
-                  <planeGeometry args={[PHONE.w - 0.015, PHONE.h - 0.02]} />
-                </mesh>
+                {real ? (
+                  // the realistic phone, its screen on the −z face (toward the holder's eyes)
+                  <RealPhone
+                    rotation={[0, Math.PI, 0]}
+                    scale={PHONE.h / REAL_PHONE.h}
+                    display={screenMat}
+                    section={false}
+                  />
+                ) : (
+                  <>
+                    <mesh geometry={PHONE_BODY} material={mats.device} castShadow receiveShadow />
+                    {/* the screen is on the back (−z) face: toward the holder's eyes */}
+                    <mesh position={[0, 0, -PHONE.d / 2 - 0.0006]} rotation={[0, Math.PI, 0]} material={screenMat}>
+                      <planeGeometry args={[PHONE.w - 0.015, PHONE.h - 0.02]} />
+                    </mesh>
+                  </>
+                )}
                 <mesh geometry={THUMB} material={mats.skin} position={thumbPos} quaternion={thumbQ} castShadow />
                 <pointLight
                   position={[0, 0.04, -0.04]}
-                  color={raw(sys > 0.5 ? section.orange : section.screenLight)}
-                  intensity={faceLight}
+                  color={raw(section.screenLight).lerp(raw(section.orange), sys)}
+                  intensity={faceLight * (1 + 0.6 * sys)}
                   distance={0.9}
                   decay={2}
                 />

@@ -3,6 +3,15 @@
 How a Secretly Works video gets made, and what the pilot (Exhibit No. 001, `phone-listening`) taught us.
 Living document: update it whenever a step causes rework, so the next video doesn't repeat it.
 
+## How a video is built (owner-approved, 2026-10-15)
+
+1. **Rough cut:** the whole video with the real voice, the right beats and camera moves, simple
+   placeholders where effects aren't finished. The owner reviews it in Remotion Studio for structure
+   and pacing.
+2. **Polish beat by beat:** take one beat to final quality, owner reviews it in the Studio, lock it,
+   move to the next. A locked beat is only reopened for something serious.
+3. **Final pass:** one full watch in the Studio, then render the MP4.
+
 ## The order that avoids rework
 
 1. **Decide the look before building anything.** Use a browser comparison page (2–3 options, same moment,
@@ -22,7 +31,9 @@ Living document: update it whenever a step causes rework, so the next video does
    props (`tellAt`, `devicesAt`, `micAt`…) are the ones to re-time; cues re-time themselves.
 5. **Layout → components → review → fix → render.** Every review round lists only issues a viewer
    would notice, in priority order, each with a concrete fix and an owner.
-6. **Render, the owner watches on a phone, then commit.**
+6. **Owner review in Remotion Studio before any final render.** Start `yarn studio`, give the owner the
+   local URL, and collect feedback while scrubbing with sound. Render the MP4 only after the owner signs off
+   in the Studio. Then the owner watches the file on a phone, and we commit.
 
 ## Rules that changed, and where they live
 

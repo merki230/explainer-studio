@@ -7,10 +7,14 @@ import {Captions} from './components/Captions';
 import {Chip} from './components/Chip';
 import {Counter} from './components/Counter';
 import {SearchBar} from './components/SearchBar';
+import {DETAIL_FADE, DetailBox} from './components/DetailBox';
+import {FULLSCREEN_FADE, FullScreen} from './components/FullScreen';
 import {NameTag, TAG_FADE} from './components/NameTag';
 import {Statement, STATEMENT_FADE} from './components/Statement';
 import {TITLE_FADE, TITLE_HOLD, TitleBlock} from './components/TitleBlock';
 import {SCENES} from './scenes';
+import {sectionCameraEnd, sectionCameraStart, TIME_PASSES} from './scenes/SectionRoomScene';
+import {transitionInto, type Transition} from './scenes/transitions';
 import {clickOffFrame, type ClickOff} from './scenes/clickOff';
 import {fonts} from './fonts';
 import {FADE, FPS, theme, type Mood} from './theme';
@@ -61,14 +65,6 @@ const ErrorCard: React.FC<{videoId: string; message: string}> = ({videoId, messa
   </AbsoluteFill>
 );
 
-const FadeIn: React.FC<{children: React.ReactNode; enabled: boolean}> = ({children, enabled}) => {
-  const frame = useCurrentFrame();
-  const opacity = enabled
-    ? interpolate(frame, [0, FADE], [0, 1], {extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)})
-    : 1;
-  return <AbsoluteFill style={{opacity}}>{children}</AbsoluteFill>;
-};
-
 /** Frames an overlay takes to fade out before its `until`. */
 const OVERLAY_EXIT = 8;
 const exitFrames = (o: ResolvedOverlay) =>
@@ -76,8 +72,8 @@ const exitFrames = (o: ResolvedOverlay) =>
     ? STATEMENT_FADE
     : o.type === 'attribution'
       ? ATTRIBUTION_FADE
-      : o.type === 'tag'
-        ? TAG_FADE
+      : o.type === 'tag' || o.type === 'detail' || o.type === 'screen'
+        ? Math.max(TAG_FADE, DETAIL_FADE, FULLSCREEN_FADE)
         : o.type === 'title'
           ? TITLE_FADE
           : OVERLAY_EXIT;
@@ -155,7 +151,7 @@ const Overlay: React.FC<{o: ResolvedOverlay; scene: SceneContext}> = ({o, scene}
   const mood = scene.mood;
   switch (o.type) {
     case 'callout':
-      return <Callout {...o} />;
+      return <Callout {...o} mood={mood} />;
     case 'search':
       return <SearchBar {...o} />;
     case 'ad':
@@ -170,6 +166,10 @@ const Overlay: React.FC<{o: ResolvedOverlay; scene: SceneContext}> = ({o, scene}
       return <TitleBlock {...o} mood={mood} />;
     case 'tag':
       return <NameTag {...o} mood={mood} scene={scene} />;
+    case 'detail':
+      return <DetailBox {...o} mood={mood} scene={scene} />;
+    case 'screen':
+      return <FullScreen {...o} mood={mood} scene={scene} />;
     default:
       return null;
   }
@@ -199,6 +199,97 @@ export const Explainer: React.FC<ExplainerProps> = ({videoId}) => {
   return <ExplainerBody videoId={videoId} timeline={result.timeline} />;
 };
 
+/** Where content starts (in) or ends (out) for a moving transition, as a fraction of the frame. */
+const offsetFor = (t: Transition): [number, number] =>
+  t.kind === 'slide'
+    ? [0, 1]
+    : t.direction === 'down'
+      ? [0, 1]
+      : t.direction === 'up'
+        ? [0, -1]
+        : t.direction === 'left'
+          ? [-1, 0]
+          : [1, 0];
+
+/** The route crossing the seam of a 'follow' move: a short orange line at the edge it moves across. */
+const SeamLine: React.FC<{t: Transition; edge: 'in' | 'out'; level: number}> = ({t, edge, level}) => {
+  const [ox, oy] = offsetFor(t);
+  const vertical = oy !== 0;
+  // incoming: the line starts at the edge it comes in by; outgoing: at the edge it leaves by
+  const atStart = edge === 'in' ? (vertical ? oy < 0 : ox < 0) : vertical ? oy > 0 : ox > 0;
+  const len = 360;
+  const style: React.CSSProperties = vertical
+    ? {left: t.at * 1080 - 3, width: 6, height: len, top: atStart ? 1920 - len : 0}
+    : {top: t.at * 1920 - 3, height: 6, width: len, left: atStart ? 1080 - len : 0};
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        ...style,
+        background: theme.orange,
+        boxShadow: `0 0 18px ${theme.orange}`,
+        opacity: level,
+      }}
+    />
+  );
+};
+
+/** Moves a scene in or out with its transition (slide, follow), or fades it in (dissolve). */
+const Transitioned: React.FC<{
+  children: React.ReactNode;
+  into?: Transition;
+  out?: Transition;
+  span: number;
+}> = ({children, into, out, span}) => {
+  const frame = useCurrentFrame();
+  const sine = Easing.inOut(Easing.sin);
+  const cubic = Easing.inOut(Easing.cubic);
+  let x = 0;
+  let y = 0;
+  let opacity = 1;
+  let seamIn = 0;
+  let seamOut = 0;
+  if (into && (into.kind === 'slide' || into.kind === 'follow')) {
+    const p = interpolate(frame, [0, into.frames], [0, 1], {
+      extrapolateLeft: 'clamp',
+      extrapolateRight: 'clamp',
+      easing: into.kind === 'follow' ? sine : cubic,
+    });
+    const [ox, oy] = offsetFor(into);
+    x += (1 - p) * ox * 1080;
+    y += (1 - p) * oy * 1920;
+    if (into.kind === 'follow')
+      seamIn =
+        1 -
+        interpolate(frame, [into.frames, into.frames + 8], [0, 1], {
+          extrapolateLeft: 'clamp',
+          extrapolateRight: 'clamp',
+        });
+  }
+  if (into?.kind === 'dissolve') {
+    opacity = interpolate(frame, [0, into.frames], [0, 1], {extrapolateRight: 'clamp', easing: cubic});
+  }
+  if (out && (out.kind === 'slide' || out.kind === 'follow')) {
+    const q = interpolate(frame, [span, span + out.frames], [0, 1], {
+      extrapolateLeft: 'clamp',
+      extrapolateRight: 'clamp',
+      easing: out.kind === 'follow' ? sine : cubic,
+    });
+    const [ox, oy] = offsetFor(out);
+    x -= q * ox * 1080;
+    y -= q * oy * 1920;
+    if (out.kind === 'follow')
+      seamOut = interpolate(frame, [span - 8, span], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+  }
+  return (
+    <AbsoluteFill style={{opacity, transform: x || y ? `translate(${x}px, ${y}px)` : undefined}}>
+      {children}
+      {into?.kind === 'follow' && seamIn > 0 ? <SeamLine t={into} edge="in" level={seamIn} /> : null}
+      {out?.kind === 'follow' && seamOut > 0 ? <SeamLine t={out} edge="out" level={seamOut} /> : null}
+    </AbsoluteFill>
+  );
+};
+
 const ExplainerBody: React.FC<{videoId: string; timeline: ReturnType<typeof timelineFor>}> = ({videoId, timeline}) => {
   const {spec: video, transcript} = getVideo(videoId);
   const last = timeline.scenes.length - 1;
@@ -212,17 +303,59 @@ const ExplainerBody: React.FC<{videoId: string; timeline: ReturnType<typeof time
       ),
     [timeline, transcript.words],
   );
+  // Transitions (§ 8): how each scene comes in, and the props each scene gets (a scene that
+  // continues the previous one starts its camera where the previous one ended).
+  const plan = useMemo(() => {
+    const into: (Transition | undefined)[] = timeline.scenes.map((s, i) =>
+      i === 0 ? undefined : transitionInto(timeline.scenes[i - 1], s),
+    );
+    const props: Record<string, unknown>[] = [];
+    timeline.scenes.forEach((s, i) => {
+      const own = {...(s.props ?? {})};
+      const t = into[i];
+      if (
+        (t?.kind === 'continue' || t?.kind === 'glide') &&
+        s.scene === 'section-room' &&
+        timeline.scenes[i - 1].scene === 'section-room'
+      ) {
+        const prev = timeline.scenes[i - 1];
+        const end = sectionCameraEnd(
+          {...props[i - 1], startFrame: prev.startFrame},
+          prev.endFrame - prev.startFrame,
+          FPS,
+        );
+        own.cameraFrom = end;
+        // 'auto' turns a continue into a glide when this scene's framing is too far from where the
+        // last one ended to continue smoothly (a preset with the same look-at keeps pushing instead)
+        const start = sectionCameraStart(own, s.endFrame - s.startFrame, FPS);
+        const sameLookPreset =
+          typeof own.camera !== 'object' && start.look.every((v, k) => Math.abs(v - end.look[k]) < 1e-6);
+        const gap = Math.hypot(...start.look.map((v, k) => v - end.look[k])) + Math.abs(start.distance - end.distance);
+        const asked = own.transition ?? 'auto';
+        const glide = t.kind === 'glide' || (asked === 'auto' && !sameLookPreset && gap > 0.05);
+        if (glide) {
+          into[i] = {...t, kind: 'glide'};
+          own.cameraGlide = (own.glide as number | undefined) ?? 0.8;
+        }
+      }
+      props.push(own);
+    });
+    return {into, props};
+  }, [timeline]);
   return (
     <AbsoluteFill style={{backgroundColor: theme.museum}}>
       {timeline.scenes.map((s, i) => {
         const Scene = SCENES[s.scene];
         if (!Scene) throw new Error(`Unknown scene "${s.scene}". Register it in src/scenes/index.ts.`);
-        // Each scene overlaps the next by FADE frames so the next one can fade in on top.
-        const duration = s.endFrame - s.startFrame + (i < last ? FADE : 0);
+        // Each scene overlaps the next for the length of the next one's transition (0 for a continue or a cut).
+        const span = s.endFrame - s.startFrame;
+        const out = plan.into[i + 1];
+        const duration = span + (i < last && out ? out.frames : 0);
+        const props = plan.props[i];
         return (
           <Sequence key={i} from={s.startFrame} durationInFrames={duration} name={`${i + 1}. ${s.scene}`}>
-            <FadeIn enabled={i > 0}>
-              <Scene durationInFrames={duration} startFrame={s.startFrame} {...s.props} />
+            <Transitioned into={plan.into[i]} out={out} span={span}>
+              <Scene durationInFrames={duration} startFrame={s.startFrame} {...props} />
               {s.overlays.map((o, k) => {
                 const end = overlayEnd(o, s, transcript.words);
                 return (
@@ -236,7 +369,7 @@ const ExplainerBody: React.FC<{videoId: string; timeline: ReturnType<typeof time
                       <Overlay
                         o={o}
                         scene={{
-                          props: {...s.props, startFrame: s.startFrame},
+                          props: {...props, startFrame: s.startFrame},
                           durationInFrames: duration,
                           offset: o.startFrame - s.startFrame,
                           mood: moodOf(s),
@@ -246,7 +379,7 @@ const ExplainerBody: React.FC<{videoId: string; timeline: ReturnType<typeof time
                   </Sequence>
                 );
               })}
-            </FadeIn>
+            </Transitioned>
           </Sequence>
         );
       })}
@@ -281,11 +414,22 @@ const ExplainerBody: React.FC<{videoId: string; timeline: ReturnType<typeof time
           </Sequence>
         );
       })}
-      <Captions
-        words={transcript.words}
-        suppress={quiet}
-        moods={timeline.scenes.map((s) => ({from: s.startFrame, mood: moodOf(s)}))}
-      />
+      {video.captions === false ? null : (
+        <Captions
+          words={transcript.words}
+          suppress={quiet}
+          moods={timeline.scenes.flatMap((s) => {
+            const from = s.props?.moodFrom as Mood | undefined;
+            if (!from || from === moodOf(s)) return [{from: s.startFrame, mood: moodOf(s)}];
+            // the time-passes blend: captions change colours at its midpoint
+            const at = (s.props?.moodAt as number | undefined) ?? 0.3;
+            return [
+              {from: s.startFrame, mood: from},
+              {from: s.startFrame + Math.round((at + TIME_PASSES / 2) * FPS), mood: moodOf(s)},
+            ];
+          })}
+        />
+      )}
       {video.watermark ? <Watermark text={video.watermark} /> : null}
       {transcript.audio ? <Audio src={staticFile(transcript.audio)} /> : null}
     </AbsoluteFill>

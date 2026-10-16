@@ -8,6 +8,12 @@ import {LEFT, overlayInk, paperHalo, RIGHT} from './sectionStyle';
 export type AttributionProps = {
   /** Who + year, as in sources.md: "FTC staff report, 2017" (shown uppercase). One line, ≤ 36 characters, no URL. */
   text: string;
+  /**
+   * Where a standalone line sits: 'sky' (default: in the sky band, top edge y 300, clear of the
+   * figures), 'low' (bottom edge y 1024, just above the captions: for frames without sky), or
+   * 'high' (top edge y 500).
+   */
+  place?: 'sky' | 'low' | 'high';
 };
 
 /** Frames the attribution line fades in (and out, see Explainer). Style guide § 6. */
@@ -28,11 +34,12 @@ export const attributionStyle = (mood: Mood): React.CSSProperties => ({
 });
 
 /**
- * A quiet footnote under a claim (v0.8 § 6–7): left-aligned at x 120, its bottom edge at y 1024
- * when alone. Opacity only, 10 frames in (and out).
+ * A quiet footnote under a claim (v0.8 § 6–7): left-aligned at x 120; alone, in the sky band by
+ * default (`place`). Opacity only, 10 frames in (and out).
  */
 export const Attribution: React.FC<AttributionProps & {mood?: Mood; delay?: number}> = ({
   text,
+  place = 'sky',
   mood = 'day',
   delay = 0,
 }) => {
@@ -44,8 +51,8 @@ export const Attribution: React.FC<AttributionProps & {mood?: Mood; delay?: numb
         position: 'absolute',
         left: LEFT,
         maxWidth: RIGHT - LEFT,
-        top: 1024,
-        transform: 'translateY(-100%)',
+        top: place === 'low' ? 1024 : place === 'high' ? 500 : 300,
+        transform: place === 'low' ? 'translateY(-100%)' : undefined,
         opacity: o,
       }}
     >

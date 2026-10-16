@@ -28,5 +28,5 @@ One section per claim, in script order:
 
 - Any specific number, named company or person, study, or "they do X" claim needs a ✅ entry.
 - Never invent a URL or quote. A claim with no source stays ❌.
-- Full sources appear in the post description. Up to 2 short attribution lines (publisher/author + year)
-  may appear on screen for ✅ claims (`brand/style-guide.md` § 5).
+- Sources appear in the post description only, never on screen. Spoken attribution ("researchers found",
+  "Apple and Google say") stays in the script where the story needs it.

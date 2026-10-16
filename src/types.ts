@@ -2,6 +2,8 @@ import type {AdCardProps} from './components/AdCard';
 import type {AttributionProps} from './components/Attribution';
 import type {CalloutProps} from './components/Callout';
 import type {CounterProps} from './components/Counter';
+import type {DetailBoxProps} from './components/DetailBox';
+import type {FullScreenProps} from './components/FullScreen';
 import type {NameTagProps} from './components/NameTag';
 import type {SearchBarProps} from './components/SearchBar';
 import type {StatementProps} from './components/Statement';
@@ -41,6 +43,8 @@ export type OverlaySpec = Timing & {
     | ({type: 'attribution'} & AttributionProps)
     | ({type: 'title'} & TitleBlockProps)
     | ({type: 'tag'} & NameTagProps)
+    | ({type: 'detail'} & DetailBoxProps)
+    | ({type: 'screen'} & FullScreenProps)
   );
 
 export type SceneSpec = {
@@ -65,5 +69,7 @@ export type VideoSpec = {
   tail?: number;
   /** Small tag at the top-left of the safe zone. Set null to hide. */
   watermark?: string | null;
+  /** Burned-in captions (default true). False only for test sandboxes that review bare frames. */
+  captions?: boolean;
   scenes: SceneSpec[];
 };
