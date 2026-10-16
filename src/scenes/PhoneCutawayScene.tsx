@@ -44,6 +44,8 @@ export type PhoneCutawaySceneProps = {
    * beats as the default look. Default false.
    */
   realism?: boolean;
+  /** Screen-space ambient occlusion (N8AO) at the mood's strength. Default: follows `realism`. */
+  ao?: boolean;
   /** Realism: what the screen shows before the front comes off (phone-screen kit; default the lock screen). */
   screen?: ScreenStep[];
   /** Realism: the phones' clock and date on the screen (default "7:58" / Wednesday, October 15 in Day). */
@@ -227,6 +229,7 @@ export const PhoneCutawayScene: React.FC<PhoneCutawaySceneProps> = ({
   doorShut = true,
   doorOpenAt,
   realism = false,
+  ao,
   screen = [{at: 0, app: 'lock'}],
   clock,
   date,
@@ -377,7 +380,7 @@ export const PhoneCutawayScene: React.FC<PhoneCutawaySceneProps> = ({
 
   return (
     <AbsoluteFill>
-      <SectionStage mood={mood} post={{focusY: 0.45}}>
+      <SectionStage mood={mood} post={{focusY: 0.45}} ao={ao ?? realism}>
         <SectionCamera
           from={close}
           to={end}

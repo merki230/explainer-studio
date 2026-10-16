@@ -6,6 +6,7 @@ import {useFrame, useThree} from '@react-three/fiber';
 import React, {useEffect, useMemo, useRef} from 'react';
 import {useCurrentFrame} from 'remotion';
 import * as THREE from 'three';
+import {N8AOPass} from 'n8ao';
 
 export type PostSettings = {
   /** Strength of the bloom on objects flagged `userData.glow` (orange only). */
@@ -22,6 +23,14 @@ export type PostSettings = {
   exposure: number;
   /** Values above this are rolled off so whites never clip. */
   shoulder: number;
+  /**
+   * Screen-space ambient occlusion (N8AO, realism pass): 0 off (default; the pass isn't even built),
+   * up to 1. Soft contact shadows in corners, under objects and between parts. Deterministic: no
+   * accumulation, fixed blue noise, no clock.
+   */
+  ao: number;
+  /** AO radius in world units (default 0.35: the scale of a phone to a couch cushion). */
+  aoRadius: number;
 };
 
 export const DEFAULT_POST: PostSettings = {
@@ -32,6 +41,8 @@ export const DEFAULT_POST: PostSettings = {
   focusY: 0.45,
   exposure: 0.86,
   shoulder: 0.82,
+  ao: 0,
+  aoRadius: 0.35,
 };
 
 const QUAD_VS = 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }';
@@ -46,7 +57,7 @@ void main(){
 }`;
 
 const COMP_FS = `
-uniform sampler2D tBase; uniform sampler2D tGlow; uniform sampler2D tSoft;
+uniform sampler2D tBase; uniform sampler2D tGlow; uniform sampler2D tSoft; uniform sampler2D tAO; uniform float aoStrength;
 uniform vec2 res;
 uniform float bloom, vig, grain, seed, tilt, focusY, exposure, shoulder;
 varying vec2 vUv;
@@ -57,6 +68,8 @@ void main(){
   vec3 col = texture2D(tBase, uv).rgb;
   float tf = smoothstep(0.14, 0.5, abs(uv.y - focusY)) * tilt;
   col = mix(col, texture2D(tSoft, uv).rgb, tf);
+  // ambient occlusion darkens the lit scene, never the glow added on top
+  col *= mix(1.0, texture2D(tAO, uv).r, aoStrength);
   col += texture2D(tGlow, uv).rgb * bloom;
   col *= exposure;
   col -= max(col - shoulder, 0.0) * 0.55;
@@ -108,6 +121,8 @@ export const MuseumPost: React.FC<Partial<PostSettings>> = (props) => {
         tBase: {value: null},
         tGlow: {value: null},
         tSoft: {value: null},
+        tAO: {value: null},
+        aoStrength: {value: 0},
         res: {value: new THREE.Vector2(2, 2)},
         bloom: {value: 1},
         vig: {value: 0.46},
@@ -126,6 +141,13 @@ export const MuseumPost: React.FC<Partial<PostSettings>> = (props) => {
       a: rt(false),
       b: rt(false),
       soft: rt(false),
+      aoTarget: rt(false),
+      ao: null as N8AOPass | null,
+      white: (() => {
+        const t = new THREE.DataTexture(new Uint8Array([255, 255, 255, 255]), 1, 1);
+        t.needsUpdate = true;
+        return t;
+      })(),
       quadScene,
       quadCam,
       quad,
@@ -138,7 +160,8 @@ export const MuseumPost: React.FC<Partial<PostSettings>> = (props) => {
 
   useEffect(
     () => () => {
-      [kit.base, kit.glow, kit.a, kit.b, kit.soft].forEach((r) => r.dispose());
+      [kit.base, kit.glow, kit.a, kit.b, kit.soft, kit.aoTarget].forEach((r) => r.dispose());
+      kit.white.dispose();
       kit.blurMat.dispose();
       kit.compMat.dispose();
       kit.black.dispose();
@@ -160,7 +183,9 @@ export const MuseumPost: React.FC<Partial<PostSettings>> = (props) => {
     const hh = Math.max(1, H >> 1);
     if (kit.base.width !== W || kit.base.height !== H) {
       kit.base.setSize(W, H);
-      [kit.glow, kit.a, kit.b, kit.soft].forEach((r) => r.setSize(hw, hh));
+      [kit.glow, kit.a, kit.b, kit.soft, kit.aoTarget].forEach((r) => r.setSize(hw, hh));
+      kit.ao?.setSize(W, H);
+      kit.aoTarget.setSize(W, H);
     }
 
     const pass = (mat: THREE.Material, target: THREE.WebGLRenderTarget | null) => {
@@ -210,6 +235,39 @@ export const MuseumPost: React.FC<Partial<PostSettings>> = (props) => {
     scene.fog = fog;
     gl.shadowMap.autoUpdate = autoShadows;
 
+    // 2b. Ambient occlusion (only when asked): N8AO renders its own beauty and depth
+    // (AO at half resolution, depth-aware upsampling) and writes the occlusion factor alone (render mode 1, black, no colour multiply) to aoTarget.
+    let aoTex: THREE.Texture = kit.white;
+    if (s.ao > 0) {
+      if (!kit.ao) {
+        const pass = new N8AOPass(scene, camera, W, H);
+        Object.assign(pass.configuration, {
+          aoSamples: 16,
+          denoiseSamples: 16,
+          denoiseRadius: 12,
+          distanceFalloff: 1,
+          intensity: 2.5,
+          halfRes: true,
+          depthAwareUpsampling: true,
+          gammaCorrection: false,
+          screenSpaceRadius: false,
+          renderMode: 1,
+          colorMultiply: false,
+          transparencyAware: false,
+          accumulate: false,
+        });
+        pass.configuration.color = new THREE.Color(0, 0, 0);
+        kit.ao = pass;
+      }
+      kit.ao.scene = scene;
+      kit.ao.camera = camera;
+      kit.ao.configuration.aoRadius = s.aoRadius;
+      gl.shadowMap.autoUpdate = false;
+      kit.ao.render(gl, kit.aoTarget, null);
+      gl.shadowMap.autoUpdate = autoShadows;
+      aoTex = kit.aoTarget.texture;
+    }
+
     blur(kit.glow, kit.a, 2, 1.7);
     blur(kit.base, kit.soft, 1, 1.3);
 
@@ -218,6 +276,8 @@ export const MuseumPost: React.FC<Partial<PostSettings>> = (props) => {
     u.tBase.value = kit.base.texture;
     u.tGlow.value = kit.a.texture;
     u.tSoft.value = kit.soft.texture;
+    u.tAO.value = aoTex;
+    u.aoStrength.value = s.ao;
     u.res.value.set(W, H);
     u.bloom.value = s.bloom;
     u.vig.value = s.vignette;

@@ -13,7 +13,16 @@ import {NameTag, TAG_FADE} from './components/NameTag';
 import {Statement, STATEMENT_FADE} from './components/Statement';
 import {TITLE_FADE, TITLE_HOLD, TitleBlock} from './components/TitleBlock';
 import {SCENES} from './scenes';
+import {labCameraEnd, labCameraStart} from './scenes/SectionLabScene';
 import {sectionCameraEnd, sectionCameraStart, TIME_PASSES} from './scenes/SectionRoomScene';
+import type {Framing} from './three/section/SectionCamera';
+
+type CameraFn = (p: Record<string, unknown>, durationInFrames: number, fps: number) => Framing;
+/** Scenes whose camera can continue or glide from the previous scene of the same kind. */
+const CAMERAS: Record<string, {start: CameraFn; end: CameraFn}> = {
+  'section-room': {start: sectionCameraStart as CameraFn, end: sectionCameraEnd as CameraFn},
+  'section-lab': {start: labCameraStart as CameraFn, end: labCameraEnd as CameraFn},
+};
 import {transitionInto, type Transition} from './scenes/transitions';
 import {clickOffFrame, type ClickOff} from './scenes/clickOff';
 import {fonts} from './fonts';
@@ -290,6 +299,9 @@ const Transitioned: React.FC<{
   );
 };
 
+/** Frames a scene mounts ahead of its start in the Studio preview. */
+const PREMOUNT = Math.round(1.5 * FPS);
+
 const ExplainerBody: React.FC<{videoId: string; timeline: ReturnType<typeof timelineFor>}> = ({videoId, timeline}) => {
   const {spec: video, transcript} = getVideo(videoId);
   const last = timeline.scenes.length - 1;
@@ -313,21 +325,14 @@ const ExplainerBody: React.FC<{videoId: string; timeline: ReturnType<typeof time
     timeline.scenes.forEach((s, i) => {
       const own = {...(s.props ?? {})};
       const t = into[i];
-      if (
-        (t?.kind === 'continue' || t?.kind === 'glide') &&
-        s.scene === 'section-room' &&
-        timeline.scenes[i - 1].scene === 'section-room'
-      ) {
+      const cam = CAMERAS[s.scene];
+      if ((t?.kind === 'continue' || t?.kind === 'glide') && cam && timeline.scenes[i - 1].scene === s.scene) {
         const prev = timeline.scenes[i - 1];
-        const end = sectionCameraEnd(
-          {...props[i - 1], startFrame: prev.startFrame},
-          prev.endFrame - prev.startFrame,
-          FPS,
-        );
+        const end = cam.end({...props[i - 1], startFrame: prev.startFrame}, prev.endFrame - prev.startFrame, FPS);
         own.cameraFrom = end;
         // 'auto' turns a continue into a glide when this scene's framing is too far from where the
         // last one ended to continue smoothly (a preset with the same look-at keeps pushing instead)
-        const start = sectionCameraStart(own, s.endFrame - s.startFrame, FPS);
+        const start = cam.start(own, s.endFrame - s.startFrame, FPS);
         const sameLookPreset =
           typeof own.camera !== 'object' && start.look.every((v, k) => Math.abs(v - end.look[k]) < 1e-6);
         const gap = Math.hypot(...start.look.map((v, k) => v - end.look[k])) + Math.abs(start.distance - end.distance);
@@ -353,7 +358,16 @@ const ExplainerBody: React.FC<{videoId: string; timeline: ReturnType<typeof time
         const duration = span + (i < last && out ? out.frames : 0);
         const props = plan.props[i];
         return (
-          <Sequence key={i} from={s.startFrame} durationInFrames={duration} name={`${i + 1}. ${s.scene}`}>
+          // premountFor: in the Studio (ignored when rendering) each scene mounts, hidden, 1.5 s before
+          // it starts, so its WebGL canvas, shaders, environment and textures are ready when it
+          // shows (no freeze at the cut)
+          <Sequence
+            key={i}
+            from={s.startFrame}
+            durationInFrames={duration}
+            name={`${i + 1}. ${s.scene}`}
+            premountFor={PREMOUNT}
+          >
             <Transitioned into={plan.into[i]} out={out} span={span}>
               <Scene durationInFrames={duration} startFrame={s.startFrame} {...props} />
               {s.overlays.map((o, k) => {

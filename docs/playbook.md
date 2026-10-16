@@ -65,6 +65,13 @@ updates them in the same step. Before closing a rule change, grep the repo for t
 - One video with a broken cue must not stop every other video from rendering (fixed in `Root`: broken
   videos render an error card).
 
+## Studio playback vs the rendered file
+
+Heavy 3D can stutter in Remotion Studio's live playback (brief freezes at scene changes) while the
+rendered file is perfectly smooth. When the owner reports a hitch, render a half-size test file first
+(`npx remotion render <slug> out/<slug>-preview.mp4 --scale=0.5`, a few minutes) and compare. Only a
+hitch that is also in the file is a real video problem.
+
 ## Reviews
 
 - `yarn stills` wipes its output folder on every run. Read the PNGs before the next run, or copy them out.

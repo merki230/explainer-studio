@@ -28,7 +28,12 @@ const mixLight = (a: Light, b: Light, k: number): Light => ({
   position: mixV3(a.position, b.position, k),
 });
 /** A light that exists in only one mood fades in or out (intensity 0 on the other side). */
-const mixOptional = <T extends {intensity: number}>(a: T | null, b: T | null, k: number, mix: (x: T, y: T, k: number) => T) => {
+const mixOptional = <T extends {intensity: number}>(
+  a: T | null,
+  b: T | null,
+  k: number,
+  mix: (x: T, y: T, k: number) => T,
+) => {
   if (!a && !b) return null;
   const x = a ?? {...(b as T), intensity: 0};
   const y = b ?? {...(a as T), intensity: 0};
@@ -77,6 +82,7 @@ export const blendMood = (a: Mood, b: Mood, k: number): MoodPalette => {
     shoulder: mixN(A.shoulder, B.shoulder, k),
     env: mixN(A.env, B.env, k),
     albedo: mixN(A.albedo, B.albedo, k),
+    ao: mixN(A.ao, B.ao, k),
     ui: k < 0.5 ? A.ui : B.ui,
     rug: c('rug'),
     appliance: c('appliance'),

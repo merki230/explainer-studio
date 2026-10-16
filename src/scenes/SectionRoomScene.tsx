@@ -105,6 +105,8 @@ export type SectionRoomSceneProps = {
   realism?: boolean;
   /** The cast hold the realistic phone (Figure `phoneModel: 'real'`). Default: follows `realism`. */
   realPhones?: boolean;
+  /** Screen-space ambient occlusion (N8AO) at the mood's strength. Default: follows `realism`. */
+  ao?: boolean;
   /** Breathing, blinks, weight shifts, head drift, thumbs, the lamp's ±3% (default on). */
   life?: boolean;
   /** Focus line of the post pass, fraction of the frame from the top (default 0.5: the look-at). */
@@ -524,7 +526,7 @@ export const SectionRoomScene: React.FC<SectionRoomSceneProps> = (props) => {
   const palette = blending ? blendMood(moodFrom, mood, k) : undefined;
   const skyFrom = blending ? {mood: moodFrom, amount: 1 - k} : undefined;
   const world = (mm: Mood) => (
-    <SectionStage mood={mm} palette={palette} post={{focusY}}>
+    <SectionStage mood={mm} palette={palette} post={{focusY}} ao={p.ao ?? p.realism ?? false}>
       <SectionCamera
         from={from}
         to={to}

@@ -16,6 +16,31 @@ export const STUDIO_HDRI = 'assets/hdri/studio_small_09_1k.hdr';
 // one WebGL context, so it is cached per renderer.
 let hdr: Promise<THREE.DataTexture> | null = null;
 const pmrem = new WeakMap<THREE.WebGLRenderer, THREE.Texture>();
+/**
+ * The prefiltered map read back to the CPU once (a CubeUV-mapped DataTexture): every later canvas in
+ * the page (each scene has its own) takes it at once, with no PMREM pass and no frame held back.
+ */
+let prefiltered: THREE.DataTexture | null = null;
+
+/** Read a PMREM render target back into a shareable DataTexture (null if the GPU can't read it). */
+const readBack = (gl: THREE.WebGLRenderer, rt: THREE.WebGLRenderTarget): THREE.DataTexture | null => {
+  try {
+    const {width: w, height: h} = rt;
+    const buf = new Uint16Array(w * h * 4);
+    gl.readRenderTargetPixels(rt, 0, 0, w, h, buf);
+    if (!buf.some((v) => v !== 0)) return null;
+    const t = new THREE.DataTexture(buf, w, h, THREE.RGBAFormat, THREE.HalfFloatType);
+    t.mapping = THREE.CubeUVReflectionMapping;
+    t.minFilter = THREE.LinearFilter;
+    t.magFilter = THREE.LinearFilter;
+    t.generateMipmaps = false;
+    t.colorSpace = rt.texture.colorSpace;
+    t.needsUpdate = true;
+    return t;
+  } catch {
+    return null;
+  }
+};
 
 /**
  * Radiance cap: the studio's softboxes are 20–50× the cyc, and in a kit without tone mapping their
@@ -48,7 +73,7 @@ const loadHdr = () => {
 export const useStudioEnv = (): THREE.Texture | null => {
   const gl = useThree((s) => s.gl);
   const advance = useThree((s) => s.advance);
-  const [env, setEnv] = useState<THREE.Texture | null>(() => pmrem.get(gl) ?? null);
+  const [env, setEnv] = useState<THREE.Texture | null>(() => pmrem.get(gl) ?? prefiltered);
   const hold = useRef<number | null>(null);
   useEffect(() => {
     if (env) return;
@@ -57,11 +82,13 @@ export const useStudioEnv = (): THREE.Texture | null => {
     loadHdr()
       .then((data) => {
         if (!alive) return;
-        let tex = pmrem.get(gl);
+        let tex: THREE.Texture | undefined = pmrem.get(gl) ?? prefiltered ?? undefined;
         if (!tex) {
           const gen = new THREE.PMREMGenerator(gl);
-          tex = gen.fromEquirectangular(data).texture;
+          const rt = gen.fromEquirectangular(data);
           gen.dispose();
+          prefiltered = readBack(gl, rt);
+          tex = rt.texture;
           pmrem.set(gl, tex);
         }
         setEnv(tex);

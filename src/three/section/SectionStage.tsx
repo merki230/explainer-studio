@@ -22,7 +22,9 @@ export const SectionStage: React.FC<{
   children: React.ReactNode;
   fov?: number;
   post?: Partial<PostSettings>;
-}> = ({mood, palette, children, fov = 26, post}) => {
+  /** Screen-space ambient occlusion at the mood's strength (`MOODS.ao`; realism pass). Default off. */
+  ao?: boolean;
+}> = ({mood, palette, children, fov = 26, post, ao = false}) => {
   const {width, height} = useVideoConfig();
   const m = palette ?? MOODS[mood];
   const bg = useMemo(() => new THREE.Color(), []);
@@ -39,7 +41,14 @@ export const SectionStage: React.FC<{
       <primitive attach="background" object={bg} />
       {/* realistic objects' studio reflections, scaled per mood (1 in Day) */}
       <MoodLook.Provider value={{env: m.env, albedo: m.albedo}}>{children}</MoodLook.Provider>
-      <MuseumPost vignette={m.vignette} softFocus={0.35} exposure={m.exposure} shoulder={m.shoulder} {...post} />
+      <MuseumPost
+        vignette={m.vignette}
+        softFocus={0.35}
+        exposure={m.exposure}
+        shoulder={m.shoulder}
+        ao={ao ? m.ao : 0}
+        {...post}
+      />
     </ThreeCanvas>
   );
 };

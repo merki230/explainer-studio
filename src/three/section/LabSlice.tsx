@@ -58,8 +58,13 @@ const useCanvasText = (w: number, h: number) =>
 
 export type LabSliceProps = {
   mood: Mood;
-  /** Seconds into the scene (drives the arms, the conveyor, the counter). */
+  /** Seconds into the scene (drives the counter and the stamp). */
   t: number;
+  /**
+   * Seconds on the video clock (drives the arms, the conveyor, the icons), so consecutive Lab scenes
+   * continue the same motion across the cut. Default: `t`.
+   */
+  clock?: number;
   /** The count the counter reaches (default 17,000). */
   count?: number;
   /** Seconds into the scene when the counter starts and how long it takes. */
@@ -93,7 +98,9 @@ export const LabSlice: React.FC<LabSliceProps> = ({
   zeroAt,
   running = true,
   realism = false,
+  clock: clockIn,
 }) => {
+  const clock = clockIn ?? t;
   const m = MOODS[mood];
   const lab = LAB[mood];
   const ready = useFontsLoaded();
@@ -194,7 +201,7 @@ export const LabSlice: React.FC<LabSliceProps> = ({
   // arms: 4, each serving two neighbouring phones; a tap every 0.6 s, a slide between its two
   // phones every 2.4 s, each arm offset so the taps run down the bench in sequence
   const arms = [0, 1, 2, 3].map((i) => {
-    const local = running ? t + i * 0.3 : 0;
+    const local = running ? clock + i * 0.3 : 0;
     const slide = 0.5 - 0.5 * Math.cos((local / 2.4) * Math.PI * 2);
     const x = L.phoneX(2 * i) + (L.phoneX(2 * i + 1) - L.phoneX(2 * i)) * ease(slide, 0.2, 0.8);
     const cyc = (local / 0.6) % 1;
@@ -212,10 +219,10 @@ export const LabSlice: React.FC<LabSliceProps> = ({
   const beltDir = belt1.clone().sub(belt0).normalize();
   const beltPart = limb(belt0, belt1, 0.025);
   const icons = new Array(6).fill(0).map((_, i) => {
-    const u = (((running ? t : 0) * 0.32) / beltLen + i / 6) % 1;
+    const u = (((running ? clock : 0) * 0.32) / beltLen + i / 6) % 1;
     const p = belt0.clone().addScaledVector(beltDir, u * beltLen);
     const fade = Math.min(1, u / 0.08, (1 - u) / 0.08);
-    const n = Math.floor(((running ? t : 0) * 0.32) / beltLen + i / 6);
+    const n = Math.floor(((running ? clock : 0) * 0.32) / beltLen + i / 6);
     return {p, s: fade, mat: mats.iconsLit[(i + n) % mats.iconsLit.length]};
   });
 
@@ -298,12 +305,12 @@ export const LabSlice: React.FC<LabSliceProps> = ({
 
       {realism ? (
         <RealLabEquipment
-          t={running ? t : 0}
+          t={running ? clock : 0}
           benchTop={benchTop}
           arms={arms}
           tapped={tapped}
           screen={mats.screen}
-          iconFor={(i) => mats.icons[(i + Math.floor((running ? t : 0) / 1.2)) % mats.icons.length]}
+          iconFor={(i) => mats.icons[(i + Math.floor((running ? clock : 0) / 1.2)) % mats.icons.length]}
           belt={[belt0, belt1]}
           icons={icons}
         />
@@ -332,7 +339,7 @@ export const LabSlice: React.FC<LabSliceProps> = ({
           {new Array(L.phones).fill(0).map((_, i) => {
             const x = L.phoneX(i);
             const tp = tapped.get(i) ?? 0;
-            const icon = mats.icons[(i + Math.floor((running ? t : 0) / 1.2)) % mats.icons.length];
+            const icon = mats.icons[(i + Math.floor((running ? clock : 0) / 1.2)) % mats.icons.length];
             return (
               <group key={i} position={[x, benchTop + 0.1, L.bench.z - 0.02]} rotation={[-0.45, 0, 0]}>
                 <mesh geometry={roundedBox(0.11, 0.2, 0.014, 0.006)} material={mats.phone} castShadow />

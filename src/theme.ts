@@ -167,6 +167,8 @@ export const MOODS: Record<
      * whose exposure (≈ 2.2× Day's) would otherwise make a phone's label or a chip glare.
      */
     albedo: number;
+    /** Ambient-occlusion strength (N8AO, realism pass) when a scene switches AO on, 0–1. */
+    ao: number;
     /** Extra soft light on the walls (Day: whiter walls without hotter tops), or null. */
     bounce: {color: string; intensity: number; position: [number, number, number]} | null;
   }
@@ -203,6 +205,7 @@ export const MOODS: Record<
     shade: '#c4ae8a',
     env: 0.22,
     albedo: 0.55,
+    ao: 0.4,
     bounce: null,
     figureLight: {color: '#9fb3e8', intensity: 0.8, position: [1.6, 3.2, 2.2], target: [0, 0.95, -0.5]},
   },
@@ -238,6 +241,7 @@ export const MOODS: Record<
     shade: '#e4dccd',
     env: 1,
     albedo: 1,
+    ao: 0.8,
     bounce: {color: '#fff7ee', intensity: 0.7, position: [4, 1.5, 3]},
     figureLight: null,
   },
