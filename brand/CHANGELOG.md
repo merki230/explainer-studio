@@ -2,6 +2,12 @@
 
 Every change to `brand.md` or `style-guide.md` gets a line here: date, what changed, why (pointing to a `feedback.md` entry or a research section). Nothing changes silently.
 
+## v0.11.1 · 2026-10-16 · Warning lights in yellow (owner decision, No. 002 onward)
+
+Owner decision of 2026-10-16, relayed by the main session (✅); value 🧪. Logged in `feedback.md` ("No. 002 · tire-sensor: warning-light colour"). v0.11 is committed and unchanged.
+
+- **Warning lights.** Real dashboard lamps such as the tire-pressure light are amber, which would read as the system. Dashboard warning icons and device indicator lights are now a **warning yellow**, distinct from `orange`; orange stays the hidden system (in No. 002, the tire sensor's radio signal). style-guide § 1: proposed token `warning` `#eedd2b` (constant table), reusing the light channels' yellow so the brand has one yellow (55°: 37° from `#ff5b14`, 15° above the reserved band, the channel palette's clearance); fallback `#f2c81f` (48°) if it reads too lemon, owner's call. New "Warning lights" row next to the orange rule: where it applies, unlit = `ledOff`, flat emissive, no bloom, halo, spill, dots or flicker; an indicator is orange only when it is the hidden system (§ 5 Bleed). The tire-pressure icon is a tire cross-section, so it fits The Section; drawn as the generic symbol. "No orange on non-system parts" row points to it; § 2 Bloom row; checklist 2; header. The ISO 2575 colour note is not yet checked in `brand/research/`.
+
 ## v0.11 · 2026-10-16 · Coloured light channels, surprise-first opening, American spelling (owner decisions, No. 002 onward)
 
 Owner decisions of 2026-10-16, relayed by the main session (✅); values 🧪. Logged in `feedback.md` ("No. 002 · fiber-sharing: owner decisions before production"). v0.10.1 is committed and unchanged.

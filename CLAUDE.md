@@ -94,6 +94,7 @@ out/<slug>/raw/         scratch only: raw mix, music/sfx/voice takes, stills, re
 | researcher      | `sources.md`: facts, sources, angles                     |
 | scriptwriter    | `script.txt`                                             |
 | fact-checker    | statuses in `sources.md` (read-only on everything else)  |
+| ai-tell-checker | nothing (flags AI-sounding script and copy, suggests rewrites) |
 | voice           | voiceover and timings                                    |
 | director        | `spec.ts`                                                |
 | scene-builder   | `src/scenes`, `src/three`, `src/components`, `src/brand` (brand-asset generator; exports to `brand/assets/` from the brand-director's spec in `brand/channel-kit.md`) |
@@ -102,7 +103,7 @@ out/<slug>/raw/         scratch only: raw mix, music/sfx/voice takes, stills, re
 | tooling         | `scripts/`, deps, config                                 |
 | brand-director  | `brand/` (brand.md, style-guide.md, feedback, changelog) |
 
-New video pipeline: researcher → scriptwriter → fact-checker (**PASS** needed) → **user approves the
+New video pipeline: researcher → scriptwriter → fact-checker (**PASS** needed) + ai-tell-checker (**CLEAN** or polished) → **user approves the
 script** → voice → director → scene-builder (only if a scene is missing) → visual-reviewer (**SHIP**
 needed) → publisher → **user approves and commits**.
 

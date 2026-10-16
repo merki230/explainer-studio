@@ -94,6 +94,24 @@ Research citations: `brand/research/platforms.md` (P§), `brand/research/landsca
 
 ---
 
+## No. 002 · tire-sensor (`tire-sensor`): warning-light colour (not published)
+
+- **Decided:** 2026-10-16, owner, relayed by the main session · **Applies to:** No. 002 onward
+
+**Owner's notes** (as relayed)
+
+- Real dashboard warning lights such as the tire-pressure icon are amber, but orange is reserved for the hidden system. Show dashboard and indicator warning lights in a **warning yellow**, distinct from the system orange; keep orange for the hidden system (here, the tire sensor's radio signal).
+
+**What we're changing** (✅ owner decision; value 🧪; CHANGELOG v0.11.1)
+
+| Rule (file § name) | Change | Note |
+|---|---|---|
+| style-guide § 1 new Warning lights row, constant tokens; § 2 Bloom; checklist 2 | Proposed token `warning` `#eedd2b` (the channels' yellow) for dashboard icons and device indicator lights; flat, never blooms or glows like the system; the tire-pressure icon is a tire cross-section, fitting The Section | The note |
+
+**To watch once published:** comments reading the yellow light as part of the system, or saying the light "should be orange/amber".
+
+---
+
 ## Template
 
 ### No. 000 · Title (`<slug>`)
