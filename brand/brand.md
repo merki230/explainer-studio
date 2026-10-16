@@ -1,6 +1,6 @@
 # Secretly Works: brand
 
-v0.10.1, 2026-10-16. Owner: brand-director. Changes go through `feedback.md` and are logged in `CHANGELOG.md`. The look is **The Section** (v0.8, from `proposals/visual-identity-v1.md`); it replaced The Plaster Museum (v0.1 to v0.7). Since v0.10: **objects realistic, people stylized** (style-guide § 3).
+v0.11, 2026-10-16. Owner: brand-director. Changes go through `feedback.md` and are logged in `CHANGELOG.md`. The look is **The Section** (v0.8, from `proposals/visual-identity-v1.md`); it replaced The Plaster Museum (v0.1 to v0.7). Since v0.10: **objects realistic, people stylized** (style-guide § 3).
 
 Every rule is a current default, not a law. **🧪 testing** = not yet confirmed by feedback or numbers. **✅ proven** = confirmed by feedback or numbers, or fixed by a platform rule we can't test around (marked "platform rule"). Each rule has a one-line why. Research citations point to `brand/research/landscape.md` (L§), `brand/research/platforms.md` (P§) and `brand/research/script-references.md` (R§).
 
@@ -51,6 +51,7 @@ How we write comes from two reference scripts the owner chose, after rejecting t
 | Numbers | **Any number that tells the story**, each ✅ sourced, said as the source says it (rounded only where the source's figure allows). No number for decoration. Replaces v0.4's "one number per video". | R§3; numbers are what the padding test keeps | 🧪 |
 | Answer straight | When the question is asked, answer it in the next breath ("The answer is your Wi-Fi."). No teasing, no "stick around". | R§2 | 🧪 |
 | Fairness | If the system has a fair side, say it once ("In fairness, ..."). | R§2; trust is the brand | 🧪 |
+| Spelling | **American English** in everything the viewer hears or reads: voice, captions, on-screen text, post copy ("fiber", "color", "center", "meter"). Brand docs and code keep their own spelling | One American narrator (style-guide § 9); captions show the words as spoken | ✅ owner decision (2026-10-16) |
 | Banned words | Exclamation marks. Hype: "insane", "you won't believe", "nobody talks about this", "went parabolic". Rhetorical "right?". "In our previous video". Any line spoken by a character, or addressed to one. | Hype breaks the calm register (R§1); the narrator is the only voice, the cast never speaks | 🧪 |
 
 **Banned patterns.** 1 to 6 are what the owner disliked in the pilot (✅ owner feedback, R§4); 7 to 9 are the weak spots of the references (🧪, R§1, R§2).
@@ -91,17 +92,25 @@ How we write comes from two reference scripts the owner chose, after rejecting t
 
 ## Hook patterns
 
-The hook is recipe steps 1 to 3 (§ Structure): the concrete moment, the surprising fact, the question. Proposition in the first 3 s, question asked by about 6 s (P§4, TikTok guidance; L§2). **The first frame is black: the phone screen of the story's moment waking** (the screen-bookend loop, § Structure, ✅ owner decision v0.8.2); by about 1 s the lock screen is lit, then the first app action, then the camera pulls back into the slice, wide by about 3 s. Never a title card or logo (L§2); the title block enters at about 2.8 s, after the wake (✅ owner decision, 2026-10-16). The opening line is spoken over the screen, so the screen must show the line's moment, not a generic unlock (the visual is the hook, L§2). Whether a black first frame costs swipe-aways is 🧪: watch the swipe-away column in `feedback.md`. Every hook is a full spoken sentence, never a fragment chain. All 🧪 until swipe-away numbers say otherwise.
+The hook is recipe steps 1 to 3 (§ Structure). **From No. 002 the surprise comes first** (✅ owner decision, 2026-10-16; supersedes the black screen-bookend opening for new videos; No. 001 keeps its opening). Why: many viewers swipe at 1 to 2 s, and No. 001's surprise landed at 6.6 s and its question at 9.1 s (`docs/playbook.md` backlog, "Hook in the first second"; P§4, L§2).
+
+- **Frame 0 is the surprise image**, finished and lit (not black, no fade-in): what the first sentence names (style-guide § 8 The opening and the loop).
+- **The first spoken sentence carries the surprise**, starting by about 0.3 s. The question lands by **about 5 to 6 s**. The scriptwriter times the first sentence (`yarn timings`) before voice.
+- **The title block shows the question from frame 0** (style-guide § 6). Never a title card or logo (L§2).
+- **The end loops back into frame 0**: the last shot ends on frame 0's picture (§ Structure, The loop).
+- The screen-bookend (a phone screen waking) stays an **optional tool**: on a new video, without the black (style-guide § 8).
+
+Every hook is a full spoken sentence, never a fragment chain. Values 🧪 until swipe-away numbers in `feedback.md` say otherwise.
 
 | # | Pattern | Example first line | When to use |
 |---|---|---|---|
-| 1 | **The lived moment** | "Your friend spends the evening on your couch, scrolling coffee machines on her phone. The next morning, your phone shows you one." | The surprise is something the viewer has lived (talk to them) |
+| 1 | **The lived moment** | "Your phone just showed you an ad for a coffee machine you never searched; your friend did, last night, on your Wi-Fi." | The surprise is something the viewer has lived (talk to them) |
 | 2 | **The dated event** | "In March 2021, one ship stuck sideways in the Suez Canal held up world trade for six days." | A real event with a date and a number opens the system (narrate like a reporter, R§2) |
-| 3 | **The role** | "Say you sign up for a store's loyalty card to save two dollars on a coffee." | Casting the viewer in a role makes the mechanism theirs (R§1, "So, you want to buy a ship") |
+| 3 | **The role** | "Say you sign up for a store's loyalty card to save two dollars on a coffee, and from then on the store keeps every item you buy." | Casting the viewer in a role makes the mechanism theirs (R§1, "So, you want to buy a ship") |
 | 4 | **The finding** | "In 2018, researchers tested more than 17,000 Android apps for secret recording." | One sourced finding overturns what the viewer assumes; say who found it |
 | 5 | **The wrong recipient** | "The barcode on your receipt isn't really there for you; it's for the store's stock system." | An everyday object has a hidden second audience |
 
-Examples show the shape; each claim needs a ✅ source before use.
+Examples show the shape (the first sentence holds the surprise); each claim needs a ✅ source before use.
 
 ## Structure of a video
 
@@ -115,15 +124,15 @@ Every video follows the **7-step recipe** (R§3). **No word-count target: length
 
 | Step | What the words do | What the frame does | Status |
 |---|---|---|---|
-| 1. Open on something concrete | An event, or a moment the viewer has lived, with one specific detail | **The opening bookend** (✅ owner decision): first frame black, a full-frame phone screen wakes (black → lock screen → the first app action of the story), then the camera pulls back out of the screen into the slice, already lit, cast in place. The title block fades in at about 2.8 s, after the wake (✅ owner decision, 2026-10-16; style-guide § 6). Name tags on first appearance in the slice | ✅ owner decision (bookend); 🧪 (the rest) |
-| 2. The surprising fact | The thing the viewer didn't expect, attributed to whoever found it | No orange yet; at most a flicker on a screen (the tell). A detail box may show the screen. A finding by researchers is shown in The Lab | 🧪 |
-| 3. The question | One question the video answers, asked by about 6 s (long-form: 2 or 3) | Hold on the object the question is about | 🧪 |
+| 1. Open on the surprise | **The first sentence carries the surprise**, inside a concrete event or a moment the viewer has lived, with one specific detail; spoken from about 0.3 s | **Frame 0 is the surprise image** (✅ owner decision, 2026-10-16, from No. 002): finished, lit, not black, showing what the first sentence names. The title block shows the question from frame 0 (style-guide § 6). Then one glide or slide out to the story. Name tags on first appearance in a slice. No. 001 keeps its black screen-bookend opening | ✅ owner decision (surprise first, question in the title from frame 0); 🧪 (values) |
+| 2. The surprising fact | The surprise made specific: the number, the place, who found it (attributed) | No orange yet; at most a flicker on a screen (the tell). A detail box may show the screen. A finding by researchers is shown in The Lab | 🧪 |
+| 3. The question | One question the video answers, spoken by about 5 to 6 s (long-form: 2 or 3); the title block has shown it since frame 0 | Hold on the object the question is about | 🧪 |
 | 4. Answer, then mechanism | Answer right away, then walk through the mechanism step by step, in physical order, pointing at what's on screen ("Look at the router") | The orange appears and travels: device to device, then out through the wall and the ground, the camera following it to the next slice; the X-ray at most once. Each mechanism step has its own visual (an object cut-away, The Lab), never the cast sitting still under the explanation | ✅ owner decision (a visual per mechanism); 🧪 (the rest) |
 | 5. One idea to keep | The one sentence the viewer could repeat to a friend | The trace stays on what the system touched; often the statement card | 🧪 |
 | 6. Attribute, don't hedge | Throughout, not a separate part: who says so, in the sentence that claims it | Nothing: no source text on screen (✅ owner decision, v0.9); sources go in the post description | 🧪 (the words); ✅ (nothing on screen) |
-| 7. Turn it back on the viewer | A consequence, or something to notice next time. Not a slogan | Back in the viewer's slice, then **the closing bookend** (✅ owner decision): the camera pushes back into a phone's screen, the phone locks (soft click), the screen goes black. Last frame black | ✅ owner decision (bookend); 🧪 (the rest) |
+| 7. Turn it back on the viewer | A consequence, or something to notice next time. Not a slogan | **The last shot ends on frame 0's picture** (✅ owner decision, 2026-10-16): same slice or screen, same mood, same framing, the same things lit, reached by a glide, so the replay is seamless. No. 001 ends on its closing bookend (push into a phone, lock, black) | ✅ owner decision (loop into frame 0); 🧪 (the rest) |
 
-**The screen-bookend loop** (✅ owner decision, v0.8.2). Every video opens on a phone screen waking and ends on a phone locking; the first and last frames are both black, so the replay is seamless whatever the mood (Night or Day) of the first and last slices. Why: the pilot opened at Night and ended in Day, so the replay jumped; a screen bookend is mood-agnostic, reusable for every story, and frames each video on the phone, where the "secret" shows up. Replaces v0.8's loop (the last shot's phone locks and the cut lands on the room's first frame). Timings and camera: style-guide § 8.
+**The loop** (✅ owner decision, 2026-10-16, from No. 002). The end loops cleanly back into frame 0 by ending on frame 0's picture. Why: the pilot opened at Night and ended in Day, so the replay jumped (v0.8.2); ending where frame 0 starts fixes that without a black frame. **The screen-bookend** (✅ owner decision v0.8.2, the default until v0.11) is now an optional tool: No. 001 keeps it (opens on a phone waking from black, ends on it locking to black); a new video may use it without the black (frame 0 = the lit screen on the surprise, the ending lands back on that screen); a black pair on a new video is the owner's call. Timings and camera: style-guide § 8.
 
 **How a video is made** (✅ owner decision): rough cut → polish beat by beat → final pass, with the owner reviewing in Remotion Studio at each step. The steps and their order: `docs/playbook.md` § How a video is built.
 
@@ -145,11 +154,11 @@ No mascot (settles Open decision 2). The recurring element is a small **cast of 
 
 | Rule | Value | Why |
 |---|---|---|
-| Format | Title block line 1 `No. 001 · The Living Room`; line 2 `SECTION A–A · 9:47 PM` (the story's time, matching the mood; never 9:41) | Reads like a section drawing's title block; the number makes a browsable series the reference doesn't have |
+| Format | **From No. 002:** title block line 1 **the video's question** (shape only: "How do a hundred homes share one fiber?"); line 2 e.g. `NO. 002 · THE STREET CABINET · 9:47 PM` (number, title, the story's time matching the mood; never 9:41). Style-guide § 6. **No. 001:** line 1 `No. 001 · The Living Room`; line 2 `SECTION A–A · 9:47 PM` | The question up from frame 0 tells a swiping viewer what the video answers (✅ owner decision, 2026-10-16); the number makes a browsable series the reference doesn't have |
 | Number | Three digits, zero-padded, in publication order. Starts at 001. Never reused, even if a video is pulled. | Makes the catalogue browsable; a gap is honest |
 | The pilot | `phone-listening` is **No. 001**. Numbering starts there, in publication order. ✅ owner decision, 2026-10-15 | The first video sets the count |
-| Title | The place or object where the hidden system lives (usually the first slice), 1 to 3 words, Title Case, usually "The …". The living room, the receipt, the elevator, the loyalty card. Never the system itself ("Cross-device tracking") and never a question. | The title is the place; the system is the surprise |
-| Timing | **First scene only**: enters at **≈ 1 s**, never in the first second, holds ≈ 2.5 s; **on a wake-bookend opening, ≈ 2.8 s**, after the wake (✅ owner decision, 2026-10-16). No per-scene label, no sub-line per scene (both retired with the museum) | One idea per frame; the opening is the screen waking, not text, and the title must not sit on the wake moment |
+| Title | The place or object where the hidden system lives (usually the first slice), 1 to 3 words, Title Case, usually "The …". The living room, the receipt, the elevator, the loyalty card. Never the system itself ("Cross-device tracking") and never a question (the question has its own line in the title block). | The title is the place; the system is the surprise |
+| Timing | **First scene only. From No. 002: up from frame 0**, holding until ≈ 0.8 s after the question is spoken (✅ owner decision, 2026-10-16). **No. 001 (black wake-bookend): enters at ≈ 2.8 s**, after the wake, holds ≈ 2.5 s. No per-scene label, no sub-line per scene (both retired with the museum) | Viewers swipe at 1 to 2 s, so frame 0 must say what the video answers (`docs/playbook.md` backlog, "Hook in the first second"); on the wake opening the title must not sit on the wake moment |
 | Video slug | `src/videos/<slug>/` keeps its plain-English slug (`phone-listening`); the number lives in `spec.ts` / `publish.md` | Slugs are for the team; numbers are for viewers |
 | Platform title | YouTube title ≤ 100 chars, hook in the first 40, number optional at the end: "Why your phone shows ads for things your friend searched · No. 001" | P§3 title limit; P rules 13 |
 
@@ -196,14 +205,14 @@ Values, copy, specs and the setup checklist live in `channel-kit.md`; this secti
 
 | Never | Why | Status |
 |---|---|---|
-| The system in any colour but orange `#ff5b14` (never blue, green or a colour per idea); anything else in the reserved orange band (style-guide § 1). Everyday things may be any other colour. **This includes real parts that are orange in life**: on a realistic object, non-system parts are never orange or amber (flex cables are black, not amber polyimide). | One hue = one meaning; the reference colours each idea differently | ✅ owner decision (v0.10 for realistic objects) |
+| The system in any colour but orange `#ff5b14` (never blue, green or a colour per idea); anything else in the reserved orange band (style-guide § 1). Everyday things may be any other colour. **One exception** (✅ owner decision, 2026-10-16): light channels inside a fibre or optical component take the channel palette, the viewer's own channel stays orange, and the video says once that the colours are added (style-guide § 1 Light channels). **This includes real parts that are orange in life**: on a realistic object, non-system parts are never orange or amber (flex cables are black, not amber polyimide). | One hue = one meaning; the reference colours each idea differently | ✅ owner decision (v0.10 for realistic objects) |
 | A camera inside a room: eye-level interior, over-the-shoulder or handheld shots. Every place is a slice seen from outside. (The bookend's full-frame screen is a flat 2D layer, like the detail box, not a camera position; style-guide § 8.) | That is the reference's frame; the owner said the interior mock-ups felt "like a copy" | ✅ owner decision |
 | A phone screen turned to the camera; a real app, logo or brand on a screen. | Phones face their owners; screens are generic and read in a detail box | ✅ owner decision |
 | A real brand on a device: a logo, wordmark, or a signature shape that identifies a maker (an iPhone or Pixel camera layout, a recognisable router or speaker silhouette). Devices are generic: e.g. the phone's camera is a single plain strip. | Realistic objects must not read as a product placement or a claim about one company (style-guide § 3) | ✅ owner decision (v0.10) |
 | A third-party asset (HDRI, texture, model, sound) that isn't recorded in `public/assets/LICENSES.md` with source, author and licence; a non-CC0 asset when a CC0 one would do; a credit-requiring asset without its credit in the post description; a new code dependency without the owner's approval. | Assets must be safe to publish on all three platforms; CC0 first (Poly Haven, ambientCG). N8AO (ambient occlusion) is approved | ✅ owner decision (v0.10) |
 | Pills: rounded name tags or rounded caption boxes; an underlined or orange caption word. | The reference's overlay style; ours is square margin notes and drawing labels (style-guide § 6) | ✅ owner decision (style); 🧪 (values) |
 | Clipped whites (Day): measured per style-guide § 2, brightest near-neutral ≤ 96%, no pixel at 255. Brightness is not raised to fix a dull still without the owner. Exception (✅ owner decision, v0.10): small pure-white glints on glass and metal edges; no surface may be pure white. | Owner rejected a brighter museum version as "too bright" (v0.3); the lesson carries over | ✅ owner feedback (the lesson); 🧪 thresholds |
-| A title card or logo sting in the first 3 s; any overlay text (title block, caption, tag, card) in the first second. The phone's own UI in the opening bookend (the lock-screen clock) is picture, not overlay. | L§3: branded intros hurt swipe rate | 🧪 |
+| A title card or logo sting in the first 3 s; a black or fading-in frame 0 (except No. 001's bookend); any overlay text in the first second **other than the title block's question and the captions of the first spoken line** (✅ owner decision, 2026-10-16: the question is up from frame 0, and the voice starts at once). The phone's own UI on a screen is picture, not overlay. | L§3: branded intros hurt swipe rate; viewers swipe at 1 to 2 s (`docs/playbook.md` backlog) | 🧪 |
 | A character who speaks, or a script line addressed to one. | The narrator is the only voice | 🧪 |
 | Realistic humans or faces. Characters have dot eyes, no mouth, adult proportions. Realism is for objects only (§ Promise, difference 3). | L§4: sidestep the uncanny and the AI-slop association; L§5: not toy-like | ✅ owner decision (v0.10: people stay stylized); 🧪 (the face details) |
 | In-app library music baked into the master. | P§5: not licensed across platforms; Content ID claims block Shorts over 1 min | ✅ platform rule |

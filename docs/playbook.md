@@ -128,7 +128,7 @@ look like them?"
 - [ ] Brand assets: logo, YouTube banner, platform bios (owner questions pending).
 - [ ] Research addendum on the reference channel (@wealthy_path): size, cadence, cast, sourcing.
 - [ ] Exhibit No. 002 candidates: see `sources.md` angle "The Screen".
-- [ ] **Hook in the first second, from No. 002 on** (owner, 2026-10-16; the pilot keeps its opening). Many viewers
+- [x] **Hook in the first second, from No. 002 on** (done 2026-10-16: now brand.md § Hook patterns and style-guide § 6 and § 8, v0.11) (owner, 2026-10-16; the pilot keeps its opening). Many viewers
   swipe at 1–2 s. The pilot opens on setup: black frame, wake, "Your friend spends the evening…". The surprise
   lands at 6.6 s and the question at 9.1 s, past the brand's ~6 s target. Next time: the first line and the first
   frame carry the payoff ("Your phone just showed you an ad for a coffee machine you never searched…"), the

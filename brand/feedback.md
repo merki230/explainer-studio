@@ -72,6 +72,28 @@ Research citations: `brand/research/platforms.md` (P§), `brand/research/landsca
 
 ---
 
+## No. 002 · fiber-sharing (`fiber-sharing`): owner decisions before production (not published)
+
+- **Decided:** 2026-10-16, owner, relayed by the main session · **Applies to:** No. 002 onward (No. 001 unchanged)
+
+**Owner's notes** (as relayed)
+
+- Many wavelengths share one fibre: show them as **distinct colours**, not all orange. The viewer's own channel stays orange; the real light is infrared, so the video must not imply the colours are real.
+- **Hook in the first second** (`docs/playbook.md` backlog): frame 0 opens on the surprise image, the first line carries the surprise, the question lands by about 5 to 6 s, the title block shows the question from frame 0, the end still loops into frame 0. The black screen-bookend opening is no longer the default. Background: No. 001's surprise landed at 6.6 s and its question at 9.1 s; many viewers swipe at 1 to 2 s.
+- American "fiber" in voice, captions and post copy.
+
+**What we're changing** (✅ owner decision; values 🧪; CHANGELOG v0.11)
+
+| Rule (file § name) | Change | Note |
+|---|---|---|
+| style-guide § 1 orange rule, new Light channels row; § 2 Bloom; brand.md § What we never do (orange) | Channel palette (7 hues, the viewer's channel orange) only inside a fibre or optical component; no spill, no bloom on the others; the video says once the colours are added | Note 1 |
+| brand.md § Hook patterns, § Structure steps 1 to 3 and 7, The loop, § Naming; style-guide § 6 Title block, § 8 The opening and the loop, screen-bookend optional | Surprise image at frame 0; surprise in the first sentence; question spoken by ≈ 5 to 6 s and in the title block from frame 0; last shot ends on frame 0's picture | Note 2 |
+| brand.md § Voice, new Spelling row | American spelling in voice, captions, on-screen text, post copy | Note 3 |
+
+**To watch once published:** swipe-away at 1 to 2 s against No. 001 (the black opening), and comments asking whether the light is really coloured.
+
+---
+
 ## Template
 
 ### No. 000 · Title (`<slug>`)
