@@ -17,6 +17,12 @@ export type CalloutProps = {
   dx?: number;
   dy?: number;
   place?: 'side' | 'above';
+  /**
+   * `place: 'above'` only: the leader first runs across from the thing to this x (fraction of the
+   * frame), then up to the label, which centres on it. For a thing with something else labelled-
+   * looking right above it (a small chip under a big one): the leader goes round it, not across it.
+   */
+  via?: number;
   /** ≤ 3 words, shown uppercase. */
   title: string;
   sub?: string;
@@ -39,6 +45,7 @@ export const Callout: React.FC<CalloutProps & {mood?: Mood}> = ({
   dx = 80,
   dy = -120,
   place = 'side',
+  via,
   title,
   sub,
   mood = 'day',
@@ -51,12 +58,18 @@ export const Callout: React.FC<CalloutProps & {mood?: Mood}> = ({
   const above = place === 'above';
   const labelLeft = dx >= 0;
   const w = Math.ceil(Math.max(width(title, TITLE, 0.08), sub ? width(sub, SUB, 0.04) : 0)) + 8;
-  const want = above ? ax + dx - w / 2 : labelLeft ? ax + dx : ax + dx - w;
+  const vx = above && via !== undefined ? via * W : undefined;
+  const want = above ? (vx ?? ax) + dx - w / 2 : labelLeft ? ax + dx : ax + dx - w;
   const left = Math.max(LEFT, Math.min(want, RIGHT - w));
   const ly = ay + dy;
   // elbow: up or down from the thing to the label's height, then across to its near edge
   const lx = above ? left + w / 2 : labelLeft ? left - 10 : left + w + 10;
-  const points = above ? `${ax},${ay} ${ax},${ly + 6} ${lx},${ly + 6}` : `${ax},${ay} ${ax},${ly} ${lx},${ly}`;
+  const points =
+    above && vx !== undefined
+      ? `${ax},${ay} ${vx},${ay} ${vx},${ly + 6} ${lx},${ly + 6}`
+      : above
+        ? `${ax},${ay} ${ax},${ly + 6} ${lx},${ly + 6}`
+        : `${ax},${ay} ${ax},${ly} ${lx},${ly}`;
 
   const line = ease(frame, 0, 12);
   const label = ease(frame, 6, 16);

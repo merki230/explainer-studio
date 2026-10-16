@@ -158,6 +158,7 @@ Avoid: anything "free" from unknown YouTube channels, AI-music tools whose terms
 12. Turn on the AI label on **all three** (TikTok AI-generated label, YouTube "altered or synthetic content", Instagram AI label).
 13. Title (YouTube) ≤ **100 chars**, hook in the first ~40. **3–5 hashtags** on every platform (Instagram cap is 5).
 14. Description: hook line, a one-line "Sources:" summary, and "Full sources: link in profile". Keep it **≤ 2,200 chars** so one text works everywhere.
+    *Note (brand-director, 2026-10-16): the "Full sources: link in profile" part is suspended by an owner decision while the profiles have no link (brand.md § Sourcing policy, § Channel identity); it comes back when a link exists. The research above is unchanged.*
 15. Cover: upload a custom cover on Instagram and TikTok (desktop); on YouTube pick a frame until we're in YPP.
 
 **Music**

@@ -1,6 +1,6 @@
 # Secretly Works: brand
 
-v0.10, 2026-10-15. Owner: brand-director. Changes go through `feedback.md` and are logged in `CHANGELOG.md`. The look is **The Section** (v0.8, from `proposals/visual-identity-v1.md`); it replaced The Plaster Museum (v0.1 to v0.7). Since v0.10: **objects realistic, people stylized** (style-guide § 3).
+v0.10.1, 2026-10-16. Owner: brand-director. Changes go through `feedback.md` and are logged in `CHANGELOG.md`. The look is **The Section** (v0.8, from `proposals/visual-identity-v1.md`); it replaced The Plaster Museum (v0.1 to v0.7). Since v0.10: **objects realistic, people stylized** (style-guide § 3).
 
 Every rule is a current default, not a law. **🧪 testing** = not yet confirmed by feedback or numbers. **✅ proven** = confirmed by feedback or numbers, or fixed by a platform rule we can't test around (marked "platform rule"). Each rule has a one-line why. Research citations point to `brand/research/landscape.md` (L§), `brand/research/platforms.md` (P§) and `brand/research/script-references.md` (R§).
 
@@ -91,7 +91,7 @@ How we write comes from two reference scripts the owner chose, after rejecting t
 
 ## Hook patterns
 
-The hook is recipe steps 1 to 3 (§ Structure): the concrete moment, the surprising fact, the question. Proposition in the first 3 s, question asked by about 6 s (P§4, TikTok guidance; L§2). **The first frame is black: the phone screen of the story's moment waking** (the screen-bookend loop, § Structure, ✅ owner decision v0.8.2); by about 1 s the lock screen is lit, then the first app action, then the camera pulls back into the slice, wide by about 3 s. Never a title card or logo (L§2); the title block still enters at about 1 s. The opening line is spoken over the screen, so the screen must show the line's moment, not a generic unlock (the visual is the hook, L§2). Whether a black first frame costs swipe-aways is 🧪: watch the swipe-away column in `feedback.md`. Every hook is a full spoken sentence, never a fragment chain. All 🧪 until swipe-away numbers say otherwise.
+The hook is recipe steps 1 to 3 (§ Structure): the concrete moment, the surprising fact, the question. Proposition in the first 3 s, question asked by about 6 s (P§4, TikTok guidance; L§2). **The first frame is black: the phone screen of the story's moment waking** (the screen-bookend loop, § Structure, ✅ owner decision v0.8.2); by about 1 s the lock screen is lit, then the first app action, then the camera pulls back into the slice, wide by about 3 s. Never a title card or logo (L§2); the title block enters at about 2.8 s, after the wake (✅ owner decision, 2026-10-16). The opening line is spoken over the screen, so the screen must show the line's moment, not a generic unlock (the visual is the hook, L§2). Whether a black first frame costs swipe-aways is 🧪: watch the swipe-away column in `feedback.md`. Every hook is a full spoken sentence, never a fragment chain. All 🧪 until swipe-away numbers say otherwise.
 
 | # | Pattern | Example first line | When to use |
 |---|---|---|---|
@@ -115,7 +115,7 @@ Every video follows the **7-step recipe** (R§3). **No word-count target: length
 
 | Step | What the words do | What the frame does | Status |
 |---|---|---|---|
-| 1. Open on something concrete | An event, or a moment the viewer has lived, with one specific detail | **The opening bookend** (✅ owner decision): first frame black, a full-frame phone screen wakes (black → lock screen → the first app action of the story), then the camera pulls back out of the screen into the slice, already lit, cast in place. The title block fades in at about 1 s. Name tags on first appearance in the slice | ✅ owner decision (bookend); 🧪 (the rest) |
+| 1. Open on something concrete | An event, or a moment the viewer has lived, with one specific detail | **The opening bookend** (✅ owner decision): first frame black, a full-frame phone screen wakes (black → lock screen → the first app action of the story), then the camera pulls back out of the screen into the slice, already lit, cast in place. The title block fades in at about 2.8 s, after the wake (✅ owner decision, 2026-10-16; style-guide § 6). Name tags on first appearance in the slice | ✅ owner decision (bookend); 🧪 (the rest) |
 | 2. The surprising fact | The thing the viewer didn't expect, attributed to whoever found it | No orange yet; at most a flicker on a screen (the tell). A detail box may show the screen. A finding by researchers is shown in The Lab | 🧪 |
 | 3. The question | One question the video answers, asked by about 6 s (long-form: 2 or 3) | Hold on the object the question is about | 🧪 |
 | 4. Answer, then mechanism | Answer right away, then walk through the mechanism step by step, in physical order, pointing at what's on screen ("Look at the router") | The orange appears and travels: device to device, then out through the wall and the ground, the camera following it to the next slice; the X-ray at most once. Each mechanism step has its own visual (an object cut-away, The Lab), never the cast sitting still under the explanation | ✅ owner decision (a visual per mechanism); 🧪 (the rest) |
@@ -149,14 +149,14 @@ No mascot (settles Open decision 2). The recurring element is a small **cast of 
 | Number | Three digits, zero-padded, in publication order. Starts at 001. Never reused, even if a video is pulled. | Makes the catalogue browsable; a gap is honest |
 | The pilot | `phone-listening` is **No. 001**. Numbering starts there, in publication order. ✅ owner decision, 2026-10-15 | The first video sets the count |
 | Title | The place or object where the hidden system lives (usually the first slice), 1 to 3 words, Title Case, usually "The …". The living room, the receipt, the elevator, the loyalty card. Never the system itself ("Cross-device tracking") and never a question. | The title is the place; the system is the surprise |
-| Timing | **First scene only**: enters at **≈ 1 s**, never in the first second, holds ≈ 2.5 s. No per-scene label, no sub-line per scene (both retired with the museum) | One idea per frame; the first frame is the black screen waking, not text |
+| Timing | **First scene only**: enters at **≈ 1 s**, never in the first second, holds ≈ 2.5 s; **on a wake-bookend opening, ≈ 2.8 s**, after the wake (✅ owner decision, 2026-10-16). No per-scene label, no sub-line per scene (both retired with the museum) | One idea per frame; the opening is the screen waking, not text, and the title must not sit on the wake moment |
 | Video slug | `src/videos/<slug>/` keeps its plain-English slug (`phone-listening`); the number lives in `spec.ts` / `publish.md` | Slugs are for the team; numbers are for viewers |
 | Platform title | YouTube title ≤ 100 chars, hook in the first 40, number optional at the end: "Why your phone shows ads for things your friend searched · No. 001" | P§3 title limit; P rules 13 |
 
 ## Sourcing policy
 
 - Every claim follows `docs/sources-format.md`: ✅ verified, 🟡 plausible (spoken with its attribution or the source's own hedge, § Voice), ❌ unsupported (cut it), 🎭 illustrative (disclosed in the post description, below). The fact-checker must PASS before voice-over (CLAUDE.md pipeline).
-- **Full sources go in the post description.** One line "Sources: …" plus "Full sources: link in profile" (P§6, P rules 14). YouTube Shorts description links are not clickable (P§6), so names, not URLs.
+- **Full sources go in the post description.** One line "Sources: …" (P§6, P rules 14). YouTube Shorts description links are not clickable (P§6), so names, not URLs. **No "Full sources: link in profile" line** while there is no profile link (✅ owner decision, 2026-10-16: it would point at nothing; § Channel identity, no link); it comes back when a link exists.
 - **No source text on screen** (✅ owner decision, v0.9; retires v0.6's on-screen attribution line, so Open decision 5 now reads "never on screen" again). Why: in the build the line "felt like a footnote in the middle of a story". No attribution line, no "Source:", no URL, no document title in the picture. Sources go in the post description only.
 - **Spoken attribution stays where the story needs it** ("researchers found", "FTC staff said"; § Voice, Attribute, don't hedge). A 🟡 claim is still spoken with its attribution or the source's hedge.
 - **Company names in the voice** only when the story is about that company's own product, never as a citation (§ Voice, Company names; ✅ owner decision, v0.9). The named company's claim still needs its row in `sources.md` like any other.
@@ -166,20 +166,31 @@ No mascot (settles Open decision 2). The recurring element is a small **cast of 
 
 ## Name
 
-**Secretly Works.** Handle **`@secretlyworks`** on every platform. ✅ owner decision, 2026-10-15. The name states the promise ("how everyday things secretly work"); the cut-open look carries the rest. The accounts found in the landscape check (L§6, rows 1 and 2) are the owner's own.
+**Secretly Works.** ✅ owner decision, 2026-10-15. The name states the promise ("how everyday things secretly work"); the cut-open look carries the rest.
+
+**Handle: `@thesecretlyworks`**, the same on all three platforms. ✅ owner decision, 2026-10-16 (the owner checked it is free on YouTube, TikTok and Instagram). Why: one identical handle makes three profiles one channel; it keeps the name whole with no punctuation to forget (format rules and sources: `channel-kit.md` § 2). History: `@secretlyworks` was not free on YouTube and `@howitsecretlyworks` was taken there (v0.3 to v0.10 wrongly recorded both as owned); `@secretly.works` was unavailable; `@secretlyworkshq` and `@secretly_works` were the fallbacks, no longer needed.
 
 | Platform | Handle | Status |
 |---|---|---|
-| Instagram | `@secretlyworks` | ✅ owned (existing account, display name "Secretly Works \| Tech in 3D", 3 followers) |
-| YouTube | `@secretlyworks` | ✅ owned (existing channel "Secretly Works") |
-| YouTube, spare | `@howitsecretlyworks` | ✅ owned. Not the channel name; keep it parked so nobody else takes it |
-| TikTok | `@secretlyworks` | ⏳ **to check in-app** (L§6: TikTok could not be verified from outside). The one open item. If taken, fall back to `@howitsecretlyworks` and say so here |
+| YouTube | `@thesecretlyworks` | ✅ owner decision (free, checked by the owner) |
+| TikTok | `@thesecretlyworks` | ✅ owner decision (free, checked by the owner) |
+| Instagram | `@thesecretlyworks` | ✅ owner decision: the existing account (display name "Secretly Works \| Tech in 3D", 3 followers) is **renamed from `@secretlyworks` to `@thesecretlyworks`** so all three match. The owner accepts that `@secretlyworks` is freed and anyone may claim it |
 
-**Instagram bio to update.** Current: "Everyday tech, opened up in 3D" (too narrow: the topic is everyday things, not only tech, § Promise). Proposed, 77 characters, 🧪 until the owner approves (v0.8: "exhibit" dropped with the museum):
+Bios and the display-name fix: `channel-kit.md` § 3 (supersedes the v0.8 bio proposal here).
 
-> How everyday things secretly work, cut open in 3D. Sources in every post.
+## Channel identity
 
-The display-name tag "Tech in 3D" narrows the topic the same way; "Secretly Works" alone, or "Secretly Works | Hidden systems in 3D", would fit the positioning. Owner's call, not blocking.
+Values, copy, specs and the setup checklist live in `channel-kit.md`; this section holds the rules.
+
+| Rule | Value | Why | Status |
+|---|---|---|---|
+| Logo | **Mark C, the "S-line", in the Night palette**: a hatched rounded square with an orange S-shaped hidden path, a dot at each end, on a dark navy ground. Spec (viewBox 120): square x 18, y 18, size 84, rx 12, ink stroke 3.6; path `M80 38 C 40 26, 36 54, 60 60 S 82 92, 40 84`, stroke 7.5, round caps; dots r 5.5 at (80, 38) and (40, 84). Colours: ground `#0d1322` (Night `bg`), hatch background `#111830`, hatch lines `#3a4668` (6-unit pattern rotated 45°, line width 1.8), ink `#efe9df` (`cut`), line `#ff5b14` (`orange`: one orange across the channel). Asset exports: `channel-kit.md` § 4 | The square is a section, its hatch the cut face; the orange line is the hidden system running through it, so the mark tells the promise in one shape and keeps "orange is reserved for the hidden system". Settles the brand-director's earlier "no orange in the symbol" suggestion in the owner's favour | ✅ owner decision, 2026-10-16 (mark C, Night); 🧪 (values) |
+| Profile picture | The **symbol alone**, no text, the same file on all three (`brand/assets/profile-800.png`) | It shows at 98 to 110 px in a circle, where a wordmark can't be read | ✅ owner decision |
+| Lockup | Symbol + "Secretly Works" wordmark, for the YouTube banner and other uses. On the banner, the lockup and **one tagline, "How everyday things secretly work"** (Inter 600, under the wordmark), are the only readable text, inside the 1546 × 423 safe area | One mark, recognised at every size; the tagline says the promise in the channel name's own words | ✅ owner decision (the lockup); ✅ owner decision, 2026-10-16 (the tagline, the only extra text); 🧪 (placement) |
+| Nothing else on profiles | **No posting schedule, no link** in any bio or on the banner | A schedule is a promise we might break; no page to link yet | ✅ owner decision |
+| YouTube watermark | The file is made (`watermark-300.png`, `channel-kit.md` § 4) but **switched off on YouTube until long-form exists** | YouTube shows it only in landscape view, so vertical Shorts wouldn't carry it; CLAUDE.md: no on-screen watermark | ✅ owner decision, 2026-10-16 |
+| Profile copy | **What, not how**, in a passionate person's spoken voice: what the viewer gets (the everyday things around them and what they're really up to), never how it's made (no 3D, no sourcing, no AI voice, no style, no process). YouTube description 1 to 3 sentences plus at most one short "what's coming" line; TikTok and Instagram bios one line, two at most. No AI patterns (§ Voice, banned patterns, plus "Ever wondered", "dive into", "unlock", "the hidden world of", "Join us", "Your daily dose of", colon or em-dash taglines, an opening question answered by the next line, emoji strings). **Chosen texts** (✅ owner choice, 2026-10-16): YouTube description B, TikTok bio A, Instagram name A and bio B, in `channel-kit.md` § 3. **Pronouns differ on purpose: "we" on YouTube, "I" on TikTok, no pronoun on Instagram** (owner's choice; don't harmonise). Supersedes the v0.10.1 rules "every bio opens with 'How everyday things secretly work, cut open in 3D.' and says the videos are sourced" and "the YouTube About text says the narrator is an AI voice" | Owner (2026-10-16): the old bios were "just like AI"; a profile should be "enough for people to understand what we do and not how" (`feedback.md`) | ✅ owner feedback (the rule); ✅ owner choice (the texts) |
+| Disclosure | The AI label goes on **every upload** on all three platforms (§ Sourcing policy; checklist in `channel-kit.md` § 5). The profiles no longer mention the AI voice; the per-post label is the disclosure | Trust is the brand; Instagram requires the label for a realistic AI voiceover (P§6) | ✅ platform rule (labels); ✅ owner decision 2026-10-16 (no AI line in the bio) |
 
 ## What we never do
 

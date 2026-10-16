@@ -205,6 +205,12 @@ const ARC_FINE = new THREE.TorusGeometry(1, 0.011, 6, 72, Math.PI * 0.6);
 /** Realism: the "Hey…" waveform glyph, a run of thin rounded bars (a fixed envelope). */
 const HEY_BARS = [0.22, 0.4, 0.75, 1, 0.82, 0.55, 0.9, 0.7, 0.45, 0.62, 0.35, 0.2, 0.12];
 const BAR = new THREE.CapsuleGeometry(0.006, 0.2, 3, 8);
+/**
+ * Realism: where the chip callout's leader leaves the wake-word chip (its right edge + a gap, phone
+ * units from the chip's centre) and the x of the gap it runs up (between the processor, right edge
+ * 0.22, and the parts right of it, left edges 0.275).
+ */
+const CHIP_LEADER = {edge: 0.05, gapX: 0.25};
 /** Realism: the ink leader from the shutter to the network icon (≈ 2 px at the close framing). */
 const LEADER = {t: 0.0045, up: 0.14, across: 0.2};
 /** Realism: the shutter's place on the top edge (left of the middle, clear of the chip's callout). */
@@ -349,34 +355,24 @@ export const PhoneCutawayScene: React.FC<PhoneCutawaySceneProps> = ({
     ],
   ];
 
-  // the chip's callout: anchored on the chip as the camera sees it when the label comes in
+  // the chip's callout: on the small wake-word chip (not the big processor right above it). The
+  // leader starts at the chip's right edge, runs across to the gap between the processor and the
+  // parts on its right (phone x ≈ 0.25), and goes up that gap to the label over the phone. It
+  // follows the camera's slow push, so it stays on the chip.
   const labelAt = Math.round((chipLabelAt ?? cutAt + 0.8) * fps);
-  const chipPx = projectToFrame(
-    sectionCameraAt({
-      from: close,
-      to: end,
-      pre,
-      frame: Math.max(frame, labelAt),
-      fps,
-      durationInFrames,
-      drift,
-      clockOffset: startFrame / fps,
-    }),
-    [CHIP[0], PH.y + WAKE_CHIP[1], WAKE_CHIP[2]],
-  );
-  const phoneTopPx = projectToFrame(
-    sectionCameraAt({
-      from: close,
-      to: end,
-      pre,
-      frame: Math.max(frame, labelAt),
-      fps,
-      durationInFrames,
-      drift,
-      clockOffset: startFrame / fps,
-    }),
-    [CHIP[0], top + 0.02, 0],
-  );
+  const labelCam = sectionCameraAt({
+    from: close,
+    to: end,
+    pre,
+    frame: Math.max(frame, labelAt),
+    fps,
+    durationInFrames,
+    drift,
+    clockOffset: startFrame / fps,
+  });
+  const chipPx = projectToFrame(labelCam, [WAKE_CHIP[0] + CHIP_LEADER.edge, PH.y + WAKE_CHIP[1], WAKE_CHIP[2]]);
+  const viaPx = projectToFrame(labelCam, [CHIP_LEADER.gapX, PH.y + WAKE_CHIP[1], WAKE_CHIP[2]]);
+  const phoneTopPx = projectToFrame(labelCam, [CHIP_LEADER.gapX, top + 0.02, 0]);
 
   return (
     <AbsoluteFill>
@@ -632,6 +628,7 @@ export const PhoneCutawayScene: React.FC<PhoneCutawaySceneProps> = ({
             x={chipPx[0] / 1080}
             y={chipPx[1] / 1920}
             place="above"
+            via={viaPx[0] / 1080}
             dx={0}
             dy={phoneTopPx[1] - chipPx[1] - 70}
           />

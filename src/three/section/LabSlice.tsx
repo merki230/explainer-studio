@@ -30,12 +30,16 @@ export const LAB_LAYOUT = {
   phones: 9,
   phoneX: (i: number) => -1.12 + i * 0.28,
   rail: {y: 1.52, z: -0.62},
-  counter: [-0.62, 1.98, Z0 + 0.012] as V3,
+  // the counter and the meter sit left of centre (counter −0.62 → −0.92, meter 0.72 → 0.02), so
+  // at the wide framing the meter's 40 px header ends inside x 888 (at 0.72 it ran off the frame)
+  counter: [-0.92, 1.98, Z0 + 0.012] as V3,
   counterSize: [1.25, 0.52] as [number, number],
-  meter: [0.72, 1.86, Z0 + 0.012] as V3,
+  meter: [0.02, 1.86, Z0 + 0.012] as V3,
   meterSize: [0.36, 0.95] as [number, number],
+  /** The meter's "AUDIO SENT" header panel above it: centre height and face size. */
+  meterHeader: {y: 2.5, size: [0.82, 0.16] as [number, number]},
   /** The "0" stamp lands on the audio meter itself (in frame at every framing). */
-  stamp: [0.72, 1.9, Z0 + 0.06] as V3,
+  stamp: [0.02, 1.9, Z0 + 0.06] as V3,
   rig: [1.18, 0.35, 0.5] as V3,
 };
 
@@ -45,6 +49,9 @@ const ease = (x: number, a: number, b: number) =>
     extrapolateRight: 'clamp',
     easing: Easing.inOut(Easing.cubic),
   });
+
+/** The header label's canvas (px): the face's 0.82 × 0.16 shape. */
+const LABEL_PX: [number, number] = [656, 128];
 
 /** A canvas texture redrawn only when its text changes (fonts must be loaded first). */
 const useCanvasText = (w: number, h: number) =>
@@ -136,7 +143,7 @@ export const LabSlice: React.FC<LabSliceProps> = ({
   // the counter: Archivo digits on the dark panel built into the wall
   const value = Math.round(count * ease(t, countAt, countAt + countFor));
   const counter = useCanvasText(512, 212);
-  const label = useCanvasText(256, 64);
+  const label = useCanvasText(LABEL_PX[0], LABEL_PX[1]);
   const stampTex = useCanvasText(256, 256);
   if (ready) {
     const key = `${value}|${mood}`;
@@ -159,13 +166,16 @@ export const LabSlice: React.FC<LabSliceProps> = ({
       mats.counter.needsUpdate = true;
     }
     if (label.key !== mood) {
+      // the meter's header: on the dark panel like the counter's "APPS TESTED", in its ink
+      const [lw, lh] = LABEL_PX;
       const cx = label.c.getContext('2d')!;
-      cx.clearRect(0, 0, 256, 64);
-      cx.fillStyle = m.ink;
-      cx.font = `700 26px ${fonts.sans}, Arial`;
+      cx.fillStyle = lab.panel;
+      cx.fillRect(0, 0, lw, lh);
+      cx.fillStyle = lab.panelInk;
+      cx.font = `700 ${Math.round(lh * 0.6)}px ${fonts.sans}, Arial`;
       cx.textAlign = 'center';
       cx.textBaseline = 'middle';
-      cx.fillText('AUDIO SENT', 128, 32);
+      cx.fillText('AUDIO SENT', lw / 2, lh * 0.54, lw - 24);
       label.t.needsUpdate = true;
       label.key = mood;
       mats.labelMat.map = label.t;
@@ -289,8 +299,16 @@ export const LabSlice: React.FC<LabSliceProps> = ({
           <planeGeometry args={[mw - 0.1, 0.04]} />
         </mesh>
       ))}
-      <mesh position={[mx, my - mh / 2 - 0.09, mz + 0.004]} material={mats.labelMat} visible={ready}>
-        <planeGeometry args={[0.5, 0.125]} />
+      {/* its header: a panel above the meter, clear of the arms below (≈ 40 px text at the wide shot) */}
+      {realism ? null : (
+        <mesh
+          geometry={roundedBox(L.meterHeader.size[0] + 0.06, L.meterHeader.size[1] + 0.06, 0.04, 0.01)}
+          material={mats.panel}
+          position={[mx, L.meterHeader.y, mz + 0.005]}
+        />
+      )}
+      <mesh position={[mx, L.meterHeader.y, mz + 0.027]} material={mats.labelMat} visible={ready}>
+        <planeGeometry args={L.meterHeader.size} />
       </mesh>
       {/* the "0" stamp, landing on cue */}
       <mesh
@@ -456,6 +474,11 @@ const RealLabEquipment: React.FC<{
     <group>
       <RealWallDevice mats={mats} position={L.counter} size={L.counterSize} />
       <RealWallDevice mats={mats} position={L.meter} size={L.meterSize} />
+      <RealWallDevice
+        mats={mats}
+        position={[L.meter[0], L.meterHeader.y, L.meter[2]]}
+        size={L.meterHeader.size}
+      />
       <RealBench mats={mats} y={L.bench.y} z={L.bench.z} width={L.bench.width} depth={L.bench.depth} />
       <RealPhoneRow mats={mats} xs={xs} y={benchTop + 0.115} z={L.bench.z - 0.02} tilt={-0.45} height={0.2}>
         {(i, dw, dh, front) => {

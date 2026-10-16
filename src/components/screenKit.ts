@@ -174,6 +174,26 @@ const rr = (cx: CanvasRenderingContext2D, x: number, y: number, w: number, h: nu
 
 const font = (weight: number, size: number) => `${weight} ${size}px ${fonts.sans}, Arial, sans-serif`;
 
+const mix = (a: number, b: number, k: number) => a + (b - a) * k;
+
+/** `text` cut with an ellipsis to fit `maxW` (in the context's current font). */
+const fitText = (cx: CanvasRenderingContext2D, text: string, maxW: number) => {
+  if (cx.measureText(text).width <= maxW) return text;
+  let n = text.length;
+  while (n > 1 && cx.measureText(`${text.slice(0, n).trimEnd()}…`).width > maxW) n--;
+  return `${text.slice(0, n).trimEnd()}…`;
+};
+
+/*
+ * Full-frame layout (style guide § 8 "Screen placement"): when a screen fills the frame (the
+ * bookends), nothing readable sits above y 520 of the 1920 frame (screen y ≈ 186) and all text
+ * stays at x ≤ 888 (screen x ≈ 300). `full` 0–1 blends the phone layout into it: the status bar
+ * fades out, the lock clock drops to ≈ y 640, the search and results content moves down, and only
+ * the first suggestion row stays (its text ends above y 1000, clear of a 2-line caption page).
+ */
+/** Right edge for text, screen units: the phone's own margin, or x 888 of the frame when full-frame. */
+const textRight = (full: number) => mix(334, 300, full);
+
 /** The invented product: a small espresso machine (neutral colours, no orange). */
 const machine = (cx: CanvasRenderingContext2D, x: number, y: number, s: number) => {
   cx.save();
@@ -201,7 +221,10 @@ const machine = (cx: CanvasRenderingContext2D, x: number, y: number, s: number) 
   cx.restore();
 };
 
-const statusBar = (cx: CanvasRenderingContext2D, s: ScreenState, p: ReturnType<typeof palette>) => {
+const statusBar = (cx: CanvasRenderingContext2D, s: ScreenState, p: ReturnType<typeof palette>, full = 0) => {
+  if (full >= 0.999) return;
+  cx.save();
+  cx.globalAlpha *= 1 - full;
   cx.fillStyle = p.text;
   cx.font = font(600, 20);
   cx.textBaseline = 'middle';
@@ -215,6 +238,7 @@ const statusBar = (cx: CanvasRenderingContext2D, s: ScreenState, p: ReturnType<t
   cx.stroke();
   cx.fillRect(307, 19, 22, 10);
   micIndicator(cx, s, p);
+  cx.restore();
 };
 
 /** The mic-in-use indicator: a pill with a mic glyph left of the signal bars. */
@@ -234,7 +258,7 @@ const micIndicator = (cx: CanvasRenderingContext2D, s: ScreenState, p: ReturnTyp
   cx.stroke();
 };
 
-const field = (cx: CanvasRenderingContext2D, y: number, s: ScreenState, p: ReturnType<typeof palette>) => {
+const field = (cx: CanvasRenderingContext2D, y: number, s: ScreenState, p: ReturnType<typeof palette>, full = 0) => {
   cx.fillStyle = p.field;
   rr(cx, 14, y, 332, 64, 14);
   cx.fill();
@@ -249,13 +273,18 @@ const field = (cx: CanvasRenderingContext2D, y: number, s: ScreenState, p: Retur
   cx.lineTo(59, y + 45);
   cx.stroke();
   const shown = s.query.slice(0, s.typed);
-  cx.font = font(600, 32);
   cx.textBaseline = 'middle';
   cx.textAlign = 'left';
+  // the whole query at the size it fits (down to 24), so it never runs past the text edge
+  const room = textRight(full) - 72 - 6;
+  cx.font = font(600, 32);
+  const w32 = cx.measureText(s.query || 'Search').width;
+  cx.font = font(600, Math.max(24, Math.min(32, (32 * room) / Math.max(1, w32))));
+  const text = fitText(cx, shown || 'Search', room);
   cx.fillStyle = shown ? p.text : p.sub;
-  cx.fillText(shown || 'Search', 72, y + 33);
+  cx.fillText(text, 72, y + 33);
   if (s.app === 'search') {
-    const w = shown ? cx.measureText(shown).width : 0;
+    const w = shown ? cx.measureText(text).width : 0;
     cx.fillStyle = p.text;
     cx.fillRect(74 + w, y + 16, 3, 34);
   }
@@ -287,27 +316,28 @@ const keyboard = (cx: CanvasRenderingContext2D, s: ScreenState, p: ReturnType<ty
   cx.fill();
 };
 
-const header = (cx: CanvasRenderingContext2D, title: string, p: ReturnType<typeof palette>) => {
+const header = (cx: CanvasRenderingContext2D, title: string, p: ReturnType<typeof palette>, y = 74, x = 20) => {
   cx.fillStyle = p.text;
   cx.font = font(800, 30);
   cx.textAlign = 'left';
   cx.textBaseline = 'middle';
-  cx.fillText(title, 20, 74);
+  cx.fillText(title, x, y);
 };
 
 /**
  * Draw a screen state into a 2D context, in screen units (360 × 686). Scale the context first to
- * draw at another size.
+ * draw at another size. `full` 0–1: the full-frame layout (see above; the bookends), default 0.
  */
-export const drawScreen = (cx: CanvasRenderingContext2D, s: ScreenState) => {
+export const drawScreen = (cx: CanvasRenderingContext2D, s: ScreenState, full = 0) => {
   const p = palette(s.mood);
+  const f = Math.max(0, Math.min(1, full));
   cx.save();
   cx.fillStyle = p.bg;
   cx.fillRect(0, 0, SCREEN_W, SCREEN_H);
   cx.textAlign = 'left';
 
   if (s.app === 'assistant') {
-    statusBar(cx, s, p);
+    statusBar(cx, s, p, f);
     // a generic voice assistant waiting for its wake word: a mic button and a quiet waveform
     cx.fillStyle = p.field;
     cx.beginPath();
@@ -338,14 +368,16 @@ export const drawScreen = (cx: CanvasRenderingContext2D, s: ScreenState) => {
     cx.fillStyle = p.text;
     cx.textAlign = 'center';
     cx.textBaseline = 'middle';
+    // full-frame: the clock centred at ≈ y 640 of the frame (screen y 229)
+    const dy = 29 * f;
     cx.font = font(700, 96);
-    cx.fillText(s.clock, SCREEN_W / 2, 200);
+    cx.fillText(s.clock, SCREEN_W / 2, 200 + dy);
     micIndicator(cx, s, p);
     cx.font = font(500, 26);
     cx.fillStyle = p.sub;
-    cx.fillText(s.date, SCREEN_W / 2, 268);
+    cx.fillText(s.date, SCREEN_W / 2, 268 + dy);
     if (s.app === 'notification') {
-      const y = 320 + (1 - s.enter) * -40;
+      const y = 320 + dy + (1 - s.enter) * -40;
       cx.globalAlpha = s.enter;
       cx.fillStyle = p.card;
       rr(cx, 14, y, 332, 120, 18);
@@ -363,34 +395,41 @@ export const drawScreen = (cx: CanvasRenderingContext2D, s: ScreenState) => {
       cx.globalAlpha = 1;
     }
   } else if (s.app === 'search' || s.app === 'results') {
-    statusBar(cx, s, p);
-    header(cx, 'Shop', p);
-    field(cx, 110, s, p);
+    statusBar(cx, s, p, f);
+    // full-frame: the header's text below y 520 of the frame, the field and rows under it
+    header(cx, 'Shop', p, mix(74, 200, f), mix(20, 32, f));
+    field(cx, mix(110, 222, f), s, p, f);
     if (s.app === 'search') {
       // suggestions that match what's typed so far
       const typed = s.query.slice(0, s.typed);
       if (typed.length > 0) {
         const sugg = [s.query, `${s.query} with grinder`, `${s.query} small`];
+        const top = mix(206, 296, f);
+        const gap = mix(62, 46, f);
+        // full-frame: no row text near the caption page (a 2-line page reaches up to ≈ y 1040): one row
+        const lowest = mix(SCREEN_H, 340, f);
         sugg.forEach((q, i) => {
-          const y = 206 + i * 62;
+          const y = top + i * gap;
+          if (y + 24 > lowest) return;
           cx.fillStyle = p.text;
           cx.font = font(500, 28);
           cx.textBaseline = 'middle';
-          cx.fillText(q.length > 20 ? `${q.slice(0, 19)}…` : q, 64, y + 24);
+          cx.fillText(fitText(cx, q, textRight(f) - 64), 64, y + 24);
           cx.strokeStyle = p.sub;
           cx.lineWidth = 2.5;
           cx.beginPath();
           cx.arc(38, y + 22, 7, 0, Math.PI * 2);
           cx.stroke();
           cx.fillStyle = p.line;
-          cx.fillRect(20, y + 54, 320, 2);
+          cx.fillRect(20, y + gap - 8, 320, 2);
         });
       }
       keyboard(cx, s, p);
     } else {
       cx.globalAlpha = s.enter;
       for (let i = 0; i < 4; i++) {
-        const y = 196 + i * 118 + (1 - s.enter) * 16;
+        const y = mix(196, 306, f) + i * 118 + (1 - s.enter) * 16;
+        if (y + 100 > SCREEN_H) break;
         cx.fillStyle = p.tile;
         rr(cx, 16, y, 100, 100, 12);
         cx.fill();
@@ -406,8 +445,13 @@ export const drawScreen = (cx: CanvasRenderingContext2D, s: ScreenState) => {
       cx.globalAlpha = 1;
     }
   } else if (s.app === 'feed') {
-    statusBar(cx, s, p);
-    header(cx, 'Feed', p);
+    statusBar(cx, s, p, f);
+    // full-frame: the header fades out (it would sit above y 520 of the frame)
+    if (f < 0.999) {
+      cx.globalAlpha = 1 - f;
+      header(cx, 'Feed', p);
+      cx.globalAlpha = 1;
+    }
     // a post at the top
     cx.fillStyle = p.card;
     rr(cx, 14, 110, 332, 96, 16);
@@ -449,17 +493,22 @@ export const drawScreen = (cx: CanvasRenderingContext2D, s: ScreenState) => {
     machine(cx, 180, y + 140, 1.5);
     cx.fillStyle = p.text;
     cx.font = font(800, 32);
-    cx.fillText('Café Pro Espresso', 34, y + 258);
+    const title = 'Café Pro Espresso';
+    const tw = cx.measureText(title).width;
+    cx.font = font(800, Math.min(32, (32 * (textRight(f) - 34)) / Math.max(1, tw)));
+    cx.fillText(title, 34, y + 258);
     cx.fillStyle = p.sub;
     cx.font = font(600, 30);
     cx.fillText('$249', 34, y + 314);
+    // full-frame: the button moves in so its text stays at x ≤ 888 of the frame
+    const bx = 196 - 30 * f;
     cx.fillStyle = p.button;
-    rr(cx, 196, y + 290, 132, 48, 10);
+    rr(cx, bx, y + 290, 132, 48, 10);
     cx.fill();
     cx.fillStyle = p.buttonInk;
     cx.font = font(700, 24);
     cx.textAlign = 'center';
-    cx.fillText('Shop now', 262, y + 315);
+    cx.fillText('Shop now', bx + 66, y + 315);
     cx.globalAlpha = 1;
   }
   cx.restore();

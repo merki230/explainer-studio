@@ -34,6 +34,24 @@ Research citations: `brand/research/platforms.md` (P§), `brand/research/landsca
 
 ---
 
+## Channel profiles: bio and description review (not a video)
+
+- **Reviewed:** 2026-10-16, owner, on `channel-kit.md` § 3 (v0.10.1 copy)
+
+**Owner's notes** (quoted as relayed by the main session)
+
+- "those descriptions are just like AI. We should describe our channel like a passionate [person], does not need to be long. It should be enough for people to understand what we do and not how."
+
+**What we're changing** (✅ owner direction, relayed by the main session; CHANGELOG v0.10.1)
+
+| Rule (file § name) | Change | Note |
+|---|---|---|
+| brand.md § Channel identity, Bio promise → Profile copy | No fixed opening line, no "sourced", no "cut open in 3D": what the viewer gets, not how it's made, in a spoken voice; YouTube 1 to 3 sentences + one optional "what's coming" line, bios one line (two at most) | The note |
+| brand.md § Channel identity, Disclosure | The AI-voice line leaves the YouTube About text; the per-post AI label on all three stays | The note ("not how") |
+| channel-kit.md § 3 | Rewritten: 3 options per field, one recommended | The note |
+
+---
+
 ## Template
 
 ### No. 000 · Title (`<slug>`)

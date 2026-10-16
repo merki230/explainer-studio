@@ -122,7 +122,9 @@ export const limb = (a: THREE.Vector3, b: THREE.Vector3, radius: number) => {
   const len = dir.length();
   const geometry = memo(
     `limb:${radius}:${len.toFixed(4)}`,
-    () => new THREE.CapsuleGeometry(radius, Math.max(0.001, len), 4, 12),
+    // 8 cap / 32 radial segments: at 4 / 12 the close framings (the bookends' pull) showed a polygonal
+    // silhouette on the forearms and per-facet shadow-terminator bands down the shins
+    () => new THREE.CapsuleGeometry(radius, Math.max(0.001, len), 8, 32),
   );
   const position = a.clone().addScaledVector(dir, 0.5);
   const quaternion = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize());

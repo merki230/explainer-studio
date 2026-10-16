@@ -23,7 +23,11 @@ export const ScreenBookend: React.FC<{
   phoneH: number;
 }> = ({state, e, bright, phone, phoneH}) => {
   const ref = useRef<HTMLCanvasElement>(null);
-  const key = state ? screenKey(state) : 'off';
+  // the full-frame layout (nothing readable above y 520, text at x ≤ 888) while the screen fills
+  // the frame; it eases back to the phone's own layout as the screen shrinks (e 0.3 → 0.7), so the
+  // hand-over to the 3D phone's screen matches
+  const full = Math.round(Math.max(0, Math.min(1, (0.7 - e) / 0.4)) * 50) / 50;
+  const key = state ? `${screenKey(state)}|${full}` : 'off';
   useLayoutEffect(() => {
     const handle = delayRender('Drawing the bookend screen');
     fontsReady().then(() => {
@@ -35,7 +39,7 @@ export const ScreenBookend: React.FC<{
         cx.fillRect(0, 0, c.width, c.height);
         if (state) {
           cx.setTransform(K, 0, 0, K, 0, 0);
-          drawScreen(cx, state);
+          drawScreen(cx, state, full);
         }
       }
       continueRender(handle);

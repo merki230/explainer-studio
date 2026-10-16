@@ -33,7 +33,7 @@ export const SectionStage: React.FC<{
     <ThreeCanvas
       width={width}
       height={height}
-      shadows="percentage"
+      shadows="soft"
       gl={{antialias: false}}
       camera={{fov, near: 0.1, far: 80, position: [4.6, 3.6, 8.6]}}
       style={{backgroundColor: m.bg}}
@@ -74,11 +74,15 @@ export const SectionLights: React.FC<{
     const hemi = new THREE.HemisphereLight();
     const key = new THREE.DirectionalLight();
     key.castShadow = true;
+    // Soft PCF (the canvas's shadows="soft", § 2 "PCF soft"): plain PCF with radius 4 stepped the
+    // penumbra into visible copies of the shadow edge at the close framings (vertical bands on the
+    // trousers in the bookends' pull). Soft PCF filters it smooth; it ignores `radius`. Normal bias
+    // 0.02 (≈ 3 texels of the ±3 shadow camera) against acne on the capsules; no peter-panning wide.
     key.shadow.mapSize.set(1024, 1024);
     Object.assign(key.shadow.camera, {left: -3, right: 3, top: 3, bottom: -3, near: 0.5, far: 14});
     key.shadow.radius = 4;
-    key.shadow.bias = -0.0006;
-    key.shadow.normalBias = 0.01;
+    key.shadow.bias = -0.0004;
+    key.shadow.normalBias = 0.02;
     const fill = new THREE.DirectionalLight();
     // Day bounce: low, from the right front, so it lifts the walls (the left one most) more than the tops; no shadows
     const bounce = new THREE.DirectionalLight();

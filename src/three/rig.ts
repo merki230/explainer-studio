@@ -99,6 +99,8 @@ export type PoseParams = {
   scroll: number;
   /** Shoulder shrug (units up). */
   shrug: number;
+  /** Gaze: the dot eyes move up the face (radians on the head sphere; > 0 up, < 0 down). */
+  eyesUp: number;
 };
 
 const Z: V3 = [0, 0, 0];
@@ -112,6 +114,7 @@ const base = (p: Partial<PoseParams>): PoseParams => ({
   phoneRot: Z,
   scroll: 0.35,
   shrug: 0,
+  eyesUp: 0,
   ...p,
 });
 
@@ -147,10 +150,22 @@ const FIXED: Record<Exclude<PoseName, 'look-up' | 'turn-to'>, PoseParams> = {
 
 const clamp = (x: number, a: number, b: number) => Math.max(a, Math.min(b, x));
 
+/** How a turn's yaw is shared down the body: fractions of the yaw for spine, chest, neck, head. */
+type YawShare = {spine: number; chest: number; neck: number; head: number};
+/** Look-up's share (the original): the chest turns more than the spine. */
+const SHARE_LOOK: YawShare = {spine: 0.2, chest: 0.32, neck: 0.22, head: 0.4};
+/**
+ * Turn-to's share: the turn led by the spine. The torso is one part on the spine, the shoulders,
+ * arms and YOU's hood ride on the chest: a chest twist off the spine pinched the torso into a bump
+ * at the shoulder.
+ */
+const SHARE_TURN: YawShare = {spine: 0.3, chest: 0.15, neck: 0.22, head: 0.45};
+
 /**
  * Aim the head (and some of the chest) at a point in figure-local space.
  * Faceless heads read their direction through the neck, the shoulders and a tilt, so the
- * turn is spread down the spine and the head tilts toward what it looks at.
+ * turn is spread down the spine and the head tilts toward what it looks at. Looking up, the
+ * figure sits back a little, the neck and head tip back (chin up) and the eyes rise.
  */
 const aimAt = (
   target: THREE.Vector3,
@@ -159,22 +174,30 @@ const aimAt = (
   turn = 1,
   /** Extra lift on the look up (1: as computed). */
   lift = 1,
-): Pick<PoseParams, 'spine' | 'chest' | 'neck' | 'head' | 'headShift'> => {
+  share: YawShare = SHARE_LOOK,
+): Pick<PoseParams, 'spine' | 'chest' | 'neck' | 'head' | 'headShift' | 'eyesUp'> => {
   const d = target.clone().sub(EYE);
   const yaw = clamp(Math.atan2(d.x, d.z), -1.45, 1.45) * turn;
   const pitch = Math.atan2(d.y, Math.hypot(d.x, d.z));
   const up = clamp((pitch - REST_GAZE_PITCH) * lift, -0.4, 1.3);
+  // the part of the lift above level (from the rest gaze down at the phone, ≈ 0.5 of `up` is level)
+  const above = Math.max(0, up - 0.5);
   const side = clamp(yaw / 1.2, -1, 1);
   return {
-    // sit up out of the slouch to look up; lean the body toward what it turns to
-    spine: [0.08 * up, clamp(0.2 * yaw * body, -0.3, 0.3), -0.07 * side * body],
-    chest: [-0.02 * up, clamp(0.32 * yaw * body, -0.42, 0.42), -0.04 * side * body],
-    neck: [0.04 * up, clamp(0.22 * yaw, -0.3, 0.3), -0.05 * side],
-    head: [-0.6 * up, clamp(0.4 * yaw, -0.6, 0.6), -0.26 * side],
+    spine: [0.08 * up - 0.06 * above, clamp(share.spine * yaw * body, -0.3, 0.3), -0.07 * side * body],
+    chest: [-0.02 * up - 0.03 * above, clamp(share.chest * yaw * body, -0.42, 0.42), -0.04 * side * body],
+    // chin up: above level, the neck tips back too and the head goes further back
+    neck: [0.04 * up - 0.1 * above, clamp(share.neck * yaw, -0.3, 0.3), -0.05 * side],
+    head: [-0.6 * up - 0.12 * above, clamp(share.head * yaw, -0.6, 0.6), -0.26 * side],
     // the head rises and comes forward off the torso as the chin lifts, and shifts toward a side target
-    headShift: [0.03 * side, 0.035 * up, 0.05 * up],
+    headShift: [0.03 * side, 0.035 * up + 0.015 * above, 0.05 * up - 0.02 * above],
+    // the eyes rise toward what is above
+    eyesUp: 0.2 * Math.min(1, above / 0.6),
   };
 };
+
+/** Turn-to's share of the full turn toward the other person: ≈ 35° of head yaw in all (≈ 0.6 rad). */
+const TURN_TO = 0.37;
 
 /**
  * A pose's joint values. `target` (figure-local) is where `look-up` and `turn-to` aim;
@@ -188,8 +211,11 @@ export const poseParams = (pose: PoseName, target?: THREE.Vector3): PoseParams =
     return base({...aim, phonePos: [0, -0.07, -0.02], phoneRot: [-0.3, 0, 0], scroll: 0});
   }
   if (pose === 'turn-to') {
-    const aim = aimAt(target ?? V(1.2, 1.3, 0), 1);
-    return base({...aim, phonePos: [0, -0.05, 0], phoneRot: [-0.2, 0, 0], scroll: 0});
+    // ≈ 35° (owner review): at ≈ 90° both faces showed one eye on the silhouette edge. The phone
+    // stays up in the hands (lowered to the lap, the near arm hung straight as a stub).
+    // lift 1.3: the gaze comes up level with the other's face (at 1 it stayed on the phone)
+    const aim = aimAt(target ?? V(1.2, 1.3, 0), 1, TURN_TO, 1.3, SHARE_TURN);
+    return base({...aim, phonePos: [0, -0.01, 0.01], phoneRot: [-0.08, 0, 0], scroll: 0});
   }
   return FIXED[pose] ?? FIXED.idle;
 };
@@ -206,6 +232,7 @@ export const lerpPose = (a: PoseParams, b: PoseParams, w: number): PoseParams =>
   phoneRot: lerp3(a.phoneRot, b.phoneRot, w),
   scroll: lerpN(a.scroll, b.scroll, w),
   shrug: lerpN(a.shrug, b.shrug, w),
+  eyesUp: lerpN(a.eyesUp, b.eyesUp, w),
 });
 
 /** A cue-driven change of pose for one figure. Times are seconds into the scene. */

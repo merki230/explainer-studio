@@ -45,6 +45,14 @@ const THUMB_BASE = V(0.062, -0.05, -0.014);
 const FACE_PITCH = 0.2;
 /** Eyes: ±0.055 across, slightly below the centre, on the sphere's front (§ 8). */
 const EYE_AT = (s: number): V3 => [s * 0.055, -0.01, 0.152];
+/** An eye moved up the sphere by `up` radians (the gaze; the pose's `eyesUp`). */
+const eyeAt = (s: number, up: number): V3 => {
+  const [x, y, z] = EYE_AT(s);
+  if (Math.abs(up) < 1e-4) return [x, y, z];
+  const c = Math.cos(up);
+  const n = Math.sin(up);
+  return [x, y * c + z * n, z * c - y * n];
+};
 
 const seg = (a: THREE.Vector3, b: THREE.Vector3, pivot: THREE.Vector3, r: number): Part =>
   limb(a.clone().sub(pivot), b.clone().sub(pivot), r);
@@ -296,7 +304,7 @@ export const Figure: React.FC<FigureProps> = ({
                       key={s}
                       geometry={EYE}
                       material={mats.eye}
-                      position={EYE_AT(s)}
+                      position={eyeAt(s, pose.eyesUp)}
                       scale={[1, 1 - 0.9 * blink, 1]}
                     />
                   ))}

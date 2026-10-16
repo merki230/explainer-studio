@@ -316,6 +316,32 @@ export const headTopOnScreen = (
   return projectToFrame(cameraAtFrame(p, o), [seat[0], seat[1] + 1.49, seat[2] - 0.05]);
 };
 
+/**
+ * Frame box (px) of a seated person's head, hair included, at a frame of the scene: [xMin, xMax,
+ * yTop, yBottom]. The rest pose's head, like `headTopOnScreen`. For leaders that must clear it.
+ */
+export const headBoxOnScreen = (
+  p: Partial<SectionRoomSceneProps>,
+  who: CastName,
+  o: {frame: number; fps: number; durationInFrames: number},
+): [number, number, number, number] | undefined => {
+  const seat = seatOf(p, who);
+  if (!seat) return undefined;
+  const cam = cameraAtFrame(p, o);
+  // Head sphere r 0.165 (Figure.tsx) plus hair: ≈ 0.2 m half-width; centre 1.325 m above the seat.
+  const r = 0.2;
+  const c: [number, number, number] = [seat[0], seat[1] + 1.325, seat[2] - 0.05];
+  const pts = [
+    projectToFrame(cam, [c[0] - r, c[1], c[2]]),
+    projectToFrame(cam, [c[0] + r, c[1], c[2]]),
+    projectToFrame(cam, [c[0], c[1] + r, c[2]]),
+    projectToFrame(cam, [c[0], c[1] - r, c[2]]),
+  ];
+  const xs = pts.map((q) => q[0]);
+  const ys = pts.map((q) => q[1]);
+  return [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+};
+
 /** Frame position (px) of a person's phone at a frame of the scene (pose and camera applied). */
 export const phoneOnScreen = (
   p: Partial<SectionRoomSceneProps>,
@@ -358,9 +384,18 @@ const X_OUT = -2.6; // past the frame's left edge
 const Y_OUT = -0.35;
 const Y_BACK = -0.55; // the way back runs 0.2 lower
 
+/**
+ * Where the route touches the router, and its node dot: on the top's front edge, a little right of
+ * centre, clear of the front's status icons and print (the dot read as a sticker over them there).
+ * The route arcs down onto it from above and goes on inside the router into the wall.
+ */
+export const ROUTER_NODE: V3 = [SLICE.router[0] + 0.05, SLICE.router[1] + 0.07, SLICE.router[2] + 0.085];
+/** Node dot radius: 0.6 of the guide's 0.035, so it reads as a lit LED, not a disc (§ 5 value). */
+const NODE_R = 0.021;
+
 const routeLegs = (a: V3, b: V3) => {
-  const [rx, ry, rz] = SLICE.router;
-  const r: V3 = [rx, ry, rz + 0.12];
+  const [rx, ry] = SLICE.router;
+  const r: V3 = ROUTER_NODE;
   const out: V3[][] = [
     // starts inside the holder, behind the phone (hidden by their body; the node dot marks the phone),
     // comes out behind the shoulder on the router's side and arcs low (just above the router) to it: from the
@@ -414,6 +449,21 @@ const legEnds = (legs: V3[][]) => {
   const total = lens.reduce((x, y) => x + y, 0);
   let acc = 0;
   return lens.map((l) => (acc += l) / total);
+};
+
+/** Seconds the X-ray cut-away takes to open (and to close), top-down. */
+const XRAY_OPEN = 0.45;
+
+/** When an eased route (cubic in-out from `at` over `dur` seconds) reaches progress `p` (0–1). */
+const timeAtProgress = (p: number, at: number, dur: number) => {
+  let lo = at;
+  let hi = at + dur;
+  for (let i = 0; i < 30; i++) {
+    const mid = (lo + hi) / 2;
+    if (ramp(mid, at, at + dur) < p) lo = mid;
+    else hi = mid;
+  }
+  return (lo + hi) / 2;
 };
 
 /** The screen tell: ≈ 2.5 Hz flicker between 20 and 80% for 1 s, then a 0.5 s ramp to full (§ 5). */
@@ -490,10 +540,12 @@ export const SectionRoomScene: React.FC<SectionRoomSceneProps> = (props) => {
     const atRouter = geo.outEnds[0];
     ledLevel = Math.max(ledLevel, ramp(outP, atRouter, atRouter + 0.03));
     if (route.xray !== false) {
-      // see-through from just before the way out enters the wall until the way back has left it
-      const inWall = geo.outEnds[1];
-      const outOfWall = geo.backEnds[4];
-      xray = t < route.backAt ? ramp(outP, inWall - 0.1, inWall) : 1 - ramp(backP, outOfWall, outOfWall + 0.1);
+      // open from just before the way out enters the wall until the way back has left it: top-down
+      // over XRAY_OPEN seconds ending as the route enters the wall, and closing the same way after
+      // it leaves (as a share of the route's length, ≈ 10%, it opened in 2 frames: a pop)
+      const tIn = timeAtProgress(geo.outEnds[1], route.outAt, outDur);
+      const tOut = timeAtProgress(geo.backEnds[4], route.backAt, backDur);
+      xray = t < route.backAt ? ramp(t, tIn - XRAY_OPEN, tIn) : 1 - ramp(t, tOut, tOut + XRAY_OPEN);
     }
     const tell = route.tell === false ? (t >= route.outAt ? 1 : 0) : tellLevel(t, route.outAt - 1.5);
     system[sender] = tell * glow;
@@ -503,7 +555,19 @@ export const SectionRoomScene: React.FC<SectionRoomSceneProps> = (props) => {
   // `orange` in both moods: the route runs along the light cut faces, where the pale Night core
   // (`orangeCore`) bloomed to near-white
   const core = section.orange;
-  const nodeMat = useMemo(() => new THREE.MeshBasicMaterial({color: raw(core), transparent: true}), [core]);
+  // lit, not flat: an emissive dome with a soft lit side and a glint, so it reads as an LED
+  const nodeMat = useMemo(
+    () =>
+      new THREE.MeshStandardMaterial({
+        color: raw(core),
+        emissive: raw(core),
+        emissiveIntensity: 0.75,
+        roughness: 0.3,
+        metalness: 0,
+        transparent: true,
+      }),
+    [core],
+  );
   nodeMat.opacity = nodes * unlocked;
   // node dots: on the router, and on the two phones wherever they are now (they move with gestures)
   const nodePoints: V3[] = [];
@@ -512,7 +576,7 @@ export const SectionRoomScene: React.FC<SectionRoomSceneProps> = (props) => {
       const q = phoneAt(p, who, t);
       if (q) nodePoints.push(q);
     }
-    nodePoints.push([SLICE.router[0], SLICE.router[1], SLICE.router[2] + 0.12]);
+    nodePoints.push(ROUTER_NODE);
   }
 
   const people = cast
@@ -598,7 +662,7 @@ export const SectionRoomScene: React.FC<SectionRoomSceneProps> = (props) => {
       ) : null}
       {nodePoints.map((q, i) => (
         <mesh key={i} position={q} material={nodeMat} userData={{glow: true}} visible={nodes > 0.001}>
-          <sphereGeometry args={[0.035, 16, 12]} />
+          <sphereGeometry args={[NODE_R, 20, 14]} />
         </mesh>
       ))}
     </SectionStage>

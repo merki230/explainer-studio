@@ -60,7 +60,7 @@ const COUCH_END: Framing = {look: [0.3, 0.95, -0.45], distance: 8.0};
 const couchRun = run({look: [0.05, 0.95, -0.45], distance: 8.8}, {look: [0.15, 0.95, -0.45], distance: 8.7}, T.question, T.listen);
 // "Look at the router": from the couch run's last framing, a crane up the back wall to the router
 // (same distance), the router high in frame over the two heads.
-const ROUTER_VIEW: Framing = {look: [0.35, 1.5, -0.7], distance: 8.0};
+const ROUTER_VIEW: Framing = {look: [0.05, 1.25, -0.7], distance: 8.0};
 // The wide run (Day, "FTC staff said" → "and that's one way"): a very slow push.
 const WIDE: Framing = {look: [-0.2, 1.36, 0], distance: 12.75};
 const wideRun = run({...WIDE, distance: 13.3}, {...WIDE, distance: 12.85}, T.ftc, T.oneWay);
@@ -155,7 +155,7 @@ export const spec: VideoSpec = {
         },
         gestures: [{figure: 'you', pose: 'lift-phone', at: 0.9}], // TIMED
       },
-      overlays: [{type: 'detail', who: 'you', cue: 'your phone', until: 'So is your phone'}],
+      overlays: [{type: 'detail', who: 'you', cue: 'your phone', until: 'So is your phone', top: 340}],
     },
     // 3 · The question. Glide to the couch (a new sentence); YOU leans into the phone on "listening?".
     {
@@ -214,8 +214,8 @@ export const spec: VideoSpec = {
       props: {
         realism: true, // objects realistic, people stylized (owner)
         mood: 'day',
-        // the bench framing trucked right (look x 0.05 → 0.35) so the "0" stamp sits inside x 888
-        camera: {from: {look: [0.35, 1.45, -0.55], distance: 8.6}, to: {look: [0.35, 1.45, -0.55], distance: 8.45}},
+        // the bench framing, centred between the counter (x −0.92) and the meter/stamp (x 0.02)
+        camera: {from: {look: [-0.1, 1.45, -0.55], distance: 9.15}, to: {look: [-0.1, 1.45, -0.55], distance: 9.0}},
         count: 17000,
         countAt: -10, // already counted
         zeroAt: 1.05, // TIMED: "not one was caught" (25.60)
@@ -314,9 +314,9 @@ export const spec: VideoSpec = {
       },
       overlays: [{type: 'detail', who: 'you', cue: 'her search', until: 'Next time'}],
     },
-    // 12 · Turn it back on the viewer. YOU turns to FRIEND on "who was on your Wi-Fi", back to the phone,
-    // and the camera pushes into YOUR phone (the marked ad), which locks to black: the last frame is
-    // black like frame 0 (the loop).
+    // 12 · Turn it back on the viewer. FRIEND glances up at the router on "read your mind"; YOU turns
+    // to FRIEND on "who was on your Wi-Fi", back to the phone, and the camera pushes into YOUR phone
+    // (the marked ad), which locks to black: the last frame is black like frame 0 (the loop).
     {
       scene: 'section-room',
       cue: 'Next time',
@@ -330,6 +330,8 @@ export const spec: VideoSpec = {
         gestures: [
           {figure: 'friend', pose: 'turn-to', at: -1},
           {figure: 'you', pose: 'scroll', at: -1},
+          // FRIEND glances up at the router on "read your mind" (≈ 51.2), back to YOU as YOU turns to her
+          {figure: 'friend', pose: 'look-up', at: 1.2, hold: 0.6}, // TIMED: up by 51.8, back by 53.0
           {figure: 'you', pose: 'turn-to', at: 2.7, hold: 0.8}, // TIMED: lands on "who was" (52.96), then back
         ],
         sleep: {who: 'you', pushAt: 4.2, pushDuration: 1.0}, // TIMED: after "Wi-Fi." (54.40); locks 6 frames before the end

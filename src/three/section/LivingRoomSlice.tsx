@@ -59,6 +59,46 @@ export const SLICE = {
 
 /** The X-ray cut-away in the back wall: [x left, x right, y top, y bottom], round the router's route. */
 const XRAY: [number, number, number, number] = [0.36, 1.04, 2.12, 0.04];
+/**
+ * The X-ray's look (§ 5, cut-face look): a hatched cut-face band round the opening on the wall's
+ * face (units wide), inked on both edges, and the soft front of the opening as it opens top-down
+ * (units tall: the cavity fades in from the wall's colour over this much below the cut).
+ */
+const XRAY_BAND = 0.055;
+const XRAY_VEIL = 0.45;
+
+let gradients: {cavity: THREE.CanvasTexture; veil: THREE.CanvasTexture} | null = null;
+/** Vertical ramps (made once, in the browser): the cavity's shading and the opening's soft front. */
+const xrayGradients = () => {
+  if (gradients) return gradients;
+  const ramp = (stops: [number, string][]) => {
+    const c = document.createElement('canvas');
+    c.width = 4;
+    c.height = 256;
+    const cx = c.getContext('2d')!;
+    const g = cx.createLinearGradient(0, 0, 0, 256);
+    for (const [at, col] of stops) g.addColorStop(at, col);
+    cx.fillStyle = g;
+    cx.fillRect(0, 0, 4, 256);
+    const t = new THREE.CanvasTexture(c);
+    t.colorSpace = THREE.NoColorSpace;
+    return t;
+  };
+  gradients = {
+    // darkest in the shadow under the top cut, lifting toward the bottom (canvas top = texture top)
+    cavity: ramp([
+      [0, '#6e6e6e'],
+      [0.12, '#a8a8a8'],
+      [1, '#ffffff'],
+    ]),
+    // alpha: clear at the top of the veil, the wall's colour at the opening's moving front
+    veil: ramp([
+      [0, '#000000'],
+      [1, '#ffffff'],
+    ]),
+  };
+  return gradients;
+};
 
 /** The cut faces' outlines: ground front and right faces, wall ends, and the L-shaped wall top. */
 export const CUT_RECTS: Rect[] = [
@@ -98,16 +138,61 @@ const PLANT: [number, number, number, number, boolean][] = [
   [0.12, 0.45, 0.09, 0.1, true],
 ];
 
-const LEAF = new THREE.CircleGeometry(1, 10);
+/**
+ * A falling leaf's outline: a pointed oval (tip at +x, a short stalk at −x) with a slight S-curve,
+ * unit length 2 (x −1 to 1), width ≈ 0.8.
+ */
+const leafShape = () => {
+  const sh = new THREE.Shape();
+  sh.moveTo(-1, 0);
+  sh.bezierCurveTo(-0.55, 0.5, 0.35, 0.52, 1, 0.02);
+  sh.bezierCurveTo(0.4, -0.38, -0.5, -0.42, -1, 0);
+  return sh;
+};
+const LEAF = new THREE.ShapeGeometry(leafShape(), 10);
+{
+  // soft shading baked into vertex colours: darker toward the stalk and the lower edge, light
+  // along the upper half, so the leaf reads as a curved blade, not a flat disc
+  const pos = LEAF.attributes.position;
+  const col = new Float32Array(pos.count * 3);
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i);
+    const y = pos.getY(i);
+    const k = 0.72 + 0.2 * ((x + 1) / 2) + 0.22 * Math.max(-0.4, Math.min(0.5, y));
+    col[i * 3] = col[i * 3 + 1] = col[i * 3 + 2] = Math.max(0.55, Math.min(1.05, k));
+  }
+  LEAF.setAttribute('color', new THREE.BufferAttribute(col, 3));
+}
+/** The leaf's midrib: a thin lighter line from the stalk to the tip. */
+const MIDRIB = new THREE.PlaneGeometry(1.9, 0.05);
+
+/** Leaves show only from this much Day on (the time-passes blend): never in a Night window. */
+const LEAVES_FROM = 0.7;
 
 /**
  * Leaves falling past the window, just outside the glass: each crosses the window on a slow
- * diagonal with a sway and a spin, on its own seeded loop, fading at the window's edges.
+ * diagonal with a sway, a spin and a tumble, on its own seeded loop, fading at the window's edges.
  */
 const Leaves: React.FC<{clock: number; level?: number}> = ({clock, level = 1}) => {
   const [wx, wy, wz] = SLICE.window;
   const [ww, wh] = SLICE.windowSize;
-  const mats = useMemo(() => [matte(section.leaf, 0.9), matte(section.leafDark, 0.9)], []);
+  // own materials (the shared `plaster` ones are memoized: the plant uses the same colours)
+  const mats = useMemo(() => {
+    const mk = (c: string, vertexColors: boolean, lift = 1) =>
+      new THREE.MeshStandardMaterial({
+        color: raw(c).multiplyScalar(lift),
+        roughness: 0.85,
+        metalness: 0,
+        vertexColors,
+        side: THREE.DoubleSide,
+      });
+    return {
+      blades: [mk(section.leaf, true), mk(section.leafDark, true)],
+      rib: [mk(section.leaf, false, 1.25), mk(section.leafDark, false, 1.3)],
+    };
+  }, []);
+  // fades in over the last 30% of the blend to Day
+  const day = Math.max(0, Math.min(1, (level - LEAVES_FROM) / (1 - LEAVES_FROM)));
   return (
     <group>
       {[0, 1, 2, 3].map((i) => {
@@ -116,17 +201,20 @@ const Leaves: React.FC<{clock: number; level?: number}> = ({clock, level = 1}) =
         const x = wx + ww * (0.55 - 1.1 * u) + 0.25 * (random(`leaf-x-${i}`) - 0.5);
         const y = wy + wh * (0.6 - 1.2 * u) + 0.04 * Math.sin(u * 14 + i);
         const inside = Math.min(1, (ww / 2 - Math.abs(x - wx)) / 0.08, (wh / 2 - Math.abs(y - wy)) / 0.08);
-        const s = Math.max(0, inside) * level;
+        const s = Math.max(0, inside) * day;
+        // the tumble: the leaf turns about its own length, so its width (and its shading) breathes
+        const tumble = 0.35 + 0.65 * Math.abs(Math.cos(u * 6 + i * 1.7));
         return (
-          <mesh
+          <group
             key={i}
-            geometry={LEAF}
-            material={mats[i % 2]}
             position={[x, y, wz + 0.008]}
             rotation={[0, 0, u * 9 + i]}
-            scale={[0.032 * s, 0.016 * s, 1]}
+            scale={[0.034 * s, 0.034 * s * tumble, 1]}
             visible={s > 0.01}
-          />
+          >
+            <mesh geometry={LEAF} material={mats.blades[i % 2]} />
+            <mesh geometry={MIDRIB} material={mats.rib[i % 2]} position={[0, 0.02, 0.0004]} />
+          </group>
         );
       })}
     </group>
@@ -255,6 +343,8 @@ export const LivingRoomSlice: React.FC<LivingRoomSliceProps> = ({
     });
     // the wall's inside, seen only through the X-ray cut-away: a dark cavity behind the route
     const cavity = new THREE.MeshStandardMaterial({roughness: 1});
+    // the opening's soft front: the wall's colour fading out upward, between the cavity and the route
+    const veil = new THREE.MeshStandardMaterial({roughness: 0.95, transparent: true, depthWrite: false});
     // the cut-away: four planes that clip the wall's inner face over a rectangle (clipIntersection)
     const planes = [0, 1, 2, 3].map(() => new THREE.Plane());
     wall.clippingPlanes = planes;
@@ -272,6 +362,7 @@ export const LivingRoomSlice: React.FC<LivingRoomSliceProps> = ({
       ledMat,
       shade,
       cavity,
+      veil,
       planes,
       col: moodMaterials(),
     };
@@ -282,6 +373,7 @@ export const LivingRoomSlice: React.FC<LivingRoomSliceProps> = ({
   mats.wallOut.color.copy(raw(m.wall));
   mats.shade.color.copy(raw(m.shade));
   mats.cavity.color.copy(raw(m.cavity));
+  mats.veil.color.copy(raw(m.wall));
   const setMap = (mat: THREE.MeshBasicMaterial, tex: THREE.Texture) => {
     if (mat.map !== tex) {
       mat.map = tex;
@@ -329,6 +421,19 @@ export const LivingRoomSlice: React.FC<LivingRoomSliceProps> = ({
   pd.set(new THREE.Vector3(0, 1, 0), -cyTop);
   const open = x > 0.001;
   const ch = cyTop - cy0;
+  if (open) {
+    const g = xrayGradients();
+    if (mats.cavity.map !== g.cavity) {
+      mats.cavity.map = g.cavity;
+      mats.cavity.needsUpdate = true;
+      mats.veil.alphaMap = g.veil;
+      mats.veil.needsUpdate = true;
+    }
+    // the cavity's shading is fixed to the wall (the full opening), not to the part open so far
+    const full = cyTop - cyBottom;
+    g.cavity.repeat.set(1, ch / full);
+    g.cavity.offset.set(0, 1 - ch / full);
+  }
   mats.ledMat.opacity = l;
   // × 0.12 on a warm shade colour: at the spec's 0.8 the lit shade clipped to pure white under the
   // Night exposure; now it reads as a warm off-white glow
@@ -375,11 +480,16 @@ export const LivingRoomSlice: React.FC<LivingRoomSliceProps> = ({
         <boxGeometry args={[WALL_T, WALL_H, D + WALL_T]} />
       </mesh>
 
-      {/* the X-ray cut-away: cavity, hatched reveal edges, ink outline */}
+      {/* the X-ray cut-away (§ 5): a shaded cavity, the opening's soft front, hatched reveal edges,
+          a hatched cut-face band on the wall's face round the opening, ink on both its edges */}
       {open ? (
         <group>
           <mesh position={[(cx0 + cx1) / 2, (cy0 + cyTop) / 2, Z0 - WALL_T + 0.02]} material={mats.cavity}>
             <planeGeometry args={[cx1 - cx0, ch]} />
+          </mesh>
+          {/* behind the route (it stays bright over it); above the opening the wall hides it */}
+          <mesh position={[(cx0 + cx1) / 2, cy0 + XRAY_VEIL / 2, Z0 - WALL_T + 0.035]} material={mats.veil}>
+            <planeGeometry args={[cx1 - cx0, XRAY_VEIL]} />
           </mesh>
           {[
             {
@@ -395,19 +505,49 @@ export const LivingRoomSlice: React.FC<LivingRoomSliceProps> = ({
               <planeGeometry args={f.s as [number, number]} />
             </mesh>
           ))}
-          <CutOutline
-            rects={[
-              [
-                [cx0, cy0, Z0 + 0.003],
-                [cx1, cyTop, Z0 + 0.003],
-              ],
-            ]}
-          />
+          {(() => {
+            // the band: top, the two sides, and the bottom riding the opening's front
+            const b = Math.min(XRAY_BAND, ch / 2);
+            const z = Z0 + 0.002;
+            const bands: [number, number, number, number][] = [
+              [cx0, cx1, cyTop - b, cyTop],
+              [cx0, cx0 + b, cy0, cyTop],
+              [cx1 - b, cx1, cy0, cyTop],
+              [cx0, cx1, cy0, cy0 + b],
+            ];
+            const inner: Rect[] =
+              ch > 2 * XRAY_BAND + 0.01
+                ? [
+                    [
+                      [cx0 + b, cy0 + b, Z0 + 0.003],
+                      [cx1 - b, cyTop - b, Z0 + 0.003],
+                    ],
+                  ]
+                : [];
+            return (
+              <>
+                {bands.map(([x0, x1, y0, y1], i) => (
+                  <mesh key={i} position={[(x0 + x1) / 2, (y0 + y1) / 2, z]} material={cut} receiveShadow>
+                    <planeGeometry args={[x1 - x0, y1 - y0]} />
+                  </mesh>
+                ))}
+                <CutOutline
+                  rects={[
+                    [
+                      [cx0, cy0, Z0 + 0.003],
+                      [cx1, cyTop, Z0 + 0.003],
+                    ],
+                    ...inner,
+                  ]}
+                />
+              </>
+            );
+          })()}
         </group>
       ) : null}
 
       {/* Day: a few leaves drift past outside the window (seeded, slow) */}
-      {leaves && dayness > 0.01 ? <Leaves clock={clock} level={dayness} /> : null}
+      {leaves && dayness > LEAVES_FROM ? <Leaves clock={clock} level={dayness} /> : null}
 
       {/* window: the view, a trim frame and a sill */}
       <mesh position={[wx, wy, wz]} material={mats.view}>
