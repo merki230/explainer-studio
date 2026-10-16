@@ -1,18 +1,12 @@
 # Publish: phone-listening (Exhibit No. 001)
 
-Handle: `@thesecretlyworks` on all three. Master: `out/phone-listening.mp4` (about 55 s). Text below is one version for all three platforms (under 2,200 characters), except the titles.
+Handle: `@thesecretlyworks` on all three. Master: `out/phone-listening.mp4` (about 55 s). Text below is one version for all three platforms (under 2,200 characters), except the title.
 
-## Titles
+## Title
 
-YouTube Shorts (under 60 characters, hook in the first 40). TikTok and Instagram have no title field, so use the same line as the first line of the caption if you want one.
+My friend searched coffee machines. I got the ad.
 
-1. Is your phone listening? Look at the router (43) **<- pick**
-2. Who else was on your Wi-Fi last night? (38)
-3. How an ad finds you after a friend's search (44)
-4. Your phone's not the only suspect for that ad (46)
-5. The coffee machine ad: phone mic or Wi-Fi? (43)
-
-Why the pick: it asks the question everyone has and points at the answer without claiming more than the video does.
+Use it as the YouTube Shorts title. TikTok and Instagram have no title field, so it isn't used there.
 
 ## Description
 
@@ -20,7 +14,7 @@ Your friend scrolls coffee machines on your couch, and the next morning your pho
 
 Illustrative: the couch, the friend and the coffee machine are an example, not a real case.
 
-Phones do listen for their wake word, and Apple and Google say that check runs on the phone. Researchers who tested more than 17,000 Android apps in 2018 did not catch any sending audio, though the tests were limited. FTC staff wrote in 2017 that devices on one home network often share a public address, which ad platforms can use to guess which devices belong to one household.
+It might not be your mic. Devices on one home network often share a public address, and ad platforms use that to guess who belongs to one household.
 
 Sources: FTC staff report on cross-device tracking (2017), Panoptispy study of Android apps (2018), Apple and Google documentation on wake-word detection.
 
@@ -42,7 +36,7 @@ On TikTok and Instagram, use the description up to and including the one-line "S
 
 ## Pinned comment
 
-Sources are in the description: the FTC staff report (2017), the Panoptispy study of Android apps (2018), and Apple's and Google's pages on how wake-word detection works. Has an ad ever shown up for something only someone else in your home searched?
+Sources are in the description if you want to read them. Has an ad ever followed someone else's search at your place? I'd like to hear what it was.
 
 ## Cover frame
 
@@ -53,7 +47,7 @@ Caveat: the caption "network often share a public" sits at y 1100 to 1188, over 
 ## Per-platform checklist (before pressing publish)
 
 - **All three:** upload the clean master `out/phone-listening.mp4`, not a file downloaded from another app. No in-app music or sounds. Public.
-- **YouTube:** Altered or synthetic content: **Yes**. Audience: not made for kids. Paste title 1 and the full description with the sources list. Pick the cover frame (no custom cover until the channel is eligible).
+- **YouTube:** Altered or synthetic content: **Yes**. Audience: not made for kids. Paste the title and the full description with the sources list. Pick the cover frame (no custom cover until the channel is eligible).
 - **TikTok:** More options, AI-generated content: **on**. Upload the cover from `out/phone-listening/cover.png`. Caption: hook line, "Illustrative" line, "Sources:" line, hashtags.
 - **Instagram:** Advanced settings, AI label: **on**. Upload the cover from `out/phone-listening/cover.png` (keep text inside the 3:4 crop). Same caption as TikTok.
 - No "Full sources: link in profile" line anywhere (no profile link yet).
