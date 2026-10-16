@@ -50,6 +50,21 @@ export type SectionRoute = {
   xray?: boolean;
   /** The sender's screen light flickers orange for 1.5 s before the route draws (default true). */
   tell?: boolean;
+  /**
+   * Line weight: multiplies the tube's core and halo radius (default 1, the § 5 values). Covers use
+   * ≈ 2 so the line survives the thumbnail shrink; keep 1 in videos.
+   */
+  weight?: number;
+  /** Which half to draw: 'both' (default), 'out' (sender → router → away) or 'back' (→ router → receiver). */
+  show?: 'both' | 'out' | 'back';
+  /**
+   * Where the way back ends (default 'body': hidden inside the receiver, behind the phone, § 5). 'phone':
+   * at the phone's node dot, through the `via` world points after the router (covers: the line must
+   * read as router → phone and stay clear of the head). Videos keep 'body'.
+   */
+  end?: 'body' | 'phone';
+  /** With `end: 'phone'`: world points the last leg passes after the router (default: right of the head, then in front of the shoulder). */
+  via?: [number, number, number][];
 };
 
 export type SectionRoomSceneProps = {
@@ -393,7 +408,7 @@ export const ROUTER_NODE: V3 = [SLICE.router[0] + 0.05, SLICE.router[1] + 0.07, 
 /** Node dot radius: 0.6 of the guide's 0.035, so it reads as a lit LED, not a disc (§ 5 value). */
 const NODE_R = 0.021;
 
-const routeLegs = (a: V3, b: V3) => {
+const routeLegs = (a: V3, b: V3, endAt?: {via?: V3[]}) => {
   const [rx, ry] = SLICE.router;
   const r: V3 = ROUTER_NODE;
   const out: V3[][] = [
@@ -437,8 +452,11 @@ const routeLegs = (a: V3, b: V3) => {
       [rx - 0.06, ry, WZ],
     ],
     [[rx - 0.06, ry, WZ], r],
-    // from the router down behind the receiver's shoulder, into them (their node dot marks the phone)
-    [r, [rx + 0.1, ry - 0.06, -0.92], [b[0] + 0.22, 1.5, -0.88], [b[0], b[1] + 0.12, b[2] - 0.32]],
+    endAt
+      ? // to the phone's node dot itself, clear of the head: out to the head's far side, then in front of the shoulder
+        [r, ...(endAt.via ?? [[b[0] + 0.45, 1.5, -0.75], [b[0] + 0.36, b[1] - 0.04, b[2] - 0.08]] as V3[]), b]
+      : // from the router down behind the receiver's shoulder, into them (their node dot marks the phone)
+        [r, [rx + 0.1, ry - 0.06, -0.92], [b[0] + 0.22, 1.5, -0.88], [b[0], b[1] + 0.12, b[2] - 0.32]],
   ];
   return {out, back, r};
 };
@@ -512,14 +530,16 @@ export const SectionRoomScene: React.FC<SectionRoomSceneProps> = (props) => {
   const sender = route?.from ?? 'friend';
   const receiver = route?.to ?? 'you';
   const outDur = route?.outDuration ?? 1.8;
+  const weight = route?.weight ?? 1;
   const backDur = route?.backDuration ?? 1.8;
   const a = route ? phoneAt(p, sender, route.outAt) : undefined;
   const b = route ? phoneAt(p, receiver, route.backAt + backDur) : undefined;
-  const geoKey = JSON.stringify([a, b]);
+  const endAt = route?.end === 'phone' ? {via: route.via} : undefined;
+  const geoKey = JSON.stringify([a, b, endAt]);
   const geo = useMemo(() => {
-    const [pa, pb] = JSON.parse(geoKey) as [V3 | undefined, V3 | undefined];
+    const [pa, pb, e] = JSON.parse(geoKey) as [V3 | undefined, V3 | undefined, {via?: V3[]} | undefined];
     if (!pa || !pb) return null;
-    const legs = routeLegs(pa, pb);
+    const legs = routeLegs(pa, pb, e ?? undefined);
     return {...legs, outEnds: legEnds(legs.out), backEnds: legEnds(legs.back), a: pa, b: pb};
   }, [geoKey]);
 
@@ -572,7 +592,9 @@ export const SectionRoomScene: React.FC<SectionRoomSceneProps> = (props) => {
   // node dots: on the router, and on the two phones wherever they are now (they move with gestures)
   const nodePoints: V3[] = [];
   if (geo || trace) {
-    for (const who of [sender, receiver]) {
+    // a half route marks only its own phone
+    const ends = route?.show === 'back' ? [receiver] : route?.show === 'out' ? [sender] : [sender, receiver];
+    for (const who of ends) {
       const q = phoneAt(p, who, t);
       if (q) nodePoints.push(q);
     }
@@ -634,30 +656,34 @@ export const SectionRoomScene: React.FC<SectionRoomSceneProps> = (props) => {
       })}
       {geo ? (
         <>
-          <OrangePath
-            legs={geo.out}
-            progress={outP}
-            glow={glow * unlocked}
-            stain={false}
-            radius={0.018}
-            coreColor={core}
-            halo={{scale: 0.055 / 0.018, opacity: 0.25}}
-            runnerLight={{intensity: 0.6, reach: 1.2}}
-            flow={flow((route?.outAt ?? 0) + outDur)}
-            dots={4}
-          />
-          <OrangePath
-            legs={geo.back}
-            progress={backP}
-            glow={glow * unlocked}
-            stain={false}
-            radius={0.018}
-            coreColor={core}
-            halo={{scale: 0.055 / 0.018, opacity: 0.25}}
-            runnerLight={{intensity: 0.6, reach: 1.2}}
-            flow={flow((route?.backAt ?? 0) + backDur)}
-            dots={4}
-          />
+          {route?.show !== 'back' ? (
+            <OrangePath
+              legs={geo.out}
+              progress={outP}
+              glow={glow * unlocked}
+              stain={false}
+              radius={0.018 * weight}
+              coreColor={core}
+              halo={{scale: 0.055 / 0.018, opacity: 0.25}}
+              runnerLight={{intensity: 0.6, reach: 1.2}}
+              flow={flow((route?.outAt ?? 0) + outDur)}
+              dots={4}
+            />
+          ) : null}
+          {route?.show !== 'out' ? (
+            <OrangePath
+              legs={geo.back}
+              progress={backP}
+              glow={glow * unlocked}
+              stain={false}
+              radius={0.018 * weight}
+              coreColor={core}
+              halo={{scale: 0.055 / 0.018, opacity: 0.25}}
+              runnerLight={{intensity: 0.6, reach: 1.2}}
+              flow={flow((route?.backAt ?? 0) + backDur)}
+              dots={4}
+            />
+          ) : null}
         </>
       ) : null}
       {nodePoints.map((q, i) => (

@@ -18,6 +18,10 @@ export type DetailBoxProps = {
   side?: 'left' | 'right';
   /** Top edge in px (default: 60 px above the holder's head, kept inside y 300–1248). */
   top?: number;
+  /** Left edge in px, overriding `side` (default: x 120 or right edge x 888). Covers only; videos keep the margins. */
+  left?: number;
+  /** Draw the 2 px leader to the phone (default true). */
+  leader?: boolean;
 };
 
 /** Frames the box takes to fade in (and out, see Explainer). */
@@ -39,7 +43,7 @@ export const DetailBox: React.FC<
     mood?: Mood;
     scene: {props: Partial<SectionRoomSceneProps>; durationInFrames: number; offset: number};
   }
-> = ({who, crop = 'auto', size = 336, side, top, mood = 'day', scene}) => {
+> = ({who, crop = 'auto', size = 336, side, top, left: leftAt, leader = true, mood = 'day', scene}) => {
   const frame = useCurrentFrame();
   const {fps, width, height} = useVideoConfig();
   const ref = useRef<HTMLCanvasElement>(null);
@@ -81,7 +85,7 @@ export const DetailBox: React.FC<
   const onLeft = (side ?? (cast.indexOf(who) === 0 ? 'left' : 'right')) === 'left';
   const outerW = innerW + 2 * BORDER;
   const outerH = innerH + 2 * BORDER;
-  const left = onLeft ? LEFT : RIGHT - outerW;
+  const left = leftAt ?? (onLeft ? LEFT : RIGHT - outerW);
   // above the head, inside the safe zone (the tab needs ≈ 28 px above the box)
   const boxTop = top ?? Math.max(328, Math.min(1248 - outerH, head[1] - 60 - outerH));
   const enter = ease(frame, 0, DETAIL_FADE);
@@ -123,9 +127,11 @@ export const DetailBox: React.FC<
 
   return (
     <div style={{position: 'absolute', inset: 0, opacity: enter}}>
-      <svg width={width} height={height} style={{position: 'absolute', inset: 0}}>
-        <polyline points={points} fill="none" stroke={ink} strokeWidth={2} strokeLinejoin="miter" />
-      </svg>
+      {leader ? (
+        <svg width={width} height={height} style={{position: 'absolute', inset: 0}}>
+          <polyline points={points} fill="none" stroke={ink} strokeWidth={2} strokeLinejoin="miter" />
+        </svg>
+      ) : null}
       <div style={{position: 'absolute', left, top: boxTop, transform: `translateY(${rise}px)`}}>
         <div
           style={{

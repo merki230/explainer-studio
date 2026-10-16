@@ -27,7 +27,7 @@ src/
   timeline.ts           cue → frame resolution
 public/<slug>/          voiceover.mp3 for that video
 scripts/                CLI tools behind the yarn commands
-out/                    renders and stills (git-ignored)
+out/<slug>/             posting folder: <slug>.mp4, cover.png, youtube-frame.png, publish.md, raw/ (git-ignored)
 ```
 
 ## Commands (yarn 4, Node 24)
@@ -36,10 +36,10 @@ out/                    renders and stills (git-ignored)
 - `yarn timings <slug>`: estimated word timings from script.txt (no audio)
 - `yarn voiceover <slug> [--take <name>]`: ElevenLabs v4 TTS + timings (costs money; needs `.env`, ask first).
   Uses `performance.txt` (script words + `[tags]`/ellipses) when present, and `voice.json` for the voice.
-  `--take` writes to `out/voices/<slug>/` instead of the live files
+  `--take` writes to `out/<slug>/raw/voices/` instead of the live files
 - `yarn voiceover:use <slug> <name>`: copy a saved take into place (free)
 - `yarn music <slug> --take <name> [--prompt "..."] [--seconds N] [--dry-run]`: ElevenLabs instrumental bed into
-  `out/music/<slug>/<name>.mp3` (costs money, ask first). Prompt from `music.txt`; length defaults to the video's rendered
+  `out/<slug>/raw/music/<name>.mp3` (costs money, ask first). Prompt from `music.txt`; length defaults to the video's rendered
   duration, rounded up
 - `yarn music:use <slug> <name>`: copy a saved music take to `public/<slug>/music.mp3` (free)
 - `yarn sfx <slug> <name> --prompt "..." [--seconds N] [--take <t>] [--dry-run]`: one ElevenLabs sound effect into
@@ -51,8 +51,10 @@ out/                    renders and stills (git-ignored)
 - `yarn voices [--search x]`: list ElevenLabs voices (free)
 - `yarn from-whisper <slug> <whisper.json>`: legacy local-Whisper timings
 - `yarn check [slug]`: resolve all cues, flag stale transcripts and too-short scenes
-- `yarn stills <slug>`: one PNG per scene in `out/<slug>/stills/` (read them to review layout)
-- `yarn render <slug> [--no-normalize] [--post-only]`: renders `out/<slug>.raw.mp4`, then loudness-normalises (-14 LUFS, -1.5 dBTP) to the final `out/<slug>.mp4`; `yarn normalize <slug>` runs only that step
+- `yarn stills <slug>`: one PNG per scene in `out/<slug>/raw/stills/` (read them to review layout)
+- `yarn render <slug> [--no-normalize] [--post-only] [--force]`: renders `out/<slug>/raw/<slug>.raw.mp4`, then loudness-normalises (-14 LUFS, -1.5 dBTP) to the final `out/<slug>/<slug>.mp4`; `yarn normalize <slug>` runs only that step
+- `yarn cover <slug>`: render the cover still to `out/<slug>/cover.png` (only if `spec.cover`; else says so, exit 0)
+- `yarn package <slug>`: copy `publish.md` to `out/<slug>/` and render `youtube-frame.png` (frame from the `<!-- youtube-frame: N -->` marker in publish.md); prints a checklist
 - `yarn verify`: typecheck + lint + check. Run before calling any change done.
 
 ## Rules

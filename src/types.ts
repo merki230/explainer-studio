@@ -116,7 +116,46 @@ export type SceneSpec = {
   overlays?: OverlaySpec[];
 };
 
+/**
+ * A purpose-made cover still (README "Covers"): one frozen frame of a scene, a hook line in the sky
+ * band and, optionally, a magnified phone screen. No captions, title block or tags. Registered as its
+ * own still composition `<slug>-cover` (1080 × 1920), outside the video's render flow.
+ * Everything readable and the subject stay inside the safe rectangle (x 120–888, y 288–1248), which
+ * also sits inside the 3:4 grid crop (y 240–1680).
+ */
+export type CoverSpec = {
+  /**
+   * The hook, statement look (Archivo 800, `ink`, `paper` halo), ≤ 2 lines, left-aligned at x 120.
+   * A `\n` forces the line break; otherwise it breaks where the two lines are most even. The size
+   * fits the widest line to `width` (capped at `size`).
+   */
+  text: string;
+  /** Largest type size in px (default 150). */
+  size?: number;
+  /** Text block's top edge in px (default 288, the safe zone's top). */
+  top?: number;
+  /** Width the text may fill from x 120 (default 768: to x 888). */
+  width?: number;
+  /** The scene behind (default 'section-room'). */
+  scene?: SceneName;
+  /** The scene's props, as in a SceneSpec (mood, ui, gestures, route, trace, realism, ...). */
+  props?: Record<string, unknown>;
+  /**
+   * The camera: one framing held still (look-at and distance at the fixed angle). Shorthand for
+   * `props.camera: {from: camera}`; the idle drift is off on covers.
+   */
+  camera?: {look: [number, number, number]; distance: number};
+  /** Seconds into the scene to freeze on (default 2): late enough for `at: -1` poses and screens to settle. */
+  at?: number;
+  /** A detail box on a phone (section-room only), drawn fully in. Same props as the overlay. */
+  detail?: DetailBoxProps;
+};
+
 export type VideoSpec = {
+  /** Test video (the `lab` sandbox): no "estimated timings" warning in `yarn check`; `yarn render` needs `--force`. */
+  sandbox?: boolean;
+  /** Cover still (see CoverSpec). Omit for none. */
+  cover?: CoverSpec;
   /** Seconds of silence kept after the last word. */
   tail?: number;
   /** Small tag at the top-left of the safe zone. Set null to hide. */

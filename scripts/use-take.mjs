@@ -1,8 +1,8 @@
 // Copy a saved voiceover take into place (no API call, free).
 //
 // usage: yarn voiceover:use <slug> <name>
-// Copies out/voices/<slug>/<name>.mp3 -> public/<slug>/voiceover.mp3 and
-// out/voices/<slug>/<name>.transcript.json -> src/videos/<slug>/transcript.json.
+// Copies out/<slug>/raw/voices/<name>.mp3 -> public/<slug>/voiceover.mp3 and
+// out/<slug>/raw/voices/<name>.transcript.json -> src/videos/<slug>/transcript.json.
 // Word text is normalised to script.txt (punctuation included) when word counts match.
 // Make takes with: yarn voiceover <slug> --take <name>
 import {copyFileSync, existsSync, readdirSync, readFileSync, writeFileSync} from 'node:fs';

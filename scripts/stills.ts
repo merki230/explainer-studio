@@ -1,4 +1,4 @@
-// Render one PNG per scene to out/<slug>/stills/, so you (or Claude) can check
+// Render one PNG per scene to out/<slug>/raw/stills/, so you (or Claude) can check
 // the layout of a whole video in seconds without scrubbing the Studio.
 // Each still is taken just after the scene's last overlay appears.
 //
@@ -43,7 +43,7 @@ const shots: {name: string; frame: number}[] = !tl
         return {name: `${String(i + 1).padStart(2, '0')}-${s.scene}`, frame};
       });
 
-const outDir = `out/${slug}/stills`;
+const outDir = `out/${slug}/raw/stills`;
 rmSync(outDir, {recursive: true, force: true});
 mkdirSync(outDir, {recursive: true});
 

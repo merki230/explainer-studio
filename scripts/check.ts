@@ -49,8 +49,9 @@ for (const [slug, {spec, transcript}] of Object.entries(VIDEOS)) {
     if (unsupported) warnings.push(`${unsupported} unsupported (❌) claim(s) in sources.md.`);
   }
 
-  if (!transcript.audio) warnings.push('no audio yet (estimated timings).');
-  else if (!existsSync(`public/${transcript.audio}`)) errors.push(`audio file public/${transcript.audio} is missing.`);
+  if (!transcript.audio) {
+    if (!spec.sandbox) warnings.push('no audio yet (estimated timings).');
+  } else if (!existsSync(`public/${transcript.audio}`)) errors.push(`audio file public/${transcript.audio} is missing.`);
 
   const aw = auditionWarning(spec.music);
   if (aw) warnings.push(aw);

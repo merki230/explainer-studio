@@ -4,7 +4,7 @@
 //   yarn music <slug> --take <name> [--prompt "..."] [--seconds N] [--dry-run]
 //   yarn music:use <slug> <name>      copy a take to public/<slug>/music.mp3 (free, see music-use.mjs)
 //
-// Writes out/music/<slug>/<name>.mp3 and appends an entry to src/videos/<slug>/audio-log.md.
+// Writes out/<slug>/raw/music/<name>.mp3 and appends an entry to src/videos/<slug>/audio-log.md.
 // Prompt: --prompt, else src/videos/<slug>/music.txt. Length: --seconds (3-600), else the composition
 // duration (what Root renders: last word + tail) rounded up to a whole second. Model music_v2_5, always force_instrumental.
 // Rules (brand/research/music-licensing.md): instrumental only; a prompt must name no artist, song,
@@ -22,7 +22,7 @@ const usage = 'yarn music <slug> --take <name> [--prompt "..."] [--seconds N] [-
 if (process.argv.includes('--help') || process.argv.includes('-h')) {
   console.log(`${usage}
 
-  Generates an instrumental bed (ElevenLabs Music, model music_v2_5) into out/music/<slug>/<name>.mp3.
+  Generates an instrumental bed (ElevenLabs Music, model music_v2_5) into out/<slug>/raw/music/<name>.mp3.
   --take <name>    required; the file name of this take
   --prompt "..."   default: src/videos/<slug>/music.txt
   --seconds N      3-600; default: composition duration (as Root), rounded up
@@ -76,11 +76,11 @@ const url = 'https://api.elevenlabs.io/v1/music?output_format=mp3_44100_128';
 const body = {prompt, music_length_ms: seconds * 1000, model_id: model, force_instrumental: true};
 if (bools['dry-run']) {
   printDryRun('POST', url, body);
-  console.log(`Would write out/music/${slug}/${opts.take}.mp3 and log it in ${paths.dir}/audio-log.md.`);
+  console.log(`Would write out/${slug}/raw/music/${opts.take}.mp3 and log it in ${paths.dir}/audio-log.md.`);
   process.exit(0);
 }
 
-const dir = `out/music/${slug}`;
+const dir = `out/${slug}/raw/music`;
 const out = `${dir}/${opts.take}.mp3`;
 if (existsSync(out)) fail(`${out} exists; pick another --take name (takes are never overwritten).`);
 const key = apiKey();

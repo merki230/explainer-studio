@@ -30,7 +30,7 @@ export const videoPaths = (slug, usage) => {
     audioFile: `public/${slug}/voiceover.mp3`,
     performance: `${dir}/performance.txt`,
     voice: `${dir}/voice.json`,
-    takesDir: `out/voices/${slug}`,
+    takesDir: `out/${slug}/raw/voices`,
   };
 };
 
@@ -69,3 +69,11 @@ export const withScriptText = (words, scriptText) => {
   if (tokens.length !== words.length) return {words, applied: false, scriptCount: tokens.length};
   return {words: words.map((w, i) => ({...w, text: tokens[i]})), applied: true, scriptCount: tokens.length};
 };
+
+/** Where a video's posting folder and its scratch files live (all git-ignored). */
+export const outDir = (slug) => `out/${slug}`;
+export const rawDir = (slug) => `out/${slug}/raw`;
+
+/** True when the video's spec.ts sets `cover` (so a `<slug>-cover` composition exists). */
+export const hasCover = (slug) =>
+  existsSync(`src/videos/${slug}/spec.ts`) && /^\s*cover\s*[:,}]/m.test(readFileSync(`src/videos/${slug}/spec.ts`, 'utf8'));

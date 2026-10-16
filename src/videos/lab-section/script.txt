@@ -1,1 +1,0 @@
-Your friend scrolls on the couch. It does listen for its wake word, and Apple and Google say that check runs on the phone, with nothing sent until it thinks it hears the phrase. Her phone keeps scrolling. As for other apps, researchers studied more than 17,000 on Android, and in their tests not one was caught sending audio. A simpler answer sits on the shelf.

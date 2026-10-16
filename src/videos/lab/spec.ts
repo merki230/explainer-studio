@@ -1,11 +1,13 @@
 import type {VideoSpec} from '../../types';
 
 /**
- * LAB: previews of the Section kit (stages 1–3, polish 2): the phone cut-away (the wake-word beat)
- * and the Lab slice (the 17,000-apps study), with the transitions between them and the living room.
- * Not for publishing.
+ * LAB: the standing sandbox. Try new scenes, overlays and sound here before touching a real video.
+ * Four short scenes: a section-room, the phone cut-away, the Lab slice, and a slide back to the room.
+ * Estimated timings, no voice (`yarn timings lab`). `sandbox: true`: `yarn render` refuses it without
+ * `--force`. Keep it small and fast; swap scenes in and out as needed.
  */
 export const spec: VideoSpec = {
+  sandbox: true,
   watermark: null,
   scenes: [
     // 1 · The living room, Day, wide: FRIEND scrolls and leans in.
@@ -28,19 +30,7 @@ export const spec: VideoSpec = {
       // eslint-disable-next-line @remotion/non-pure-animation
       props: {mood: 'day', transition: 'cut', glideIn: 1.0, cutAt: 0.9, wavesAt: 1.6, waveEvery: 0.9, wakeAt: 8.0},
     },
-    // 3 · Back in the living room (a new location: it slides in).
-    {
-      scene: 'section-room',
-      cue: 'Her phone keeps',
-      props: {
-        mood: 'day',
-        camera: 'wide',
-        screens: {you: 0},
-        ui: {friend: [{at: -1, app: 'feed', adAt: 99}], you: [{at: 0, app: 'lock'}]},
-        gestures: [{figure: 'friend', pose: 'lean-in', at: -1}],
-      },
-    },
-    // 4 · The Lab: follow the line down from the living room. Phones tapped by robot arms, icons on
+    // 3 · The Lab: follow the line down from the living room. Phones tapped by robot arms, icons on
     // the conveyor, the counter to 17,000 on "studied … 17,000", the "0" stamp on "not one".
     {
       scene: 'section-lab',
@@ -54,7 +44,7 @@ export const spec: VideoSpec = {
         zeroAt: 6.1,
       },
     },
-    // 5 · Back to the living room (slides in).
+    // 4 · Back to the living room (slides in).
     {
       scene: 'section-room',
       cue: 'A simpler answer',

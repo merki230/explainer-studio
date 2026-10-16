@@ -4,7 +4,7 @@
 //
 // usage:
 //   yarn voiceover <slug>                 write the live files
-//   yarn voiceover <slug> --take <name>   write out/voices/<slug>/<name>.mp3 + .transcript.json instead
+//   yarn voiceover <slug> --take <name>   write out/<slug>/raw/voices/<name>.mp3 + .transcript.json instead
 //   yarn voiceover:use <slug> <name>      copy a take into place (no API call, see use-take.mjs)
 //   yarn voiceover --text "Hello. [pause] World." --take _test   ad-hoc text (needs --take; uses slug "_adhoc")
 //

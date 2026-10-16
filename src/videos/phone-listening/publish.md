@@ -1,6 +1,6 @@
 # Publish: phone-listening (Exhibit No. 001)
 
-Handle: `@thesecretlyworks` on all three. Master: `out/phone-listening.mp4` (about 55 s). Text below is one version for all three platforms (under 2,200 characters), except the title.
+Handle: `@thesecretlyworks` on all three. Master: `out/phone-listening/phone-listening.mp4` (about 55 s). Text below is one version for all three platforms (under 2,200 characters), except the title.
 
 ## Title
 
@@ -38,16 +38,16 @@ On TikTok and Instagram, use the description up to and including the one-line "S
 
 Sources are in the description if you want to read them. Has an ad ever followed someone else's search at your place? I'd like to hear what it was.
 
-## Cover frame
+## Cover
 
-Frame **1125** (37.50 s): the route leaves the router and the cut-away opens in the wall, the one moment where the hidden system shows. Still rendered at `out/phone-listening/cover.png` (1080 x 1920, scale 1).
-
-Caveat: the caption "network often share a public" sits at y 1100 to 1188, over the sofa and inside the 3:4 crop. It reads as a half sentence on a cover. If that bothers the owner, frame 1075 (35.83 s, the router before the route starts) has the same caption problem; there is no caption-free frame in this stretch, so a cover with a different caption phrase is an owner call (a frame from about 28.5 s, "A simpler answer", is the alternative, but it has no orange).
+- **TikTok and Instagram:** upload `out/phone-listening/cover.png`, the purpose-made cover (`spec.cover`; rebuild with `yarn cover phone-listening`). It shows "Is your phone listening?", the couch, YOU's phone with the coffee-machine ad, and the orange line from the router to the phone. The text and subject sit inside the 3:4 grid crop.
+<!-- youtube-frame: 1490 -->
+- **YouTube Shorts:** if the app only lets you pick a frame from the video, pick **49.7 s (frame 1490)**: the couch, the ad in the detail box, the orange trace, and the short caption "your phone.".
 
 ## Per-platform checklist (before pressing publish)
 
-- **All three:** upload the clean master `out/phone-listening.mp4`, not a file downloaded from another app. No in-app music or sounds. Public.
-- **YouTube:** Altered or synthetic content: **Yes**. Audience: not made for kids. Paste the title and the full description with the sources list. Pick the cover frame (no custom cover until the channel is eligible).
+- **All three:** upload the clean master `out/phone-listening/phone-listening.mp4`, not a file downloaded from another app. No in-app music or sounds. Public.
+- **YouTube:** Altered or synthetic content: **Yes**. Audience: not made for kids. Paste the title and the full description with the sources list. Cover: upload `cover.png` if the app allows it, otherwise pick frame 1490 (49.7 s; `youtube-frame.png` in the same folder).
 - **TikTok:** More options, AI-generated content: **on**. Upload the cover from `out/phone-listening/cover.png`. Caption: hook line, "Illustrative" line, "Sources:" line, hashtags.
 - **Instagram:** Advanced settings, AI label: **on**. Upload the cover from `out/phone-listening/cover.png` (keep text inside the 3:4 crop). Same caption as TikTok.
 - No "Full sources: link in profile" line anywhere (no profile link yet).

@@ -125,6 +125,32 @@ export const spec: VideoSpec = {
   music: {level: -14, duckDb: 0},
   // Voice: the original dry voiceover (owner preferred it to the yarn voice:room versions, 2026-10-16).
   watermark: null, // no watermark: the invented coffee machine is disclosed in the post ("Illustrative: …")
+  // Cover still (`yarn cover phone-listening`): the couch,
+  // close, Day; YOU's ad (with the system's edge) read in the detail box; the route from the router to
+  // YOU's phone at 2× weight so it survives the thumbnail shrink.
+  cover: {
+    text: 'Is your phone listening?',
+    camera: {look: [0.2, 1.17, -0.45], distance: 8.2},
+    props: {
+      realism: true, // objects realistic, people stylized (owner)
+      mood: 'day',
+      trace: true, // router LED lit
+      // her search on her screen (faces her, unread), the ad with the system's edge on YOU's
+      ui: {
+        friend: [{at: -60, app: 'results', query: 'coffee machine'}],
+        you: [{at: -60, app: 'feed', adAt: 0, markAt: -59}],
+      },
+      gestures: [
+        {figure: 'you', pose: 'lift-phone', at: -20},
+        {figure: 'friend', pose: 'scroll', at: -20},
+      ],
+      // the way back only (router → YOU's phone), fully drawn and glowing, at 2× the video's weight
+      // ends at the phone's node dot (owner fix: into the head it read as "reading your mind")
+      route: {outAt: -16, backAt: -12, glowFor: 100, xray: false, tell: false, weight: 2, show: 'back', end: 'phone'},
+    },
+    // over YOU's phone, so the leader is one short drop
+    detail: {who: 'you', size: 252, left: 414, top: 552},
+  },
   scenes: [
     // 1 · Open on something concrete. Frame 0 black; FRIEND's phone wakes full-frame and her search
     // starts on it (the opening line is spoken over the screen), then the camera pulls back into the

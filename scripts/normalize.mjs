@@ -2,8 +2,8 @@
 // stream untouched. Called by `yarn render`; also usable alone on an existing render.
 //
 // usage: yarn normalize <slug>      (or: node scripts/normalize.mjs <slug>)
-//   Input is out/<slug>.raw.mp4 (the raw Remotion mix). If only out/<slug>.mp4 exists, it is
-//   treated as the raw render and renamed to out/<slug>.raw.mp4 first. Output: out/<slug>.mp4.
+//   Input is out/<slug>/raw/<slug>.raw.mp4 (the raw Remotion mix). If only out/<slug>/<slug>.mp4
+//   exists, it is treated as the raw render and moved to the raw path first. Output: out/<slug>/<slug>.mp4.
 //
 // Target: -14 LUFS integrated, -1.5 dBTP, LRA 11 (edit TARGET to change).
 // Pass 1 measures, pass 2 applies with linear=true. When linear can't reach the target without the true
@@ -12,7 +12,7 @@
 // Audio: AAC, 48 kHz, 192k, trimmed to the video's length (AAC priming adds ~0.1 s of padding).
 // Checks: video frame count and duration equal the raw file's; audio start within 1 frame of video.
 import {execFileSync, spawnSync} from 'node:child_process';
-import {existsSync, renameSync, rmSync} from 'node:fs';
+import {existsSync, mkdirSync, renameSync, rmSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 
 const TARGET = {I: -14, TP: -1.5, LRA: 11};
@@ -53,10 +53,11 @@ const probe = (file) => {
 const fmt = (j, p) => `${Number(j[p + 'i']).toFixed(1)} LUFS, ${Number(j[p + 'tp']).toFixed(1)} dBTP, LRA ${Number(j[p + 'lra']).toFixed(1)}`;
 
 export const normalize = (slug) => {
-  const raw = `out/${slug}.raw.mp4`;
-  const final = `out/${slug}.mp4`;
+  const raw = `out/${slug}/raw/${slug}.raw.mp4`;
+  const final = `out/${slug}/${slug}.mp4`;
   if (!existsSync(raw)) {
     if (!existsSync(final)) throw new Error(`Nothing to normalise: ${raw} and ${final} are missing.`);
+    mkdirSync(`out/${slug}/raw`, {recursive: true});
     renameSync(final, raw);
   }
   const target = `I=${TARGET.I}:TP=${TARGET.TP}:LRA=${TARGET.LRA}`;
@@ -71,7 +72,7 @@ export const normalize = (slug) => {
     `measured_I=${m.input_i}:measured_TP=${m.input_tp}:measured_LRA=${m.input_lra}:` +
     `measured_thresh=${m.input_thresh}:offset=${m.target_offset}`;
 
-  const tmp = `out/${slug}.normalizing.mp4`;
+  const tmp = `out/${slug}/raw/${slug}.normalizing.mp4`;
   const args = [
     '-y', '-i', raw, '-map', '0:v', '-map', '0:a', '-c:v', 'copy',
     '-af', `loudnorm=${target}:${measured}:linear=true:print_format=json`,

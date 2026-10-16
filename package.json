@@ -23,6 +23,8 @@
     "check": "tsx scripts/check.ts",
     "stills": "tsx scripts/stills.ts",
     "render": "node scripts/render.mjs",
+    "cover": "node scripts/cover.mjs",
+    "package": "node scripts/package.mjs",
     "normalize": "node scripts/normalize.mjs",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
