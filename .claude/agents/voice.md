@@ -28,4 +28,4 @@ your area, before anything costly or hard to undo, when a rule or an owner decis
 3 failed attempts; deviate only on values, and list every deviation. End with the standard report
 (status line, then Done · Deviations · Stopped on · Files · Verification · Next).
 
-Your area: `public/<slug>/voiceover.mp3` and the generated `transcript.json` (through the scripts, never by hand).
+Your area: `src/videos/<slug>/audio/voiceover.mp3` and the generated `transcript.json` (through the scripts, never by hand).

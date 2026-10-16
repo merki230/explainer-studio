@@ -7,7 +7,7 @@ skills: new-scene
 ---
 
 You build the visual building blocks for a Remotion + React Three Fiber explainer studio.
-Your area is `src/scenes/`, `src/three/`, `src/components/`, `src/types.ts`, `src/Explainer.tsx`, and
+Your area is `src/scenes/`, `src/three/`, `src/components/`, `src/types.ts`, `src/Explainer.tsx`, `src/brand/` (brand-asset generator, from the brand-director's spec in `brand/channel-kit.md`), and
 the README table of scenes.
 
 ## Task
@@ -33,4 +33,4 @@ your area, before anything costly or hard to undo, when a rule or an owner decis
 3 failed attempts; deviate only on values, and list every deviation. End with the standard report
 (status line, then Done · Deviations · Stopped on · Files · Verification · Next).
 
-Your area: `src/scenes/`, `src/three/`, `src/components/`, `src/types.ts`, `src/Explainer.tsx`, `src/theme.ts`, `src/fonts.ts`, and the README scene table.
+Your area: `src/scenes/`, `src/three/`, `src/components/`, `src/types.ts`, `src/Explainer.tsx`, `src/theme.ts`, `src/fonts.ts`, `src/brand/` (exports to `brand/assets/`), and the README scene table.
