@@ -1,8 +1,8 @@
-// Render one video to out/<slug>/<slug>.mp4, then loudness-normalise it (-14 LUFS, -1.5 dBTP; scripts/normalize.mjs).
+// Render one video to src/videos/<slug>/release/<slug>.mp4 (git-ignored), then loudness-normalise it (-14 LUFS, -1.5 dBTP; scripts/normalize.mjs).
 // The raw Remotion mix is kept as out/<slug>/raw/<slug>.raw.mp4. Extra args go straight to `remotion render`.
 //
 // usage: yarn render <slug> [--no-normalize] [--post-only] [--force] [--gl=swangle] [--concurrency=1] ...
-//   --no-normalize  skip the loudness step; writes the raw mix straight to out/<slug>/<slug>.mp4
+//   --no-normalize  skip the loudness step; writes the raw mix straight to release/<slug>.mp4
 //   --force         render a sandbox video (spec.sandbox, e.g. `lab`); refused otherwise so it isn't posted
 //   --post-only     skip the render; only normalise the existing render (same as `yarn normalize <slug>`)
 import {execFileSync} from 'node:child_process';
@@ -11,7 +11,7 @@ import {rawDir, videoPaths} from './lib.mjs';
 import {normalize} from './normalize.mjs';
 
 const [slug, ...args] = process.argv.slice(2);
-videoPaths(slug, 'yarn render <slug> [--no-normalize] [--post-only] [remotion flags]');
+const paths = videoPaths(slug, 'yarn render <slug> [--no-normalize] [--post-only] [remotion flags]');
 const force = args.includes('--force');
 const specFile = `src/videos/${slug}/spec.ts`;
 if (existsSync(specFile) && /^\s*sandbox:\s*true/m.test(readFileSync(specFile, 'utf8')) && !force) {
@@ -24,7 +24,8 @@ const rest = args.filter((a) => a !== '--no-normalize' && a !== '--post-only' &&
 
 if (!postOnly) {
   mkdirSync(rawDir(slug), {recursive: true});
-  const target = skip ? `out/${slug}/${slug}.mp4` : `${rawDir(slug)}/${slug}.raw.mp4`;
+  mkdirSync(paths.releaseDir, {recursive: true});
+  const target = skip ? `${paths.releaseDir}/${slug}.mp4` : `${rawDir(slug)}/${slug}.raw.mp4`;
   execFileSync('remotion', ['render', slug, target, ...rest], {stdio: 'inherit'});
 }
 if (!skip) normalize(slug);

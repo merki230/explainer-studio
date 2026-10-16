@@ -24,8 +24,8 @@ export const DUCK_BRIDGE = 0.35;
 
 export const dbToGain = (db: number) => Math.pow(10, db / 20);
 
-/** `public/`-relative path of the music bed. */
-export const musicSrc = (slug: string, music: MusicSpec) => music.src ?? `${slug}/music.mp3`;
+/** Path of the music bed, relative to the video folder (`src/videos/<slug>/`). */
+export const musicSrc = (music: MusicSpec) => music.src ?? 'audio/music.mp3';
 
 /** Timeline label of an audition take: `music-a` → "Music A", `calm` → "Music CALM". */
 export const auditionLabel = (entry: string) =>
@@ -33,20 +33,19 @@ export const auditionLabel = (entry: string) =>
 
 /**
  * The music beds to play, each `{key, name, src}`. Normally the one `src` bed. In audition mode one
- * per `audition` entry (`<slug>/<entry>.mp3`), or only the first when `rendering` (a render must never
+ * per `audition` entry (`audio/<entry>.mp3`), or only the first when `rendering` (a render must never
  * mix several beds).
  */
 export const musicBeds = (
-  slug: string,
   music: MusicSpec,
   rendering: boolean,
 ): {key: string; name: string; src: string}[] => {
   const takes = music.audition ?? [];
-  if (!takes.length) return [{key: 'music', name: 'music', src: musicSrc(slug, music)}];
+  if (!takes.length) return [{key: 'music', name: 'music', src: musicSrc(music)}];
   return (rendering ? takes.slice(0, 1) : takes).map((t) => ({
     key: t,
     name: auditionLabel(t),
-    src: `${slug}/${t}.mp3`,
+    src: `audio/${t}.mp3`,
   }));
 };
 
@@ -57,24 +56,24 @@ export const auditionWarning = (music: MusicSpec | undefined): string | null =>
       'Remove `audition` from the music block once a take is chosen.'
     : null;
 
-/** `public/`-relative path of a sound effect. */
-export const sfxSrc = (slug: string, name: string) => `${slug}/sfx/${name}.mp3`;
+/** Path of a sound effect, relative to the video folder. */
+export const sfxSrc = (name: string) => `audio/sfx/${name}.mp3`;
 
 /**
- * Every sound file a video asks for (`public/`-relative), with where it is asked from.
+ * Every sound file a video asks for (relative to the video folder), with where it is asked from.
  * For `yarn check` (missing-file warnings) and the renderer.
  */
-export const soundFiles = (slug: string, spec: VideoSpec): {src: string; from: string}[] => {
+export const soundFiles = (spec: VideoSpec): {src: string; from: string}[] => {
   const out: {src: string; from: string}[] = [];
   if (spec.music) {
-    musicBeds(slug, spec.music, false).forEach((b) =>
+    musicBeds(spec.music, false).forEach((b) =>
       out.push({src: b.src, from: spec.music?.audition ? `music audition "${b.key}"` : 'music'}),
     );
   }
-  if (spec.voice?.src) out.push({src: `${slug}/${spec.voice.src}`, from: 'voice.src (falls back to transcript.audio)'});
+  if (spec.voice?.src) out.push({src: `audio/${spec.voice.src}`, from: 'voice.src (falls back to transcript.audio)'});
   spec.scenes.forEach((s, i) =>
     (s.overlays ?? []).forEach((o) => {
-      if (o.type === 'sfx') out.push({src: sfxSrc(slug, o.name), from: `scene ${i + 1} sfx "${o.name}"`});
+      if (o.type === 'sfx') out.push({src: sfxSrc(o.name), from: `scene ${i + 1} sfx "${o.name}"`});
     }),
   );
   return out;

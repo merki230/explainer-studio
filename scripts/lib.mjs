@@ -1,5 +1,5 @@
 // Shared helpers for the per-video scripts.
-import {existsSync, mkdirSync, readdirSync, readFileSync} from 'node:fs';
+import {existsSync, readdirSync, readFileSync} from 'node:fs';
 
 // Load secrets from .env (ELEVENLABS_API_KEY, ...) when it exists.
 if (existsSync('.env')) process.loadEnvFile('.env');
@@ -20,14 +20,15 @@ export const videoPaths = (slug, usage) => {
     console.error(`No video "${slug}" in src/videos/. Create one with: yarn new ${slug}`);
     process.exit(1);
   }
-  mkdirSync(`public/${slug}`, {recursive: true});
   return {
     dir,
     script: `${dir}/script.txt`,
     transcript: `${dir}/transcript.json`,
-    // Relative to public/, as staticFile() expects.
-    audio: `${slug}/voiceover.mp3`,
-    audioFile: `public/${slug}/voiceover.mp3`,
+    // Audio lives in the video folder. `audio` (what transcript.json stores) is relative to `dir`.
+    audioDir: `${dir}/audio`,
+    audio: 'audio/voiceover.mp3',
+    audioFile: `${dir}/audio/voiceover.mp3`,
+    releaseDir: `${dir}/release`,
     performance: `${dir}/performance.txt`,
     voice: `${dir}/voice.json`,
     takesDir: `out/${slug}/raw/voices`,
@@ -70,8 +71,7 @@ export const withScriptText = (words, scriptText) => {
   return {words: words.map((w, i) => ({...w, text: tokens[i]})), applied: true, scriptCount: tokens.length};
 };
 
-/** Where a video's posting folder and its scratch files live (all git-ignored). */
-export const outDir = (slug) => `out/${slug}`;
+/** Scratch files (raw mix, takes, stills, reviews): git-ignored. The posting files are in src/videos/<slug>/release/. */
 export const rawDir = (slug) => `out/${slug}/raw`;
 
 /** True when the video's spec.ts sets `cover` (so a `<slug>-cover` composition exists). */

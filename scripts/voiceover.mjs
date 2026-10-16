@@ -1,5 +1,5 @@
 // Text-to-speech + word timestamps in ONE call (ElevenLabs "with-timestamps").
-// Writes public/<slug>/voiceover.mp3 and src/videos/<slug>/transcript.json.
+// Writes src/videos/<slug>/audio/voiceover.mp3 and src/videos/<slug>/transcript.json.
 // COSTS CREDITS (one character per character sent, tags included).
 //
 // usage:
@@ -35,7 +35,6 @@ if (take === '' || args.includes('--take')) {
 }
 
 const paths = adhoc ? null : videoPaths(args[0], usage);
-const slug = adhoc ? '_adhoc' : args[0];
 if (adhoc && !take) {
   console.error('--text requires --take <name> so live files are never touched.');
   process.exit(1);
@@ -114,7 +113,7 @@ if (expected.join(' ') !== got.join(' ')) {
   console.warn(`WARNING: transcript words differ from the text sent (${got.length} vs ${expected.length} words).`);
 }
 
-const transcript = JSON.stringify({audio: `${slug}/voiceover.mp3`, words: rounded}, null, 2);
+const transcript = JSON.stringify({audio: 'audio/voiceover.mp3', words: rounded}, null, 2);
 const audio = Buffer.from(data.audio_base64, 'base64');
 let audioOut;
 let transcriptOut;
@@ -124,6 +123,7 @@ if (take) {
   audioOut = `${dir}/${take}.mp3`;
   transcriptOut = `${dir}/${take}.transcript.json`;
 } else {
+  mkdirSync(paths.audioDir, {recursive: true});
   audioOut = paths.audioFile;
   transcriptOut = paths.transcript;
 }

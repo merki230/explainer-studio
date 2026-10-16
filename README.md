@@ -27,7 +27,8 @@ Each video lives in its own folder and is its own composition in the Studio:
 src/videos/<slug>/script.txt       the voiceover text
 src/videos/<slug>/spec.ts          scenes + overlays, keyed to cues in the script
 src/videos/<slug>/transcript.json  word timings (generated)
-public/<slug>/voiceover.mp3        the audio
+src/videos/<slug>/audio/           voiceover.mp3, music.mp3, sfx/ (in git)
+src/videos/<slug>/release/         cover.png, youtube-frame.png (in git); <slug>.mp4 (git-ignored)
 ```
 
 Shared building blocks (`src/scenes`, `src/three`, `src/components`, `src/theme.ts`) are used by every video.
@@ -39,7 +40,7 @@ Shared building blocks (`src/scenes`, `src/three`, `src/components`, `src/theme.
 3. **Get word timings**, using one of these:
    - Preview without audio: `yarn timings my-topic`
    - AI voice (ElevenLabs `eleven_v4`, key in `.env`): `yarn voiceover my-topic`
-   - Your own recording: put it at `public/my-topic/voiceover.mp3`, then `yarn transcribe my-topic` (Scribe v2)
+   - Your own recording: put it at `src/videos/my-topic/audio/voiceover.mp3`, then `yarn transcribe my-topic` (Scribe v2)
    - Legacy local Whisper: `yarn from-whisper` (see `scripts/whisper-to-transcript.mjs`)
      Every factual claim gets a source in `sources.md` ([format](docs/sources-format.md)); the sources go in
      the post description.
@@ -48,18 +49,18 @@ Shared building blocks (`src/scenes`, `src/three`, `src/components`, `src/theme.
    Cues keep working when you re-record the voiceover.
 5. **Check it:** `yarn check my-topic` resolves every cue; `yarn stills my-topic` writes one PNG per scene
    to `out/my-topic/raw/stills/`. Fine-tune overlay `x`/`y` (fractions of the 1080×1920 frame) in the Studio.
-6. **Render:** `yarn render my-topic` (sandbox videos like `lab` need `--force`) writes `out/my-topic/my-topic.mp4`, loudness-normalised to -14 LUFS / -1.5 dBTP (raw mix kept as `out/my-topic/raw/my-topic.raw.mp4`; `--no-normalize` skips it, `yarn normalize my-topic` re-runs only that step).
+6. **Render:** `yarn render my-topic` (sandbox videos like `lab` need `--force`) writes `src/videos/my-topic/release/my-topic.mp4` (git-ignored), loudness-normalised to -14 LUFS / -1.5 dBTP (raw mix kept as `out/my-topic/raw/my-topic.raw.mp4`; `--no-normalize` skips it, `yarn normalize my-topic` re-runs only that step).
 
 7. **Cover:** add a `cover` block to `spec.ts` (see "Covers" below), then
-   `yarn cover my-topic` (writes `out/my-topic/cover.png`). Check it small too:
+   `yarn cover my-topic` (writes `src/videos/my-topic/release/cover.png`). Check it small too:
    `npx remotion still my-topic-cover out/my-topic/raw/review/cover-scale-5.png --scale=0.2` (and `--scale=0.1`).
 
-8. **Package:** `yarn package my-topic` copies `publish.md` into `out/my-topic/`, renders `youtube-frame.png` (the frame named by the `<!-- youtube-frame: N -->` marker in `publish.md`) and prints a checklist. That folder is what you upload from:
+8. **Package:** `yarn package my-topic` renders `release/youtube-frame.png` (the frame named by the `<!-- youtube-frame: N -->` marker in `publish.md`) and prints a checklist. Everything you upload is in the video folder:
 
 ```
-out/<slug>/
-  <slug>.mp4  cover.png  youtube-frame.png  publish.md
-  raw/        raw render, music/ sfx/ voices/ takes, stills/, review/
+src/videos/<slug>/
+  publish.md  release/{<slug>.mp4 (git-ignored), cover.png, youtube-frame.png}  audio/
+out/<slug>/raw/   scratch (git-ignored): raw render, music/ sfx/ voices/ takes, stills/, review/
 ```
 
 `yarn verify` runs typecheck, lint and check together.
@@ -68,7 +69,7 @@ out/<slug>/
 
 A video with `cover` in its spec gets a second composition, `<slug>-cover` (1080×1920, one frame), registered
 from `Root.tsx` next to the video. `yarn render` and `yarn stills` pick compositions by slug, so they never
-render it; render it with `yarn cover <slug>` (writes `out/<slug>/cover.png`). It shows the
+render it; render it with `yarn cover <slug>` (writes `src/videos/<slug>/release/cover.png`). It shows the
 scene frozen at `at` seconds, with the camera held still, and nothing from the video's overlay flow: no
 captions, title block, tags or sound. Keep the text and the subject inside the safe rectangle
 (x 120–888, y 288–1248), which also sits inside the Instagram grid's 3:4 crop (y 240–1680).
@@ -191,7 +192,7 @@ Phone-screen kit (`src/components/screenKit.ts`): generic screens drawn on a can
 
 Overlays: `callout` takes `place: 'side' | 'above'` (card beside the anchor, or centred above it) and keeps its card inside x 120–888; `search` `y` is the bar's centre, `x` its centre (`0.5`) and `width` its width in px (`696`); `ad` takes `align: 'center' | 'left' | 'right'` (which edge `x` is) and stays inside x 120–888. `ad` and `search` take `pointTo: [x, y]` (frame fractions): a callout-style ring on the target and a leader to the card. Every overlay takes `until` (a cue, or seconds into the scene): it fades out over 8 frames ending there, never later than the scene's cut (use the next scene's cue to clear it before the crossfade).
 
-Sound (style guide § 9; levels in dB relative to the voice, which plays at 0 dB). Music bed: video-level `music: {src?, startAt?, fadeIn?, fadeOut?, level?, duckDb?, trim?}`; `src` defaults to `<slug>/music.mp3` (in `public/`), `startAt` 3 s (fade-in start, after the hook), `fadeIn` 2 s, `fadeOut` 1.5 s ending silent on the last frame (clean loop), `level` −18, `duckDb` 4 (extra dip while words are spoken, from `transcript.json`: 150 ms look-ahead attack, 300 ms release, gaps under 0.35 s stay ducked), `trim` 0 s; the bed loops if shorter than the video. Music audition: `music.audition: ['music-a', 'music-b', 'music-c']` plays `public/<slug>/<entry>.mp3` for each entry as its own timeline track ("Music A", …) with the same curve, instead of `src`; each take gets a checkbox under `musicAudition` in the Studio props panel (untick to mute it). Renders and stills play only the first entry and log a warning; remove `audition` once a take is chosen. Voice override: video-level `voice: {src: 'voiceover-room.mp3'}` plays `public/<slug>/<src>` instead of `transcript.audio` (timings still from `transcript.json`, so it must be the same take; a missing file falls back to `transcript.audio` with a warning). Sound effects: an overlay `{type: 'sfx', name, cue?, at?, volume?, trim?, loop?, fade?, until?}` plays `public/<slug>/sfx/<name>.mp3` from its cue or `at`; a negative `at` counts back from the scene's cut (`at: -0.2` on the last scene puts the lock click 0.2 s before the end); `volume` dB (default 0, the file's level; the orange hum −20), `trim` s cut from the file's start, `loop` + `until` for a hum (stops at `until`, never past the scene's cut), `fade` s linear in/out (default 0). Without `until` it plays to the end of the file, past the cut if needed; a whoosh on a slide goes on the incoming scene at `at: 0`. A missing music or sfx file is skipped with a browser-console warning (the file list comes from `getStaticFiles()`), so renders and the Studio never break on it.
+Sound (style guide § 9; levels in dB relative to the voice, which plays at 0 dB). Music bed: video-level `music: {src?, startAt?, fadeIn?, fadeOut?, level?, duckDb?, trim?}`; `src` is relative to the video folder and defaults to `audio/music.mp3`, `startAt` 3 s (fade-in start, after the hook), `fadeIn` 2 s, `fadeOut` 1.5 s ending silent on the last frame (clean loop), `level` −18, `duckDb` 4 (extra dip while words are spoken, from `transcript.json`: 150 ms look-ahead attack, 300 ms release, gaps under 0.35 s stay ducked), `trim` 0 s; the bed loops if shorter than the video. Music audition: `music.audition: ['music-a', 'music-b', 'music-c']` plays `src/videos/<slug>/audio/<entry>.mp3` for each entry as its own timeline track ("Music A", …) with the same curve, instead of `src`; each take gets a checkbox under `musicAudition` in the Studio props panel (untick to mute it). Renders and stills play only the first entry and log a warning; remove `audition` once a take is chosen. Voice override: video-level `voice: {src: 'voiceover-room.mp3'}` plays `src/videos/<slug>/audio/<src>` instead of `transcript.audio` (timings still from `transcript.json`, so it must be the same take; a missing file falls back to `transcript.audio` with a warning). Sound effects: an overlay `{type: 'sfx', name, cue?, at?, volume?, trim?, loop?, fade?, until?}` plays `src/videos/<slug>/audio/sfx/<name>.mp3` from its cue or `at`; a negative `at` counts back from the scene's cut (`at: -0.2` on the last scene puts the lock click 0.2 s before the end); `volume` dB (default 0, the file's level; the orange hum −20), `trim` s cut from the file's start, `loop` + `until` for a hum (stops at `until`, never past the scene's cut), `fade` s linear in/out (default 0). Without `until` it plays to the end of the file, past the cut if needed; a whoosh on a slide goes on the incoming scene at `at: 0`. A missing music or sfx file is skipped with a browser-console warning (audio is bundled from `src/videos/**/*.mp3` through `src/audioAssets.ts`, not `public/`), so renders and the Studio never break on it.
 
 Scene chips are exhibit labels: `chip: {title: 'No. 014 · The Living Room', text: 'One network'}` (title in serif, text in small mono). `delay` (s, default 0) holds the label back, e.g. `delay: 1.0` on a video's first scene. The label is drawn outside the scene crossfade, as one element across cuts: an identical label holds still; a changed line swaps (old text out over 6 frames, new text in over 6) while the card stays; it fades out with the cut into a scene with no label.
 Keep all text inside the platform safe zone (`SAFE` in `theme.ts`: x 120–888, y 288–1248). Captions sit centred on y = 0.60.

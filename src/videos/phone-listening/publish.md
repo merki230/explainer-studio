@@ -1,6 +1,6 @@
 # Publish: phone-listening (Exhibit No. 001)
 
-Handle: `@thesecretlyworks` on all three. Master: `out/phone-listening/phone-listening.mp4` (about 55 s). Text below is one version for all three platforms (under 2,200 characters), except the title.
+Handle: `@thesecretlyworks` on all three. Master: `release/phone-listening.mp4` (about 55 s). Text below is one version for all three platforms (under 2,200 characters), except the title.
 
 ## Title
 
@@ -40,16 +40,16 @@ Sources are in the description if you want to read them. Has an ad ever followed
 
 ## Cover
 
-- **TikTok and Instagram:** upload `out/phone-listening/cover.png`, the purpose-made cover (`spec.cover`; rebuild with `yarn cover phone-listening`). It shows "Is your phone listening?", the couch, YOU's phone with the coffee-machine ad, and the orange line from the router to the phone. The text and subject sit inside the 3:4 grid crop.
+- **TikTok and Instagram:** upload `release/cover.png`, the purpose-made cover (`spec.cover`; rebuild with `yarn cover phone-listening`). It shows "Is your phone listening?", the couch, YOU's phone with the coffee-machine ad, and the orange line from the router to the phone. The text and subject sit inside the 3:4 grid crop.
 <!-- youtube-frame: 1490 -->
 - **YouTube Shorts:** if the app only lets you pick a frame from the video, pick **49.7 s (frame 1490)**: the couch, the ad in the detail box, the orange trace, and the short caption "your phone.".
 
 ## Per-platform checklist (before pressing publish)
 
-- **All three:** upload the clean master `out/phone-listening/phone-listening.mp4`, not a file downloaded from another app. No in-app music or sounds. Public.
-- **YouTube:** Altered or synthetic content: **Yes**. Audience: not made for kids. Paste the title and the full description with the sources list. Cover: upload `cover.png` if the app allows it, otherwise pick frame 1490 (49.7 s; `youtube-frame.png` in the same folder).
-- **TikTok:** More options, AI-generated content: **on**. Upload the cover from `out/phone-listening/cover.png`. Caption: hook line, "Illustrative" line, "Sources:" line, hashtags.
-- **Instagram:** Advanced settings, AI label: **on**. Upload the cover from `out/phone-listening/cover.png` (keep text inside the 3:4 crop). Same caption as TikTok.
+- **All three:** upload the clean master `release/phone-listening.mp4`, not a file downloaded from another app. No in-app music or sounds. Public.
+- **YouTube:** Altered or synthetic content: **Yes**. Audience: not made for kids. Paste the title and the full description with the sources list. Cover: upload `release/cover.png` if the app allows it, otherwise pick frame 1490 (49.7 s; `release/youtube-frame.png`).
+- **TikTok:** More options, AI-generated content: **on**. Upload the cover from `release/cover.png`. Caption: hook line, "Illustrative" line, "Sources:" line, hashtags.
+- **Instagram:** Advanced settings, AI label: **on**. Upload the cover from `release/cover.png` (keep text inside the 3:4 crop). Same caption as TikTok.
 - No "Full sources: link in profile" line anywhere (no profile link yet).
 - No asset-credit line: every asset in `public/assets/LICENSES.md` is CC0, which needs no credit.
 - Paste the pinned comment right after posting and pin it (YouTube and TikTok; on Instagram pin it as a comment from the account).

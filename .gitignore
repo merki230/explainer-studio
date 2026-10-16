@@ -1,5 +1,10 @@
 node_modules
 out
+
+# final renders only; the rest of src/videos/<slug>/release/ (cover, youtube-frame) is tracked
+src/videos/*/release/*.mp4
+src/videos/*/release/*.mov
+src/videos/*/release/*.wav
 build
 .DS_Store
 

@@ -1,5 +1,5 @@
 import React, {useMemo} from 'react';
-import {AbsoluteFill, Audio, Easing, interpolate, Sequence, staticFile, useCurrentFrame} from 'remotion';
+import {AbsoluteFill, Audio, Easing, interpolate, Sequence, useCurrentFrame} from 'remotion';
 import {AdCard} from './components/AdCard';
 import {Attribution, ATTRIBUTION_FADE} from './components/Attribution';
 import {Callout} from './components/Callout';
@@ -7,7 +7,8 @@ import {Captions} from './components/Captions';
 import {Chip} from './components/Chip';
 import {Counter} from './components/Counter';
 import {SearchBar} from './components/SearchBar';
-import {hasStaticFile, MusicBed, Sfx} from './components/Sound';
+import {audioUrl} from './audioAssets';
+import {MusicBed, Sfx} from './components/Sound';
 import {DETAIL_FADE, DetailBox} from './components/DetailBox';
 import {FULLSCREEN_FADE, FullScreen} from './components/FullScreen';
 import {NameTag, TAG_FADE} from './components/NameTag';
@@ -328,10 +329,11 @@ const ExplainerBody: React.FC<{
   const last = timeline.scenes.length - 1;
   // `voice.src` overrides the voice file (same take, so the transcript timings still hold); a missing
   // file falls back to `transcript.audio`.
-  const voiceOverride = video.voice?.src ? `${videoId}/${video.voice.src}` : null;
-  const voiceSrc = voiceOverride && hasStaticFile(voiceOverride) ? voiceOverride : transcript.audio;
-  if (voiceOverride && voiceSrc !== voiceOverride && transcript.audio) {
-    console.warn(`[sound] voice.src ${voiceOverride} missing: playing ${transcript.audio} instead.`);
+  const overrideUrl = video.voice?.src ? audioUrl(videoId, `audio/${video.voice.src}`) : null;
+  const baseUrl = transcript.audio ? audioUrl(videoId, transcript.audio) : null;
+  const voiceUrl = overrideUrl ?? baseUrl;
+  if (video.voice?.src && !overrideUrl && baseUrl) {
+    console.warn(`[sound] voice.src ${video.voice.src} missing: playing ${transcript.audio} instead.`);
   }
   // Captions are suppressed while a statement card is up (style guide § 5, § 7).
   const quiet = useMemo(
@@ -474,7 +476,7 @@ const ExplainerBody: React.FC<{
         />
       )}
       {video.watermark ? <Watermark text={video.watermark} /> : null}
-      {voiceSrc ? <Audio src={staticFile(voiceSrc)} /> : null}
+      {voiceUrl ? <Audio src={voiceUrl} /> : null}
       {video.music ? (
         <MusicBed
           slug={videoId}

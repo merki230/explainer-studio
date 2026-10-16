@@ -2,7 +2,7 @@
 //
 // usage:
 //   yarn music <slug> --take <name> [--prompt "..."] [--seconds N] [--dry-run]
-//   yarn music:use <slug> <name>      copy a take to public/<slug>/music.mp3 (free, see music-use.mjs)
+//   yarn music:use <slug> <name>      copy a take to src/videos/<slug>/audio/music.mp3 (free, see music-use.mjs)
 //
 // Writes out/<slug>/raw/music/<name>.mp3 and appends an entry to src/videos/<slug>/audio-log.md.
 // Prompt: --prompt, else src/videos/<slug>/music.txt. Length: --seconds (3-600), else the composition

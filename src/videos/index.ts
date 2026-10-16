@@ -11,7 +11,7 @@ export type VideoEntry = {spec: VideoSpec; transcript: Transcript};
 
 /**
  * Every video in the studio. The key is the slug: it names the folder in
- * src/videos/, the Remotion composition id, and the output file out/<slug>.mp4.
+ * src/videos/ (which also holds its audio/ and release/), and the Remotion composition id.
  */
 export const VIDEOS: Record<string, VideoEntry> = {
   // <entries>

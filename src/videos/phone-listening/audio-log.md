@@ -6,6 +6,13 @@
 > the plan in effect when the audio was created (see `brand/research/music-licensing.md`). Edited or
 > back-filled entries would make it worthless as proof. Append-only; commit it with the video.
 
+> **Path migration, 2026-10-16 (hand-written, not generated).** Audio moved from `public/<slug>/` into the
+> video folder. The entries below are left exactly as generated, so their paths and hashes stay the
+> original evidence. Read old paths as: `public/phone-listening/music.mp3` is now
+> `audio/music.mp3`, and `public/phone-listening/sfx/<name>.mp3` is now `audio/sfx/<name>.mp3` (both
+> inside `src/videos/phone-listening/`). The files were moved with `git mv`, byte for byte (sha256
+> unchanged). `out/...` paths are scratch takes that are not in git. New entries use the new paths.
+
 ## 2026-10-16T13:59:53.031Z · music · out/music/phone-listening/a.mp3
 
 - Plan: Creator (owner-provided)

@@ -51,14 +51,16 @@ for (const [slug, {spec, transcript}] of Object.entries(VIDEOS)) {
 
   if (!transcript.audio) {
     if (!spec.sandbox) warnings.push('no audio yet (estimated timings).');
-  } else if (!existsSync(`public/${transcript.audio}`)) errors.push(`audio file public/${transcript.audio} is missing.`);
+  } else if (!existsSync(`src/videos/${slug}/${transcript.audio}`)) {
+    errors.push(`audio file src/videos/${slug}/${transcript.audio} is missing.`);
+  }
 
   const aw = auditionWarning(spec.music);
   if (aw) warnings.push(aw);
 
   // Music / sfx files a video asks for (missing ones are skipped in renders).
-  for (const {src, from} of soundFiles(slug, spec)) {
-    if (!existsSync(`public/${src}`)) warnings.push(`${from}: public/${src} is missing (skipped in renders).`);
+  for (const {src, from} of soundFiles(spec)) {
+    if (!existsSync(`src/videos/${slug}/${src}`)) warnings.push(`${from}: src/videos/${slug}/${src} is missing (skipped in renders).`);
   }
 
   try {

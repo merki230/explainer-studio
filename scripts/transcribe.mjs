@@ -2,7 +2,7 @@
 // Use for human recordings. COSTS CREDITS (billed per audio minute).
 //
 // usage: yarn transcribe <slug> [audio-file]
-// Default audio: public/<slug>/voiceover.mp3. Writes src/videos/<slug>/transcript.json.
+// Default audio: src/videos/<slug>/audio/voiceover.mp3. Writes src/videos/<slug>/transcript.json.
 // Words are Scribe's own spelling; replaced by script.txt's text when word counts match; otherwise "yarn check" will warn.
 import {existsSync, readFileSync, writeFileSync} from 'node:fs';
 import {basename} from 'node:path';

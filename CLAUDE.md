@@ -18,6 +18,8 @@ src/
     publish.md          titles, description with sources, hashtags (made by the publisher)
     music.txt           optional: ElevenLabs music prompt (mood, instruments, tempo; no artist names)
     audio-log.md        generation record for every ElevenLabs music/SFX file, GENERATED, never hand-edit
+    audio/              voiceover.mp3, music.mp3, sfx/<name>.mp3 (in git; bundled through src/audioAssets.ts)
+    release/            cover.png, youtube-frame.png (in git); <slug>.mp4, the final render (git-ignored)
   videos/index.ts       registry: every video, one Remotion composition each
   scenes/               full-frame scenes (registered in scenes/index.ts)
   three/                reusable 3D parts (Stage, CameraRig, Mannequin, Arc, ...)
@@ -25,14 +27,14 @@ src/
   theme.ts              palette, frame size, FPS, FADE (pure, safe to import from Node)
   fonts.ts              font loading (browser only)
   timeline.ts           cue → frame resolution
-public/<slug>/          voiceover.mp3 for that video
+public/assets/          shared CC0 HDRI and textures (not per-video)
 scripts/                CLI tools behind the yarn commands
-out/<slug>/             posting folder: <slug>.mp4, cover.png, youtube-frame.png, publish.md, raw/ (git-ignored)
+out/<slug>/raw/         scratch only: raw mix, music/sfx/voice takes, stills, review (git-ignored)
 ```
 
 ## Commands (yarn 4, Node 24)
 
-- `yarn new <slug>`: scaffold a video folder and register it
+- `yarn new <slug>`: scaffold a video folder (with `audio/` and `release/`) and register it
 - `yarn timings <slug>`: estimated word timings from script.txt (no audio)
 - `yarn voiceover <slug> [--take <name>]`: ElevenLabs v4 TTS + timings (costs money; needs `.env`, ask first).
   Uses `performance.txt` (script words + `[tags]`/ellipses) when present, and `voice.json` for the voice.
@@ -41,9 +43,9 @@ out/<slug>/             posting folder: <slug>.mp4, cover.png, youtube-frame.png
 - `yarn music <slug> --take <name> [--prompt "..."] [--seconds N] [--dry-run]`: ElevenLabs instrumental bed into
   `out/<slug>/raw/music/<name>.mp3` (costs money, ask first). Prompt from `music.txt`; length defaults to the video's rendered
   duration, rounded up
-- `yarn music:use <slug> <name>`: copy a saved music take to `public/<slug>/music.mp3` (free)
+- `yarn music:use <slug> <name>`: copy a saved music take to `src/videos/<slug>/audio/music.mp3` (free)
 - `yarn sfx <slug> <name> --prompt "..." [--seconds N] [--take <t>] [--dry-run]`: one ElevenLabs sound effect into
-  `public/<slug>/sfx/<name>.mp3` (costs money, ask first)
+  `src/videos/<slug>/audio/sfx/<name>.mp3` (costs money, ask first)
 - `yarn sfx:click <slug> [--name click] [--force]`: self-made phone-lock click (free, deterministic)
 - `yarn voice:room <slug> [--wet <dB>] [--size <0..1>] [--width <0..1>] [--out <name>]`: optional light room on the
   voiceover (free, local). Not the default: the owner prefers the dry voice
@@ -52,9 +54,9 @@ out/<slug>/             posting folder: <slug>.mp4, cover.png, youtube-frame.png
 - `yarn from-whisper <slug> <whisper.json>`: legacy local-Whisper timings
 - `yarn check [slug]`: resolve all cues, flag stale transcripts and too-short scenes
 - `yarn stills <slug>`: one PNG per scene in `out/<slug>/raw/stills/` (read them to review layout)
-- `yarn render <slug> [--no-normalize] [--post-only] [--force]`: renders `out/<slug>/raw/<slug>.raw.mp4`, then loudness-normalises (-14 LUFS, -1.5 dBTP) to the final `out/<slug>/<slug>.mp4`; `yarn normalize <slug>` runs only that step
-- `yarn cover <slug>`: render the cover still to `out/<slug>/cover.png` (only if `spec.cover`; else says so, exit 0)
-- `yarn package <slug>`: copy `publish.md` to `out/<slug>/` and render `youtube-frame.png` (frame from the `<!-- youtube-frame: N -->` marker in publish.md); prints a checklist
+- `yarn render <slug> [--no-normalize] [--post-only] [--force]`: renders `out/<slug>/raw/<slug>.raw.mp4`, then loudness-normalises (-14 LUFS, -1.5 dBTP) to the final `src/videos/<slug>/release/<slug>.mp4` (git-ignored); `yarn normalize <slug>` runs only that step
+- `yarn cover <slug>`: render the cover still to `src/videos/<slug>/release/cover.png` (only if `spec.cover`; else says so, exit 0)
+- `yarn package <slug>`: render `release/youtube-frame.png` (frame from the `<!-- youtube-frame: N -->` marker in publish.md); prints a checklist of the posting files
 - `yarn verify`: typecheck + lint + check. Run before calling any change done.
 
 ## Rules

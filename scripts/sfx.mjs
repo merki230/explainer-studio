@@ -2,8 +2,8 @@
 //
 // usage: yarn sfx <slug> <name> --prompt "..." [--seconds N] [--take <t>] [--dry-run]
 //
-// Writes public/<slug>/sfx/<name>.mp3, or with --take out/<slug>/raw/sfx/<name>.<t>.mp3 (audition first,
-// then copy it into public/ yourself). Never overwrites a file. Appends to src/videos/<slug>/audio-log.md.
+// Writes src/videos/<slug>/audio/sfx/<name>.mp3, or with --take out/<slug>/raw/sfx/<name>.<t>.mp3 (audition first,
+// then copy it into audio/sfx/ yourself). Never overwrites a file. Appends to src/videos/<slug>/audio-log.md.
 // Model eleven_text_to_sound_v2, seconds 0.5-30 (default: the model chooses). Own generations only:
 // never use ElevenLabs' community SFX library, and never publish an effect as a standalone file.
 // --dry-run prints the request without the key and writes nothing. Key: ELEVENLABS_API_KEY in .env.
@@ -15,10 +15,10 @@ const usage = 'yarn sfx <slug> <name> --prompt "..." [--seconds N] [--take <t>] 
 if (process.argv.includes('--help') || process.argv.includes('-h')) {
   console.log(`${usage}
 
-  Generates one sound effect (model eleven_text_to_sound_v2) into public/<slug>/sfx/<name>.mp3.
+  Generates one sound effect (model eleven_text_to_sound_v2) into src/videos/<slug>/audio/sfx/<name>.mp3.
   --prompt "..."   required; describe the sound
   --seconds N      0.5-30; default: the model chooses
-  --take <t>       write out/<slug>/raw/sfx/<name>.<t>.mp3 instead of public/ (audition)
+  --take <t>       write out/<slug>/raw/sfx/<name>.<t>.mp3 instead of audio/sfx/ (audition)
   --dry-run        print the request (no key), call nothing, write nothing
   Costs credits: needs the owner's go-ahead. Logged in src/videos/<slug>/audio-log.md (never hand-edit).`);
   process.exit(0);
@@ -51,7 +51,7 @@ if (opts.seconds !== undefined) {
   body.duration_seconds = s;
 }
 const url = 'https://api.elevenlabs.io/v1/sound-generation?output_format=mp3_44100_128';
-const dir = opts.take ? `out/${slug}/raw/sfx` : `public/${slug}/sfx`;
+const dir = opts.take ? `out/${slug}/raw/sfx` : `${paths.audioDir}/sfx`;
 const out = `${dir}/${name}${opts.take ? `.${opts.take}` : ''}.mp3`;
 if (bools['dry-run']) {
   printDryRun('POST', url, body);

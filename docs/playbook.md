@@ -60,11 +60,11 @@ updates them in the same step. Before closing a rule change, grep the repo for t
 
 - `yarn music <slug> --take <name> [--prompt "..."] [--seconds N]`: instrumental bed into
   `out/<slug>/raw/music/<name>.mp3`. Prompt defaults to `src/videos/<slug>/music.txt`, length to the
-  composition duration (as Root renders it) rounded up to a whole second. `yarn music:use <slug> <name>` copies it to `public/<slug>/music.mp3` (free).
+  composition duration (as Root renders it) rounded up to a whole second. `yarn music:use <slug> <name>` copies it to `src/videos/<slug>/audio/music.mp3` (free).
 - `yarn sfx <slug> <name> --prompt "..." [--seconds N] [--take <t>]`: one effect into
-  `public/<slug>/sfx/<name>.mp3` (`--take` writes `out/<slug>/raw/sfx/` for auditions). Existing files are never overwritten.
+  `src/videos/<slug>/audio/sfx/<name>.mp3` (`--take` writes `out/<slug>/raw/sfx/` for auditions). Existing files are never overwritten.
 - `yarn sfx:click <slug> [--name click] [--force]`: free, local. Self-made deterministic phone-lock click (0.35 s) encoded to
-  `public/<slug>/sfx/<name>.mp3`; same samples every run; refuses to overwrite without `--force`; no `audio-log.md` entry.
+  `src/videos/<slug>/audio/sfx/<name>.mp3`; same samples every run; refuses to overwrite without `--force`; no `audio-log.md` entry.
 - Both cost credits: ask the owner first. `--dry-run` prints the request (no key) and writes nothing; `--help`
   lists the options.
 - Every generated file is appended to `src/videos/<slug>/audio-log.md` (date, plan, endpoint, model, prompt,
@@ -78,7 +78,7 @@ updates them in the same step. Before closing a rule change, grep the repo for t
 
 - `yarn voice:room <slug> [--wet <dB>] [--size <0..1>] [--width <0..1>] [--out <name>]`: free, local. Adds a light
   small-room reverb (wet -18 dB, ~15 ms predelay, RT60 ~0.4 s) to `voiceover.mp3` so the narrator sits in the
-  music's space; writes stereo `public/<slug>/voiceover-room.mp3` (input untouched, same sample length,
+  music's space; writes stereo `src/videos/<slug>/audio/voiceover-room.mp3` (input untouched, same sample length,
   loudness matched within 0.5 LU, deterministic). Point the spec at it only when the owner prefers it; no `audio-log.md` entry.
 
 ## Staged builds
@@ -138,4 +138,4 @@ look like them?"
 
 ## Loudness
 
-`yarn render` ends with a two-pass loudnorm to -14 LUFS / -1.5 dBTP (`scripts/normalize.mjs`); the raw mix is kept as `out/<slug>/raw/<slug>.raw.mp4`; the final is `out/<slug>/<slug>.mp4`. The posting folder `out/<slug>/` also holds `cover.png` (`yarn cover <slug>`), `youtube-frame.png` and a copy of `publish.md` (`yarn package <slug>`); everything else (takes, stills, review) lives in `out/<slug>/raw/`. A voice-led mix at about -22 LUFS can't reach -14 in linear mode without the true peak passing the limit, so loudnorm runs dynamic (pilot: -21.8 to -14.3 LUFS, -4.2 to -1.2 dBTP after AAC). Video is stream-copied; frame count and A/V sync are checked.
+`yarn render` ends with a two-pass loudnorm to -14 LUFS / -1.5 dBTP (`scripts/normalize.mjs`); the raw mix is kept as `out/<slug>/raw/<slug>.raw.mp4`; the final is `src/videos/<slug>/release/<slug>.mp4` (git-ignored). `release/` also holds `cover.png` (`yarn cover <slug>`) and `youtube-frame.png` (`yarn package <slug>`), both in git next to `publish.md`; everything else (takes, stills, review) lives in `out/<slug>/raw/`. A voice-led mix at about -22 LUFS can't reach -14 in linear mode without the true peak passing the limit, so loudnorm runs dynamic (pilot: -21.8 to -14.3 LUFS, -4.2 to -1.2 dBTP after AAC). Video is stream-copied; frame count and A/V sync are checked.

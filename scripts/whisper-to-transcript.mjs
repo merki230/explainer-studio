@@ -1,8 +1,8 @@
 // LEGACY: prefer `yarn transcribe <slug>` (ElevenLabs Scribe v2). Kept for offline use.
 // Use your OWN recording instead of TTS:
-//   1. Put your recording at public/<slug>/voiceover.mp3
+//   1. Put your recording at src/videos/<slug>/audio/voiceover.mp3
 //   2. pip install -U openai-whisper
-//      whisper public/<slug>/voiceover.mp3 --model small --word_timestamps True --output_format json --output_dir out
+//      whisper src/videos/<slug>/audio/voiceover.mp3 --model small --word_timestamps True --output_format json --output_dir out
 //   3. yarn from-whisper <slug> out/voiceover.json
 import {readFileSync, writeFileSync} from 'node:fs';
 import {videoPaths} from './lib.mjs';

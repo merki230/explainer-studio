@@ -6,7 +6,7 @@ import {FPS, HEIGHT, WIDTH} from './theme';
 import {VIDEOS} from './videos';
 
 // One composition per video, named by its slug, plus a `<slug>-cover` still for videos with a
-// `cover` (rendered with `yarn cover <slug>` to `out/<slug>/cover.png`; `yarn render`
+// `cover` (rendered with `yarn cover <slug>` to `src/videos/<slug>/release/cover.png`; `yarn render`
 // and `yarn stills` select compositions by slug, so they never pick it up).
 export const Root: React.FC = () => (
   <>

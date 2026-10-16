@@ -17,8 +17,11 @@ if (existsSync(dir)) {
 }
 
 mkdirSync(dir, {recursive: true});
-mkdirSync(`public/${slug}`, {recursive: true});
-writeFileSync(`public/${slug}/.gitkeep`, '');
+// audio/ (voiceover, music, sfx; in git) and release/ (cover and frame in git, the mp4 is not)
+for (const sub of ['audio', 'release']) {
+  mkdirSync(`${dir}/${sub}`, {recursive: true});
+  writeFileSync(`${dir}/${sub}/.gitkeep`, '');
+}
 writeFileSync(
   `${dir}/script.txt`,
   'Put the hook in this first sentence. Then write the rest of the voiceover here, about 150 to 170 words for a minute.\n',

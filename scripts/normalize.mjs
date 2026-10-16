@@ -2,8 +2,8 @@
 // stream untouched. Called by `yarn render`; also usable alone on an existing render.
 //
 // usage: yarn normalize <slug>      (or: node scripts/normalize.mjs <slug>)
-//   Input is out/<slug>/raw/<slug>.raw.mp4 (the raw Remotion mix). If only out/<slug>/<slug>.mp4
-//   exists, it is treated as the raw render and moved to the raw path first. Output: out/<slug>/<slug>.mp4.
+//   Input is out/<slug>/raw/<slug>.raw.mp4 (the raw Remotion mix). If only the release mp4 exists, it is
+//   treated as the raw render and moved to the raw path first. Output: src/videos/<slug>/release/<slug>.mp4 (git-ignored).
 //
 // Target: -14 LUFS integrated, -1.5 dBTP, LRA 11 (edit TARGET to change).
 // Pass 1 measures, pass 2 applies with linear=true. When linear can't reach the target without the true
@@ -13,6 +13,7 @@
 // Checks: video frame count and duration equal the raw file's; audio start within 1 frame of video.
 import {execFileSync, spawnSync} from 'node:child_process';
 import {existsSync, mkdirSync, renameSync, rmSync} from 'node:fs';
+import {dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 
 const TARGET = {I: -14, TP: -1.5, LRA: 11};
@@ -54,12 +55,13 @@ const fmt = (j, p) => `${Number(j[p + 'i']).toFixed(1)} LUFS, ${Number(j[p + 'tp
 
 export const normalize = (slug) => {
   const raw = `out/${slug}/raw/${slug}.raw.mp4`;
-  const final = `out/${slug}/${slug}.mp4`;
+  const final = `src/videos/${slug}/release/${slug}.mp4`;
   if (!existsSync(raw)) {
     if (!existsSync(final)) throw new Error(`Nothing to normalise: ${raw} and ${final} are missing.`);
     mkdirSync(`out/${slug}/raw`, {recursive: true});
     renameSync(final, raw);
   }
+  mkdirSync(dirname(final), {recursive: true});
   const target = `I=${TARGET.I}:TP=${TARGET.TP}:LRA=${TARGET.LRA}`;
   const rawInfo = probe(raw);
   if (rawInfo.aStart === null) throw new Error(`${raw} has no audio stream.`);

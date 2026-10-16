@@ -1,24 +1,10 @@
 import React, {useMemo} from 'react';
-import {Audio, getRemotionEnvironment, getStaticFiles, Sequence, staticFile} from 'remotion';
+import {Audio, getRemotionEnvironment, Sequence} from 'remotion';
+import {audioUrl} from '../audioAssets';
 import type {MusicSpec, SfxOverlay, Word} from '../types';
 import {auditionWarning, duckEnvelope, MUSIC_DEFAULTS, musicBeds, musicGain, sfxGain, sfxSrc} from './soundMix';
 
 const warned = new Set<string>();
-
-/**
- * Whether `public/<src>` exists. `<Audio>` fails the render on a missing file, so sounds check first.
- * `getStaticFiles()` reads the list of `public/` files that both the Studio and `bundle()` (render,
- * stills) write into the page, so it works in both; the Studio keeps it current as files are added.
- * Outside a page (Node, the Player) it returns [], and every sound is skipped.
- */
-export const hasStaticFile = (src: string): boolean => {
-  const ok = getStaticFiles().some((f) => f.name === src);
-  if (!ok && !warned.has(src)) {
-    warned.add(src);
-    console.warn(`[sound] public/${src} not found: skipped.`);
-  }
-  return ok;
-};
 
 /**
  * The music bed (style guide § 9): fades in after the hook, ducks under speech, ends silent.
@@ -45,8 +31,9 @@ export const MusicBed: React.FC<{
   const from = Math.max(0, Math.floor((music.startAt ?? MUSIC_DEFAULTS.startAt) * fps));
   return (
     <>
-      {musicBeds(slug, music, rendering).map((b) =>
-        !hasStaticFile(b.src) ? null : (
+      {musicBeds(music, rendering).map((b) => {
+        const url = audioUrl(slug, b.src);
+        return !url ? null : (
           <Sequence
             key={b.key}
             from={from}
@@ -55,7 +42,7 @@ export const MusicBed: React.FC<{
             layout="none"
           >
             <Audio
-              src={staticFile(b.src)}
+              src={url}
               loop
               loopVolumeCurveBehavior="extend"
               // an unticked take stays on the timeline, muted (its waveform greys out)
@@ -65,8 +52,8 @@ export const MusicBed: React.FC<{
               volume={(f) => musicGain(f + from, durationInFrames, fps, music, duck)}
             />
           </Sequence>
-        ),
-      )}
+        );
+      })}
     </>
   );
 };
@@ -82,12 +69,12 @@ export const Sfx: React.FC<{slug: string; o: SfxOverlay; from: number; length?: 
   length,
   fps,
 }) => {
-  const src = sfxSrc(slug, o.name);
-  if (!hasStaticFile(src)) return null;
+  const url = audioUrl(slug, sfxSrc(o.name));
+  if (!url) return null;
   return (
     <Sequence from={from} durationInFrames={length} name={`sfx ${o.name}`} layout="none">
       <Audio
-        src={staticFile(src)}
+        src={url}
         loop={o.loop}
         loopVolumeCurveBehavior="extend"
         trimBefore={Math.round((o.trim ?? 0) * fps) || undefined}

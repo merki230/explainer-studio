@@ -6,8 +6,8 @@
 //   --size   room size 0..1 (default 0.5; RT60 0.30 s .. 0.55 s, delay lengths scale with it)
 //   --width  stereo spread of the dry voice 0..1 (default 0). Mid/side lift of a decorrelated copy,
 //            so the mono sum is exactly the original (mono-compatible).
-//   --out    output name without extension (default voiceover-room), written in public/<slug>/
-// Reads public/<slug>/voiceover.mp3. Output is stereo 44.1 kHz mp3 (192k), same length as the input.
+//   --out    output name without extension (default voiceover-room), written in src/videos/<slug>/audio/
+// Reads src/videos/<slug>/audio/voiceover.mp3. Output is stereo 44.1 kHz mp3 (192k), same length as the input.
 //
 // How: Remotion's bundled ffmpeg decodes to float PCM, Node does the DSP, ffmpeg encodes. The ffmpeg
 // bundle has no reverb or EQ filters. DSP: dry centred and unchanged; wet = 15 ms predelay -> 200 Hz
@@ -157,7 +157,7 @@ const width = num('width', 0, 0, 1);
 const outName = opts.out ?? 'voiceover-room';
 if (!validName(outName)) fail('--out must be a plain name (letters, digits, dash, underscore, dot).');
 
-const dir = path.join(root, 'public', slug);
+const dir = path.join(root, 'src', 'videos', slug, 'audio');
 const inFile = path.join(dir, 'voiceover.mp3');
 const outFile = path.join(dir, `${outName}.mp3`);
 if (!existsSync(inFile)) fail(`Missing ${path.relative(root, inFile)}.`);

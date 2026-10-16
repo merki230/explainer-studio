@@ -1,20 +1,21 @@
-// Render a video's cover still to out/<slug>/cover.png (TikTok / Instagram cover).
+// Render a video's cover still to src/videos/<slug>/release/cover.png (TikTok / Instagram cover).
 // Only videos whose spec.ts sets `cover` have a `<slug>-cover` composition; others get a note and exit 0.
 //
 // usage: yarn cover <slug>
 import {execFileSync} from 'node:child_process';
 import {mkdirSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
-import {hasCover, outDir, videoPaths} from './lib.mjs';
+import {hasCover, videoPaths} from './lib.mjs';
 
 /** Returns the written path, or null when the video has no cover. */
 export const renderCover = (slug) => {
+  const paths = videoPaths(slug, 'yarn cover <slug>');
   if (!hasCover(slug)) {
     console.log(`${slug} has no cover (no \`cover\` in its spec.ts); nothing to render.`);
     return null;
   }
-  const target = `${outDir(slug)}/cover.png`;
-  mkdirSync(outDir(slug), {recursive: true});
+  const target = `${paths.releaseDir}/cover.png`;
+  mkdirSync(paths.releaseDir, {recursive: true});
   execFileSync('npx', ['remotion', 'still', `${slug}-cover`, target], {stdio: 'inherit'});
   return target;
 };

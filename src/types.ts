@@ -11,6 +11,7 @@ import type {TitleBlockProps} from './components/TitleBlock';
 import type {SceneName} from './scenes';
 
 export type Word = {text: string; start: number; end: number};
+/** `audio` is relative to the video folder, e.g. `audio/voiceover.mp3` (null before there is a voice). */
 export type Transcript = {audio: string | null; words: Word[]};
 
 /**
@@ -22,7 +23,7 @@ export type Transcript = {audio: string | null; words: Word[]};
 export type Timing = {cue?: string; at?: number};
 
 /**
- * A sound effect (style guide § 9): plays `public/<slug>/sfx/<name>.mp3` from its `cue` or `at`.
+ * A sound effect (style guide § 9): plays `src/videos/<slug>/audio/sfx/<name>.mp3` from its `cue` or `at`.
  * A negative `at` counts back from the scene's cut (`at: -0.2` = 0.2 s before the scene ends; on the
  * last scene, before the video ends), so the lock click can sit at the very end. It plays to the end
  * of the file (past the scene's cut if needed) unless `until` stops it. A missing file is skipped with
@@ -30,7 +31,7 @@ export type Timing = {cue?: string; at?: number};
  */
 export type SfxOverlay = {
   type: 'sfx';
-  /** File name without `.mp3`, in `public/<slug>/sfx/`. */
+  /** File name without `.mp3`, in `audio/sfx/` of the video folder. */
   name: string;
   /** dB relative to the voice (gain 1). Default 0 (the file's own level). The hum: -20. */
   volume?: number;
@@ -43,12 +44,12 @@ export type SfxOverlay = {
 };
 
 /**
- * One quiet music bed per video (style guide § 9), from `public/<slug>/music.mp3` by default. It fades
+ * One quiet music bed per video (style guide § 9), from `audio/music.mp3` in the video folder by default. It fades
  * in from `startAt`, ducks while words are spoken, loops if shorter than the video, and fades out to
  * silence on the last frame. A missing file is skipped with a console warning.
  */
 export type MusicSpec = {
-  /** `public/`-relative path. Default `<slug>/music.mp3`. */
+  /** Path relative to the video folder. Default `audio/music.mp3`. */
   src?: string;
   /** Seconds into the video when the fade-in starts. Default 3 (after the hook). */
   startAt?: number;
@@ -63,7 +64,7 @@ export type MusicSpec = {
   /** Seconds cut from the start of the file. Default 0. */
   trim?: number;
   /**
-   * Audition mode, for comparing takes in the Studio: file names (no extension) in `public/<slug>/`,
+   * Audition mode, for comparing takes in the Studio: file names (no extension) in `audio/` of the video folder,
    * e.g. `['music-a', 'music-b', 'music-c']`. Each plays as its own timeline track ("Music A", ...)
    * with the same curve (start, fades, level, ducking); `src` is not played. Each take gets an on/off
    * checkbox in the Studio props panel (`musicAudition`). Renders and stills play only the first
@@ -165,7 +166,7 @@ export type VideoSpec = {
   /** Music bed (see MusicSpec). Omit for no music. */
   music?: MusicSpec;
   /**
-   * Voice file override, for A/B-ing a processed voice: `src` is a file name in `public/<slug>/`
+   * Voice file override, for A/B-ing a processed voice: `src` is a file name in `audio/` of the video folder
    * (e.g. `'voiceover-room.mp3'`) played instead of `transcript.audio`. Timings still come from
    * `transcript.json`, so it must be the same take. A missing file falls back to `transcript.audio`
    * with a console warning.
