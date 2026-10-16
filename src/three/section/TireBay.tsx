@@ -279,12 +279,14 @@ export const TireBay: React.FC<{mood: Mood; t: number} & Partial<TireBayProps>> 
             // the clipboard hand (left) at the chest, the board tilted up to the eyes; the gauge hand (right)
             // low at the side, writing on the board, or out to the end tire's valve
             const writeJiggle = wK * 0.012 * Math.sin(t * 19);
-            // the gauge in the hand on the camera side (the left worker's right, the right worker's left),
+            // the gauge in the right hand,
             // the clipboard in the other, held close to the chest (clear of the posts)
-            const cs = who === 'left' ? -1 : 1;
+            // both gauge with the right hand (local −x): the left worker's camera side, the right worker's
+            // rack side (its reach then goes straight to the tire, never back behind its body)
+            const cs = -1;
             // the free hand: the clipboard at the chest (left worker); the right worker's rests forward on
             // its thigh, in front of the body, so both arms read from the camera
-            const clipHand = clip ? toWorld([-cs * 0.12, 0.8 + lift, 0.14]) : toWorld([-cs * 0.14, 0.62 + lift, 0.2]);
+            const clipHand = clip ? toWorld([-cs * 0.12, 0.8 + lift, 0.14]) : toWorld([-cs * 0.3, 0.6 + lift, 0.06]);
             const restG = toWorld([cs * 0.15, 0.74 + lift, 0.2]);
             const writeG = toWorld([-cs * 0.06 + writeJiggle, 0.84 + lift + writeJiggle * 0.6, 0.2]);
             const valve = new THREE.Vector3(...valveAt(wheelPos(r, wheel), valvePhi(wheel), R));
@@ -292,9 +294,9 @@ export const TireBay: React.FC<{mood: Mood; t: number} & Partial<TireBayProps>> 
             const gaugeG = valve.clone().add(new THREE.Vector3(who === 'left' ? -0.2 : 0.15, 0.05, who === 'left' ? 0.02 : 0.14));
             const handG = restG.clone().lerp(writeG, wK).lerp(gaugeG, gK);
             // gauging, the clipboard drops to the side a little
-            // gauging, the clipboard drops to the side a little; the right worker brings its free hand in
-            // under the gauge hand (both hands out toward the tire, so both arms read)
-            const handC = clip ? clipHand.clone().lerp(toWorld([-cs * 0.2, 0.68 + lift, 0.06]), gK) : clipHand.clone().lerp(handG.clone().add(new THREE.Vector3(0.07, -0.05, 0.06)), gK);
+            // gauging, the clipboard drops to the side a little; the right worker gauges one-handed, its free
+            // arm hanging relaxed at its side the whole time
+            const handC = clip ? clipHand.clone().lerp(toWorld([-cs * 0.2, 0.68 + lift, 0.06]), gK) : clipHand;
             const gDir = valve
               .clone()
               .sub(handG)
@@ -323,7 +325,7 @@ export const TireBay: React.FC<{mood: Mood; t: number} & Partial<TireBayProps>> 
                   rotationY={rot}
                   seed={who === 'left' ? 'bay-a' : 'bay-b'}
                   phone={false}
-                  hands={who === 'left' ? [local(handG), local(handC)] : [local(handC), local(handG)]}
+                  hands={[local(handG), local(handC)]}
                   stance="stand"
                   gestures={gestures}
                 />
