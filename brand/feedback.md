@@ -52,6 +52,26 @@ Research citations: `brand/research/platforms.md` (P§), `brand/research/landsca
 
 ---
 
+## No. 001 · Is your phone listening? (`phone-listening`): sound mix review (not published)
+
+- **Reviewed:** 2026-10-16, owner, on headphones · **Stage:** sound pass (voice, music bed, click, hum, whoosh)
+
+**Owner's notes** (quoted as relayed by the main session)
+
+- The narrator felt "isolated" from the music: "the only thing in my ears".
+- Room reverb on the voice (`yarn voice:room`), light and strong: both rejected. "use the voice without the room".
+- Music bed about 9 dB under the voice, no ducking (spec `music: {level: -14, duckDb: 0}`, take C ≈ −16.7 LUFS, voice ≈ −22 LUFS): "right".
+
+**What we're changing** (✅ owner decision; CHANGELOG v0.10.1)
+
+| Rule (file § name) | Change | Note |
+|---|---|---|
+| style-guide § 9 Music | 16 to 20 dB under → about 9 dB under, steady (no duck), level set per track from measured LUFS; reference bed prompt in `src/videos/phone-listening/music.txt` | Notes 1 and 3 |
+| style-guide § 9 Voice processing (new) | The voice stays dry; `yarn voice:room` is not the default | Note 2 |
+| style-guide § 9 SFX | Lock click self-made (synthesised; ElevenLabs gave near-silent clicks twice); hum and whoosh ElevenLabs; No. 001 offsets recorded | Sound pass |
+
+---
+
 ## Template
 
 ### No. 000 · Title (`<slug>`)

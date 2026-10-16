@@ -18,6 +18,12 @@ import type {VideoSpec} from '../../types';
  * the live `directed` take (≈ 54.4 s). Props marked `// TIMED` (scene boundaries for the camera
  * runs, `route`, `ui` steps, `gestures`, bookends) are seconds set from transcript.json: re-check
  * them if the voiceover is redone.
+ *
+ * Sound (style guide § 9, README "Sound"): the music bed; a whoosh on each of the three slides; a low
+ * hum while the orange route moves (out and back, ending as it arrives on "one household" so the
+ * statement lands in clean air); the lock click on the closing lock. Levels were set from measured
+ * loudness (voice ≈ −22 LUFS, music take A ≈ −16, hum ≈ −9.5, whoosh ≈ −16.6): re-check them if a
+ * file is replaced.
  */
 
 type V3 = [number, number, number];
@@ -101,7 +107,23 @@ const GLIDE = {transition: 'glide'} as const;
 const LOCKED = {at: -60, app: 'lock' as const};
 const AD_IN = {at: -60, app: 'feed' as const, adAt: 0};
 
+// Sound (§ 9). Levels in dB relative to the voice (gain 1).
+// Whoosh on a slide (18 frames): starts 0.1 s in, so the file's peak (0.15–0.2 s) lands mid-slide
+// (0.3 s); −18, the quiet end of the 12–18 dB window, as each slide lands on a first word.
+const WHOOSH = {type: 'sfx', name: 'whoosh', at: 0.1, volume: -18} as const;
+// The hum: only while the route moves, in two phrases that follow it: out (leaves her phone → gone
+// past the frame, ending at the cut) and back (comes back → arrives at YOU's phone, faded out by "one
+// household"). A sound can't run past its scene's cut, and the cut (38.48) falls while the route is
+// out of frame (37.68–39.6), so the hum rests there. The file is ≈ 12 LU louder than the voice, so
+// −32 (not −20) puts it ≈ 20 dB under (§ 9). // TIMED
+const HUM = {type: 'sfx', name: 'hum', loop: true, fade: 0.3, volume: -32} as const;
+
 export const spec: VideoSpec = {
+  // Take C (owner choice, 2026-10-16; ≈ -16.7 LUFS vs voice -22). Owner heard the voice as detached from the
+  // music on headphones (voice too loud against the bed), so the bed sits ≈ 9 dB under the voice with no duck
+  // (style-guide § 9 says 16–20; owner-led trial).
+  music: {level: -14, duckDb: 0},
+  // Voice: the original dry voiceover (owner preferred it to the yarn voice:room versions, 2026-10-16).
   watermark: null, // no watermark: the invented coffee machine is disclosed in the post ("Illustrative: …")
   scenes: [
     // 1 · Open on something concrete. Frame 0 black; FRIEND's phone wakes full-frame and her search
@@ -191,6 +213,7 @@ export const spec: VideoSpec = {
         wakeAt: 5.95, // TIMED: "Hey…" sets off on "until it" (16.11); the chip lights ≈ 17.3, "hears the phrase"
         doorShut: true,
       },
+      overlays: [WHOOSH], // slides in
     },
     // 5 · The study (The Lab, a second location; slides in): the wall counter runs to 17,000 as it is
     // spoken; the arms tap and the conveyor runs.
@@ -205,6 +228,7 @@ export const spec: VideoSpec = {
         countAt: 1.3, // TIMED: starts on "researchers" (20.04)
         countFor: 2.6, // TIMED: lands on "17,000" (22.32–22.72)
       },
+      overlays: [WHOOSH], // slides in
     },
     // 6 · Its result: the camera moves in on the bench (same slice); the audio meter stays flat and the
     // "0" stamp lands on "not one was caught".
@@ -234,6 +258,7 @@ export const spec: VideoSpec = {
         ui: {friend: [LOCKED], you: [AD_IN]},
         gestures: routeGestures(T.shelf),
       },
+      overlays: [WHOOSH], // slides back to the living room
     },
     // 8 · The mechanism (FTC): glide to wide (a new sentence; router → wide is too far for a push), so
     // the whole path shows. The route leaves FRIEND's phone, through the router, down inside the back
@@ -251,6 +276,7 @@ export const spec: VideoSpec = {
         gestures: routeGestures(T.ftc),
         route: routeIn(T.ftc),
       },
+      overlays: [{...HUM, at: ROUTE.out - T.ftc, until: 'and ad platforms'}], // the route out
     },
     // 9 · The guess: the way back arrives at YOU's phone; the idea to keep in the sky band.
     {
@@ -266,6 +292,7 @@ export const spec: VideoSpec = {
         route: routeIn(T.guess),
       },
       overlays: [
+        {...HUM, at: ROUTE.back - T.guess, until: 'one household'}, // the route back
         {
           type: 'statement',
           cue: 'one household',
@@ -336,6 +363,9 @@ export const spec: VideoSpec = {
         ],
         sleep: {who: 'you', pushAt: 4.2, pushDuration: 1.0}, // TIMED: after "Wi-Fi." (54.40); locks 6 frames before the end
       },
+      // the lock click on the lock frame (6 frames, 0.2 s, before the end; the click's transient is at the
+      // file's start)
+      overlays: [{type: 'sfx', name: 'click', at: -0.2, volume: -6}],
     },
   ],
 };

@@ -16,6 +16,8 @@ src/
     transcript.json     word timings, GENERATED, never hand-edit
     sources.md          every claim in the script, with its source and status
     publish.md          titles, description with sources, hashtags (made by the publisher)
+    music.txt           optional: ElevenLabs music prompt (mood, instruments, tempo; no artist names)
+    audio-log.md        generation record for every ElevenLabs music/SFX file, GENERATED, never hand-edit
   videos/index.ts       registry: every video, one Remotion composition each
   scenes/               full-frame scenes (registered in scenes/index.ts)
   three/                reusable 3D parts (Stage, CameraRig, Mannequin, Arc, ...)
@@ -36,12 +38,21 @@ out/                    renders and stills (git-ignored)
   Uses `performance.txt` (script words + `[tags]`/ellipses) when present, and `voice.json` for the voice.
   `--take` writes to `out/voices/<slug>/` instead of the live files
 - `yarn voiceover:use <slug> <name>`: copy a saved take into place (free)
+- `yarn music <slug> --take <name> [--prompt "..."] [--seconds N] [--dry-run]`: ElevenLabs instrumental bed into
+  `out/music/<slug>/<name>.mp3` (costs money, ask first). Prompt from `music.txt`; length defaults to the video's rendered
+  duration, rounded up
+- `yarn music:use <slug> <name>`: copy a saved music take to `public/<slug>/music.mp3` (free)
+- `yarn sfx <slug> <name> --prompt "..." [--seconds N] [--take <t>] [--dry-run]`: one ElevenLabs sound effect into
+  `public/<slug>/sfx/<name>.mp3` (costs money, ask first)
+- `yarn sfx:click <slug> [--name click] [--force]`: self-made phone-lock click (free, deterministic)
+- `yarn voice:room <slug> [--wet <dB>] [--size <0..1>] [--width <0..1>] [--out <name>]`: optional light room on the
+  voiceover (free, local). Not the default: the owner prefers the dry voice
 - `yarn transcribe <slug> [audio]`: Scribe v2 timings from a human recording (costs money, ask first)
 - `yarn voices [--search x]`: list ElevenLabs voices (free)
 - `yarn from-whisper <slug> <whisper.json>`: legacy local-Whisper timings
 - `yarn check [slug]`: resolve all cues, flag stale transcripts and too-short scenes
 - `yarn stills <slug>`: one PNG per scene in `out/<slug>/stills/` (read them to review layout)
-- `yarn render <slug>`: final `out/<slug>.mp4`
+- `yarn render <slug> [--no-normalize] [--post-only]`: renders `out/<slug>.raw.mp4`, then loudness-normalises (-14 LUFS, -1.5 dBTP) to the final `out/<slug>.mp4`; `yarn normalize <slug>` runs only that step
 - `yarn verify`: typecheck + lint + check. Run before calling any change done.
 
 ## Rules

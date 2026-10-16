@@ -7,6 +7,7 @@ import {Captions} from './components/Captions';
 import {Chip} from './components/Chip';
 import {Counter} from './components/Counter';
 import {SearchBar} from './components/SearchBar';
+import {hasStaticFile, MusicBed, Sfx} from './components/Sound';
 import {DETAIL_FADE, DetailBox} from './components/DetailBox';
 import {FULLSCREEN_FADE, FullScreen} from './components/FullScreen';
 import {NameTag, TAG_FADE} from './components/NameTag';
@@ -31,7 +32,14 @@ import {findCue, resolveTimeline, type ResolvedOverlay, type ResolvedScene} from
 import type {Word} from './types';
 import {VIDEOS} from './videos';
 
-export type ExplainerProps = {videoId: string};
+export type ExplainerProps = {
+  videoId: string;
+  /**
+   * Music audition only (`music.audition` in the spec): take name → on/off, shown as checkboxes in the
+   * Studio props panel. Unticked takes are muted. Ignored by renders and stills (first take only).
+   */
+  musicAudition?: Record<string, boolean>;
+};
 
 const getVideo = (videoId: string) => {
   const entry = VIDEOS[videoId];
@@ -179,6 +187,9 @@ const Overlay: React.FC<{o: ResolvedOverlay; scene: SceneContext}> = ({o, scene}
       return <DetailBox {...o} mood={mood} scene={scene} />;
     case 'screen':
       return <FullScreen {...o} mood={mood} scene={scene} />;
+    case 'sfx':
+      // sounds play outside the scene's layers (see SceneSounds), so a click can outlast the cut
+      return null;
     default:
       return null;
   }
@@ -202,10 +213,16 @@ const Watermark: React.FC<{text: string}> = ({text}) => (
   </div>
 );
 
-export const Explainer: React.FC<ExplainerProps> = ({videoId}) => {
+/** Absolute start frame of a sound effect: its cue or `at`; a negative `at` counts back from the cut. */
+const sfxStart = (o: ResolvedOverlay, s: ResolvedScene) =>
+  o.type === 'sfx' && !o.cue && (o.at ?? 0) < 0
+    ? Math.min(s.endFrame - 1, Math.max(s.startFrame, s.endFrame + Math.round((o.at ?? 0) * FPS)))
+    : o.startFrame;
+
+export const Explainer: React.FC<ExplainerProps> = ({videoId, musicAudition}) => {
   const result = useMemo(() => safeTimelineFor(videoId), [videoId]);
   if (!result.timeline) return <ErrorCard videoId={videoId} message={result.error} />;
-  return <ExplainerBody videoId={videoId} timeline={result.timeline} />;
+  return <ExplainerBody videoId={videoId} timeline={result.timeline} musicAudition={musicAudition} />;
 };
 
 /** Where content starts (in) or ends (out) for a moving transition, as a fraction of the frame. */
@@ -302,9 +319,20 @@ const Transitioned: React.FC<{
 /** Frames a scene mounts ahead of its start in the Studio preview. */
 const PREMOUNT = Math.round(1.5 * FPS);
 
-const ExplainerBody: React.FC<{videoId: string; timeline: ReturnType<typeof timelineFor>}> = ({videoId, timeline}) => {
+const ExplainerBody: React.FC<{
+  videoId: string;
+  timeline: ReturnType<typeof timelineFor>;
+  musicAudition?: Record<string, boolean>;
+}> = ({videoId, timeline, musicAudition}) => {
   const {spec: video, transcript} = getVideo(videoId);
   const last = timeline.scenes.length - 1;
+  // `voice.src` overrides the voice file (same take, so the transcript timings still hold); a missing
+  // file falls back to `transcript.audio`.
+  const voiceOverride = video.voice?.src ? `${videoId}/${video.voice.src}` : null;
+  const voiceSrc = voiceOverride && hasStaticFile(voiceOverride) ? voiceOverride : transcript.audio;
+  if (voiceOverride && voiceSrc !== voiceOverride && transcript.audio) {
+    console.warn(`[sound] voice.src ${voiceOverride} missing: playing ${transcript.audio} instead.`);
+  }
   // Captions are suppressed while a statement card is up (style guide § 5, § 7).
   const quiet = useMemo(
     () =>
@@ -371,6 +399,7 @@ const ExplainerBody: React.FC<{videoId: string; timeline: ReturnType<typeof time
             <Transitioned into={plan.into[i]} out={out} span={span}>
               <Scene durationInFrames={duration} startFrame={s.startFrame} {...props} />
               {s.overlays.map((o, k) => {
+                if (o.type === 'sfx') return null;
                 const end = overlayEnd(o, s, transcript.words);
                 return (
                   <Sequence
@@ -445,7 +474,26 @@ const ExplainerBody: React.FC<{videoId: string; timeline: ReturnType<typeof time
         />
       )}
       {video.watermark ? <Watermark text={video.watermark} /> : null}
-      {transcript.audio ? <Audio src={staticFile(transcript.audio)} /> : null}
+      {voiceSrc ? <Audio src={staticFile(voiceSrc)} /> : null}
+      {video.music ? (
+        <MusicBed
+          slug={videoId}
+          music={video.music}
+          words={transcript.words}
+          durationInFrames={timeline.durationInFrames}
+          fps={FPS}
+          takes={musicAudition}
+        />
+      ) : null}
+      {timeline.scenes.flatMap((s, i) =>
+        s.overlays.map((o, k) => {
+          if (o.type !== 'sfx') return null;
+          const from = sfxStart(o, s);
+          const end = o.until === undefined ? undefined : overlayEnd(o, s, transcript.words);
+          const length = end === undefined ? timeline.durationInFrames - from : Math.max(1, end - from);
+          return <Sfx key={`sfx-${i}-${k}`} slug={videoId} o={o} from={from} length={length} fps={FPS} />;
+        }),
+      )}
     </AbsoluteFill>
   );
 };

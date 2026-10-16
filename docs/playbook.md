@@ -56,6 +56,31 @@ updates them in the same step. Before closing a rule change, grep the repo for t
   word too long). A suspicious duration means **listen**, not re-record: the owner checked "2018" and it
   was fine.
 
+### Music and sound effects (ElevenLabs)
+
+- `yarn music <slug> --take <name> [--prompt "..."] [--seconds N]`: instrumental bed into
+  `out/music/<slug>/<name>.mp3`. Prompt defaults to `src/videos/<slug>/music.txt`, length to the
+  composition duration (as Root renders it) rounded up to a whole second. `yarn music:use <slug> <name>` copies it to `public/<slug>/music.mp3` (free).
+- `yarn sfx <slug> <name> --prompt "..." [--seconds N] [--take <t>]`: one effect into
+  `public/<slug>/sfx/<name>.mp3` (`--take` writes `out/sfx/` for auditions). Existing files are never overwritten.
+- `yarn sfx:click <slug> [--name click] [--force]`: free, local. Self-made deterministic phone-lock click (0.35 s) encoded to
+  `public/<slug>/sfx/<name>.mp3`; same samples every run; refuses to overwrite without `--force`; no `audio-log.md` entry.
+- Both cost credits: ask the owner first. `--dry-run` prints the request (no key) and writes nothing; `--help`
+  lists the options.
+- Every generated file is appended to `src/videos/<slug>/audio-log.md` (date, plan, endpoint, model, prompt,
+  length, path, sha256). It is generated, never hand-edited, and committed: it is our proof in a Content ID
+  dispute and of the plan at creation. The plan is "Creator" (owner-provided; `ELEVENLABS_PLAN` overrides).
+- Licence conditions (`brand/research/music-licensing.md`): generate only while a paid plan is active (Creator+
+  for music) and not with beta features; our own generations only, never ElevenLabs' ready-made tracks or
+  community SFX; instrumental, no artist, song, label or lyrics in prompts (the script refuses obvious
+  patterns, it is not a guarantee); never register a track in Content ID, a distributor or a PRO; keep the AI
+  label on; dispute any claim at once with the log. SFX never go out as standalone files.
+
+- `yarn voice:room <slug> [--wet <dB>] [--size <0..1>] [--width <0..1>] [--out <name>]`: free, local. Adds a light
+  small-room reverb (wet -18 dB, ~15 ms predelay, RT60 ~0.4 s) to `voiceover.mp3` so the narrator sits in the
+  music's space; writes stereo `public/<slug>/voiceover-room.mp3` (input untouched, same sample length,
+  loudness matched within 0.5 LU, deterministic). Point the spec at it only when the owner prefers it; no `audio-log.md` entry.
+
 ## Staged builds
 
 - Big visual changes are built in stages, with owner-judged stills after each stage: set and cast first,
@@ -110,3 +135,7 @@ look like them?"
   question lands by ~5 s, and the title shows the question from frame 0. Check the hook at the script stage, before
   voice, by timing the first sentence. The black screen-bookend open is up for review alongside this (brand.md
   § Hook patterns, owner decision).
+
+## Loudness
+
+`yarn render` ends with a two-pass loudnorm to -14 LUFS / -1.5 dBTP (`scripts/normalize.mjs`); the raw mix is kept as `out/<slug>.raw.mp4`. A voice-led mix at about -22 LUFS can't reach -14 in linear mode without the true peak passing the limit, so loudnorm runs dynamic (pilot: -21.8 to -14.3 LUFS, -4.2 to -1.2 dBTP after AAC). Video is stream-copied; frame count and A/V sync are checked.

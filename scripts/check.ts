@@ -4,6 +4,7 @@
 //
 // usage: yarn check [slug]
 import {existsSync, readFileSync} from 'node:fs';
+import {auditionWarning, soundFiles} from '../src/components/soundMix';
 import {FADE, FPS} from '../src/theme';
 import {resolveTimeline} from '../src/timeline';
 import {VIDEOS} from '../src/videos';
@@ -50,6 +51,14 @@ for (const [slug, {spec, transcript}] of Object.entries(VIDEOS)) {
 
   if (!transcript.audio) warnings.push('no audio yet (estimated timings).');
   else if (!existsSync(`public/${transcript.audio}`)) errors.push(`audio file public/${transcript.audio} is missing.`);
+
+  const aw = auditionWarning(spec.music);
+  if (aw) warnings.push(aw);
+
+  // Music / sfx files a video asks for (missing ones are skipped in renders).
+  for (const {src, from} of soundFiles(slug, spec)) {
+    if (!existsSync(`public/${src}`)) warnings.push(`${from}: public/${src} is missing (skipped in renders).`);
+  }
 
   try {
     const tl = resolveTimeline(spec, words, FPS);
