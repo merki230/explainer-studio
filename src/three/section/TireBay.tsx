@@ -118,7 +118,7 @@ const actionsFor = (who: 'left' | 'right', beat: 'check' | 'result', rows: TireB
   if (beat === 'check') {
     return who === 'left'
       ? {acts: [{kind: 'gauge', from: 0.5, to: 1.8}, {kind: 'write', from: 2.1, to: 3.3}], looks: [{at: 2.0, hold: 0.9, row: 1, wheel: 5}]}
-      : {acts: [{kind: 'write', from: 0.3, to: 1.4}, {kind: 'gauge', from: 1.7, to: 3.0}], looks: [{at: 0.4, hold: 0.8, row: 0, wheel: 2}]};
+      : {acts: [{kind: 'write', from: 0.2, to: 1.3}, {kind: 'write', from: 2.4, to: 3.3}], looks: [{at: 1.3, hold: 0.8, row: 0, wheel: 2}]};
   }
   const top = rows[0];
   const bottom = rows[1];
@@ -128,7 +128,7 @@ const actionsFor = (who: 'left' | 'right', beat: 'check' | 'result', rows: TireB
   if (bottom && Number.isFinite(bottom.lowAt) && bottom.low.length) looks.push({at: bottom.lowAt + 0.1, hold: 1.1, row: 1, wheel: bottom.low[0]});
   return who === 'left'
     ? {acts: [{kind: 'write', from: 0.2, to: 1.5}, {kind: 'gauge', from: 1.8, to: 2.8}, {kind: 'write', from: 3.7, to: 4.8}], looks}
-    : {acts: [{kind: 'gauge', from: 0.15, to: 1.3}, {kind: 'write', from: 1.6, to: 2.8}, {kind: 'gauge', from: 3.6, to: 4.6}], looks};
+    : {acts: [{kind: 'write', from: 1.5, to: 2.6}, {kind: 'write', from: 4.1, to: 4.9}], looks};
 };
 
 /** How far into an action (0 → 1 → 0, eased in and out over 0.35 s). */
@@ -165,6 +165,8 @@ export const TireBay: React.FC<{mood: Mood; t: number} & Partial<TireBayProps>> 
       cord: new THREE.MeshStandardMaterial({color: raw(REAL.cable), roughness: 0.8}),
       clip: new THREE.MeshStandardMaterial({color: raw(REAL.labDark), roughness: 0.55}),
       sheet: new THREE.MeshStandardMaterial({color: raw(MOODS[mood].paper), roughness: 0.9}),
+      screen: new THREE.MeshBasicMaterial({color: raw(section.screenLight)}),
+      bars: new THREE.MeshBasicMaterial({color: raw(REAL.labDark)}),
     }),
     [mood],
   );
@@ -257,16 +259,16 @@ export const TireBay: React.FC<{mood: Mood; t: number} & Partial<TireBayProps>> 
         ? (['left', 'right'] as const).map((who) => {
             const spot = B.spots[who];
             const pos: V3 = [spot[0], 0, spot[1]];
-            // facing the rack's end: the left worker turned ≈ 20° from the profile toward the camera, the
-            // right one in profile (narrowest on screen, so it stays clear of the end wheels and in frame)
-            // three-quarter to the camera, facing into the rack's end
-            // the right worker more open to the camera, so its reach into the rack crosses in front of
-            // its body instead of going straight back behind it
-            const rot = who === 'left' ? 0.9 : -0.7;
+            // the left worker three-quarter to the camera, facing into the rack's end
+            // the right worker turned toward the camera, so the tablet sits in front of its body, off the rack
+            const rot = who === 'left' ? 0.9 : -0.35;
             const r = 1;
             const wheel = who === 'left' ? 0 : 7;
             const {acts, looks} = actionsFor(who, beat, rows);
-            const gK = actK(acts, 'gauge', t);
+            // the right worker reads a tablet held in both hands (no gauge); its 'write' beats are taps
+            const tab = who === 'right';
+            const gK = tab ? 0 : actK(acts, 'gauge', t);
+            const tapK = tab ? actK(acts, 'write', t) : 0;
             // the right worker has no clipboard: its 'write' beats are glances down the row, hands still
             const clip = who === 'left';
             const wK = clip ? actK(acts, 'write', t) : 0;
@@ -306,6 +308,15 @@ export const TireBay: React.FC<{mood: Mood; t: number} & Partial<TireBayProps>> 
             const gq = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), gDir);
             // the clipboard faces up and back toward the face
             const cq = new THREE.Quaternion().setFromEuler(new THREE.Euler(-1.1 + 0.5 * gK, rot, 0, 'YXZ'));
+            // tablet: both hands at its two sides, in front of the chest at reading height; a tap dips the
+            // right hand's fingers onto the screen
+            const tap = tapK * Math.max(0, Math.sin(t * 9)) * 0.03;
+            const tabletHands: [V3, V3] = [
+              [-0.13 + tapK * 0.05, 0.9 + lift - tap, 0.24 + tapK * 0.02],
+              [0.13, 0.9 + lift, 0.24],
+            ];
+            // the slate faces up and back toward the eyes
+            const tq = new THREE.Quaternion().setFromEuler(new THREE.Euler(0.75, rot, 0, 'YXZ'));
             const gestures = [
               ...acts
                 .filter((a) => a.kind === 'gauge')
@@ -325,12 +336,12 @@ export const TireBay: React.FC<{mood: Mood; t: number} & Partial<TireBayProps>> 
                   rotationY={rot}
                   seed={who === 'left' ? 'bay-a' : 'bay-b'}
                   phone={false}
-                  hands={[local(handG), local(handC)]}
+                  hands={tab ? tabletHands : [local(handG), local(handC)]}
                   stance="stand"
                   gestures={gestures}
                 />
                 {/* the pencil gauge in the right hand: a steel barrel, a dark chuck head */}
-                <group position={handG} quaternion={gq}>
+                <group position={handG} quaternion={gq} visible={!tab}>
                   <mesh position={[0, 0.09, 0]} material={mats.gauge} castShadow>
                     <cylinderGeometry args={[0.014, 0.014, 0.18, 12]} />
                   </mesh>
@@ -338,6 +349,22 @@ export const TireBay: React.FC<{mood: Mood; t: number} & Partial<TireBayProps>> 
                     <cylinderGeometry args={[0.02, 0.016, 0.035, 12]} />
                   </mesh>
                 </group>
+                {tab ? (
+                  // the tablet: a dark slate in both hands, its light screen with simple bars (neutral)
+                  <group position={toWorld([0, 0.9 + lift, 0.26])} quaternion={tq}>
+                    <mesh material={mats.clip} castShadow>
+                      <boxGeometry args={[0.24, 0.01, 0.17]} />
+                    </mesh>
+                    <mesh position={[0, 0.0055, 0]} rotation={[-Math.PI / 2, 0, 0]} material={mats.screen}>
+                      <planeGeometry args={[0.215, 0.145]} />
+                    </mesh>
+                    {[0.05, 0.08, 0.035, 0.065, 0.045].map((h, k) => (
+                      <mesh key={k} position={[-0.075 + k * 0.035, 0.006, 0.055 - h / 2]} rotation={[-Math.PI / 2, 0, 0]} material={mats.bars}>
+                        <planeGeometry args={[0.02, h]} />
+                      </mesh>
+                    ))}
+                  </group>
+                ) : null}
                 {/* the clipboard in the left hand: a dark board, a sheet, the clip */}
                 <group position={handC} quaternion={cq} visible={clip}>
                   <mesh position={[0, 0, 0.06]} material={mats.clip} castShadow>
