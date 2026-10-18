@@ -2,6 +2,12 @@
 
 Every change to `brand.md` or `style-guide.md` gets a line here: date, what changed, why (pointing to a `feedback.md` entry or a research section). Nothing changes silently.
 
+## v0.11.3 · 2026-10-18 · Real red indicators (owner decision, No. 004 onward)
+
+Owner decision of 2026-10-18, relayed by the main session (✅); value 🧪. Logged in `feedback.md` ("No. 004 · water-meter: leak-indicator colour").
+
+- **Real red indicators.** Real water meters have a red leak-indicator triangle. style-guide § 1: proposed token `leakRed` (constant table) and a new "Real red indicators" row: only red parts that are red on the real object (meter leak triangles and similar), flat (no emissive, no glow, bloom, halo, spill or dots), orange instead if the part is the hidden system. Value `#ef3957` (350°, 85%, 58%), reusing `channels.red` so the brand has one red: 28° from `#ff5b14`, 65° from `warning`, 18° below the reserved band. The A/V script's `#c62828` (0°) was adjusted: only 8° from the band and 18° from orange. Fallback `#c8203d` (same hue, darker), owner's call. § 2 Bloom row, checklist 2, header.
+
 ## v0.11.2 · 2026-10-18 · Music from the start, real-world SFX, posting time (owner decisions)
 
 Owner decisions of 2026-10-18, relayed by the main session (✅); values 🧪. Logged in `feedback.md` ("No. 003 · elevator-dispatch: sound decisions" and § Platform numbers). v0.11.1 is unchanged otherwise.

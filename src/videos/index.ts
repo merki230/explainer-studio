@@ -11,6 +11,8 @@ import {spec as tireSensor} from './tire-sensor/spec';
 import tireSensorTranscript from './tire-sensor/transcript.json';
 import {spec as elevatorDispatch} from './elevator-dispatch/spec';
 import elevatorDispatchTranscript from './elevator-dispatch/transcript.json';
+import {spec as waterMeter} from './water-meter/spec';
+import waterMeterTranscript from './water-meter/transcript.json';
 // </imports>
 
 export type VideoEntry = {spec: VideoSpec; transcript: Transcript};
@@ -26,5 +28,6 @@ export const VIDEOS: Record<string, VideoEntry> = {
   'light-to-data': {spec: lightToData, transcript: lightToDataTranscript as Transcript},
   'tire-sensor': {spec: tireSensor, transcript: tireSensorTranscript as Transcript},
   'elevator-dispatch': {spec: elevatorDispatch, transcript: elevatorDispatchTranscript as Transcript},
+  'water-meter': {spec: waterMeter, transcript: waterMeterTranscript as Transcript},
   // </entries>
 };

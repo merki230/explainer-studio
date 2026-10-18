@@ -9,6 +9,7 @@ import {WheelSliceScene} from './WheelSliceScene';
 import {CarSliceScene} from './CarSliceScene';
 import {TowerSliceScene} from './TowerSliceScene';
 import {HotelLobbyScene} from './HotelLobbyScene';
+import {StreetSliceScene} from './StreetSliceScene';
 
 /**
  * Scene registry. To add a scene: write a component that takes
@@ -26,6 +27,7 @@ export const SCENES: Record<string, React.FC<any>> = {
   'car-slice': CarSliceScene,
   'tower-slice': TowerSliceScene,
   'hotel-lobby': HotelLobbyScene,
+  'street-slice': StreetSliceScene,
 };
 
 export type SceneName =
@@ -38,4 +40,5 @@ export type SceneName =
   | 'wheel-slice'
   | 'car-slice'
   | 'tower-slice'
-  | 'hotel-lobby';
+  | 'hotel-lobby'
+  | 'street-slice';

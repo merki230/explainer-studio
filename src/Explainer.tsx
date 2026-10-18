@@ -21,6 +21,7 @@ import {wheelCameraEnd, wheelCameraStart} from './scenes/WheelSliceScene';
 import {carCameraEnd, carCameraStart} from './scenes/CarSliceScene';
 import {towerCameraEnd, towerCameraStart} from './scenes/TowerSliceScene';
 import {hotelCameraEnd, hotelCameraStart} from './scenes/HotelLobbyScene';
+import {streetCameraEnd, streetCameraStart} from './scenes/StreetSliceScene';
 import type {Framing} from './three/section/SectionCamera';
 
 type CameraFn = (p: Record<string, unknown>, durationInFrames: number, fps: number) => Framing;
@@ -32,6 +33,7 @@ const CAMERAS: Record<string, {start: CameraFn; end: CameraFn}> = {
   'car-slice': {start: carCameraStart as CameraFn, end: carCameraEnd as CameraFn},
   'tower-slice': {start: towerCameraStart as CameraFn, end: towerCameraEnd as CameraFn},
   'hotel-lobby': {start: hotelCameraStart as CameraFn, end: hotelCameraEnd as CameraFn},
+  'street-slice': {start: streetCameraStart as CameraFn, end: streetCameraEnd as CameraFn},
 };
 import {transitionInto, type Transition} from './scenes/transitions';
 import {clickOffFrame, type ClickOff} from './scenes/clickOff';

@@ -1,7 +1,13 @@
 import React, {useLayoutEffect, useRef} from 'react';
 import {continueRender, delayRender, interpolate, useCurrentFrame, useVideoConfig} from 'remotion';
 import {fonts, fontsReady} from '../fonts';
-import {headBoxOnScreen, headTopOnScreen, phoneOnScreen, screenFor, type SectionRoomSceneProps} from '../scenes/SectionRoomScene';
+import {
+  headBoxOnScreen,
+  headTopOnScreen,
+  phoneOnScreen,
+  screenFor,
+  type SectionRoomSceneProps,
+} from '../scenes/SectionRoomScene';
 import type {CastName, Mood} from '../theme';
 import {ease} from './card';
 import {drawScreen, focusRect, screenKey, SCREEN_H, SCREEN_W} from './screenKit';
@@ -10,16 +16,24 @@ import {drawCluster} from './dashboardKit';
 import {carHeadBoxOnScreen, clusterOnScreen, type CarSliceSceneProps} from '../scenes/CarSliceScene';
 import {anchorOnScreen} from './anchors';
 import {MOODS} from '../theme';
+import {StreetBox} from './streetBoxes';
 
 export type DetailBoxProps = {
-  /** Whose phone it magnifies (the scene's `ui` script for them drives what it shows); for 'dashboard', the driver. */
-  who: CastName;
+  /** Whose phone it magnifies (the scene's `ui` script for them drives what it shows); for 'dashboard', the driver. Default 'you'. */
+  who?: CastName;
   /**
    * What it shows: 'phone' (default: the holder's screen, `section-room` only) or 'dashboard' (the
    * instrument cluster of a `car-slice`: speed, a trip timer counting on, the tire-pressure light, off or
    * lit in warning yellow from the scene's `warningAt`).
    */
-  content?: 'phone' | 'dashboard' | 'keypad';
+  content?: 'phone' | 'dashboard' | 'keypad' | 'laptop' | 'usage' | 'register';
+  /** 'usage' (street-slice): seconds after the box enters when the "Possible leak" banner gives way to the hourly page (default 1.2; 0 = the page at once). */
+  pageAt?: number;
+  /** 'usage': seconds after the box enters when the hourly bars start drawing (default `pageAt` + 0.3), and how long (default 1.2). */
+  barsAt?: number;
+  barsFor?: number;
+  /** 'register': the odometer digits (default '01462', 🎭). */
+  reading?: string;
   /** 'keypad': the floor typed (default '9', 🎭 illustrative). */
   floor?: string;
   /** 'keypad': the car the answer screen names (default 'C', 🎭 illustrative). */
@@ -63,14 +77,22 @@ const BORDER = 4;
 type SceneCtx = {props: Partial<SectionRoomSceneProps>; durationInFrames: number; offset: number; name?: string};
 
 export const DetailBox: React.FC<DetailBoxProps & {mood?: Mood; scene: SceneCtx}> = (p) =>
-  p.content === 'dashboard' ? <DashboardBox {...p} /> : p.content === 'keypad' ? <KeypadBox {...p} /> : <PhoneBox {...p} />;
+  p.content === 'laptop' || p.content === 'usage' || p.content === 'register' ? (
+    <StreetBox {...p} content={p.content} scene={{...p.scene, props: p.scene.props as Record<string, unknown>}} />
+  ) : p.content === 'dashboard' ? (
+    <DashboardBox {...p} />
+  ) : p.content === 'keypad' ? (
+    <KeypadBox {...p} />
+  ) : (
+    <PhoneBox {...p} />
+  );
 
 const PhoneBox: React.FC<
   DetailBoxProps & {
     mood?: Mood;
     scene: SceneCtx;
   }
-> = ({who, crop = 'auto', size = 336, side, top, left: leftAt, leader = true, mood = 'day', scene}) => {
+> = ({who = 'you', crop = 'auto', size = 336, side, top, left: leftAt, leader = true, mood = 'day', scene}) => {
   const frame = useCurrentFrame();
   const {fps, width, height} = useVideoConfig();
   const ref = useRef<HTMLCanvasElement>(null);
@@ -129,8 +151,7 @@ const PhoneBox: React.FC<
   // 45° diagonal into the phone, stopping 12 px short as before.
   const CLEAR = 24;
   const [hx0, hx1, hy0, hy1] = headBox;
-  const nearHead =
-    phone[0] > hx0 - CLEAR && phone[0] < hx1 + CLEAR && hy1 > by && hy0 < phone[1];
+  const nearHead = phone[0] > hx0 - CLEAR && phone[0] < hx1 + CLEAR && hy1 > by && hy0 < phone[1];
   if (under && nearHead) {
     const away = (hx0 + hx1) / 2 > phone[0] ? -1 : 1;
     const edge = away < 0 ? hx0 - CLEAR : hx1 + CLEAR;
@@ -197,16 +218,16 @@ const PhoneBox: React.FC<
 };
 
 /** The tab and frame shared by both contents. */
-const Frame: React.FC<{left: number; top: number; w: number; h: number; ink: string; paper: string; rise: number; children: React.ReactNode}> = ({
-  left,
-  top,
-  w,
-  h,
-  ink,
-  paper,
-  rise,
-  children,
-}) => (
+const Frame: React.FC<{
+  left: number;
+  top: number;
+  w: number;
+  h: number;
+  ink: string;
+  paper: string;
+  rise: number;
+  children: React.ReactNode;
+}> = ({left, top, w, h, ink, paper, rise, children}) => (
   <div style={{position: 'absolute', left, top, transform: `translateY(${rise}px)`}}>
     <div
       style={{
@@ -247,7 +268,7 @@ const Frame: React.FC<{left: number; top: number; w: number; h: number; ink: str
  * Only in a `car-slice` scene.
  */
 const DashboardBox: React.FC<DetailBoxProps & {mood?: Mood; scene: SceneCtx}> = ({
-  who,
+  who = 'you',
   size = 360,
   side,
   top,
@@ -319,7 +340,12 @@ const DashboardBox: React.FC<DetailBoxProps & {mood?: Mood; scene: SceneCtx}> = 
  * with that key pressed), then the answer (the floor, "Go to", a large `ink` car letter with an arrow).
  * No maker's look; text ≥ 28 px. A 2 px `ink` elbow leader to the keypad's screen.
  */
-export const drawKeypad = (cx: CanvasRenderingContext2D, w: number, h: number, o: {floor: string; car: string; answer: boolean; ink: string; sub: string}) => {
+export const drawKeypad = (
+  cx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  o: {floor: string; car: string; answer: boolean; ink: string; sub: string},
+) => {
   const ui = MOODS.day.ui;
   cx.setTransform(1, 0, 0, 1, 0, 0);
   cx.fillStyle = ui;
@@ -423,7 +449,10 @@ const KeypadBox: React.FC<DetailBoxProps & {mood?: Mood; scene: SceneCtx}> = ({
     // `key` captures everything the drawing depends on
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
-  const target = anchorOnScreen({...scene, props: scene.props as Record<string, unknown>}, 'keypad', frame, fps) ?? [width / 2, height / 2];
+  const target = anchorOnScreen({...scene, props: scene.props as Record<string, unknown>}, 'keypad', frame, fps) ?? [
+    width / 2,
+    height / 2,
+  ];
   const outerW = innerW + 2 * BORDER;
   const outerH = innerH + 2 * BORDER;
   const onLeft = (side ?? (target[0] > width / 2 ? 'left' : 'right')) === 'left';

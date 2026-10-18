@@ -101,6 +101,12 @@ export const section = {
    * bloomed, never orange. Same value as the light channels' yellow.
    */
   warning: '#eedd2b',
+  /**
+   * A water meter's leak (low-flow) triangle (No. 004; brand-director, 2026-10-18): the real object's red,
+   * outside the reserved band. Same value as the light channels' red. Flat: no emissive, glow or bloom;
+   * it may spin, never pulse.
+   */
+  leakRed: '#ef3957',
 };
 
 type Lamp = {light: string; intensity: number; reach: number; shade: string; glow: string; glowIntensity: number};
@@ -459,6 +465,65 @@ export const TOWER = {
   paper: '#e4e1d8',
   /** Car floor: dark granite tile with paler flecks. */
   carFloorFleck: '#5b5e64',
+};
+
+/**
+ * The street slice (No. 004): a residential street cut square to the road through a meter box, the
+ * meter, its radio and lid antenna, a utility pickup, the receivers. Real materials, the same in both
+ * moods; nothing here is the system and nothing sits in the reserved band (bronze and brass stay under
+ * 60% saturation, the centre line is a muted yellow at hue ≈ 49°, no amber lamps).
+ */
+export const STREET = {
+  /** Road surface, its paint (muted yellow centre line, white edge), the kerb and sidewalk concrete. */
+  asphalt: '#5c5f64',
+  centreLine: '#cdb85a',
+  edgeLine: '#dedcd4',
+  concrete: '#c9c5bd',
+  /** Lawn and park strip; the gravel bed in the meter pit. */
+  grass: '#7d9a5e',
+  grassDark: '#62804a',
+  gravel: '#9a958c',
+  /** The meter box (composite, dark grey), its lid and the lid's embossed lettering. */
+  box: '#4a4d52',
+  lid: '#3a3c40',
+  lidEmboss: '#55585e',
+  /** The lid antenna's black cap and its threaded stem. */
+  cap: '#17181a',
+  stem: '#2a2c30',
+  /** The meter: cast bronze body (desaturated), brass couplings, the register's black housing, dial face, ink. */
+  bronze: '#8c7b5c',
+  bronzeDark: '#6e614a',
+  brassNut: '#a8955f',
+  register: '#232528',
+  dial: '#e9e7e0',
+  dialInk: '#1e1f22',
+  /** The radio module (grey potting), its label, the coax and three-wire cable (black). */
+  radio: '#7d828a',
+  radioLabel: '#d8d9d3',
+  cable: '#1c1d20',
+  /** Service pipe (black poly) and the water main (ductile iron, blue-grey); the main's water. */
+  poly: '#2b2d31',
+  main: '#4f5966',
+  water: '#7d97ad',
+  /** The utility pickup: white paint, black trim and bumpers, unlit lamps (clear; dark red tails). */
+  truck: '#e4e5e1',
+  truckTrim: '#2a2c30',
+  lamp: '#dfe3e8',
+  tailLamp: '#6e2a2c',
+  /** The rugged laptop (dark grey shell). */
+  laptop: '#3a3d42',
+  /** Utility pole (weathered wood), the receiver box (grey), the water tank (pale steel). */
+  pole: '#7a6c5c',
+  receiverBox: '#9ea2a8',
+  tank: '#cfd3d6',
+  /** Neighbours' houses: sidings and roofs (neutral). */
+  sidings: ['#ddd7cb', '#bec8ce', '#d2c9b6', '#c9ccc4'],
+  roof: '#5b5e63',
+  /** The faucet's water stream (pale, neutral, translucent; never glows). */
+  stream: '#d6e3ec',
+  /** Kitchen: counter top, cabinets. */
+  counter: '#cfccc5',
+  cabinet: '#e3dfd5',
 };
 
 /**

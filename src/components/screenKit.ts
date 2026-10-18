@@ -15,7 +15,7 @@ import {section, type Mood} from '../theme';
 export const SCREEN_W = 360;
 export const SCREEN_H = 686;
 
-export type ScreenApp = 'lock' | 'notification' | 'search' | 'results' | 'feed' | 'assistant';
+export type ScreenApp = 'lock' | 'notification' | 'search' | 'results' | 'feed' | 'assistant' | 'usage';
 
 /** One step of a phone's screen script: from `at` (seconds into the scene) the phone shows `app`. */
 export type ScreenStep = {
@@ -37,7 +37,18 @@ export type ScreenStep = {
    * system's orange: only when the story says the mic is the hidden system). Default off.
    */
   mic?: 'off' | 'on' | 'system';
+  /** usage: seconds after `at` when the 24 hourly bars start drawing, left to right (default 0.3), and how long they take (default 1.2). */
+  barsAt?: number;
+  barsFor?: number;
+  /** usage: the 24 hourly values (gallons, 🎭 illustrative; default a day whose overnight hours never reach zero). */
+  hours?: number[];
 };
+
+/** A day of hourly water use (gallons, 🎭): overnight a steady floor above zero (a small leak), morning and evening peaks. */
+export const DEFAULT_HOURS = [
+  1.4, 1.3, 1.4, 1.3, 1.4, 1.5, 6.8, 9.5, 5.2, 2.4, 2.1, 2.6, 3.4, 2.2, 1.9, 2.3, 2.8, 4.6, 7.9, 6.1, 3.8, 3.1, 2.0,
+  1.5,
+];
 
 /** Everything the drawing needs at one instant. */
 export type ScreenState = {
@@ -59,6 +70,9 @@ export type ScreenState = {
   mic: 'off' | 'on' | 'system';
   /** Seconds since this step started (drives the assistant's waveform). */
   local: number;
+  /** usage: how far the bars have drawn (0–1, left to right) and the values. */
+  bars: number;
+  hours: number[];
 };
 
 const ease = (x: number, a: number, b: number) =>
@@ -95,7 +109,17 @@ export const screenStateAt = (
   } else if (s.app === 'feed') {
     const adAt = s.adAt ?? 0.5;
     enter = ease(local, adAt, adAt + 0.45);
+  } else if (s.app === 'usage') {
+    enter = ease(local, 0, 0.35);
   }
+  const barsAt = s.barsAt ?? 0.3;
+  const bars =
+    s.app === 'usage'
+      ? interpolate(local, [barsAt, barsAt + (s.barsFor ?? 1.2)], [0, 1], {
+          extrapolateLeft: 'clamp',
+          extrapolateRight: 'clamp',
+        })
+      : 0;
   const mark = s.app === 'feed' && s.markAt !== undefined ? ease(t, s.markAt, s.markAt + 0.3) : 0;
   return {
     app: s.app,
@@ -111,6 +135,8 @@ export const screenStateAt = (
     text: s.text ?? (s.app === 'assistant' ? 'Waiting for the wake word' : 'New deals picked for you'),
     mic: s.mic ?? 'off',
     local,
+    bars,
+    hours: s.hours ?? DEFAULT_HOURS,
   };
 };
 
@@ -128,6 +154,8 @@ export const screenKey = (s: ScreenState) =>
     s.text,
     s.mic,
     s.app === 'assistant' ? Math.round(s.local * 30) : 0,
+    s.bars.toFixed(3),
+    s.hours.join(','),
   ].join('|');
 
 /** Night: dark UI; Day: light UI (§ 8 kit). Neutral accents only. */
@@ -444,6 +472,53 @@ export const drawScreen = (cx: CanvasRenderingContext2D, s: ScreenState, full = 
       }
       cx.globalAlpha = 1;
     }
+  } else if (s.app === 'usage') {
+    statusBar(cx, s, p, f);
+    // a generic utility account page: yesterday's use, hour by hour (text ≥ 30 screen units, so ≥ 28 px in the box)
+    cx.globalAlpha = s.enter;
+    header(cx, 'Water use', p, 82, 20);
+    cx.fillStyle = p.sub;
+    cx.font = font(600, 28);
+    cx.textBaseline = 'middle';
+    cx.fillText('Yesterday, by hour', 20, 124);
+    const top = 160;
+    const base = 400;
+    const max = Math.max(...s.hours) * 1.08;
+    const bw = 332 / 24;
+    const lowest = Math.min(...s.hours);
+    // the overnight floor: a dashed rule at the lowest hour
+    const fy = base - (lowest / max) * (base - top);
+    cx.strokeStyle = p.sub;
+    cx.lineWidth = 2;
+    cx.setLineDash([6, 6]);
+    cx.beginPath();
+    cx.moveTo(14, fy);
+    cx.lineTo(346, fy);
+    cx.stroke();
+    cx.setLineDash([]);
+    s.hours.forEach((v, i) => {
+      const k = Math.max(0, Math.min(1, s.bars * 24 - i));
+      if (k <= 0) return;
+      const hgt = (v / max) * (base - top) * k;
+      cx.fillStyle = p.text;
+      cx.fillRect(14 + i * bw + 1.5, base - hgt, bw - 3, hgt);
+    });
+    cx.fillStyle = p.line;
+    cx.fillRect(14, base, 332, 2);
+    cx.fillStyle = p.sub;
+    cx.font = font(600, 30);
+    cx.textAlign = 'left';
+    cx.fillText('12a', 14, base + 30);
+    cx.textAlign = 'center';
+    cx.fillText('6a', 14 + bw * 6, base + 30);
+    cx.fillText('12p', 14 + bw * 12, base + 30);
+    cx.fillText('6p', 14 + bw * 18, base + 30);
+    cx.textAlign = 'left';
+    cx.fillStyle = p.text;
+    cx.font = font(700, 30);
+    cx.globalAlpha = s.enter * Math.max(0, Math.min(1, s.bars * 24 - 4));
+    cx.fillText(`Never below ${lowest.toFixed(1)} gal`, 20, 476);
+    cx.globalAlpha = 1;
   } else if (s.app === 'feed') {
     statusBar(cx, s, p, f);
     // full-frame: the header fades out (it would sit above y 520 of the frame)
@@ -520,6 +595,7 @@ export const focusRect = (s: ScreenState): [number, number, number, number] => {
   if (s.app === 'lock') return [0, 80, 360, 300];
   if (s.app === 'notification') return [0, 150, 360, 320];
   if (s.app === 'assistant') return [0, 0, 360, 520];
+  if (s.app === 'usage') return [0, 50, 360, 450];
   return [0, 40, 360, 360]; // search, results: the field and what's under it
 };
 

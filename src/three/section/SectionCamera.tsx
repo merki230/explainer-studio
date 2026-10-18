@@ -119,7 +119,9 @@ export const SectionCamera: React.FC<{
    * flicker while the camera moves. Default off (the room-sized slices keep the stage's planes).
    */
   fitClip?: boolean;
-}> = ({from, to, durationInFrames, drift = 0, clockOffset = 0, pre, post, fitClip = false}) => {
+  /** With `fitClip`: the far plane at least this far (a backdrop or a long street behind the subject). */
+  farMin?: number;
+}> = ({from, to, durationInFrames, drift = 0, clockOffset = 0, pre, post, fitClip = false, farMin = 0}) => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera;
@@ -129,7 +131,7 @@ export const SectionCamera: React.FC<{
   if (fitClip) {
     const d = position.distanceTo(look);
     camera.near = Math.max(0.1, d * 0.15);
-    camera.far = d * 2 + 200;
+    camera.far = Math.max(d * 2 + 200, farMin);
   }
   camera.updateProjectionMatrix();
   return null;
