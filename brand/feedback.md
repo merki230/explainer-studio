@@ -22,10 +22,16 @@ One row per video, platform and snapshot; add new rows at the bottom, never over
 | No. 002 `tire-sensor` | 81 s | TikTok | 2026-10-17, about 19:00, owner's local time (America/Chicago, confirmed by the owner 2026-10-18) | ≈ 12 h (2026-10-17/18) | 12.5K | 205 | 11 | 25.7 s | 32% | full 5.57% · retention 32% | / | total play 91h23m49s |
 | No. 002 `tire-sensor` | 81 s | Instagram | 2026-10-17, about 19:00, owner's local time (America/Chicago, confirmed by the owner 2026-10-18) | ≈ 12 h | 2,148 | 38 | 2 | 36 s | 44% | / | skip 18.1% | 2 reposts |
 | No. 002 `tire-sensor` | 81 s | YouTube Shorts | 2026-10-17, about 19:00, owner's local time (America/Chicago, confirmed by the owner 2026-10-18) | ≈ 12 h | 1,195 | 23 | / | 0:38 | 47% | / | swiped away 28% | total watch time "8.9" (unit not shown, probably hours) |
+| No. 003 `elevator-dispatch` | 92.9 s | TikTok | 2026-10-18, 12:00 PM, America/Chicago | pending | pending | pending | pending | pending | pending | pending | pending | midday slot |
+| No. 003 `elevator-dispatch` | 92.9 s | Instagram | 2026-10-18, 12:00 PM, America/Chicago | pending | pending | pending | pending | pending | pending | pending | pending | midday slot |
+| No. 003 `elevator-dispatch` | 92.9 s | YouTube Shorts | 2026-10-18, 12:00 PM, America/Chicago | pending | pending | pending | pending | pending | pending | pending | pending | midday slot |
+| No. 004 `water-meter` | 61.8 s | all (planned) | planned: next week (week of 2026-10-19), about 7 PM, America/Chicago | not yet posted | / | / | / | / | / | / | / | evening slot; also tests length (≈ 62 s vs 81 s and 93 s) and H5 |
 
 Reading notes: YouTube views include replays (P§4). TikTok's "retention 32%" matches its average watch ÷ length, so it's probably the same figure, not a separate one. YouTube's "8.9" doesn't square with its average: 8.9 h ÷ 1,195 views ≈ 27 s, not 38 s; confirm the unit (or the denominator YouTube uses) at the 72 h snapshot.
 
-**Posting time is a variable to test** (owner, 2026-10-18). No. 002 went out in the evening (about 19:00 local; the time zone, America/Chicago, is unconfirmed: owner to confirm). Over the next videos, compare a midday post against an evening post, same snapshot times, and note the time in "Posted at" for every row. One video per slot is not enough to conclude anything; no rule until several posts per slot are in.
+**Posting time is a variable to test** (owner, 2026-10-18). No. 002 went out in the evening (about 19:00 local; America/Chicago, confirmed by the owner 2026-10-18). Over the next videos, compare a midday post against an evening post, same snapshot times, and note the time in "Posted at" for every row. One video per slot is not enough to conclude anything; no rule until several posts per slot are in.
+
+First two data points: No. 002 (evening, about 7 PM, 2026-10-17) and No. 003 (midday, 12:00 PM, 2026-10-18), both America/Chicago. No. 004 is planned for the evening slot (about 7 PM, next week). Caveat: these also differ in length (81 s, 92.9 s, 61.8 s) and topic (No. 004 is an H5 hidden-tech video), so time of day is not the only variable between them.
 
 ---
 
