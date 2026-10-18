@@ -33,6 +33,8 @@ const SECTION_DEFAULT_LOCATION: Record<string, string> = {
   'phone-cutaway': 'phone-cutaway',
   'wheel-slice': 'wheel',
   'car-slice': 'car',
+  'tower-slice': 'tower',
+  'hotel-lobby': 'hotel',
 };
 
 /** The transition into `cur` from `prev` (its `transition` prop, or the 'auto' rules). */

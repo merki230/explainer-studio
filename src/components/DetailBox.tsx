@@ -8,6 +8,8 @@ import {drawScreen, focusRect, screenKey, SCREEN_H, SCREEN_W} from './screenKit'
 import {LEFT, overlayInk, RIGHT} from './sectionStyle';
 import {drawCluster} from './dashboardKit';
 import {carHeadBoxOnScreen, clusterOnScreen, type CarSliceSceneProps} from '../scenes/CarSliceScene';
+import {anchorOnScreen} from './anchors';
+import {MOODS} from '../theme';
 
 export type DetailBoxProps = {
   /** Whose phone it magnifies (the scene's `ui` script for them drives what it shows); for 'dashboard', the driver. */
@@ -17,7 +19,13 @@ export type DetailBoxProps = {
    * instrument cluster of a `car-slice`: speed, a trip timer counting on, the tire-pressure light, off or
    * lit in warning yellow from the scene's `warningAt`).
    */
-  content?: 'phone' | 'dashboard';
+  content?: 'phone' | 'dashboard' | 'keypad';
+  /** 'keypad': the floor typed (default '9', 🎭 illustrative). */
+  floor?: string;
+  /** 'keypad': the car the answer screen names (default 'C', 🎭 illustrative). */
+  car?: string;
+  /** 'keypad': seconds after the box enters when the screen turns to the answer (default 1.5). */
+  answerAt?: number;
   /** 'dashboard': force the tire light on or off (default: the scene's `warningAt`). */
   warning?: boolean;
   /** 'dashboard': the trip timer's value at the scene's start, seconds (default 760, "12:40"); it counts on. */
@@ -55,7 +63,7 @@ const BORDER = 4;
 type SceneCtx = {props: Partial<SectionRoomSceneProps>; durationInFrames: number; offset: number; name?: string};
 
 export const DetailBox: React.FC<DetailBoxProps & {mood?: Mood; scene: SceneCtx}> = (p) =>
-  p.content === 'dashboard' ? <DashboardBox {...p} /> : <PhoneBox {...p} />;
+  p.content === 'dashboard' ? <DashboardBox {...p} /> : p.content === 'keypad' ? <KeypadBox {...p} /> : <PhoneBox {...p} />;
 
 const PhoneBox: React.FC<
   DetailBoxProps & {
@@ -285,6 +293,142 @@ const DashboardBox: React.FC<DetailBoxProps & {mood?: Mood; scene: SceneCtx}> = 
   // above the head (or the cluster), inside the safe zone
   const above = Math.min(target[1], headBox ? headBox[2] : target[1]);
   const boxTop = top ?? Math.max(328, Math.min(1248 - outerH, above - 70 - outerH));
+  const enter = ease(frame, 0, DETAIL_FADE);
+  const rise = interpolate(enter, [0, 1], [8, 0]);
+  const by = boxTop + outerH;
+  const lx = onLeft ? left + outerW - 28 : left + 28;
+  const px = target[0] + (lx < target[0] ? -12 : 12);
+  const points = `${lx},${by} ${lx},${target[1]} ${px},${target[1]}`;
+  return (
+    <div style={{position: 'absolute', inset: 0, opacity: enter}}>
+      {leader ? (
+        <svg width={width} height={height} style={{position: 'absolute', inset: 0}}>
+          <polyline points={points} fill="none" stroke={ink} strokeWidth={2} strokeLinejoin="miter" />
+        </svg>
+      ) : null}
+      <Frame left={left} top={boxTop} w={outerW} h={outerH} ink={ink} paper={paper} rise={rise}>
+        <canvas ref={ref} width={innerW} height={innerH} style={{display: 'block', width: innerW, height: innerH}} />
+      </Frame>
+    </div>
+  );
+};
+
+/**
+ * The keypad screen as its user sees it (No. 003, `hotel-lobby`): a light, generic destination-dispatch
+ * UI. First the entry (a "Select your floor" prompt, the floor typed in the field, a 3 × 4 digit grid
+ * with that key pressed), then the answer (the floor, "Go to", a large `ink` car letter with an arrow).
+ * No maker's look; text ≥ 28 px. A 2 px `ink` elbow leader to the keypad's screen.
+ */
+export const drawKeypad = (cx: CanvasRenderingContext2D, w: number, h: number, o: {floor: string; car: string; answer: boolean; ink: string; sub: string}) => {
+  const ui = MOODS.day.ui;
+  cx.setTransform(1, 0, 0, 1, 0, 0);
+  cx.fillStyle = ui;
+  cx.fillRect(0, 0, w, h);
+  const pad = 20;
+  cx.textBaseline = 'alphabetic';
+  if (!o.answer) {
+    cx.fillStyle = o.sub;
+    cx.font = `600 28px ${fonts.sans}`;
+    cx.textAlign = 'left';
+    cx.fillText('Select your floor', pad, 46);
+    // the field with the typed floor and a cursor
+    const fy = 64;
+    const fh = 84;
+    cx.strokeStyle = o.ink;
+    cx.lineWidth = 3;
+    cx.strokeRect(pad + 1.5, fy + 1.5, w - 2 * pad - 3, fh - 3);
+    cx.fillStyle = o.ink;
+    cx.font = `700 64px ${fonts.sans}`;
+    cx.fillText(o.floor, pad + 20, fy + 64);
+    const tw = cx.measureText(o.floor).width;
+    cx.fillRect(pad + 26 + tw, fy + 16, 4, fh - 32);
+    // the digit grid
+    const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', ''];
+    const gy = fy + fh + 16;
+    const gap = 8;
+    const kw = (w - 2 * pad - 2 * gap) / 3;
+    const kh = (h - gy - pad - 3 * gap) / 4;
+    cx.textAlign = 'center';
+    cx.font = `700 30px ${fonts.sans}`;
+    keys.forEach((k, i) => {
+      if (!k) return;
+      const x = pad + (i % 3) * (kw + gap);
+      const y = gy + Math.floor(i / 3) * (kh + gap);
+      const on = k === o.floor.slice(-1);
+      cx.fillStyle = on ? o.ink : '#e6e7ea';
+      cx.fillRect(x, y, kw, kh);
+      cx.fillStyle = on ? ui : o.ink;
+      cx.fillText(k, x + kw / 2, y + kh / 2 + 11);
+    });
+    return;
+  }
+  cx.textAlign = 'left';
+  cx.fillStyle = o.sub;
+  cx.font = `600 28px ${fonts.sans}`;
+  cx.fillText(`Floor ${o.floor}`, pad, 46);
+  cx.fillStyle = o.ink;
+  cx.font = `700 34px ${fonts.sans}`;
+  cx.fillText('Go to elevator', pad, 96);
+  // the letter in a square, an arrow pointing to it
+  const s = Math.min(w - 2 * pad - 110, h - 140);
+  const bx = w - pad - s;
+  const by = 120;
+  cx.strokeStyle = o.ink;
+  cx.lineWidth = 6;
+  cx.strokeRect(bx + 3, by + 3, s - 6, s - 6);
+  cx.textAlign = 'center';
+  cx.font = `800 ${Math.round(s * 0.78)}px ${fonts.display}`;
+  cx.fillText(o.car, bx + s / 2, by + s * 0.79);
+  const ay = by + s / 2;
+  cx.lineWidth = 10;
+  cx.beginPath();
+  cx.moveTo(pad + 4, ay);
+  cx.lineTo(bx - 20, ay);
+  cx.stroke();
+  cx.beginPath();
+  cx.moveTo(bx - 44, ay - 26);
+  cx.lineTo(bx - 16, ay);
+  cx.lineTo(bx - 44, ay + 26);
+  cx.stroke();
+};
+
+const KeypadBox: React.FC<DetailBoxProps & {mood?: Mood; scene: SceneCtx}> = ({
+  size = 336,
+  side,
+  top,
+  left: leftAt,
+  leader = true,
+  floor = '9',
+  car = 'C',
+  answerAt = 1.5,
+  mood = 'day',
+  scene,
+}) => {
+  const frame = useCurrentFrame();
+  const {fps, width, height} = useVideoConfig();
+  const ref = useRef<HTMLCanvasElement>(null);
+  const answer = frame / fps >= answerAt;
+  const innerW = size;
+  const innerH = Math.round(size * 1.18);
+  const {ink, paper} = overlayInk(mood);
+  const key = `${answer}|${floor}|${car}|${innerW}`;
+  useLayoutEffect(() => {
+    const handle = delayRender('Drawing the keypad box');
+    fontsReady().then(() => {
+      const cx = ref.current?.getContext('2d');
+      // the screen is a Day UI in both moods (a lit screen), so its ink is the Day ink
+      if (cx) drawKeypad(cx, innerW, innerH, {floor, car, answer, ink: MOODS.day.ink, sub: MOODS.day.inkSub});
+      continueRender(handle);
+    });
+    // `key` captures everything the drawing depends on
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
+  const target = anchorOnScreen({...scene, props: scene.props as Record<string, unknown>}, 'keypad', frame, fps) ?? [width / 2, height / 2];
+  const outerW = innerW + 2 * BORDER;
+  const outerH = innerH + 2 * BORDER;
+  const onLeft = (side ?? (target[0] > width / 2 ? 'left' : 'right')) === 'left';
+  const left = leftAt ?? (onLeft ? LEFT : RIGHT - outerW);
+  const boxTop = top ?? Math.max(328, Math.min(1248 - outerH, target[1] - 160 - outerH));
   const enter = ease(frame, 0, DETAIL_FADE);
   const rise = interpolate(enter, [0, 1], [8, 0]);
   const by = boxTop + outerH;

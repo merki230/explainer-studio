@@ -56,6 +56,8 @@ export const Statement: React.FC<StatementProps & {mood?: Mood}> = ({
         color: overlayInk(mood).ink,
         textShadow: paperHalo(mood, 32),
         textAlign: 'left',
+        // a `\n` in the text breaks the line (single-line statements are unchanged)
+        whiteSpace: 'pre-line',
       }}
     >
       {text}

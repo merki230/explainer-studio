@@ -24,7 +24,9 @@ export const SectionStage: React.FC<{
   post?: Partial<PostSettings>;
   /** Screen-space ambient occlusion at the mood's strength (`MOODS.ao`; realism pass). Default off. */
   ao?: boolean;
-}> = ({mood, palette, children, fov = 26, post, ao = false}) => {
+  /** Far clipping plane (default 80); a whole building framed from far back needs more. */
+  far?: number;
+}> = ({mood, palette, children, fov = 26, post, ao = false, far = 80}) => {
   const {width, height} = useVideoConfig();
   const m = palette ?? MOODS[mood];
   const bg = useMemo(() => new THREE.Color(), []);
@@ -35,7 +37,7 @@ export const SectionStage: React.FC<{
       height={height}
       shadows="soft"
       gl={{antialias: false}}
-      camera={{fov, near: 0.1, far: 80, position: [4.6, 3.6, 8.6]}}
+      camera={{fov, near: 0.1, far, position: [4.6, 3.6, 8.6]}}
       style={{backgroundColor: m.bg}}
     >
       <primitive attach="background" object={bg} />
@@ -67,7 +69,13 @@ export const SectionLights: React.FC<{
   lamp?: number;
   /** World position of the lamp's light. */
   lampAt?: V3;
-}> = ({mood, palette, target = [0, 0.6, -0.2], lamp = 1, lampAt = [-1.45, 1.3, -0.75]}) => {
+  /**
+   * For slices much bigger than a room (a whole building): the shadow camera's half-size (default 3).
+   * When set, the key keeps its direction but stands back from `target` by 3 × extent, and the map
+   * grows to 2048.
+   */
+  extent?: number;
+}> = ({mood, palette, target = [0, 0.6, -0.2], lamp = 1, lampAt = [-1.45, 1.3, -0.75], extent}) => {
   const m = palette ?? MOODS[mood];
   // created once; colours and intensities set every frame (so a blended palette just works)
   const lights = useMemo(() => {
@@ -101,7 +109,19 @@ export const SectionLights: React.FC<{
   lights.bounce.intensity = (m.bounce?.intensity ?? 0) * Math.PI;
   lights.fig.color.copy(raw(m.figureLight?.color ?? '#000000'));
   lights.fig.intensity = m.figureLight?.intensity ?? 0;
-  lights.key.position.set(...m.key.position);
+  if (extent) {
+    // same direction as the room's key (its position toward the room's default target), from far back
+    const dir = new THREE.Vector3(...m.key.position).sub(new THREE.Vector3(0, 0.6, -0.2)).normalize();
+    lights.key.position.set(...target).addScaledVector(dir, 3 * extent);
+    const cam = lights.key.shadow.camera;
+    if (cam.right !== extent) {
+      Object.assign(cam, {left: -extent, right: extent, top: extent, bottom: -extent, near: 0.5, far: 6 * extent});
+      cam.updateProjectionMatrix();
+      lights.key.shadow.mapSize.set(2048, 2048);
+      lights.key.shadow.map?.dispose();
+      lights.key.shadow.map = null;
+    }
+  } else lights.key.position.set(...m.key.position);
   lights.key.target.position.set(...target);
   lights.key.target.updateMatrixWorld();
   lights.fill.position.set(...m.fill.position);

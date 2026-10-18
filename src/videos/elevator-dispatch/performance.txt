@@ -1,0 +1,17 @@
+When you press that button, a computer's already picking your elevator, and it's not always the closest one.
+[curious] So why would it skip the closest one?
+Look at the shafts... the closest car has a stop to make first, and a farther one could come straight to you.
+Many systems pick by time instead of distance... so sometimes the farther car gets the job.
+It knows where every car is and which way it's moving, and it can weigh each one to see how full it is.
+For each car, it works out how many seconds it's gonna take to reach you, counting the stops it's already promised.
+Some systems also add up how much your stop would delay everyone else.
+In those systems, every car gets a score... and the lowest one gets you.
+[pause] With four elevators and five floors calling, there are already 1,024 ways to answer them.
+And most systems keep re-deciding as new calls come in.
+It can even change its mind late in the game...
+In one maker's design, it only locks in a car once that car has to start braking for your floor.
+[pause] Since around 1990, some buildings have had you enter your floor in the lobby, and they tell you which elevator to take.
+That lets the system group people going to the same floors, so each car makes fewer stops.
+It can be confusing, especially the first time... and in hotels, where many riders are new.
+Button or keypad, the computer's picking for everyone at once, which can mean you wait longer.
+[pause] Next time you press that button and a farther car shows up... it was probably the one the computer scored lowest.

@@ -9,6 +9,8 @@ import {spec as lightToData} from './light-to-data/spec';
 import lightToDataTranscript from './light-to-data/transcript.json';
 import {spec as tireSensor} from './tire-sensor/spec';
 import tireSensorTranscript from './tire-sensor/transcript.json';
+import {spec as elevatorDispatch} from './elevator-dispatch/spec';
+import elevatorDispatchTranscript from './elevator-dispatch/transcript.json';
 // </imports>
 
 export type VideoEntry = {spec: VideoSpec; transcript: Transcript};
@@ -23,5 +25,6 @@ export const VIDEOS: Record<string, VideoEntry> = {
   'lab': {spec: lab, transcript: labTranscript as Transcript},
   'light-to-data': {spec: lightToData, transcript: lightToDataTranscript as Transcript},
   'tire-sensor': {spec: tireSensor, transcript: tireSensorTranscript as Transcript},
+  'elevator-dispatch': {spec: elevatorDispatch, transcript: elevatorDispatchTranscript as Transcript},
   // </entries>
 };
