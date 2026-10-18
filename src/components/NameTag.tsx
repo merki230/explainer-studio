@@ -4,6 +4,7 @@ import {fonts} from '../fonts';
 import {headTopOnScreen, type SectionRoomSceneProps} from '../scenes/SectionRoomScene';
 import {carHeadTopOnScreen, type CarSliceSceneProps} from '../scenes/CarSliceScene';
 import {CAST, type CastName, type Mood} from '../theme';
+import {ANCHOR_SCENES, anchorOnScreen} from './anchors';
 import {ease} from './card';
 import {LEFT, overlayInk, paperHalo, RIGHT} from './sectionStyle';
 
@@ -44,12 +45,20 @@ export const NameTag: React.FC<
   const {fps, width, height} = useVideoConfig();
   const when = {frame: frame + scene.offset, fps, durationInFrames: scene.durationInFrames};
   const car = scene.name === 'car-slice';
-  const head = car ? carHeadTopOnScreen(scene.props as Partial<CarSliceSceneProps>, who, when) : headTopOnScreen(scene.props, who, when);
+  // the tower and the hotel: YOU's head (`youSpot`); others aren't tagged there
+  const anchored = ANCHOR_SCENES.includes(scene.name ?? '');
+  const head = anchored
+    ? who === 'you'
+      ? anchorOnScreen({...scene, props: scene.props as Record<string, unknown>}, 'youSpot', frame, fps)
+      : undefined
+    : car
+      ? carHeadTopOnScreen(scene.props as Partial<CarSliceSceneProps>, who, when)
+      : headTopOnScreen(scene.props, who, when);
   if (!head) return null;
   const {ink, paper} = overlayInk(mood);
   const text = (label ?? who).toUpperCase();
   const cast = scene.props.cast ?? ['friend', 'you'];
-  const onLeft = (side ?? (car ? (head[0] < 540 ? 'left' : 'right') : cast.indexOf(who) === 0 ? 'left' : 'right')) === 'left';
+  const onLeft = (side ?? (car || anchored ? (head[0] < 540 ? 'left' : 'right') : cast.indexOf(who) === 0 ? 'left' : 'right')) === 'left';
   const w = SQUARE + GAP + textWidth(text);
   const tagLeft = onLeft ? LEFT : RIGHT - w;
   const [hx, hy] = head;

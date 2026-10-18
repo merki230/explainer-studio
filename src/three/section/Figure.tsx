@@ -41,6 +41,14 @@ const THUMB_L = 0.03;
 const THUMB = new THREE.CapsuleGeometry(THUMB_R, THUMB_L, 4, 10);
 /** Thumb root on the +x hand, on the screen side (−z) of the phone. */
 const THUMB_BASE = V(0.062, -0.05, -0.014);
+/**
+ * The pointing index finger (stylized, skin): a capsule out of the small hand along the forearm, for
+ * pressing buttons and typing. `from` is where it leaves the hand's centre; the tip is `TIP` from the
+ * wrist target, so a hand target given as a fingertip can be solved (see `point`).
+ */
+const FINGER = {r: 0.0115, len: 0.048, from: 0.024, out: 0.035};
+const FINGER_GEO = new THREE.CapsuleGeometry(FINGER.r, FINGER.len, 4, 12);
+const FINGER_TIP = FINGER.from + FINGER.len + 2 * FINGER.r;
 /** At rest the face looks down a little more than the head bone (the mock-up's 0.32 total). */
 const FACE_PITCH = 0.2;
 /** Eyes: ±0.055 across, slightly below the centre, on the sphere's front (§ 8). */
@@ -106,6 +114,25 @@ export const blinkAt = (clock: number, seed: string, fps: number) => {
   return 0;
 };
 
+/** The index finger in the forearm's frame (rest pose), out of the hand along the forearm, scaled by `k`. */
+const Finger: React.FC<{s: number; k: number; material: THREE.Material}> = ({s, k, material}) => {
+  const dir = REST.wrist(s).sub(REST.elbow(s)).normalize();
+  const hand = REST.hand(s).sub(REST.elbow(s));
+  const len = FINGER.from + (FINGER.len / 2 + FINGER.r) * k;
+  const q = new THREE.Quaternion().setFromUnitVectors(V(0, 1, 0), dir);
+  return (
+    <mesh
+      geometry={FINGER_GEO}
+      material={material}
+      position={hand.clone().addScaledVector(dir, len)}
+      quaternion={q}
+      scale={[1, Math.max(0.05, k), 1]}
+      castShadow
+      receiveShadow
+    />
+  );
+};
+
 export type FigureProps = {
   /** Who this is: the cast's colours, hair and detail (theme `CAST`). */
   who: CastName;
@@ -153,6 +180,12 @@ export type FigureProps = {
    * how much of a stride to show, 0 (standing still) to 1. The legs swing opposite, the body bobs.
    */
   walk?: {phase: number; amount: number};
+  /**
+   * The index finger out, per hand [right, left], 0 (curled: just the round hand) to 1 (pointing).
+   * While pointing, that hand's `hands` target is where the **fingertip** goes (the arm solves so
+   * the tip lands on it), so a button target can be given as the button itself.
+   */
+  point?: [number, number];
 };
 
 /** How far the body rises standing up (the thigh's length): the seated hip at 0.6 → 1.07. */
@@ -181,6 +214,7 @@ export const Figure: React.FC<FigureProps> = ({
   hands,
   stance = 'sit',
   walk,
+  point = [0, 0],
 }) => {
   const frame = useCurrentFrame();
   const stand = stance === 'stand';
@@ -282,7 +316,18 @@ export const Figure: React.FC<FigureProps> = ({
     const shoulder = REST.shoulder(s)
       .sub(REST.chest)
       .add(V(0, shrug, 0));
-    return {s, shoulder, ...solveArm(s, shoulder, grips[i])};
+    const pk = hands ? Math.max(0, Math.min(1, point[i])) : 0;
+    if (pk <= 0) return {s, shoulder, pk, ...solveArm(s, shoulder, grips[i])};
+    // the target is the fingertip: solve, then pull the wrist back along the forearm by the finger's
+    // reach (twice, so the forearm's direction settles), the finger growing with `point`
+    const restFore = REST.wrist(s).sub(REST.elbow(s)).normalize();
+    const reach = FINGER.from + (FINGER_TIP - FINGER.from + FINGER.out) * pk + REST.hand(s).sub(REST.wrist(s)).dot(restFore);
+    let sol = solveArm(s, shoulder, grips[i]);
+    for (let it = 0; it < 3; it++) {
+      const dir = restFore.clone().applyQuaternion(sol.upper.clone().multiply(sol.fore));
+      sol = solveArm(s, shoulder, grips[i].clone().addScaledVector(dir, -reach));
+    }
+    return {s, shoulder, pk, ...sol};
   });
   const thumbDir = V(-0.6, 0.55 + 0.55 * swipe, -0.12 - 0.25 * swipe).normalize();
   const thumbPos = THUMB_BASE.clone().addScaledVector(thumbDir, THUMB_L / 2 + THUMB_R);
@@ -393,7 +438,15 @@ export const Figure: React.FC<FigureProps> = ({
                   <PartMesh part={side.upper} material={mats.top} />
                   <group position={rel(REST.elbow(a.s), REST.shoulder(a.s))} quaternion={a.fore}>
                     <PartMesh part={side.fore} material={mats.top} />
-                    <PartMesh part={side.hand} material={mats.skin} />
+                    {a.pk > 0 ? (
+                      // pointing: the hand comes out of the sleeve a little, the index finger out of it
+                      <group position={REST.wrist(a.s).sub(REST.elbow(a.s)).normalize().multiplyScalar(FINGER.out * a.pk)}>
+                        <PartMesh part={side.hand} material={mats.skin} />
+                        <Finger s={a.s} k={a.pk} material={mats.skin} />
+                      </group>
+                    ) : (
+                      <PartMesh part={side.hand} material={mats.skin} />
+                    )}
                   </group>
                 </group>
               );

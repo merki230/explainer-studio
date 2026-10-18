@@ -19,6 +19,8 @@ import {labCameraEnd, labCameraStart} from './scenes/SectionLabScene';
 import {sectionCameraEnd, sectionCameraStart, TIME_PASSES} from './scenes/SectionRoomScene';
 import {wheelCameraEnd, wheelCameraStart} from './scenes/WheelSliceScene';
 import {carCameraEnd, carCameraStart} from './scenes/CarSliceScene';
+import {towerCameraEnd, towerCameraStart} from './scenes/TowerSliceScene';
+import {hotelCameraEnd, hotelCameraStart} from './scenes/HotelLobbyScene';
 import type {Framing} from './three/section/SectionCamera';
 
 type CameraFn = (p: Record<string, unknown>, durationInFrames: number, fps: number) => Framing;
@@ -28,6 +30,8 @@ const CAMERAS: Record<string, {start: CameraFn; end: CameraFn}> = {
   'section-lab': {start: labCameraStart as CameraFn, end: labCameraEnd as CameraFn},
   'wheel-slice': {start: wheelCameraStart as CameraFn, end: wheelCameraEnd as CameraFn},
   'car-slice': {start: carCameraStart as CameraFn, end: carCameraEnd as CameraFn},
+  'tower-slice': {start: towerCameraStart as CameraFn, end: towerCameraEnd as CameraFn},
+  'hotel-lobby': {start: hotelCameraStart as CameraFn, end: hotelCameraEnd as CameraFn},
 };
 import {transitionInto, type Transition} from './scenes/transitions';
 import {clickOffFrame, type ClickOff} from './scenes/clickOff';
@@ -173,7 +177,7 @@ const Overlay: React.FC<{o: ResolvedOverlay; scene: SceneContext}> = ({o, scene}
   const mood = scene.mood;
   switch (o.type) {
     case 'callout':
-      return <Callout {...o} mood={mood} />;
+      return <Callout {...o} mood={mood} scene={scene} />;
     case 'search':
       return <SearchBar {...o} />;
     case 'ad':

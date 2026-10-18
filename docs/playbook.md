@@ -10,6 +10,9 @@ Living document: update it whenever a step causes rework, so the next video does
    existing part). Lines that are hard to show, too long for one shot or rushed get reworded, and the
    pauses in `performance.txt` are placed on the cuts. Changing words after the paid voice take is the
    expensive way.
+   The A/V script must vary the framing (owner, 2026-10-18, No. 003): open close on the action the first line
+   names (e.g. the finger on the button), then reveal; mix close, medium and wide every scene or two; keep the
+   wide shot for when the whole picture is the point. A video held in one wide view loses attention.
 1. **Rough cut:** the whole video with the real voice, the right beats and camera moves, simple
    placeholders where effects aren't finished. The owner reviews it in Remotion Studio for structure
    and pacing.
@@ -49,6 +52,7 @@ updates them in the same step. Before closing a rule change, grep the repo for t
 
 ## Voice and ElevenLabs
 
+- **One take, the directed one** (owner, 2026-10-17): `yarn voiceover <slug> --take directed` from `performance.txt`, then `yarn voiceover:use <slug> directed`. No plain comparison take.
 - Check the plan first. Free plans can't use library voices through the API (402 `paid_plan_required`)
   and don't allow commercial use. The account is now on a paid plan.
 - `ELEVENLABS_VOICE_ID` in `.env` **overrides** `voice.json`. If a take uses the wrong voice, check `.env`.

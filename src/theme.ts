@@ -392,6 +392,76 @@ export const REAL = {
 };
 
 /**
+ * The tower slice (No. 003): an office building's lift core cut open. Neutral building materials, the
+ * same in both moods (the lights change); nothing here is the system, nothing in the reserved band.
+ */
+export const TOWER = {
+  /** Shaft walls and the core's back wall (fair-faced concrete). */
+  concrete: '#bdbab4',
+  /** Inside a shaft: dark, so empty doorways read as openings and the lit cars stand out. */
+  shaft: '#5c5b59',
+  /** Landing doors and car doors (brushed stainless, kept mid-grey so they don't read as holes). */
+  door: '#a3a7ad',
+  /** Car interior wall panels (light laminate), so the riders read against them. */
+  carWall: '#e2dccf',
+  /** Brushed stainless: car walls' trim, door frames, the call panel plate. */
+  stainless: '#c3c6ca',
+  /** Glass landing and car doors, shaft front glazing (a faint cool tint, mostly see-through). */
+  glass: '#d6e2e6',
+  /** Piers between the landing doors (stone cladding). */
+  pier: '#d9d3c8',
+  /** Landing and lobby floors (pale stone). */
+  stone: '#c3bdb2',
+  /** Landing walls (painted). */
+  paint: '#e6e2da',
+  /** Car floor (dark rubber tile). */
+  carFloor: '#3e4046',
+  /** Car ceiling light panel (neutral, never in the reserved band). */
+  lightPanel: '#eef1f4',
+  /** Steel ropes and the counterweight's cast iron. */
+  rope: '#5f6268',
+  counterweight: '#4c4f55',
+  /** Hoist machines in the machine room. */
+  machine: '#6a7078',
+  /** The call panel's button faces (dark) and the unlit ring. */
+  button: '#2a2c31',
+  /** A corridor or entrance seen through a doorway (shadowed, so people fade into it). */
+  corridor: '#6e6c69',
+  /** Hotel lobby (No. 003 K): walnut reception desk and wall panel (low saturation, outside the reserved band). */
+  walnut: '#6b5646',
+  /** Hotel lobby floor (polished pale stone, a step warmer than the office halls). */
+  lobbyStone: '#cfc7b8',
+  /** Rolling suitcases: shells (graphite, slate blue) and the handle. */
+  suitcase: '#3d4148',
+  suitcaseAlt: '#5a6d86',
+  handle: '#9a9ea5',
+  /** The destination keypad's screen glass seen from behind (dark, like a phone's back). */
+  keypadBack: '#1d1f24',
+  /** Close-up kit (No. 003 rework): the car's laminate grain (a shade under `carWall`) and its kick plate seam. */
+  laminateGrain: '#d3ccbd',
+  /** Display glass (car operating panel, keypad) and its lit digits (neutral, like `screenLight`). */
+  displayGlass: '#0b0c0f',
+  displayInk: '#dbe6ff',
+  /** A hall lantern's lens when dark (milky acrylic). */
+  lensOff: '#cfccc5',
+  /** Engraved button and panel markings (dark fill in the stainless). */
+  engrave: '#3a3c41',
+  /** The group-controller cabinet: light grey enamel, galvanised mounting plate, grey PVC ducts, terminals, contactors. */
+  cabinetPaint: '#c9cbc8',
+  mountPlate: '#aeb2b5',
+  duct: '#8e918f',
+  terminalBlock: '#7f858c',
+  contactor: '#3b3e44',
+  /** Control wiring: black, grey and blue cores (never amber or orange). */
+  wireGrey: '#7a7d82',
+  wireBlue: '#3d5d9c',
+  /** The wiring diagram in the cabinet door's pocket (paper) and its ink. */
+  paper: '#e4e1d8',
+  /** Car floor: dark granite tile with paler flecks. */
+  carFloorFleck: '#5b5e64',
+};
+
+/**
  * The car slice (No. 002), per mood: the road on the ground block, its lane paint, the two car bodies
  * (never red or orange, § 1). Neutral; nothing here is the system.
  */

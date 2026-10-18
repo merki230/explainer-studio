@@ -2,13 +2,20 @@ import React from 'react';
 import {useCurrentFrame, useVideoConfig} from 'remotion';
 import {fonts} from '../fonts';
 import type {Mood} from '../theme';
+import {anchorOnScreen, type AnchorScene} from './anchors';
 import {ease} from './card';
 import {LEFT, overlayInk, paperHalo, RIGHT} from './sectionStyle';
 
 export type CalloutProps = {
-  /** Anchor point (the thing being labelled), as fractions of the frame. */
-  x: number;
-  y: number;
+  /** Anchor point (the thing being labelled), as fractions of the frame (ignored with `anchor`). */
+  x?: number;
+  y?: number;
+  /**
+   * A named point of the scene instead of x/y, followed as the camera and the thing move (only on
+   * `tower-slice` and `hotel-lobby`; see `anchorOnScreen`): e.g. 'carRoof:B', 'callButton:4',
+   * 'controllerAt', 'youSpot', 'keypad', 'door:C', 'wall:B'.
+   */
+  anchor?: string;
   /**
    * Where the label sits, in px relative to the anchor. With `place: 'side'` (default) this is the
    * middle of its near edge (left edge if dx ≥ 0, else right); with `place: 'above'` it is the middle
@@ -39,9 +46,11 @@ const width = (s: string, size: number, spacing: number) => s.length * size * (0
  * uppercase `ink` with a `paper` halo, no card; an optional sub-line in Inter 600 20 px `inkSub`.
  * Same props as before. Kept inside x 120–888.
  */
-export const Callout: React.FC<CalloutProps & {mood?: Mood}> = ({
-  x,
-  y,
+export const Callout: React.FC<CalloutProps & {mood?: Mood; scene?: AnchorScene}> = ({
+  x = 0.5,
+  y = 0.5,
+  anchor,
+  scene,
   dx = 80,
   dy = -120,
   place = 'side',
@@ -51,10 +60,11 @@ export const Callout: React.FC<CalloutProps & {mood?: Mood}> = ({
   mood = 'day',
 }) => {
   const frame = useCurrentFrame();
-  const {width: W, height: H} = useVideoConfig();
+  const {width: W, height: H, fps} = useVideoConfig();
   const {ink, inkSub} = overlayInk(mood);
-  const ax = x * W;
-  const ay = y * H;
+  const at = anchor && scene ? anchorOnScreen(scene, anchor, frame, fps) : undefined;
+  const ax = at ? at[0] : x * W;
+  const ay = at ? at[1] : y * H;
   const above = place === 'above';
   const labelLeft = dx >= 0;
   const w = Math.ceil(Math.max(width(title, TITLE, 0.08), sub ? width(sub, SUB, 0.04) : 0)) + 8;

@@ -2,6 +2,15 @@
 
 Every change to `brand.md` or `style-guide.md` gets a line here: date, what changed, why (pointing to a `feedback.md` entry or a research section). Nothing changes silently.
 
+## v0.11.2 · 2026-10-18 · Music from the start, real-world SFX, posting time (owner decisions)
+
+Owner decisions of 2026-10-18, relayed by the main session (✅); values 🧪. Logged in `feedback.md` ("No. 003 · elevator-dispatch: sound decisions" and § Platform numbers). v0.11.1 is unchanged otherwise.
+
+- **Music start.** style-guide § 9 Music: "enters after the hook (≥ 3 s)" → the music is present from the start and may begin at frame 0 with a short fade-in (No. 003: `startAt: 0, fadeIn: 1.5`). Why: on No. 003 the owner found the 3 s entry too late; the opening felt thin. Kept: about 9 dB under the dry voice, steady, no duck; the music ends in silence on the last frame (the loop), now written into the row (it was applied in the specs but not stated in § 9). Principle ✅, values 🧪.
+- **SFX.** style-guide § 9 SFX: "Three sounds only … nothing else beyond click, hum and whoosh" → short real-world sounds for actions seen on screen (button presses, doors, chimes, air), each about 12 to 19 dB under the voice, no music stingers, risers or impacts, never under a statement card. Click, hum (about 20 dB under, unchanged) and whoosh stay as standing sounds. The values used so far are listed as examples (file-level spec offsets, with dB under the voice computed from the LUFS noted in the specs): No. 002 hiss −28, chime −10; No. 003 press −15/−18, ding −10/−12, doors −18.5. Why: the row lagged behind practice; No. 002 shipped hiss and chime and No. 003 press, ding and doors, all owner-approved. Principle ✅, values 🧪.
+- **Posting time.** `feedback.md` § Platform numbers gains a "Posted at" column (date, local time, time zone); No. 002 filled as "2026-10-17, about 19:00, owner's local time (America/Chicago?)", time zone unconfirmed. Posting time is now a variable to test: a midday post against an evening post over the next videos. No rule changes.
+- style-guide header updated to v0.11.2.
+
 ## v0.11.1 · 2026-10-16 · Warning lights in yellow (owner decision, No. 002 onward)
 
 Owner decision of 2026-10-16, relayed by the main session (✅); value 🧪. Logged in `feedback.md` ("No. 002 · tire-sensor: warning-light colour"). v0.11 is committed and unchanged.
