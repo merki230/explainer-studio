@@ -115,3 +115,26 @@ export const CutOutline: React.FC<{
     </group>
   );
 };
+
+/**
+ * An ink line along any polyline (curved cut edges: a tire's profile, a car's side section), as one
+ * thin tube. `closed` joins the last point to the first. Unlit, the same ink in both moods.
+ */
+export const InkLine: React.FC<{
+  points: V3[];
+  closed?: boolean;
+  color?: string;
+  thickness?: number;
+}> = ({points, closed = true, color = section.cutLine, thickness = INK}) => {
+  const k = JSON.stringify([points, closed, thickness]);
+  const geometry = useMemo(() => {
+    const [pts, cl, th] = JSON.parse(k) as [V3[], boolean, number];
+    const path = new THREE.CurvePath<THREE.Vector3>();
+    const vs = pts.map((p) => new THREE.Vector3(...p));
+    const n = cl ? vs.length : vs.length - 1;
+    for (let i = 0; i < n; i++) path.add(new THREE.LineCurve3(vs[i], vs[(i + 1) % vs.length]));
+    return new THREE.TubeGeometry(path, Math.max(8, n * 2), th / 2, 4, false);
+  }, [k]);
+  const material = useMemo(() => new THREE.MeshBasicMaterial({color: raw(color)}), [color]);
+  return <mesh geometry={geometry} material={material} frustumCulled={false} />;
+};

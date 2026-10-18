@@ -1,0 +1,1170 @@
+{
+  "audio": "audio/voiceover.mp3",
+  "words": [
+    {
+      "text": "In",
+      "start": 0,
+      "end": 0.16
+    },
+    {
+      "text": "many",
+      "start": 0.28,
+      "end": 0.4
+    },
+    {
+      "text": "cars,",
+      "start": 0.48,
+      "end": 1.12
+    },
+    {
+      "text": "a",
+      "start": 1.16,
+      "end": 1.2
+    },
+    {
+      "text": "little",
+      "start": 1.28,
+      "end": 1.44
+    },
+    {
+      "text": "radio",
+      "start": 1.52,
+      "end": 1.92
+    },
+    {
+      "text": "inside",
+      "start": 2,
+      "end": 2.4
+    },
+    {
+      "text": "each",
+      "start": 2.48,
+      "end": 2.72
+    },
+    {
+      "text": "tire",
+      "start": 2.8,
+      "end": 3.2
+    },
+    {
+      "text": "wakes",
+      "start": 3.36,
+      "end": 3.6
+    },
+    {
+      "text": "up",
+      "start": 3.68,
+      "end": 3.84
+    },
+    {
+      "text": "as",
+      "start": 3.92,
+      "end": 4
+    },
+    {
+      "text": "you",
+      "start": 4.04,
+      "end": 4.08
+    },
+    {
+      "text": "drive",
+      "start": 4.16,
+      "end": 4.4
+    },
+    {
+      "text": "away.",
+      "start": 4.6,
+      "end": 4.827
+    },
+    {
+      "text": "So",
+      "start": 6.192,
+      "end": 6.24
+    },
+    {
+      "text": "why",
+      "start": 6.48,
+      "end": 6.64
+    },
+    {
+      "text": "would",
+      "start": 6.72,
+      "end": 6.8
+    },
+    {
+      "text": "a",
+      "start": 6.88,
+      "end": 6.96
+    },
+    {
+      "text": "tire",
+      "start": 7.04,
+      "end": 7.44
+    },
+    {
+      "text": "need",
+      "start": 7.52,
+      "end": 7.6
+    },
+    {
+      "text": "its",
+      "start": 7.68,
+      "end": 7.76
+    },
+    {
+      "text": "own",
+      "start": 7.84,
+      "end": 8
+    },
+    {
+      "text": "radio?",
+      "start": 8.08,
+      "end": 8.64
+    },
+    {
+      "text": "Your",
+      "start": 9.28,
+      "end": 9.44
+    },
+    {
+      "text": "car",
+      "start": 9.56,
+      "end": 9.68
+    },
+    {
+      "text": "needs",
+      "start": 9.76,
+      "end": 9.92
+    },
+    {
+      "text": "to",
+      "start": 10,
+      "end": 10.04
+    },
+    {
+      "text": "know",
+      "start": 10.08,
+      "end": 10.16
+    },
+    {
+      "text": "the",
+      "start": 10.24,
+      "end": 10.32
+    },
+    {
+      "text": "pressure",
+      "start": 10.4,
+      "end": 10.72
+    },
+    {
+      "text": "inside,",
+      "start": 10.8,
+      "end": 11.68
+    },
+    {
+      "text": "but",
+      "start": 11.84,
+      "end": 12
+    },
+    {
+      "text": "it's",
+      "start": 12.08,
+      "end": 12.24
+    },
+    {
+      "text": "hard",
+      "start": 12.36,
+      "end": 12.48
+    },
+    {
+      "text": "to",
+      "start": 12.56,
+      "end": 12.64
+    },
+    {
+      "text": "run",
+      "start": 12.72,
+      "end": 12.8
+    },
+    {
+      "text": "a",
+      "start": 12.84,
+      "end": 12.88
+    },
+    {
+      "text": "wire",
+      "start": 12.96,
+      "end": 13.28
+    },
+    {
+      "text": "to",
+      "start": 13.36,
+      "end": 13.44
+    },
+    {
+      "text": "a",
+      "start": 13.52,
+      "end": 13.6
+    },
+    {
+      "text": "spinning",
+      "start": 13.68,
+      "end": 14
+    },
+    {
+      "text": "wheel.",
+      "start": 14.08,
+      "end": 15.04
+    },
+    {
+      "text": "Instead,",
+      "start": 15.12,
+      "end": 16
+    },
+    {
+      "text": "each",
+      "start": 16.08,
+      "end": 16.24
+    },
+    {
+      "text": "tire",
+      "start": 16.32,
+      "end": 16.64
+    },
+    {
+      "text": "gets",
+      "start": 16.72,
+      "end": 16.88
+    },
+    {
+      "text": "a",
+      "start": 16.96,
+      "end": 17.04
+    },
+    {
+      "text": "small",
+      "start": 17.2,
+      "end": 17.36
+    },
+    {
+      "text": "sensor",
+      "start": 17.52,
+      "end": 17.92
+    },
+    {
+      "text": "with",
+      "start": 18,
+      "end": 18.08
+    },
+    {
+      "text": "its",
+      "start": 18.2,
+      "end": 18.32
+    },
+    {
+      "text": "own",
+      "start": 18.4,
+      "end": 18.56
+    },
+    {
+      "text": "battery,",
+      "start": 18.64,
+      "end": 19.44
+    },
+    {
+      "text": "often",
+      "start": 19.6,
+      "end": 19.76
+    },
+    {
+      "text": "behind",
+      "start": 19.84,
+      "end": 20.08
+    },
+    {
+      "text": "the",
+      "start": 20.12,
+      "end": 20.16
+    },
+    {
+      "text": "valve",
+      "start": 20.24,
+      "end": 20.56
+    },
+    {
+      "text": "where",
+      "start": 20.64,
+      "end": 20.72
+    },
+    {
+      "text": "you",
+      "start": 20.8,
+      "end": 20.88
+    },
+    {
+      "text": "pump",
+      "start": 20.96,
+      "end": 21.12
+    },
+    {
+      "text": "in",
+      "start": 21.16,
+      "end": 21.2
+    },
+    {
+      "text": "the",
+      "start": 21.28,
+      "end": 21.36
+    },
+    {
+      "text": "air.",
+      "start": 21.52,
+      "end": 22
+    },
+    {
+      "text": "Look",
+      "start": 22.32,
+      "end": 22.48
+    },
+    {
+      "text": "inside,",
+      "start": 22.76,
+      "end": 23.44
+    },
+    {
+      "text": "and",
+      "start": 23.48,
+      "end": 23.52
+    },
+    {
+      "text": "there's",
+      "start": 23.56,
+      "end": 23.68
+    },
+    {
+      "text": "a",
+      "start": 23.76,
+      "end": 23.84
+    },
+    {
+      "text": "pressure",
+      "start": 24,
+      "end": 24.16
+    },
+    {
+      "text": "sensor,",
+      "start": 24.24,
+      "end": 24.88
+    },
+    {
+      "text": "a",
+      "start": 24.96,
+      "end": 25.04
+    },
+    {
+      "text": "motion",
+      "start": 25.12,
+      "end": 25.44
+    },
+    {
+      "text": "sensor,",
+      "start": 25.52,
+      "end": 26.32
+    },
+    {
+      "text": "a",
+      "start": 26.4,
+      "end": 26.48
+    },
+    {
+      "text": "tiny",
+      "start": 26.64,
+      "end": 26.8
+    },
+    {
+      "text": "computer",
+      "start": 26.88,
+      "end": 27.44
+    },
+    {
+      "text": "and",
+      "start": 27.68,
+      "end": 28
+    },
+    {
+      "text": "the",
+      "start": 28.04,
+      "end": 28.08
+    },
+    {
+      "text": "radio",
+      "start": 28.16,
+      "end": 28.48
+    },
+    {
+      "text": "itself.",
+      "start": 28.56,
+      "end": 29.6
+    },
+    {
+      "text": "When",
+      "start": 29.64,
+      "end": 29.68
+    },
+    {
+      "text": "you're",
+      "start": 29.76,
+      "end": 29.92
+    },
+    {
+      "text": "parked,",
+      "start": 30.08,
+      "end": 30.48
+    },
+    {
+      "text": "it's",
+      "start": 30.56,
+      "end": 30.68
+    },
+    {
+      "text": "asleep,",
+      "start": 30.72,
+      "end": 31.52
+    },
+    {
+      "text": "and",
+      "start": 31.56,
+      "end": 31.6
+    },
+    {
+      "text": "the",
+      "start": 31.68,
+      "end": 31.72
+    },
+    {
+      "text": "motion",
+      "start": 31.76,
+      "end": 32.08
+    },
+    {
+      "text": "sensor",
+      "start": 32.16,
+      "end": 32.56
+    },
+    {
+      "text": "wakes",
+      "start": 32.6,
+      "end": 32.8
+    },
+    {
+      "text": "it",
+      "start": 32.88,
+      "end": 32.96
+    },
+    {
+      "text": "up",
+      "start": 33.04,
+      "end": 33.2
+    },
+    {
+      "text": "once",
+      "start": 33.32,
+      "end": 33.44
+    },
+    {
+      "text": "the",
+      "start": 33.48,
+      "end": 33.52
+    },
+    {
+      "text": "wheel",
+      "start": 33.6,
+      "end": 33.76
+    },
+    {
+      "text": "turns.",
+      "start": 33.84,
+      "end": 34.8
+    },
+    {
+      "text": "Then,",
+      "start": 34.92,
+      "end": 35.28
+    },
+    {
+      "text": "every",
+      "start": 35.36,
+      "end": 35.6
+    },
+    {
+      "text": "minute",
+      "start": 35.72,
+      "end": 35.84
+    },
+    {
+      "text": "or",
+      "start": 35.92,
+      "end": 36
+    },
+    {
+      "text": "so,",
+      "start": 36.12,
+      "end": 36.56
+    },
+    {
+      "text": "it",
+      "start": 36.64,
+      "end": 36.72
+    },
+    {
+      "text": "sends",
+      "start": 36.8,
+      "end": 37.04
+    },
+    {
+      "text": "the",
+      "start": 37.08,
+      "end": 37.12
+    },
+    {
+      "text": "car",
+      "start": 37.2,
+      "end": 37.44
+    },
+    {
+      "text": "a",
+      "start": 37.52,
+      "end": 37.68
+    },
+    {
+      "text": "quick",
+      "start": 37.8,
+      "end": 37.92
+    },
+    {
+      "text": "radio",
+      "start": 38,
+      "end": 38.32
+    },
+    {
+      "text": "message",
+      "start": 38.52,
+      "end": 38.72
+    },
+    {
+      "text": "with",
+      "start": 38.8,
+      "end": 38.88
+    },
+    {
+      "text": "the",
+      "start": 38.92,
+      "end": 38.96
+    },
+    {
+      "text": "pressure.",
+      "start": 39.04,
+      "end": 39.92
+    },
+    {
+      "text": "The",
+      "start": 39.96,
+      "end": 40
+    },
+    {
+      "text": "car",
+      "start": 40.08,
+      "end": 40.24
+    },
+    {
+      "text": "can",
+      "start": 40.32,
+      "end": 40.4
+    },
+    {
+      "text": "tell",
+      "start": 40.48,
+      "end": 40.72
+    },
+    {
+      "text": "which",
+      "start": 40.84,
+      "end": 40.96
+    },
+    {
+      "text": "wheel",
+      "start": 41.04,
+      "end": 41.2
+    },
+    {
+      "text": "is",
+      "start": 41.32,
+      "end": 41.44
+    },
+    {
+      "text": "talking",
+      "start": 41.627,
+      "end": 42
+    },
+    {
+      "text": "because",
+      "start": 42.2,
+      "end": 42.4
+    },
+    {
+      "text": "each",
+      "start": 42.48,
+      "end": 42.64
+    },
+    {
+      "text": "message",
+      "start": 42.72,
+      "end": 43.12
+    },
+    {
+      "text": "carries",
+      "start": 43.2,
+      "end": 43.52
+    },
+    {
+      "text": "the",
+      "start": 43.6,
+      "end": 43.68
+    },
+    {
+      "text": "sensor's",
+      "start": 43.84,
+      "end": 44.16
+    },
+    {
+      "text": "own",
+      "start": 44.24,
+      "end": 44.4
+    },
+    {
+      "text": "ID.",
+      "start": 44.48,
+      "end": 45.44
+    },
+    {
+      "text": "It",
+      "start": 45.52,
+      "end": 45.6
+    },
+    {
+      "text": "stays",
+      "start": 45.64,
+      "end": 45.92
+    },
+    {
+      "text": "quiet",
+      "start": 46.12,
+      "end": 46.32
+    },
+    {
+      "text": "most",
+      "start": 46.4,
+      "end": 46.56
+    },
+    {
+      "text": "of",
+      "start": 46.64,
+      "end": 46.72
+    },
+    {
+      "text": "the",
+      "start": 46.76,
+      "end": 46.8
+    },
+    {
+      "text": "time",
+      "start": 46.88,
+      "end": 47.12
+    },
+    {
+      "text": "to",
+      "start": 47.2,
+      "end": 47.28
+    },
+    {
+      "text": "save",
+      "start": 47.4,
+      "end": 47.52
+    },
+    {
+      "text": "power,",
+      "start": 47.72,
+      "end": 48.24
+    },
+    {
+      "text": "and",
+      "start": 48.36,
+      "end": 48.48
+    },
+    {
+      "text": "that's",
+      "start": 48.56,
+      "end": 48.72
+    },
+    {
+      "text": "how",
+      "start": 48.8,
+      "end": 48.88
+    },
+    {
+      "text": "the",
+      "start": 48.92,
+      "end": 48.96
+    },
+    {
+      "text": "battery",
+      "start": 49.04,
+      "end": 49.36
+    },
+    {
+      "text": "lasts",
+      "start": 49.44,
+      "end": 49.76
+    },
+    {
+      "text": "up",
+      "start": 49.84,
+      "end": 49.92
+    },
+    {
+      "text": "to",
+      "start": 49.96,
+      "end": 50
+    },
+    {
+      "text": "about",
+      "start": 50.08,
+      "end": 50.4
+    },
+    {
+      "text": "ten",
+      "start": 50.52,
+      "end": 50.64
+    },
+    {
+      "text": "years.",
+      "start": 50.72,
+      "end": 51.6
+    },
+    {
+      "text": "Once",
+      "start": 51.68,
+      "end": 51.76
+    },
+    {
+      "text": "a",
+      "start": 51.84,
+      "end": 51.92
+    },
+    {
+      "text": "tire's",
+      "start": 51.96,
+      "end": 52.24
+    },
+    {
+      "text": "about",
+      "start": 52.32,
+      "end": 52.48
+    },
+    {
+      "text": "a",
+      "start": 52.56,
+      "end": 52.64
+    },
+    {
+      "text": "quarter",
+      "start": 52.8,
+      "end": 52.96
+    },
+    {
+      "text": "low,",
+      "start": 53.04,
+      "end": 53.84
+    },
+    {
+      "text": "US",
+      "start": 53.88,
+      "end": 54.16
+    },
+    {
+      "text": "rules",
+      "start": 54.24,
+      "end": 54.48
+    },
+    {
+      "text": "say",
+      "start": 54.56,
+      "end": 54.64
+    },
+    {
+      "text": "the",
+      "start": 54.72,
+      "end": 54.8
+    },
+    {
+      "text": "warning",
+      "start": 54.96,
+      "end": 55.12
+    },
+    {
+      "text": "light's",
+      "start": 55.24,
+      "end": 55.52
+    },
+    {
+      "text": "gotta",
+      "start": 55.56,
+      "end": 55.76
+    },
+    {
+      "text": "come",
+      "start": 55.84,
+      "end": 56
+    },
+    {
+      "text": "on",
+      "start": 56.08,
+      "end": 56.24
+    },
+    {
+      "text": "within",
+      "start": 56.4,
+      "end": 56.56
+    },
+    {
+      "text": "20",
+      "start": 56.64,
+      "end": 56.88
+    },
+    {
+      "text": "minutes",
+      "start": 56.96,
+      "end": 57.2
+    },
+    {
+      "text": "of",
+      "start": 57.28,
+      "end": 57.32
+    },
+    {
+      "text": "driving.",
+      "start": 57.36,
+      "end": 57.867
+    },
+    {
+      "text": "Some",
+      "start": 58.88,
+      "end": 58.96
+    },
+    {
+      "text": "cars",
+      "start": 59.04,
+      "end": 59.36
+    },
+    {
+      "text": "don't",
+      "start": 59.44,
+      "end": 59.56
+    },
+    {
+      "text": "have",
+      "start": 59.6,
+      "end": 59.76
+    },
+    {
+      "text": "tire",
+      "start": 59.8,
+      "end": 60
+    },
+    {
+      "text": "sensors",
+      "start": 60.08,
+      "end": 60.48
+    },
+    {
+      "text": "at",
+      "start": 60.52,
+      "end": 60.56
+    },
+    {
+      "text": "all,",
+      "start": 60.64,
+      "end": 61.28
+    },
+    {
+      "text": "and",
+      "start": 61.32,
+      "end": 61.36
+    },
+    {
+      "text": "they",
+      "start": 61.44,
+      "end": 61.52
+    },
+    {
+      "text": "spot",
+      "start": 61.64,
+      "end": 61.76
+    },
+    {
+      "text": "a",
+      "start": 61.84,
+      "end": 61.92
+    },
+    {
+      "text": "soft",
+      "start": 62.04,
+      "end": 62.16
+    },
+    {
+      "text": "tire",
+      "start": 62.24,
+      "end": 62.64
+    },
+    {
+      "text": "because",
+      "start": 62.72,
+      "end": 62.96
+    },
+    {
+      "text": "it",
+      "start": 63.04,
+      "end": 63.12
+    },
+    {
+      "text": "spins",
+      "start": 63.2,
+      "end": 63.68
+    },
+    {
+      "text": "slightly",
+      "start": 63.76,
+      "end": 64.08
+    },
+    {
+      "text": "faster.",
+      "start": 64.16,
+      "end": 65.12
+    },
+    {
+      "text": "When",
+      "start": 65.2,
+      "end": 65.28
+    },
+    {
+      "text": "US",
+      "start": 65.36,
+      "end": 65.6
+    },
+    {
+      "text": "safety",
+      "start": 65.68,
+      "end": 66
+    },
+    {
+      "text": "officials",
+      "start": 66.08,
+      "end": 66.48
+    },
+    {
+      "text": "checked",
+      "start": 66.64,
+      "end": 66.88
+    },
+    {
+      "text": "mid-2000s",
+      "start": 66.96,
+      "end": 67.84
+    },
+    {
+      "text": "cars,",
+      "start": 67.92,
+      "end": 68.64
+    },
+    {
+      "text": "the",
+      "start": 68.72,
+      "end": 68.8
+    },
+    {
+      "text": "ones",
+      "start": 68.88,
+      "end": 69.04
+    },
+    {
+      "text": "with",
+      "start": 69.12,
+      "end": 69.2
+    },
+    {
+      "text": "the",
+      "start": 69.28,
+      "end": 69.32
+    },
+    {
+      "text": "warning",
+      "start": 69.36,
+      "end": 69.76
+    },
+    {
+      "text": "were",
+      "start": 69.84,
+      "end": 69.92
+    },
+    {
+      "text": "about",
+      "start": 70,
+      "end": 70.32
+    },
+    {
+      "text": "half",
+      "start": 70.44,
+      "end": 70.56
+    },
+    {
+      "text": "as",
+      "start": 70.64,
+      "end": 70.72
+    },
+    {
+      "text": "likely",
+      "start": 70.8,
+      "end": 71.12
+    },
+    {
+      "text": "to",
+      "start": 71.2,
+      "end": 71.28
+    },
+    {
+      "text": "have",
+      "start": 71.36,
+      "end": 71.44
+    },
+    {
+      "text": "a",
+      "start": 71.48,
+      "end": 71.52
+    },
+    {
+      "text": "badly",
+      "start": 71.6,
+      "end": 71.84
+    },
+    {
+      "text": "low",
+      "start": 71.92,
+      "end": 72.08
+    },
+    {
+      "text": "tire.",
+      "start": 72.16,
+      "end": 72.56
+    },
+    {
+      "text": "Next",
+      "start": 73.52,
+      "end": 73.6
+    },
+    {
+      "text": "time",
+      "start": 73.68,
+      "end": 73.84
+    },
+    {
+      "text": "you",
+      "start": 73.92,
+      "end": 74
+    },
+    {
+      "text": "fill",
+      "start": 74.08,
+      "end": 74.16
+    },
+    {
+      "text": "a",
+      "start": 74.2,
+      "end": 74.24
+    },
+    {
+      "text": "tire,",
+      "start": 74.32,
+      "end": 74.96
+    },
+    {
+      "text": "there's",
+      "start": 75,
+      "end": 75.28
+    },
+    {
+      "text": "probably",
+      "start": 75.52,
+      "end": 75.76
+    },
+    {
+      "text": "a",
+      "start": 75.84,
+      "end": 75.92
+    },
+    {
+      "text": "little",
+      "start": 76.04,
+      "end": 76.16
+    },
+    {
+      "text": "radio",
+      "start": 76.24,
+      "end": 76.64
+    },
+    {
+      "text": "behind",
+      "start": 76.76,
+      "end": 77.04
+    },
+    {
+      "text": "that",
+      "start": 77.12,
+      "end": 77.2
+    },
+    {
+      "text": "valve,",
+      "start": 77.28,
+      "end": 78.08
+    },
+    {
+      "text": "waiting",
+      "start": 78.24,
+      "end": 78.4
+    },
+    {
+      "text": "for",
+      "start": 78.48,
+      "end": 78.56
+    },
+    {
+      "text": "the",
+      "start": 78.6,
+      "end": 78.64
+    },
+    {
+      "text": "wheel",
+      "start": 78.72,
+      "end": 78.96
+    },
+    {
+      "text": "to",
+      "start": 79.04,
+      "end": 79.12
+    },
+    {
+      "text": "turn.",
+      "start": 79.28,
+      "end": 79.76
+    }
+  ]
+}

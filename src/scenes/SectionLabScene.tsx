@@ -4,11 +4,18 @@ import {LabSlice} from '../three/section/LabSlice';
 import {SectionCamera, type Framing} from '../three/section/SectionCamera';
 import {SectionLights, SectionStage} from '../three/section/SectionStage';
 import type {Mood} from '../theme';
+import {DEFAULT_ROWS, type TireBayProps} from '../three/section/TireBay';
 
 /** Framings at the fixed angle: 'wide' (the whole lab, like the living room's) and 'bench' (the bench and the wall displays). */
 export const LAB_FRAMINGS: Record<'wide' | 'bench', Framing> = {
   wide: {look: [-0.2, 1.36, 0], distance: 12.75},
   bench: {look: [0.05, 1.45, -0.55], distance: 8.6},
+};
+
+/** The tire bay's framings: 'wide' as the Lab's; 'bench' on the rack's two rows. */
+export const TIRE_BAY_FRAMINGS: Record<'wide' | 'bench', Framing> = {
+  wide: LAB_FRAMINGS.wide,
+  bench: {look: [-0.2, 1.36, -0.7], distance: 9.6},
 };
 
 export type SectionLabSceneProps = {
@@ -32,6 +39,21 @@ export type SectionLabSceneProps = {
   running?: boolean;
   /** Realism pass: real lab equipment, realistic test phones, studio reflections (default false). */
   realism?: boolean;
+  /**
+   * What the Lab is dressed as: 'apps' (default: No. 001's phone bench, arms, counter, meter) or
+   * 'tire-bay' (No. 002: a rack of two rows of eight wheels with set-panel labels, two extras gauging).
+   */
+  dressing?: 'apps' | 'tire-bay';
+  /**
+   * The tire bay: `rows` ({label, low: wheel indices 0–7, lowAt: s}, top shelf first), `lowPressure`
+   * (default 0.55), `workers` (default true: two workers standing at the rack's ends gauge the end
+   * tires, write on clipboards and turn to each low tire as its readout lights). The first Lab scene
+   * is the 'check' beat (nothing low); a 'bench' framing or a tire-bay scene continuing from the
+   * previous one is the 'result' beat (each row's low tires sag and light their readouts at its
+   * `lowAt`). Default rows: "WITHOUT THE WARNING" with wheels 2 and 5 low, "WITH THE WARNING" with
+   * wheel 4 low (🎭 2 of 8 vs 1 of 8), at 0.6 s and 2.9 s in the result beat.
+   */
+  tireBay?: Partial<TireBayProps>;
   /** Screen-space ambient occlusion (N8AO) at the mood's strength. Default: follows `realism`. */
   ao?: boolean;
   /** Which slice this is (default 'lab'); from another location it slides in, or follows the line. */
@@ -65,7 +87,8 @@ const labCameraMove = (p: Partial<SectionLabSceneProps>, durationInFrames: numbe
   let from: Framing;
   let to: Framing;
   if (typeof camera === 'string') {
-    const preset = LAB_FRAMINGS[camera] ?? LAB_FRAMINGS.wide;
+    const presets = p.dressing === 'tire-bay' ? TIRE_BAY_FRAMINGS : LAB_FRAMINGS;
+    const preset = presets[camera] ?? presets.wide;
     const c = pre ? undefined : p.cameraFrom;
     if (c) {
       const same = c.look.every((v, i) => Math.abs(v - preset.look[i]) < 1e-6);
@@ -108,6 +131,8 @@ export const SectionLabScene: React.FC<SectionLabSceneProps> = ({
   running = true,
   realism = false,
   ao,
+  dressing = 'apps',
+  tireBay,
   startFrame = 0,
   cameraFrom,
   cameraGlide,
@@ -115,7 +140,7 @@ export const SectionLabScene: React.FC<SectionLabSceneProps> = ({
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
   const t = frame / fps;
-  const {from, to, pre} = labCameraMove({camera, push, cameraFrom, cameraGlide}, durationInFrames, fps);
+  const {from, to, pre} = labCameraMove({camera, push, cameraFrom, cameraGlide, dressing}, durationInFrames, fps);
   return (
     <SectionStage mood={mood} post={{focusY: 0.5}} ao={ao ?? realism}>
       <SectionCamera
@@ -137,6 +162,20 @@ export const SectionLabScene: React.FC<SectionLabSceneProps> = ({
         zeroAt={zeroAt}
         running={running}
         realism={realism}
+        dressing={dressing}
+        tireBay={{
+          // the result beat: the 'bench' framing, or any tire-bay scene that continues from the one
+          // before it (a custom move gliding in from the first Lab scene)
+          rows:
+            camera === 'bench' || cameraFrom !== undefined
+              ? [
+                  {...DEFAULT_ROWS[0], lowAt: 0.6},
+                  {...DEFAULT_ROWS[1], lowAt: 2.9},
+                ]
+              : DEFAULT_ROWS,
+          beat: camera === 'bench' || cameraFrom !== undefined ? 'result' : 'check',
+          ...tireBay,
+        }}
       />
     </SectionStage>
   );

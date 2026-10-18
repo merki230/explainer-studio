@@ -17,6 +17,8 @@ import {TITLE_FADE, TITLE_HOLD, TitleBlock} from './components/TitleBlock';
 import {SCENES} from './scenes';
 import {labCameraEnd, labCameraStart} from './scenes/SectionLabScene';
 import {sectionCameraEnd, sectionCameraStart, TIME_PASSES} from './scenes/SectionRoomScene';
+import {wheelCameraEnd, wheelCameraStart} from './scenes/WheelSliceScene';
+import {carCameraEnd, carCameraStart} from './scenes/CarSliceScene';
 import type {Framing} from './three/section/SectionCamera';
 
 type CameraFn = (p: Record<string, unknown>, durationInFrames: number, fps: number) => Framing;
@@ -24,6 +26,8 @@ type CameraFn = (p: Record<string, unknown>, durationInFrames: number, fps: numb
 const CAMERAS: Record<string, {start: CameraFn; end: CameraFn}> = {
   'section-room': {start: sectionCameraStart as CameraFn, end: sectionCameraEnd as CameraFn},
   'section-lab': {start: labCameraStart as CameraFn, end: labCameraEnd as CameraFn},
+  'wheel-slice': {start: wheelCameraStart as CameraFn, end: wheelCameraEnd as CameraFn},
+  'car-slice': {start: carCameraStart as CameraFn, end: carCameraEnd as CameraFn},
 };
 import {transitionInto, type Transition} from './scenes/transitions';
 import {clickOffFrame, type ClickOff} from './scenes/clickOff';
@@ -163,7 +167,7 @@ const FadeOut: React.FC<{children: React.ReactNode; at?: number; frames?: number
   return <AbsoluteFill style={{opacity}}>{children}</AbsoluteFill>;
 };
 
-type SceneContext = {props: Record<string, unknown>; durationInFrames: number; offset: number; mood: Mood};
+type SceneContext = {props: Record<string, unknown>; durationInFrames: number; offset: number; mood: Mood; name: string};
 
 const Overlay: React.FC<{o: ResolvedOverlay; scene: SceneContext}> = ({o, scene}) => {
   const mood = scene.mood;
@@ -175,7 +179,7 @@ const Overlay: React.FC<{o: ResolvedOverlay; scene: SceneContext}> = ({o, scene}
     case 'ad':
       return <AdCard {...o} />;
     case 'counter':
-      return <Counter {...o} />;
+      return <Counter {...o} mood={mood} />;
     case 'statement':
       return <Statement {...o} mood={mood} />;
     case 'attribution':
@@ -418,6 +422,7 @@ const ExplainerBody: React.FC<{
                           durationInFrames: duration,
                           offset: o.startFrame - s.startFrame,
                           mood: moodOf(s),
+                          name: s.scene,
                         }}
                       />
                     </FadeOut>

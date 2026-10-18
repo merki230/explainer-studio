@@ -2,6 +2,7 @@ import React from 'react';
 import {useCurrentFrame, useVideoConfig} from 'remotion';
 import {fonts} from '../fonts';
 import {headTopOnScreen, type SectionRoomSceneProps} from '../scenes/SectionRoomScene';
+import {carHeadTopOnScreen, type CarSliceSceneProps} from '../scenes/CarSliceScene';
 import {CAST, type CastName, type Mood} from '../theme';
 import {ease} from './card';
 import {LEFT, overlayInk, paperHalo, RIGHT} from './sectionStyle';
@@ -36,21 +37,19 @@ export const NameTag: React.FC<
   NameTagProps & {
     mood?: Mood;
     /** The scene's props, its length, and this overlay's start within it (set by Explainer). */
-    scene: {props: Partial<SectionRoomSceneProps>; durationInFrames: number; offset: number};
+    scene: {props: Partial<SectionRoomSceneProps>; durationInFrames: number; offset: number; name?: string};
   }
 > = ({who, label, side, rise = 120, mood = 'day', scene}) => {
   const frame = useCurrentFrame();
   const {fps, width, height} = useVideoConfig();
-  const head = headTopOnScreen(scene.props, who, {
-    frame: frame + scene.offset,
-    fps,
-    durationInFrames: scene.durationInFrames,
-  });
+  const when = {frame: frame + scene.offset, fps, durationInFrames: scene.durationInFrames};
+  const car = scene.name === 'car-slice';
+  const head = car ? carHeadTopOnScreen(scene.props as Partial<CarSliceSceneProps>, who, when) : headTopOnScreen(scene.props, who, when);
   if (!head) return null;
   const {ink, paper} = overlayInk(mood);
   const text = (label ?? who).toUpperCase();
   const cast = scene.props.cast ?? ['friend', 'you'];
-  const onLeft = (side ?? (cast.indexOf(who) === 0 ? 'left' : 'right')) === 'left';
+  const onLeft = (side ?? (car ? (head[0] < 540 ? 'left' : 'right') : cast.indexOf(who) === 0 ? 'left' : 'right')) === 'left';
   const w = SQUARE + GAP + textWidth(text);
   const tagLeft = onLeft ? LEFT : RIGHT - w;
   const [hx, hy] = head;

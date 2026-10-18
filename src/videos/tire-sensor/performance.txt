@@ -1,0 +1,13 @@
+In many cars, a little radio inside each tire wakes up as you drive away.
+[pause] [curious] So why would a tire need its own radio?
+Your car needs to know the pressure inside, but it's hard to run a wire to a spinning wheel...
+Instead, each tire gets a small sensor with its own battery, often behind the valve where you pump in the air.
+Look inside... and there's a pressure sensor, a motion sensor, a tiny computer and the radio itself.
+When you're parked, it's asleep, and the motion sensor wakes it up once the wheel turns.
+Then, every minute or so, it sends the car a quick radio message with the pressure.
+The car can tell which wheel is talking because each message carries the sensor's own ID.
+It stays quiet most of the time to save power, and that's how the battery lasts up to about ten years.
+Once a tire's about a quarter low... US rules say the warning light's gotta come on within 20 minutes of driving.
+[pause] Some cars don't have tire sensors at all... and they spot a soft tire because it spins slightly faster.
+When US safety officials checked mid-2000s cars, the ones with the warning were about half as likely to have a badly low tire.
+[pause] Next time you fill a tire, there's probably a little radio behind that valve... waiting for the wheel to turn.

@@ -5,6 +5,11 @@ Living document: update it whenever a step causes rework, so the next video does
 
 ## How a video is built (owner-approved, 2026-10-15)
 
+0. **Picture before voice** (owner, 2026-10-16): before recording, the director writes an A/V script
+   (`src/videos/<slug>/av-script.md`, one row per sentence: on screen, motion, transition, overlay, new or
+   existing part). Lines that are hard to show, too long for one shot or rushed get reworded, and the
+   pauses in `performance.txt` are placed on the cuts. Changing words after the paid voice take is the
+   expensive way.
 1. **Rough cut:** the whole video with the real voice, the right beats and camera moves, simple
    placeholders where effects aren't finished. The owner reviews it in Remotion Studio for structure
    and pacing.
@@ -128,7 +133,7 @@ look like them?"
 - [ ] Brand assets: logo, YouTube banner, platform bios (owner questions pending).
 - [ ] Research addendum on the reference channel (@wealthy_path): size, cadence, cast, sourcing.
 - [ ] Exhibit No. 002 candidates: see `sources.md` angle "The Screen".
-- [ ] **Hook in the first second, from No. 002 on** (owner, 2026-10-16; the pilot keeps its opening). Many viewers
+- [x] **Hook in the first second, from No. 002 on** (done 2026-10-16: now brand.md § Hook patterns and style-guide § 6 and § 8, v0.11) (owner, 2026-10-16; the pilot keeps its opening). Many viewers
   swipe at 1–2 s. The pilot opens on setup: black frame, wake, "Your friend spends the evening…". The surprise
   lands at 6.6 s and the question at 9.1 s, past the brand's ~6 s target. Next time: the first line and the first
   frame carry the payoff ("Your phone just showed you an ad for a coffee machine you never searched…"), the

@@ -96,6 +96,11 @@ export const section = {
   pot: '#d8d4cc',
   /** The router's status LED while the system is idle (dark). */
   ledOff: '#3a3d44',
+  /**
+   * Dashboard warning icons and device indicator lights, lit (v0.11.1 § 1 Warning lights): flat, never
+   * bloomed, never orange. Same value as the light channels' yellow.
+   */
+  warning: '#eedd2b',
 };
 
 type Lamp = {light: string; intensity: number; reach: number; shade: string; glow: string; glowIntensity: number};
@@ -351,6 +356,51 @@ export const REAL = {
   cap: '#8f8166',
   resistor: '#1d1d20',
   inductor: '#5d6066',
+  /** The wheel (No. 002): tire rubber, its inner liner, the alloy rim, brake rotor, valve rubber, brass valve core. */
+  tire: '#2b2c30',
+  liner: '#3a3c41',
+  rim: '#b3b7bd',
+  rotor: '#8c9097',
+  valve: '#1d1e21',
+  brass: '#a8955f',
+  /** Two-tone alloy (polish round 1): the machined spoke faces and lip, the painted gunmetal pockets. */
+  rimMachined: '#c8ccd2',
+  rimPaint: '#6b7078',
+  /** The brake caliper (painted, fixed) and the lug nuts' chrome. */
+  caliper: '#383b41',
+  chrome: '#c4c8cd',
+  /** The valve stem's anodised aluminium (clamp-in TPMS stem) and its rubber grommet. */
+  stemAlu: '#9ea3aa',
+  grommet: '#202124',
+  /** The tire sensor: grey plastic housing, steel coin cell, its label ink, the tone ring's dark steel. */
+  sensor: '#80868f',
+  /** The housing's moulded details (ribs, the screw boss, the vent) a shade darker; the potting gasket. */
+  sensorDark: '#646a72',
+  coinCell: '#c3c6cb',
+  toneRing: '#4a4d53',
+  /** The air chuck's steel head and its black hose. */
+  chuck: '#9fa3aa',
+  hose: '#1f2023',
+  /** The car's interior: seats, dashboard, carpet; the dark tinted glass; the receiver box. */
+  seat: '#3b3e45',
+  dash: '#2e3036',
+  carpet: '#4a4c52',
+  carGlass: '#1c2733',
+  receiver: '#25272c',
+  /** A white tick mark on a sidewall (the indirect system's spin cue). */
+  tick: '#e8e6e0',
+};
+
+/**
+ * The car slice (No. 002), per mood: the road on the ground block, its lane paint, the two car bodies
+ * (never red or orange, § 1). Neutral; nothing here is the system.
+ */
+export const CAR: Record<
+  Mood,
+  {asphalt: string; lane: string; verge: string; bodies: {you: string; mom: string}}
+> = {
+  day: {asphalt: '#5a5d63', lane: '#e4e2da', verge: '#8f9a7e', bodies: {you: '#9fb0c4', mom: '#5f7d6e'}},
+  night: {asphalt: '#3b3e46', lane: '#c9c7c0', verge: '#4a5246', bodies: {you: '#6d7d92', mom: '#45594f'}},
 };
 
 export type CastName = 'you' | 'friend' | 'mom' | 'extra';

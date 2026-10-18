@@ -136,7 +136,27 @@ export type FigureProps = {
   life?: boolean;
   /** Seconds added to the scene time for the idle life (the scene's start in the video). */
   clockOffset?: number;
+  /**
+   * Where the hands go instead of the phone (figure-local points: origin on the floor under the
+   * pelvis, facing +z, +x the figure's left): [right hand, left hand]. Use with `phone: false`: on a
+   * steering wheel, a gauge. The arms solve to them (two-bone IK).
+   */
+  hands?: [V3, V3];
+  /**
+   * 'sit' (default: the rest pose, seat height ≈ 0.57) or 'stand': the legs straighten under the
+   * hips (a slight knee bend), the body rises by the thigh's length, the feet flat on the ground.
+   * `hands` stay figure-local (origin on the ground), so they follow.
+   */
+  stance?: 'sit' | 'stand';
+  /**
+   * Walking (standing only): the step cycle's phase (cycles; drive it from the distance walked) and
+   * how much of a stride to show, 0 (standing still) to 1. The legs swing opposite, the body bobs.
+   */
+  walk?: {phase: number; amount: number};
 };
+
+/** How far the body rises standing up (the thigh's length): the seated hip at 0.6 → 1.07. */
+export const STAND_LIFT = 0.47;
 
 /**
  * A member of the cast, seated (style guide v0.8 § 8): the Mannequin rig (rig.ts) in everyday
@@ -158,8 +178,19 @@ export const Figure: React.FC<FigureProps> = ({
   phoneModel = 'simple',
   life = true,
   clockOffset = 0,
+  hands,
+  stance = 'sit',
+  walk,
 }) => {
   const frame = useCurrentFrame();
+  const stand = stance === 'stand';
+  const wa = stand && walk ? Math.max(0, Math.min(1, walk.amount)) : 0;
+  const wp = walk ? walk.phase * Math.PI * 2 : 0;
+  // the body dips a little at each passing step (twice a cycle)
+  const lift = stand ? STAND_LIFT - 0.015 * wa * (1 - Math.cos(2 * wp)) * 0.5 : 0;
+  /** A leg's swing (radians, forward +) and knee bend for the step cycle. */
+  const swing = (s: number) => 0.32 * wa * Math.sin(wp + (s > 0 ? Math.PI : 0));
+  const kneeBend = (s: number) => 0.45 * wa * Math.max(0, Math.sin(wp + (s > 0 ? Math.PI : 0) + Math.PI / 2));
   const {fps} = useVideoConfig();
   const t = frame / fps;
   const clock = t + clockOffset;
@@ -236,12 +267,22 @@ export const Figure: React.FC<FigureProps> = ({
   const shrug = pose.shrug + 0.006 * b;
 
   const ph = phoneInChest(pose, swipe, PHONE_PITCH_TO_FACE);
+  // hand targets in the chest's frame: undo the spine and chest turns
+  const spineQ = new THREE.Quaternion().setFromEuler(spineE);
+  const chestQ = new THREE.Quaternion().setFromEuler(chestE);
+  const toChest = (p: V3) =>
+    V(...p)
+      .sub(REST.spine)
+      .applyQuaternion(spineQ.clone().invert())
+      .sub(REST.chest.clone().sub(REST.spine))
+      .applyQuaternion(chestQ.clone().invert());
+  const grips = hands ? [toChest([hands[0][0], hands[0][1] - lift, hands[0][2]]), toChest([hands[1][0], hands[1][1] - lift, hands[1][2]])] : ph.grips;
   const arms = [0, 1].map((i) => {
     const s = i === 0 ? -1 : 1;
     const shoulder = REST.shoulder(s)
       .sub(REST.chest)
       .add(V(0, shrug, 0));
-    return {s, shoulder, ...solveArm(s, shoulder, ph.grips[i])};
+    return {s, shoulder, ...solveArm(s, shoulder, grips[i])};
   });
   const thumbDir = V(-0.6, 0.55 + 0.55 * swipe, -0.12 - 0.25 * swipe).normalize();
   const thumbPos = THUMB_BASE.clone().addScaledVector(thumbDir, THUMB_L / 2 + THUMB_R);
@@ -261,13 +302,17 @@ export const Figure: React.FC<FigureProps> = ({
   const c = REST.headCentre;
   return (
     <group position={position} rotation={[0, rotationY, 0]}>
-      <group position={REST.pelvis}>
+      <group position={[REST.pelvis.x, REST.pelvis.y + lift, REST.pelvis.z]}>
         {P.side.map((side) => (
-          <group key={side.s} position={rel(REST.hip(side.s), REST.pelvis)} rotation={[0, idle.hipYaw * L, 0]}>
+          <group
+            key={side.s}
+            position={rel(REST.hip(side.s), REST.pelvis)}
+            rotation={[stand ? Math.PI / 2 - 0.06 - swing(side.s) : 0, idle.hipYaw * L * (stand ? 0.3 : 1), 0]}
+          >
             <PartMesh part={side.thigh} material={mats.bottom} />
-            <group position={rel(REST.knee(side.s), REST.hip(side.s))}>
+            <group position={rel(REST.knee(side.s), REST.hip(side.s))} rotation={[stand ? -Math.PI / 2 + 0.12 + kneeBend(side.s) : 0, 0, 0]}>
               <PartMesh part={side.shin} material={mats.bottom} />
-              <group position={rel(REST.ankle(side.s), REST.knee(side.s))}>
+              <group position={rel(REST.ankle(side.s), REST.knee(side.s))} rotation={[stand ? -0.06 + swing(side.s) - kneeBend(side.s) : 0, 0, 0]}>
                 <PartMesh part={side.foot} material={mats.shoe} />
               </group>
             </group>
