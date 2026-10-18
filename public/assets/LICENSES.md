@@ -15,3 +15,5 @@ Every file under `public/assets/` with its source, author and licence.
 | --- | --- | --- |
 | `src/videos/phone-listening/audio/sfx/click.mp3` | Self-made with `yarn sfx:click` (deterministic synth, `scripts/sfx-click.mjs`) | No licence needed |
 | `src/videos/phone-listening/audio/music.mp3`, `audio/sfx/whoosh.mp3`, `audio/sfx/hum.mp3` | ElevenLabs output on the Creator plan, recorded in `src/videos/phone-listening/audio-log.md` | ElevenLabs terms for the Creator plan (`brand/research/music-licensing.md`) |
+| `src/videos/tire-sensor/audio/music-a.mp3`, `audio/sfx/hiss.mp3`, `audio/sfx/chime.mp3` | ElevenLabs output on the Creator plan, recorded in `src/videos/tire-sensor/audio-log.md` | ElevenLabs terms for the Creator plan (`brand/research/music-licensing.md`) |
+| `src/videos/tire-sensor/audio/sfx/whoosh.mp3`, `audio/sfx/hum.mp3` | Copies of No. 001's ElevenLabs files (see `src/videos/phone-listening/audio-log.md`), reused in our own videos | ElevenLabs terms for the Creator plan |

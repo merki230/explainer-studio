@@ -111,6 +111,23 @@ export const spec: VideoSpec = {
   // enters at 3 s (default startAt, after the hook's first line), fades in over 2 s, out to silence at the end
   music: {src: `audio/music-${MUSIC_TAKE}.mp3`, level: MUSIC_LEVEL[MUSIC_TAKE], duckDb: 0},
   tail: 1.2, // the end hold on frame 0's picture
+  // Cover still (`yarn cover tire-sensor`): frame 0's cut wheel, closer than HOOK (≈ 1.3×) and lower, so
+  // the tire runs from just under the hook (y ≈ 580) to y ≈ 1640, inside the 3:4 crop. Stopped with the
+  // valve at home, the sensor awake, its first orange pulse frozen ≈ 0.17 s out: the bright outer ring
+  // wraps the sensor and the top cut, clear of the text, and survives the thumbnail shrink.
+  cover: {
+    text: 'The radio inside the tire.',
+    scene: 'wheel-slice',
+    camera: {look: [-0.22, 0.32, 0.11], distance: 7.9},
+    at: 1.17,
+    props: {
+      ...DAY,
+      spin: [{at: 0, speed: 0}],
+      pressure: FULL,
+      sensor: [{at: 0, state: 'awake'}],
+      pulses: [1.0],
+    },
+  },
   scenes: [
     // 1 · Frame 0 and the question (A/V 1 + 2, one scene so the title block can hold past the question).
     // The sensor wakes on "wakes", the wheel starts turning on "drive away", the first orange pulse
