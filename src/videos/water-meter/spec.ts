@@ -106,6 +106,9 @@ const KITCHEN_CLOSE: Framing = {look: [-6.2, 1.85, -1.2], distance: 6};
 /** M → C: down the service pipe under the yard on the way to the register. */
 const PIPE: Framing = {look: [-2.2, -0.3, -0.05], distance: 4.5};
 
+/** The cover: the box at the curb and the stopped truck beside it, a touch closer than REVEAL. */
+const COVER_CAMERA: Framing = {look: [1.0, 0.7, -2.6], distance: 21};
+
 // ---------------------------------------------------------------- the water (video seconds)
 
 /** YOU's tap: on in the kitchen (41.6, as the glide lands), off on "tap" (49.68). TIMED */
@@ -190,6 +193,23 @@ const picture: VideoSpec = {
   // starts at frame 0 (startAt: 0), fades in over 1.5 s, out to silence at the end (owner, 2026-10-18)
   music: {src: `audio/music-${MUSIC_TAKE}.mp3`, level: MUSIC_LEVEL[MUSIC_TAKE], duckDb: 0, startAt: 0, fadeIn: 1.5},
   tail: 1.0, // the end hold on frame 0's close-up
+  // Cover still (`yarn cover water-meter`): the A/V cover idea. The cut-open meter box (meter, radio, lid
+  // cap) at the curb, the white pickup stopped beside it in the near lane, whole, its front bumper 1.5 m
+  // behind the cut, and one orange burst arcing from the cap to its roof receiver (frozen 0.65 s after it
+  // leaves: line drawn, ring up). Text in the sky band, two lines.
+  cover: {
+    text: "Who's reading\nyour meter?",
+    size: 120,
+    scene: 'street-slice',
+    camera: COVER_CAMERA,
+    at: 2,
+    props: {
+      ...DAY,
+      truck: {direction: 'toward', through: -1.5, speed: [{at: 0, speed: 0}]},
+      bursts: [{at: 1.35, lid: 0, to: 'truck'}],
+      leakSpin: [{at: 0, speed: 0.3}],
+    },
+  },
   scenes: [
     // 1 · Lines 1–2. Frame 0, C: the box close-up. A burst leaves the cap on "water" (1.20) and runs to
     // the truck coming down the near lane toward us, whole and behind the plane, as the camera
