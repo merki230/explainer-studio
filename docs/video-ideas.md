@@ -22,6 +22,7 @@ This is a hypothesis, not a rule: judge it on two or three more videos (metrics 
 | 5 | Hotel key card | A chip and antenna inside the plastic; the door checks a code | "Your hotel key card has a tiny antenna hidden inside the plastic." | idea |
 | 6 | Car airbag | A sensor decides in milliseconds whether a crash is real | "Your airbag decides you're crashing faster than you can blink." | idea |
 | 7 | Parking garage lights | A sensor over each space reports whether it's taken | "That green light above the parking space is watching whether a car is under it." | idea |
+| 8 | Tire sensors (follow-up to No. 002) | After a tire rotation, how does the car know which sensor is on which wheel? (relearn, or automatic location) | "How does your car know which tire is which?" | idea (from a No. 002 TikTok comment) |
 
 All claims above are unverified until researched.
 

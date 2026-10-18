@@ -17,16 +17,25 @@ const RING = new THREE.TorusGeometry(1, 0.035, 8, 64);
  * bloomed, fading as they grow (through the rubber). `age` is seconds since the pulse left (≤ 0 or
  * past `PULSE_LIFE`: nothing). `reach` is the final radius in world units.
  */
-export const RadioPulse: React.FC<{position: V3; age: number; reach?: number; weight?: number}> = ({
-  position,
-  age,
-  reach = 0.9,
-  weight = 1,
-}) => {
+export const RadioPulse: React.FC<{
+  position: V3;
+  age: number;
+  reach?: number;
+  weight?: number;
+  /** How much of the ring is drawn (radians), centred on the top (default 2π: whole). π: the upper half, for a source on the ground. */
+  arc?: number;
+}> = ({position, age, reach = 0.9, weight = 1, arc = Math.PI * 2}) => {
+  const ring = useMemo(() => {
+    if (arc >= Math.PI * 2 - 1e-3) return RING;
+    const g = new THREE.TorusGeometry(1, 0.035, 8, 48, arc);
+    g.rotateZ(Math.PI / 2 - arc / 2);
+    return g;
+  }, [arc]);
   const mats = useMemo(
     () =>
       [0, 1].map(
-        () => new THREE.MeshBasicMaterial({color: raw(section.orange), transparent: true, depthWrite: false, opacity: 0}),
+        () =>
+          new THREE.MeshBasicMaterial({color: raw(section.orange), transparent: true, depthWrite: false, opacity: 0}),
       ),
     [],
   );
@@ -44,7 +53,15 @@ export const RadioPulse: React.FC<{position: V3; age: number; reach?: number; we
         // the tube keeps its width as the ring grows (thin, like § 5's core)
         const tube = (0.018 * weight) / Math.max(0.05, r) / 0.035;
         return (
-          <mesh key={k} geometry={RING} material={mats[k]} scale={[r, r, r * tube]} visible={on} userData={{glow: true}} renderOrder={3}>
+          <mesh
+            key={k}
+            geometry={ring}
+            material={mats[k]}
+            scale={[r, r, r * tube]}
+            visible={on}
+            userData={{glow: true}}
+            renderOrder={3}
+          >
             {null}
           </mesh>
         );
@@ -130,7 +147,8 @@ export const AirChuck: React.FC<{tip: V3; dir: V3; armFrom: V3; k: number; size?
   arm = 2.4,
 }) => {
   const mats = useMemo(() => {
-    const phys = (c: string, o: THREE.MeshPhysicalMaterialParameters = {}) => new THREE.MeshPhysicalMaterial({color: raw(c), ...o});
+    const phys = (c: string, o: THREE.MeshPhysicalMaterialParameters = {}) =>
+      new THREE.MeshPhysicalMaterial({color: raw(c), ...o});
     return {
       steel: phys(REAL.chuck, {metalness: 1, roughness: 0.32}),
       brass: phys(REAL.brass, {metalness: 1, roughness: 0.35}),
@@ -151,13 +169,37 @@ export const AirChuck: React.FC<{tip: V3; dir: V3; armFrom: V3; k: number; size?
   const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), d);
   // the arm at the cast's scale (`arm` × the figure's metre units, ≈ 2.4 for a radius-1 wheel of 0.33 m... kept a little small)
   const hand = back.clone().addScaledVector(off, 0.02 * arm);
-  const elbow = hand.clone().addScaledVector(off, 0.42 * arm).add(new THREE.Vector3(0, -0.1 * arm, 0));
+  const elbow = hand
+    .clone()
+    .addScaledVector(off, 0.42 * arm)
+    .add(new THREE.Vector3(0, -0.1 * arm, 0));
   const fore = limb(hand.clone().addScaledVector(off, 0.04 * arm), elbow, 0.058 * arm);
-  const hoseCurve = useMemo(() => new THREE.CatmullRomCurve3([new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()]), []);
+  const hoseCurve = useMemo(
+    () => new THREE.CatmullRomCurve3([new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()]),
+    [],
+  );
   hoseCurve.points[0].copy(back);
-  hoseCurve.points[1].copy(back.clone().addScaledVector(d, 0.25 * size).add(new THREE.Vector3(0, -0.15 * size, 0)));
-  hoseCurve.points[2].copy(back.clone().addScaledVector(d, 0.4 * size).addScaledVector(off, 0.6 * size).add(new THREE.Vector3(0, -0.9 * size, 0)));
-  const hoseKey = hoseCurve.points.map((p) => p.toArray().map((x) => x.toFixed(3)).join(',')).join('|');
+  hoseCurve.points[1].copy(
+    back
+      .clone()
+      .addScaledVector(d, 0.25 * size)
+      .add(new THREE.Vector3(0, -0.15 * size, 0)),
+  );
+  hoseCurve.points[2].copy(
+    back
+      .clone()
+      .addScaledVector(d, 0.4 * size)
+      .addScaledVector(off, 0.6 * size)
+      .add(new THREE.Vector3(0, -0.9 * size, 0)),
+  );
+  const hoseKey = hoseCurve.points
+    .map((p) =>
+      p
+        .toArray()
+        .map((x) => x.toFixed(3))
+        .join(','),
+    )
+    .join('|');
   const hoseGeo = useMemo(
     () => new THREE.TubeGeometry(hoseCurve, 24, 0.018 * size, 8, false),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -172,7 +214,13 @@ export const AirChuck: React.FC<{tip: V3; dir: V3; armFrom: V3; k: number; size?
         <cylinderGeometry args={[0.022 * size, 0.022 * size, 0.024 * size, 20]} />
       </mesh>
       <mesh geometry={hoseGeo} material={mats.hose} castShadow />
-      <mesh geometry={fore.geometry} position={fore.position} quaternion={fore.quaternion} material={mats.sleeve} castShadow />
+      <mesh
+        geometry={fore.geometry}
+        position={fore.position}
+        quaternion={fore.quaternion}
+        material={mats.sleeve}
+        castShadow
+      />
       <mesh position={hand} material={mats.skin} castShadow>
         <sphereGeometry args={[0.045 * arm, 16, 12]} />
       </mesh>

@@ -29,6 +29,24 @@ Reading notes: YouTube views include replays (P§4). TikTok's "retention 32%" ma
 
 ---
 
+## No. 004 · water-meter (`water-meter`): leak-indicator colour (not published)
+
+- **Decided:** 2026-10-18, owner, relayed by the main session · **Applies to:** No. 004 onward
+
+**Owner's notes** (as relayed)
+
+- Real water meters have a red leak-indicator triangle. Show it red, clearly distinct from the system orange and the warning yellow, flat, never glowing like the system.
+
+**What we're changing** (✅ owner decision; value 🧪; CHANGELOG v0.11.3)
+
+| Rule (file § name) | Change | Note |
+|---|---|---|
+| style-guide § 1 new Real red indicators row, constant tokens; § 2 Bloom; checklist 2 | Proposed token `leakRed` `#ef3957` (the channels' red; the A/V script's `#c62828` adjusted for band clearance) for real red indicator parts; flat, no emissive or bloom | The note |
+
+**To watch once published:** comments reading the red triangle as part of the system, or saying it "should be" a different red.
+
+---
+
 ## No. 003 · elevator-dispatch (`elevator-dispatch`): sound decisions (not published)
 
 - **Decided:** 2026-10-18, owner, relayed by the main session · **Applies to:** No. 003 onward
@@ -159,7 +177,13 @@ Reading notes: YouTube views include replays (P§4). TikTok's "retention 32%" ma
 
 - "Don't change any rule yet; we need insight from more videos first." (owner decision, relayed by the main session)
 
-**Viewer comments:** not yet reported. Still to watch: the yellow warning light read as the system (entry above).
+**Viewer comments** (logged one by one; counts once more come in)
+
+- **TikTok, @Noah Marty:** "But how does it still say the right wheel even when you rotate your tires?"
+  - **Channel's reply** (owner, 2026-10-18): "Some cars need a quick 'relearn' after a rotation. Many newer ones figure it out on their own." (Source: `src/videos/tire-sensor/sources.md` B10.)
+  - **Reading:** a curious follow-up question: evidence for H5 (the hidden-tech niche keeps people thinking). Added as idea #8 in `docs/video-ideas.md`.
+
+Still to watch: the yellow warning light read as the system (entry above).
 
 **Where the average viewer is when they leave** (average watch against `transcript.json`; an average, not a drop-off curve)
 

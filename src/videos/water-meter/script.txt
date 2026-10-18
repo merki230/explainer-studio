@@ -1,0 +1,12 @@
+A truck can read your water meter just by driving past your house.
+So how does a meter talk to a moving truck?
+Look at the meter box.
+There's a little battery radio in there wired to the meter, and that round cap on the lid is its antenna.
+Every few seconds, most newer radios send out a short burst on their own, with your reading and an ID number.
+The truck rolls by at normal speed while a computer on board matches each ID to an address.
+One maker says the battery's designed to last twenty years, and each burst is so short and so weak.
+Newer systems skip the truck, and many send hourly readings to receivers on poles or water tanks.
+That lets many utilities flag a possible leak.
+Your utility's website might show you your own use hour by hour.
+Turn off every tap, and if you can see your meter, a red triangle that's still turning may mean a leak.
+And if there's a round cap on your meter box lid, that's what's been doing the talking.
