@@ -1,4 +1,4 @@
-import type {VideoSpec} from '../../types';
+import type {OverlaySpec, VideoSpec} from '../../types';
 
 /**
  * Exhibit No. 004 · The Meter Box, in The Section (style guide v0.11.2). Rough cut, from `av-script.md`
@@ -24,6 +24,15 @@ import type {VideoSpec} from '../../types';
  * shared across scenes (tap, flow, leak spin) are written once in **video seconds** and rebased with
  * `r(abs, start)`. T holds the cue times of the directed take (transcript.json, 60.8 s); re-check T and
  * every // TIMED value if the voiceover is redone.
+ *
+ * Sound (style guide § 9 v0.11.2; No. 003's pattern): one music bed, switched with MUSIC_TAKE, from frame
+ * 0 with a 1.5 s fade-in, ≈ 9 dB under the dry voice, no duck, faded to silence on the last frame.
+ * Action sounds 13–19 dB under the voice (SOUND, by scene): the truck arriving and braking (1) and its
+ * pass (6), a soft blip on YOUR cap's bursts (one blip for a group; the weak bursts of 8 and the
+ * neighbours' quieter), YOU's tap on (11) and off (13), the phone's alert (11). No slides, so no whoosh;
+ * no hum. Levels from measured loudness (voice −21.4 LUFS; music A −15.0, B −16.2, C −16.3; truck
+ * −10.5, blip −25.5, tap −8.6, notify −34.4): re-check if a file is replaced. Nothing sounds after
+ * ≈ 60.3 s, so the loop is clean.
  *
  * Illustrative (🎭, disclosed in the post; Decision 4): the ID and reading digits, the addresses on the
  * truck computer, the "Possible leak" text, the hourly bars, the burst timing as drawn.
@@ -133,8 +142,53 @@ const CALLOUT = {
   receiver: {anchor: 'pole', x: 0.72, y: 0.36, place: 'side', dx: -160, dy: -90},
 } as const;
 
-export const spec: VideoSpec = {
+// ---------------------------------------------------------------- sound (§ 9)
+
+// The music take: switch with this one constant.
+const MUSIC_TAKE: 'a' | 'b' | 'c' = 'a';
+// level = (voice LUFS − 9) − track LUFS, voice −21.4: a bed ≈ 9 dB under the dry voice, steady (no duck).
+const MUSIC_LEVEL = {a: -15.4, b: -14.2, c: -14.1} as const;
+
+// SFX volumes are file-level offsets; "≈ N under" = file LUFS + volume against the voice (−21.4).
+// The truck (4 s, −10.5 LUFS): loud 0.5–1.4 s into the file, decaying to an idle tail by ≈ 2.4 s. −25 ≈ 14 under.
+const TRUCK = {type: 'sfx', name: 'truck', volume: -25} as const;
+// A soft blip on a burst (0.5 s, −25.5 LUFS): −13 ≈ 17 under; QUIET −16 ≈ 20 under (groups, weak bursts).
+const BLIP = {type: 'sfx', name: 'blip', volume: -13} as const;
+const BLIP_QUIET = {...BLIP, volume: -16} as const;
+// The tap (3 s, −8.6 LUFS): a click and running water to ≈ 1.6 s, then the stop. −28 ≈ 16 under.
+const TAP_SFX = {type: 'sfx', name: 'tap', volume: -28} as const;
+// The phone's alert (1 s, −34.4 LUFS): 0 ≈ 13 under.
+const NOTIFY = {type: 'sfx', name: 'notify', volume: 0} as const;
+
+/** Sound per scene (index in `scenes`), seconds into the scene. TIMED against the props above. */
+const SOUND: Record<number, OverlaySpec[]> = {
+  // 1: blips on the bursts (1.20 "water", 5.40 "talk"); the truck's loud part lands as it slows (≈ 1.5–2.4 s),
+  // braking and idle tail to ≈ 5 s
+  0: [{...BLIP, at: 1.2}, {...BLIP, at: 5.4}, {...TRUCK, at: 1.0, fade: 0.3}],
+  // 4: the two bursts of "every few seconds"
+  3: [{...BLIP, at: r(14.88, T.every)}, {...BLIP, at: r(17.6, T.every)}],
+  // 5: the burst on "reading"
+  4: [{...BLIP, at: r(19.44, T.reading)}],
+  // 6: the truck's pass as it nears (quieter, from 3 s), two of the four neighbour bursts
+  5: [{...TRUCK, volume: -29, at: 3.0, fade: 0.5, until: 6.4}, {...BLIP_QUIET, at: 1.9}, {...BLIP_QUIET, at: 5.1}],
+  // 8: the short and the weak burst, quiet
+  7: [{...BLIP_QUIET, at: r(32.64, T.burst)}, {...BLIP_QUIET, at: r(33.52, T.burst)}],
+  // 9: every lid at once on "many": one blip
+  8: [{...BLIP, at: r(36.96, T.newer)}],
+  // 10: the lines to the pole, then to the tank
+  9: [{...BLIP_QUIET, at: r(39.3, T.poles)}, {...BLIP_QUIET, at: r(40.0, T.poles)}],
+  // 11: the tap on (click and water, faded under the line), the alert as the phone lights on "flag"
+  10: [{...TAP_SFX, at: r(TAP.on, T.flag), fade: 0.4, until: r(TAP.on + 1.5, T.flag)}, {...NOTIFY, at: r(42.7, T.flag)}],
+  // 13: the tap off: the file from 1.2 s (water, then the stop at ≈ 1.6 s) so the stop lands on "tap" (49.68)
+  12: [{...TAP_SFX, trim: 1.2, at: r(TAP.off - 0.42, T.tap)}],
+  // 15: the last burst on "doing" (59.80); silent from ≈ 60.3 s to the end
+  14: [{...BLIP, at: r(59.8, T.end)}],
+};
+
+const picture: VideoSpec = {
   watermark: null,
+  // starts at frame 0 (startAt: 0), fades in over 1.5 s, out to silence at the end (owner, 2026-10-18)
+  music: {src: `audio/music-${MUSIC_TAKE}.mp3`, level: MUSIC_LEVEL[MUSIC_TAKE], duckDb: 0, startAt: 0, fadeIn: 1.5},
   tail: 1.0, // the end hold on frame 0's close-up
   scenes: [
     // 1 · Lines 1–2. Frame 0, C: the box close-up. A burst leaves the cap on "water" (1.20) and runs to
@@ -351,4 +405,9 @@ export const spec: VideoSpec = {
       }),
     },
   ],
+};
+
+export const spec: VideoSpec = {
+  ...picture,
+  scenes: picture.scenes.map((sc, i) => ({...sc, overlays: [...(sc.overlays ?? []), ...(SOUND[i] ?? [])]})),
 };
