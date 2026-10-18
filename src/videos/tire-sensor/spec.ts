@@ -23,7 +23,16 @@ import type {VideoSpec} from '../../types';
  * transcript.json: re-check them if the voiceover is redone. Callout anchors were read off stills.
  *
  * Illustrative (🎭, disclosed in the post): the sensor IDs on the pulse tags ("4F2A" on the near rear
- * wheel, scene 9) and the Lab's 2-of-8 vs 1-of-8 wheel rows (scene 17). No music or sfx in the rough cut.
+ * wheel, scene 9) and the Lab's 2-of-8 vs 1-of-8 wheel rows (scene 17).
+ *
+ * Sound (style guide § 9, README "Sound"; owner-approved placement): one music bed, switched with
+ * MUSIC_TAKE below; a whoosh on each of the six slides (scenes 2, 4, 10, 14, 16, 18); a low hum only
+ * while orange radio pulses are live (scene 1's first pulse, scenes 7–9, the two quiet blinks of scene
+ * 10), always gone before the statement card (scene 9); an air hiss as the tire goes soft (12) and as
+ * it refills through the chuck (18); a soft chime on the warning light (13). No lock click: this video
+ * has no phone lock. Levels were set from measured loudness (voice ≈ −21.9 LUFS, music A −15.1, B
+ * −16.9, C −15.7, hiss −11.6, chime −25.6): re-check them if a file is replaced. SFX `at`/`until`
+ * values are // TIMED against the pulses and props above.
  */
 
 type V3 = [number, number, number];
@@ -71,6 +80,18 @@ const SLIDE = {transition: 'slide'} as const;
 // eslint-disable-next-line @remotion/non-pure-animation
 const FOLLOW_UP = {transition: 'follow', follow: {direction: 'up'}} as const;
 
+// Sound (§ 9). Levels in dB relative to the voice (gain 1); SFX volumes are file-level offsets.
+// The music take: switch with this one constant (owner's choice pending).
+const MUSIC_TAKE: 'a' | 'b' | 'c' = 'a';
+// level ≈ (voice LUFS − 9) − track LUFS, voice −21.9: a bed ≈ 9 dB under the dry voice, steady (no duck).
+const MUSIC_LEVEL = {a: -15.8, b: -14.0, c: -15.2} as const;
+// Whoosh on a slide (18 frames), as No. 001: starts 0.1 s in so its peak lands mid-slide; −18.
+const WHOOSH = {type: 'sfx', name: 'whoosh', at: 0.1, volume: -18} as const;
+// The hum while the orange is live, as No. 001: the file is ≈ 12 LU over the voice, −32 puts it ≈ 20 dB under.
+const HUM = {type: 'sfx', name: 'hum', loop: true, fade: 0.3, volume: -32} as const;
+// Air hiss (2 s file, sound in the first 1.55 s, −11.6 LUFS): −28 puts it ≈ 18 dB under the voice.
+const HISS = {type: 'sfx', name: 'hiss', fade: 0.25, volume: -28} as const;
+
 const DAY = {mood: 'day', realism: true} as const;
 const DRIVING = [{at: 0, speed: 1}];
 const FULL = [{at: 0, value: 1}];
@@ -87,6 +108,8 @@ const AT = {
 
 export const spec: VideoSpec = {
   watermark: null,
+  // enters at 3 s (default startAt, after the hook's first line), fades in over 2 s, out to silence at the end
+  music: {src: `audio/music-${MUSIC_TAKE}.mp3`, level: MUSIC_LEVEL[MUSIC_TAKE], duckDb: 0},
   tail: 1.2, // the end hold on frame 0's picture
   scenes: [
     // 1 · Frame 0 and the question (A/V 1 + 2, one scene so the title block can hold past the question).
@@ -123,6 +146,7 @@ export const spec: VideoSpec = {
           time: '7:58 AM',
           until: 'Your car needs', // faded by the cut (9.28); the question ends 8.64
         },
+        {...HUM, at: 7.4, until: 8.7}, // TIMED: the first pulse (7.56, 0.95 s of rings)
       ],
     },
     // 2 · The car needs the pressure (A/V 3a): the cut car, YOU driving.
@@ -130,7 +154,7 @@ export const spec: VideoSpec = {
       scene: 'car-slice',
       cue: 'Your car needs',
       props: {...DAY, ...SLIDE, variant: 'sensors', driver: 'you', framing: 'wide', driving: DRIVING},
-      overlays: [{type: 'tag', who: 'you', at: 0.3}],
+      overlays: [WHOOSH, {type: 'tag', who: 'you', at: 0.3}],
     },
     // 3 · A wire to a spinning wheel winds up (A/V 3b): glide to the front wheel, the grey cable.
     {
@@ -159,6 +183,7 @@ export const spec: VideoSpec = {
         sensor: [{at: 0, state: 'awake'}],
       },
       overlays: [
+        WHOOSH,
         {
           type: 'callout',
           cue: 'small sensor',
@@ -258,6 +283,7 @@ export const spec: VideoSpec = {
         dimDot: false, // everything on the sensor dark while parked
         pulses: [4.6], // the first pulse, leading the follow to the car
       },
+      overlays: [{...HUM, at: 4.45, until: 'Then, every minute'}], // TIMED: the pulse, to the cut (5.28)
     },
     // 8 · Every minute or so, a radio message to the car's receiver (A/V 7). Time is compressed.
     {
@@ -276,6 +302,7 @@ export const spec: VideoSpec = {
         ],
       },
       overlays: [
+        {...HUM, at: 1.75, until: 'The car can tell'}, // TIMED: both routes (1.88–3.18, 3.9 → past the cut)
         {
           type: 'callout',
           cue: 'every minute',
@@ -310,7 +337,11 @@ export const spec: VideoSpec = {
           {at: 2.5, wheel: 'RR'},
         ],
       },
-      overlays: [{type: 'statement', cue: "sensor's own ID", text: 'Its own ID.', until: 'It stays quiet'}],
+      overlays: [
+        // TIMED: the five routes (0.3–3.8); faded out by 3.6, before the statement (3.88) takes the frame
+        {...HUM, at: 0.15, until: 3.6},
+        {type: 'statement', cue: "sensor's own ID", text: 'Its own ID.', until: 'It stays quiet'},
+      ],
     },
     // 10 · Quiet most of the time: long dark gaps, brief orange blinks (A/V 9a).
     {
@@ -325,6 +356,12 @@ export const spec: VideoSpec = {
         sensor: [{at: 0, state: 'quiet'}],
         pulses: [1.0, 2.0], // whole turns from the start, so the sensor is at home on each blink
       },
+      overlays: [
+        WHOOSH,
+        // TIMED: a short, quieter blip on each blink (0.95 s of rings), silence in the gaps
+        {...HUM, at: 0.95, until: 1.6, fade: 0.15, volume: -34},
+        {...HUM, at: 1.95, until: 2.6, fade: 0.15, volume: -34},
+      ],
     },
     // 11 · So the battery lasts up to about ten years (A/V 9b): the teardown, the coin cell forward.
     {
@@ -371,6 +408,7 @@ export const spec: VideoSpec = {
         sensor: [{at: 0, state: 'awake'}],
         pulses: [2.0], // two whole turns: the sensor at home; the soft tire's pulse leads the follow
       },
+      overlays: [{...HISS, at: 0.8, until: 2.1}], // TIMED: air out while the tire squashes (0.8 → 2.1)
     },
     // 13 · The warning light within 20 minutes (A/V 10b): the cluster read in the detail box; YOU glances.
     {
@@ -387,7 +425,12 @@ export const spec: VideoSpec = {
         pulses: [{at: 0.4, wheel: 'FR'}],
         warningAt: 1.08, // TIMED: "warning" (54.96); YOU glances 0.2 s later (default)
       },
-      overlays: [{type: 'detail', who: 'you', content: 'dashboard', cue: "warning light's", until: 'Some cars'}],
+      overlays: [
+        // TIMED: on the light (warningAt 1.08; the file's onset is 0.057 s in). The file is quiet (−25.6
+        // LUFS) but still only ≈ 4 dB under the voice at 0, so −10 puts it ≈ 14 dB under.
+        {type: 'sfx', name: 'chime', at: 1.03, volume: -10},
+        {type: 'detail', who: 'you', content: 'dashboard', cue: "warning light's", until: 'Some cars'},
+      ],
     },
     // 14 · Some cars have no sensors (A/V 11a): the other car, MOM driving, no orange anywhere.
     {
@@ -403,7 +446,7 @@ export const spec: VideoSpec = {
         lowWheel: 'FR',
         speedRings: true,
       },
-      overlays: [{type: 'tag', who: 'mom', at: 0.3}],
+      overlays: [WHOOSH, {type: 'tag', who: 'mom', at: 0.3}],
     },
     // 15 · They spot a soft tire by its spin (A/V 11b): glide low on the near wheels, the tick gains.
     {
@@ -432,6 +475,7 @@ export const spec: VideoSpec = {
         dressing: 'tire-bay',
         camera: {from: {look: [-0.2, 0.9, 0], distance: 12.75}, to: {look: [-0.2, 0.9, 0], distance: 12.6}},
       },
+      overlays: [WHOOSH],
     },
     // 17 · About half as likely (A/V 12b): glide to the rows; 2 of 8 sag without, 1 of 8 with (🎭).
     // The row labels are set panels in the Lab: the frame's one card.
@@ -473,6 +517,7 @@ export const spec: VideoSpec = {
         dimDot: true,
         chuck: {at: 0.7, until: 4.0}, // TIMED: on before "fill" (74.08), off before the cut (78.24)
       },
+      overlays: [WHOOSH, {...HISS, at: 1.2, until: 2.8}], // TIMED: the refill hiss as the tire firms (1.2 → 3.0)
     },
     // 19 · The loop: glide back to frame 0's picture and hold (A/V 13b's end). Nothing to read.
     {
