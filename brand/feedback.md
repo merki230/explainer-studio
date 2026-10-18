@@ -19,9 +19,9 @@ One row per video, platform and snapshot; add new rows at the bottom, never over
 | Video | Length | Platform | Posted at | Snapshot | Views | Likes | Followers gained | Avg watch | % watched | Full watch / retention | Skip / swipe-away | Other |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | No. 001 `phone-listening` | / | all | / | not yet reported | pending | pending | pending | pending | pending | pending | pending | pending |
-| No. 002 `tire-sensor` | 81 s | TikTok | 2026-10-17, about 19:00, owner's local time (America/Chicago? unconfirmed) | ≈ 12 h (2026-10-17/18) | 12.5K | 205 | 11 | 25.7 s | 32% | full 5.57% · retention 32% | / | total play 91h23m49s |
-| No. 002 `tire-sensor` | 81 s | Instagram | 2026-10-17, about 19:00, owner's local time (America/Chicago? unconfirmed) | ≈ 12 h | 2,148 | 38 | 2 | 36 s | 44% | / | skip 18.1% | 2 reposts |
-| No. 002 `tire-sensor` | 81 s | YouTube Shorts | 2026-10-17, about 19:00, owner's local time (America/Chicago? unconfirmed) | ≈ 12 h | 1,195 | 23 | / | 0:38 | 47% | / | swiped away 28% | total watch time "8.9" (unit not shown, probably hours) |
+| No. 002 `tire-sensor` | 81 s | TikTok | 2026-10-17, about 19:00, owner's local time (America/Chicago, confirmed by the owner 2026-10-18) | ≈ 12 h (2026-10-17/18) | 12.5K | 205 | 11 | 25.7 s | 32% | full 5.57% · retention 32% | / | total play 91h23m49s |
+| No. 002 `tire-sensor` | 81 s | Instagram | 2026-10-17, about 19:00, owner's local time (America/Chicago, confirmed by the owner 2026-10-18) | ≈ 12 h | 2,148 | 38 | 2 | 36 s | 44% | / | skip 18.1% | 2 reposts |
+| No. 002 `tire-sensor` | 81 s | YouTube Shorts | 2026-10-17, about 19:00, owner's local time (America/Chicago, confirmed by the owner 2026-10-18) | ≈ 12 h | 1,195 | 23 | / | 0:38 | 47% | / | swiped away 28% | total watch time "8.9" (unit not shown, probably hours) |
 
 Reading notes: YouTube views include replays (P§4). TikTok's "retention 32%" matches its average watch ÷ length, so it's probably the same figure, not a separate one. YouTube's "8.9" doesn't square with its average: 8.9 h ÷ 1,195 views ≈ 27 s, not 38 s; confirm the unit (or the denominator YouTube uses) at the 72 h snapshot.
 
