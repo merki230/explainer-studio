@@ -32,7 +32,7 @@ import type {VideoSpec} from '../../types';
  * Illustrative (🎭, disclosed in the post): the car positions and riders, the score values, the keypad's
  * "9" and "C", the hotel's door groups and stop floors.
  *
- * Sound (style guide § 9; No. 002's pattern): one music bed, switched with MUSIC_TAKE below, entering at 3 s,
+ * Sound (style guide § 9; No. 002's pattern): one music bed, switched with MUSIC_TAKE below, starting at frame 0 with a 1.5 s fade-in (owner, 2026-10-18),
  * ≈ 9 dB under the dry voice, no duck; a whoosh on the two slides (17, 21); a short low hum only while the
  * orange decision lines are live (the dot past B on "skip", the lines fanning out of the controller, the
  * winner's dot, the 1,024 flicker, the line before it locks), never under the statement card (21) or the
@@ -355,9 +355,28 @@ const traceA = (start: number, extra: Record<string, unknown> = {}) => ({to: 'A'
 
 export const spec: VideoSpec = {
   watermark: null,
-  // enters at 3 s (default startAt, after the hook's first line), fades in over 2 s, out to silence at the end
+  // starts at frame 0 (startAt: 0), fades in over 1.5 s, out to silence at the end
   music: {src: `audio/music-${MUSIC_TAKE}.mp3`, level: MUSIC_LEVEL[MUSIC_TAKE], duckDb: 0, startAt: 0, fadeIn: 1.5}, // owner, 2026-10-18: music from the first second (was the 3 s default)
   tail: 1.2, // the end hold on frame 0's close-up
+  // Cover still (`yarn cover elevator-dispatch`): the cut-open tower a little closer than TOWER (88 → 78),
+  // aimed so the roof sits just under the two-line hook (y ≈ 540) and the lobby floor at y ≈ 1630, inside
+  // the 3:4 crop. Frame 0's cast (A empty in the lobby, B at 5 straight above YOU at the lit button on 4,
+  // C full at 1, D at 2), with the controller's line locked (thicker, bright end node) on A: it runs out
+  // across the machine room over B's shaft and down to the farther car. Text 115 px (two lines to y ≈ 500).
+  cover: {
+    text: 'Who picked\nyour elevator?',
+    size: 115,
+    scene: 'tower-slice',
+    camera: {look: [0.6, 14.1, 0], distance: 78},
+    at: 2,
+    props: {
+      ...DAY,
+      cars: carsAt(T.hook),
+      you: YOU_HOLD,
+      calls: [{level: 4, dir: 'down'}],
+      lines: [{to: 'A', state: 'locked'}],
+    },
+  },
   scenes: [
     // 1 · Frame 0 is the close-up (lines 1 + 2): YOU's hand pushes the lit down button on 4, B's and C's
     // doors round it. On "computer's already picking" the camera pulls back to the whole cut-open tower
