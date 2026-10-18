@@ -32,7 +32,15 @@ import type {VideoSpec} from '../../types';
  * Illustrative (🎭, disclosed in the post): the car positions and riders, the score values, the keypad's
  * "9" and "C", the hotel's door groups and stop floors.
  *
- * No music or sfx in this cut.
+ * Sound (style guide § 9; No. 002's pattern): one music bed, switched with MUSIC_TAKE below, entering at 3 s,
+ * ≈ 9 dB under the dry voice, no duck; a whoosh on the two slides (17, 21); a short low hum only while the
+ * orange decision lines are live (the dot past B on "skip", the lines fanning out of the controller, the
+ * winner's dot, the 1,024 flicker, the line before it locks), never under the statement card (21) or the
+ * end; a soft press on YOU's button pushes (frame 0, 23) and every keypad tap; a ding as B arrives at 4
+ * (16) and as the keypad names C (17); the doors' slide as B opens at 5 (13) and at 4 (16). Levels from
+ * measured loudness (voice −22.2 LUFS; music A −16.9, B −17.8, C −16.75; press −23.2, ding −26.5, doors
+ * −21.7): re-check if a file is replaced. SFX times are // TIMED against the props (press = the
+ * fingertip's contact, `pushContacts`). Nothing sounds over the last frames, so the loop is clean.
  */
 
 type V3 = [number, number, number];
@@ -79,6 +87,24 @@ const CONTINUE = {transition: 'continue'} as const;
 const SLIDE = {transition: 'slide'} as const;
 
 const DAY = {mood: 'day'} as const;
+
+// ---------------------------------------------------------------- sound (§ 9)
+
+// Levels in dB relative to the voice (gain 1); SFX volumes are file-level offsets.
+// The music take: switch with this one constant.
+const MUSIC_TAKE: 'a' | 'b' | 'c' = 'a';
+// level = (voice LUFS − 9) − track LUFS, voice −22.2: a bed ≈ 9 dB under the dry voice, steady (no duck).
+const MUSIC_LEVEL = {a: -14.3, b: -13.4, c: -14.4} as const;
+// Whoosh on a slide (18 frames), as No. 001/002: starts 0.1 s in so its peak lands mid-slide.
+const WHOOSH = {type: 'sfx', name: 'whoosh', at: 0.1, volume: -18} as const;
+// The hum while orange lines are live, as No. 001/002 (≈ 20 dB under the voice); brief windows only.
+const HUM = {type: 'sfx', name: 'hum', loop: true, fade: 0.3, volume: -32} as const;
+// A button press (0.63 s, −23.2 LUFS): −15 puts it ≈ 16 dB under the voice. Start = fingertip contact.
+const PRESS = {type: 'sfx', name: 'press', volume: -15} as const;
+// The arrival ding (1.5 s, −26.5 LUFS): −10 puts it ≈ 14 dB under the voice.
+const DING = {type: 'sfx', name: 'ding', volume: -10} as const;
+// The doors sliding (2.0 s, −21.7 LUFS): −18.5 puts it ≈ 18 dB under the voice.
+const DOORS_SFX = {type: 'sfx', name: 'doors', volume: -18.5} as const;
 
 // ---------------------------------------------------------------- framings (fixed 3/4 angle)
 
@@ -329,6 +355,8 @@ const traceA = (start: number, extra: Record<string, unknown> = {}) => ({to: 'A'
 
 export const spec: VideoSpec = {
   watermark: null,
+  // enters at 3 s (default startAt, after the hook's first line), fades in over 2 s, out to silence at the end
+  music: {src: `audio/music-${MUSIC_TAKE}.mp3`, level: MUSIC_LEVEL[MUSIC_TAKE], duckDb: 0, startAt: 0, fadeIn: 1.5}, // owner, 2026-10-18: music from the first second (was the 3 s default)
   tail: 1.2, // the end hold on frame 0's close-up
   scenes: [
     // 1 · Frame 0 is the close-up (lines 1 + 2): YOU's hand pushes the lit down button on 4, B's and C's
@@ -365,6 +393,8 @@ export const spec: VideoSpec = {
           time: '8:52 AM',
           until: 'Look at the shafts', // faded by the cut (9.12); the question ends ≈ 8.6
         },
+        {...PRESS, at: 0.52}, // TIMED: the fingertip lands (push at 0.44)
+        {...HUM, at: 7.3, until: 8.6}, // TIMED: the dot past B on "skip" (7.44, 1 s)
       ],
     },
     // 2 · The closest car has a stop first (line 3a), medium: glide down to B at 5 straight above YOU;
@@ -488,6 +518,7 @@ export const spec: VideoSpec = {
       },
       overlays: [
         {type: 'callout', at: 0.8, until: 'which way', ...CALLOUT.controller, title: 'Group controller', sub: "the building's computer"},
+        {...HUM, at: r(22.1, T.knows), until: r(24.3, T.knows)}, // TIMED: the lines fanning out ("every", 22.16)
       ],
     },
     // 6 · It weighs each car (line 5b), close: inside full car C, rising, its six riders; its load bar
@@ -577,6 +608,7 @@ export const spec: VideoSpec = {
         scorePlace: 'clamp',
         scoresUntil: r(42.93, T.score), // A's marked readout holds through the push in
       },
+      overlays: [{...HUM, at: r(40.6, T.score), until: r(41.9, T.score)}], // TIMED: the winner's dot ("lowest", 40.70)
     },
     // 11 · Four elevators, five floors calling (line 9a), wide: pull out to the whole tower; a caller on
     // L, 1, 2, 3 pushes and each button lights.
@@ -612,6 +644,7 @@ export const spec: VideoSpec = {
         flicker: {at: 0.2, until: r(49.4, T.ways)}, // settles just before the cut
       },
       overlays: [
+        {...HUM, at: 0.2, until: r(49.4, T.ways)}, // TIMED: the plan flicker
         {type: 'counter', cue: '1,024 ways', from: 0, to: 1024, label: 'ways', sub: '4 × 4 × 4 × 4 × 4', duration: 1.6, x: 0.111, y: 0.156},
       ],
     },
@@ -631,6 +664,7 @@ export const spec: VideoSpec = {
         lines: [STEADY_A, {to: 'C', state: 'tentative'}, {to: 'D', state: 'tentative', switchTo: {to: 'B', at: r(52.0, T.redecide)}}],
         stops: bStop(T.redecide),
       },
+      overlays: [{...DOORS_SFX, at: r(51.95, T.redecide)}], // TIMED: B opens at 5 for the new caller
     },
     // 14 · It changes its mind (line 11), medium: floors 3–5, A climbing on the left; YOU's line snaps
     // from A to B, its stop done and doors closing.
@@ -696,7 +730,12 @@ export const spec: VideoSpec = {
           {to: 'C', state: 'tentative'},
         ],
       },
-      overlays: [{type: 'callout', cue: 'start braking', ...CALLOUT.locked, title: 'Locked in', sub: 'once it brakes'}],
+      overlays: [
+        {...HUM, at: 0.2, until: r(59.7, T.brake)}, // TIMED: the open line, silent as it locks ("braking", 59.60)
+        {type: 'callout', cue: 'start braking', ...CALLOUT.locked, title: 'Locked in', sub: 'once it brakes'},
+        {...DING, at: r(61.1, T.brake)}, // TIMED: B levels at 4 (≈ 61.1–61.2)
+        {...DOORS_SFX, at: r(61.3, T.brake)}, // TIMED: its doors open
+      ],
     },
     // 17 · The destination keypad (line 13): slide to the hotel, close on the keypad with YOU standing
     // at it; YOU types 9 on "enter" (detail box); on "tell you" the screen answers C, an orange line runs
@@ -711,7 +750,10 @@ export const spec: VideoSpec = {
         ...lobbyCast(T.keypad),
       },
       overlays: [
+        WHOOSH,
         {type: 'tag', who: 'you', at: 0.5, until: 'enter your floor'},
+        {...PRESS, at: r(64.675, T.keypad)}, // TIMED: YOU taps 9
+        {...DING, at: r(66.6, T.keypad), volume: -12}, // TIMED: the screen names C ("tell", 66.56)
         // the answer on "tell" (66.56), 2.0 s after the box enters on "enter" (64.56). TIMED
         {type: 'detail', who: 'you', content: 'keypad', side: 'left', top: 330, floor: '9', car: 'C', answerAt: 2.0, cue: 'enter your floor', until: 'That lets the system'},
       ],
@@ -722,6 +764,7 @@ export const spec: VideoSpec = {
       scene: 'hotel-lobby',
       cue: 'That lets the system',
       props: {...DAY, ...GLIDE, cameraKeys: [key(0.8, LOBBY_WIDE), key(3.04, {...LOBBY_WIDE, distance: 53}, 'sine')], ...lobbyCast(T.group)},
+      overlays: [69.525, 70.225, 70.925, 71.625].map((t) => ({...PRESS, at: r(t, T.group), volume: -18})), // TIMED: the four guests' taps
     },
     // 19 · So each car makes fewer stops (line 14b): glide up to the hotel's upper floors; C rises with
     // its group (YOU among them) and A with its pair, one solid stop tick each (9 and 6); the dashed
@@ -788,7 +831,7 @@ export const spec: VideoSpec = {
         ],
         lines: (['A', 'B', 'C', 'D'] as const).map((to) => ({to, state: 'steady', at: r(80.92, T.everyone), draw: 0.8})), // TIMED: "computer's"
       },
-      overlays: [{type: 'statement', cue: 'everyone at once', text: 'Everyone\nat once.', place: 'low'}],
+      overlays: [WHOOSH, {type: 'statement', cue: 'everyone at once', text: 'Everyone\nat once.', place: 'low'}],
     },
     // 22 · Which can mean you wait longer (line 16b), medium-close: glide in to YOU at 4; B slides past
     // without stopping; YOU looks up after it.
@@ -828,6 +871,7 @@ export const spec: VideoSpec = {
         ], // YOU's push lights the down button itself
         lines: [{to: 'A', state: 'tentative', at: r(87.2, T.next), dotsFrom: r(87.2, T.next)}], // TIMED: "farther" (87.20)
       },
+      overlays: [{...PRESS, at: r(86.104, T.next)}], // TIMED: the fingertip lands (push at 86.00)
     },
     // 24 · …the one the computer scored lowest (line 17b): a bright dot runs down to A, then the camera
     // pushes back in to frame 0's close-up (the loop) and holds; the dots ease back to rest.
