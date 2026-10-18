@@ -4,18 +4,19 @@ import {MOODS, type Mood} from '../theme';
 import {projectToFrame, type Framing} from '../three/section/SectionCamera';
 import {keypadAt, levelYAt, personHead, TOWER_DIM, towerLayout, towerResolver, TowerSlice, type StopTick, type TowerCar, type TowerLayout} from '../three/section/TowerSlice';
 import {carStateAt, personAt, type PersonSpec} from '../three/section/towerMotion';
-import {ease, type CameraKey} from './keyframes';
-import {TowerStage, towerCameraAt, towerCameraMove, type LiveLine} from './TowerSliceScene';
+import {ease} from './keyframes';
+import {closeScale, TowerStage, towerCameraAt, towerCameraMove, type FramingTable, type LiveLine, type TowerCameraKey} from './TowerSliceScene';
 
 type V3 = [number, number, number];
-export type HotelFraming = 'lobby' | 'wide' | 'mid';
+/** Presets: 'lobby', 'wide', 'mid'; placed: 'keypad' (the keypad close-up, YOU's hand on its screen), 'car:X' (into car X at the scene's start). */
+export type HotelFraming = 'lobby' | 'wide' | 'mid' | 'keypad' | `car:${string}`;
 
 /**
  * Framings for the default hotel (4 shafts, 14 floors). `lobby`: the lobby, its four lettered doors,
  * the keypad, reception and the entrance. `wide`: a little wider (groups walking to their doors).
  * `mid`: a band of upper floors (6 to 10) where the cars stop.
  */
-export const HOTEL_FRAMINGS: Record<HotelFraming, Framing> = {
+export const HOTEL_FRAMINGS: Record<'lobby' | 'wide' | 'mid', Framing> = {
   lobby: {look: [-0.2, 0.9, 1.8], distance: 54},
   wide: {look: [-0.2, 1.4, 1.6], distance: 62},
   mid: {look: [0.6, 22.6, -0.5], distance: 64},
@@ -63,7 +64,8 @@ export type HotelLobbySceneProps = {
   stops?: StopTick[];
   framing?: HotelFraming;
   camera?: {from: Framing; to?: Framing};
-  cameraKeys?: CameraKey[];
+  /** Camera keys; a key may name a framing (`{at, framing: 'lobby'}`); `log: true` for a steady dolly. */
+  cameraKeys?: TowerCameraKey[];
   push?: number;
   drift?: number;
   location?: string;
@@ -75,12 +77,35 @@ export type HotelLobbySceneProps = {
   cameraGlide?: number;
 };
 
-export const hotelCameraStart = (p: Partial<HotelLobbySceneProps>, d: number, fps: number): Framing =>
-  towerCameraMove({...p, cameraFrom: undefined, cameraGlide: undefined}, d, fps, 0, HOTEL_FRAMINGS, 'lobby').from;
-export const hotelCameraEnd = (p: Partial<HotelLobbySceneProps>, d: number, fps: number): Framing =>
-  towerCameraMove(p, d, fps, undefined, HOTEL_FRAMINGS, 'lobby').to;
-
 const hotelLayout = (p: Partial<HotelLobbySceneProps>) => towerLayout((p.letters ?? ['A', 'B', 'C', 'D']).length, p.floors ?? 14, {hotel: true});
+
+/**
+ * The hotel's framings: the presets plus the placed close-ups. `keypad`: the destination keypad on
+ * its pedestal and the hand of whoever stands at it, the lobby doors behind. `car:X`: into car X.
+ */
+export const hotelFramings =
+  (p: Partial<HotelLobbySceneProps>): FramingTable =>
+  (name) => {
+    const L = hotelLayout(p);
+    const letters = p.letters ?? ['A', 'B', 'C', 'D'];
+    const [kind, arg] = name.split(':');
+    if (kind === 'keypad') {
+      const k = keypadAt(L);
+      return {look: [k.x - 0.12, 1.12, k.z - 0.25], distance: 3.6};
+    }
+    const shaft = letters.indexOf(arg ?? '');
+    const car = (p.cars ?? HOTEL_CARS)[arg ?? ''];
+    if (kind === 'car' && shaft >= 0 && car) {
+      const lv = carStateAt(car, 0).level;
+      return {look: [L.shaftX[shaft] - 0.42, levelYAt(L, lv) + 1.15, TOWER_DIM.car.front - TOWER_DIM.car.d / 2 + 0.3], distance: 6.8};
+    }
+    return (HOTEL_FRAMINGS as Record<string, Framing>)[name];
+  };
+
+export const hotelCameraStart = (p: Partial<HotelLobbySceneProps>, d: number, fps: number): Framing =>
+  towerCameraMove({...p, cameraFrom: undefined, cameraGlide: undefined}, d, fps, 0, hotelFramings(p), 'lobby').from;
+export const hotelCameraEnd = (p: Partial<HotelLobbySceneProps>, d: number, fps: number): Framing =>
+  towerCameraMove(p, d, fps, undefined, hotelFramings(p), 'lobby').to;
 
 export const hotelPeople = (p: Partial<HotelLobbySceneProps>): PersonSpec[] => {
   const you = p.you === undefined ? {start: 'keypad'} : p.you;
@@ -129,7 +154,7 @@ export const hotelAnchorPoint = (p: Partial<HotelLobbySceneProps>, anchor: strin
 };
 
 export const hotelCameraAt = (p: Partial<HotelLobbySceneProps>, o: {frame: number; fps: number; durationInFrames: number}) =>
-  towerCameraAt(p, o, HOTEL_FRAMINGS, 'lobby');
+  towerCameraAt(p, o, hotelFramings(p), 'lobby');
 
 export const hotelAnchorOnScreen = (
   p: Partial<HotelLobbySceneProps>,
@@ -154,7 +179,10 @@ export const HotelLobbyScene: React.FC<HotelLobbySceneProps> = (props) => {
   const {fps} = useVideoConfig();
   const t = frame / fps;
   const L = useMemo(() => hotelLayout(props), [props.letters, props.floors]); // eslint-disable-line react-hooks/exhaustive-deps
-  const {from, to, pre} = towerCameraMove(props, durationInFrames, fps, frame, HOTEL_FRAMINGS, 'lobby');
+  const {from, to, pre} = towerCameraMove(props, durationInFrames, fps, frame, hotelFramings(props), 'lobby');
+  const cam = hotelCameraAt(props, {frame, fps, durationInFrames});
+  // lines and node dots thin as the camera comes in (the keypad close-up), as on the tower
+  const kc = closeScale(cam.position.distanceTo(cam.look), HOTEL_FRAMINGS.lobby.distance);
   const people = hotelPeople(props);
   const lines: LiveLine[] = entries.flatMap((e, i) => {
     const r = keypadRoute(L, letters, e.car);
@@ -163,7 +191,7 @@ export const HotelLobbyScene: React.FC<HotelLobbySceneProps> = (props) => {
     const fade = e.fade === undefined ? 1 : 1 - ease(t, e.fade, e.fade + 0.5);
     const out = e.until === undefined ? 1 : 1 - ease(t, e.until - 0.4, e.until);
     if (out <= 0.001) return [];
-    return [{key: `${i}`, legs: r.legs, end: r.end, radius: 0.028, glow: fade * out, progress, flow: undefined, locked: false, pulses: []}];
+    return [{key: `${i}`, legs: r.legs, end: r.end, radius: 0.028 * kc, glow: fade * out, progress, flow: undefined, locked: false, pulses: []}];
   });
   const k = keypadAt(L);
   return (
@@ -181,6 +209,7 @@ export const HotelLobbyScene: React.FC<HotelLobbySceneProps> = (props) => {
         lines={lines}
         t={t}
         node={lines.length ? k.node : null}
+        nodeScale={kc}
       >
         <TowerSlice mood={mood} layout={L} letters={letters} cars={cars} people={people} calls={[]} stops={props.stops} t={t} clockOffset={startFrame / fps} />
       </TowerStage>

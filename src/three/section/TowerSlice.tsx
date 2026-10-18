@@ -7,12 +7,29 @@ import {useLabMaterials} from '../real/RealLab';
 import {applyEnv, useEnvStrength, useStudioEnv} from '../real/useStudioEnv';
 import type {Gesture} from '../rig';
 import {cutMaterial, CutOutline, type Rect} from './cutLook';
+import {
+  CABINET,
+  CALL_PANEL,
+  CarOperatingPanel,
+  cladMaterial,
+  ControllerCabinet,
+  DestinationKeypad,
+  DoorFrame,
+  HallCallPanel,
+  HallLantern,
+  KEYPAD,
+  keypadKeyLocal,
+  useKitMaterials,
+  type KitMaterials,
+} from './elevatorKit';
 import {Figure} from './Figure';
 import {
   bump,
   carStateAt,
   handAt,
   personAt,
+  pushIndex,
+  PUSH_CONTACT,
   type CarMotion,
   type PersonSpec,
   type PersonState,
@@ -140,6 +157,10 @@ export type TowerCar = CarMotion & {
   watch?: number[];
   /** An ink braking-distance mark from the sill to the target floor while it brakes. */
   brakeMark?: boolean;
+  /** Floors asked for inside (lit rings on the operating panel): levels, or [{level, at?, until?}]. */
+  buttons?: (number | {level: number; at?: number; until?: number})[];
+  /** The operating panel's FULL sign (warning yellow): true, or lit from this time (s). */
+  full?: boolean | number;
 };
 
 /**
@@ -150,7 +171,8 @@ export type TowerCar = CarMotion & {
 export const RIDER_SLOTS: [number, number, number][] = [
   [-0.28, 0.76, 0.15],
   [0.2, 0.1, -0.35],
-  [-0.68, 0.8, 0.45],
+  // (kept off the left wall's front, where the operating panel is)
+  [-0.6, 0.42, 0.45],
   [-0.35, 0.08, 0.25],
   [-0.01, -0.45, -0.1],
   [-0.52, -0.47, 0.3],
@@ -191,19 +213,22 @@ export const callButton = (L: TowerLayout, level: number, dir: 'up' | 'down'): V
 /**
  * Where YOU stands in a hall: in front of the doors, back to the camera (3/4 from behind), the right
  * hand on the pier's down button, so the second shaft's car (B) is right above. Placed from the button
- * at figure-local (−0.16, ·, 0.4): in front, a little to the right, within the arm's ≈ 0.66 reach.
+ * at figure-local (−0.36, ·, 0.36): in front and to the right of the right shoulder, so the forearm
+ * comes in from the left and the pointing finger shows beside the hand (the button close-up).
  */
 export const youSpot = (L: TowerLayout, level: number): {pos: V3; rot: number} => {
   const rot = Math.PI - 0.25;
   const b = callButton(L, level, 'down');
-  const off = new THREE.Vector3(-0.16, 0, 0.4).applyAxisAngle(new THREE.Vector3(0, 1, 0), rot);
+  const off = new THREE.Vector3(-0.36, 0, 0.36).applyAxisAngle(new THREE.Vector3(0, 1, 0), rot);
   return {pos: [b[0] - off.x, L.levelY(level), b[2] + 0.04 - off.z], rot};
 };
 
 /** The controller cabinet (its x) and the node dot on its front (world). */
-export const controllerAt = (L: TowerLayout): {x: number; node: V3} => {
+export const CABINET_Z = -1.25;
+export const controllerAt = (L: TowerLayout): {x: number; node: V3; front: number} => {
   const x = L.pierX(Math.min(1, L.shafts - 2));
-  return {x, node: [x, L.machineFloor + 1.55, -1.25]};
+  const n = CABINET.node;
+  return {x, node: [x + n[0], L.machineFloor + n[1], CABINET_Z + n[2]], front: CABINET_Z};
 };
 
 /** A car's roof point (world) where a decision line ends: on the crosshead, toward the line's side. */
@@ -220,7 +245,18 @@ export const shaftLineX = (L: TowerLayout, shaft: number) => L.shaftX[shaft] + L
 export const keypadAt = (L: TowerLayout) => {
   const x = L.pierX(Math.min(1, L.shafts - 2)) + 0.6;
   const z = 2.3;
-  return {x, z, screen: [x, 1.18, z - 0.05] as V3, node: [x, 1.0, z] as V3, user: {x, z: z - 0.62}};
+  const h = KEYPAD.head;
+  return {x, z, screen: [x + h[0], h[1], z + h[2]] as V3, node: [x, 1.0, z] as V3, user: {x, z: z - 0.62}};
+};
+
+/** A key on the hotel keypad's screen (world) and the screen's normal (toward its user). */
+export const keypadKey = (L: TowerLayout, key: number): {at: V3; normal: V3} => {
+  const k = keypadAt(L);
+  const e = new THREE.Euler(KEYPAD.tilt, Math.PI, 0);
+  const p = new THREE.Vector3(...keypadKeyLocal(key)).applyEuler(e);
+  const n = new THREE.Vector3(0, 0, 1).applyEuler(e);
+  const h = KEYPAD.head;
+  return {at: [k.x + h[0] + p.x, h[1] + p.y, k.z + h[2] + p.z], normal: [n.x, n.y, n.z]};
 };
 
 /** A level's hall depth (its cut front). */
@@ -313,7 +349,8 @@ const useTowerMaterials = (mood: Mood) => {
       shaft: std(TOWER.shaft, 0.95),
       stone: phys(TOWER.stone, {roughness: 0.35, clearcoat: 0.3}),
       lobbyStone: phys(TOWER.lobbyStone, {roughness: 0.25, clearcoat: 0.5}),
-      pier: phys(TOWER.pier, {roughness: 0.45}),
+      // stone cladding: large slabs with fine joints (seen in the close-ups; plain stone from afar)
+      pier: cladMaterial(TOWER.pier),
       paint: std(TOWER.paint, 0.9),
       corridor: std(TOWER.corridor, 1),
       earth: std(m.earth, 1),
@@ -390,23 +427,58 @@ export type TowerSliceProps = {
   loadBars?: {at: number; until?: number; capacity?: number};
   /** Orange direction chevrons on moving cars: from `at` until `until`. */
   chevrons?: {at: number; until?: number};
+  /**
+   * Levels whose landing doors are drawn whole: full brushed leaves in a clad wall (the wall beside
+   * and above each door), a real elevator lobby, instead of the cut stubs that show the cars.
+   */
+  fullDoors?: number[];
+  /** Lit hall lanterns over a door: [{car, level, dir, at?, until?}] (warning yellow, flat). */
+  lanterns?: TowerLantern[];
+  /** The controller cabinet's door, 0 shut to 1 open (default 1). */
+  cabinetOpen?: number;
   /** Seconds into the scene, for timed things. */
   t: number;
   clockOffset?: number;
 };
 
+/** A hall lantern lit over car `car`'s door on `level`, showing `dir`, from `at` until `until` (s). */
+export type TowerLantern = {car: string; level: number; dir: 'up' | 'down'; at?: number; until?: number};
+
 const ease3 = (x: number, a: number, b: number) => {
   const u = Math.max(0, Math.min(1, (x - a) / Math.max(1e-6, b - a)));
   return u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2;
 };
+/** The cap's travel (0–1) for a fingertip push (0–1): it moves only once the finger touches it. */
+const capPush = (push: number) => Math.max(0, Math.min(1, (push - PUSH_CONTACT) / (1 - PUSH_CONTACT)));
+/** Hover gap and travel of a fingertip at a button: it hovers `HOVER` off the cap, and pushes `HOVER + CAP` in. */
+const HOVER = 0.012;
+const CAP_TRAVEL = 0.0042;
+/** The call buttons' cap face (z, at rest): the faceplate on the pier, the bezel, the cap. */
+const CAP_FACE_Z = TOWER_DIM.frontOut + CALL_PANEL.depth + 0.0052 + 0.004 + 0.004;
 const windowed = (t: number, at: number, until: number | undefined, fade = 0.4) =>
   ease3(t, at, at + fade) * (until === undefined ? 1 : 1 - ease3(t, until - fade, until));
 
 /** The building, the halls with their call panels, the shafts and cars, the people, the machine room. */
-export const TowerSlice: React.FC<TowerSliceProps> = ({mood, layout: L, letters, cars, people, calls, stops = [], loadBars, chevrons, t, clockOffset = 0}) => {
+export const TowerSlice: React.FC<TowerSliceProps> = ({
+  mood,
+  layout: L,
+  letters,
+  cars,
+  people,
+  calls,
+  stops = [],
+  loadBars,
+  chevrons,
+  fullDoors = [],
+  lanterns = [],
+  cabinetOpen = 1,
+  t,
+  clockOffset = 0,
+}) => {
   const D = TOWER_DIM;
   const lab = useLabMaterials();
   const mats = useTowerMaterials(mood);
+  const kit = useKitMaterials(mood);
   const ready = useFontsLoaded();
   const hotel = L.hotel;
 
@@ -429,7 +501,8 @@ export const TowerSlice: React.FC<TowerSliceProps> = ({mood, layout: L, letters,
     });
   }
 
-  const boxes = useMemo(() => buildingBoxes(L, mats), [L, mats]);
+  const fullKey = [...fullDoors].sort().join(',');
+  const boxes = useMemo(() => buildingBoxes(L, mats, fullKey ? fullKey.split(',').map(Number) : []), [L, mats, fullKey]);
   const carStates = useMemo(
     () => Object.fromEntries(letters.map((l) => [l, cars[l] ? carStateAt(cars[l], t) : null])),
     [letters, cars, t],
@@ -438,6 +511,17 @@ export const TowerSlice: React.FC<TowerSliceProps> = ({mood, layout: L, letters,
 
   const lit = (k: number, dir: 'up' | 'down') =>
     calls.some((c) => c.level === k && c.dir === dir && t >= (c.at ?? -Infinity) && t < (c.until ?? Infinity));
+  // how far each call button's cap is pushed in, by whoever stands at that panel
+  const pressed = new Map<string, number>();
+  people.forEach((p, i) => {
+    const s = personAt(p, i, t, resolver);
+    if (s.spot !== 'panel' || s.walking || !s.visible) return;
+    const h = handAt(p, t);
+    const key = `${Math.round(s.level)}:${p.button ?? 'down'}`;
+    pressed.set(key, Math.max(pressed.get(key) ?? 0, capPush(h.push * h.up)));
+  });
+  const lanternOn = (letter: string, k: number, dir: 'up' | 'down') =>
+    lanterns.some((l) => l.car === letter && l.level === k && l.dir === dir && t >= (l.at ?? -Infinity) && t < (l.until ?? Infinity));
   const levels = Array.from({length: L.floors + 1}, (_, k) => k);
   const shaftH = L.top + D.pit;
   const travel = L.top - D.car.h - 2.4;
@@ -482,34 +566,30 @@ export const TowerSlice: React.FC<TowerSliceProps> = ({mood, layout: L, letters,
               const y = L.levelY(k);
               const h = (k === L.floors ? L.top : L.levelY(k + 1)) - y;
               const here = st && Math.abs(st.level - k) < 0.02 ? st.open : 0;
-              const full = hotel && k === 0;
+              const full = (hotel && k === 0) || fullDoors.includes(k);
               return (
                 <group key={k} position={[cx, y, -0.25]}>
-                  {[-1, 1].map((s) => (
-                    <mesh key={s} position={[(s * (D.door.w + 0.05)) / 2, D.door.h / 2, 0.02]} material={mats.stainless}>
-                      <boxGeometry args={[0.05, D.door.h, 0.06]} />
-                    </mesh>
-                  ))}
-                  <mesh position={[0, D.door.h + 0.06, 0.02]} material={mats.stainless}>
-                    <boxGeometry args={[D.door.w + 0.1, 0.08, 0.06]} />
-                  </mesh>
-                  <mesh position={[0, 0.015, 0.1]} material={lab.alu}>
-                    <boxGeometry args={[D.door.w + 0.1, 0.03, 0.2]} />
-                  </mesh>
+                  {/* the frame on the wall's face (z −0.2), its returns into the opening, the sill */}
+                  <group position={[0, 0, 0.05]}>
+                    <DoorFrame mats={kit} w={D.door.w} h={D.door.h} />
+                  </group>
                   {full ? null : (
                     <mesh position={[0, h - 0.06, 0.01]} material={mats.stainless}>
                       <boxGeometry args={[D.shaftW, 0.08, 0.04]} />
                     </mesh>
                   )}
-                  <mesh position={[0, D.door.h + 0.28, 0.03]} material={mats.dark}>
-                    <boxGeometry args={[0.34, 0.09, 0.03]} />
-                  </mesh>
-                  <DoorLeaves mats={mats} open={here} z={0.05} full={full} />
-                  {full ? (
+                  {hotel && k === 0 ? null : (
+                    <group position={[0, D.door.h + 0.075 + 0.085, 0.05]}>
+                      <HallLantern mats={kit} up={lanternOn(letter, k, 'up')} down={lanternOn(letter, k, 'down')} />
+                    </group>
+                  )}
+                  {/* whole leaves sit behind the wall (they slide into it); stubs stand at the face */}
+                  <DoorLeaves mats={mats} kit={kit} open={here} z={full ? -0.072 : 0.035} full={full} />
+                  {hotel && k === 0 ? (
                     // the lobby's lettered sign beside the door at eye height, on the wall right of it (ink on a
                     // stainless plate; above the door the podium's slab would hide it from the 3/4 view)
                     <group position={[0.84, 1.7, 0.08]}>
-                      <mesh material={mats.stainless}>
+                      <mesh material={kit.steelH}>
                         <boxGeometry args={[0.4, 0.4, 0.03]} />
                       </mesh>
                       <mesh position={[0, 0, 0.017]} material={letterMats[i]} visible={ready} renderOrder={5}>
@@ -539,6 +619,10 @@ export const TowerSlice: React.FC<TowerSliceProps> = ({mood, layout: L, letters,
             {c && st ? (
               <Car
                 mats={mats}
+                kit={kit}
+                ready={ready}
+                labels={levels.map((k) => (k === 0 ? 'L' : `${k}`))}
+                level={st.level}
                 position={[cx, carY, D.car.front - D.car.d / 2]}
                 car={c}
                 open={st.open}
@@ -546,6 +630,7 @@ export const TowerSlice: React.FC<TowerSliceProps> = ({mood, layout: L, letters,
                 loadShown={loadK}
                 chevron={chevK * Math.min(1, Math.abs(st.v) / 0.15)}
                 dir={st.v >= 0 ? 1 : -1}
+                v={st.v}
                 seed={`car-${letter}`}
                 mood={mood}
                 t={t}
@@ -564,25 +649,12 @@ export const TowerSlice: React.FC<TowerSliceProps> = ({mood, layout: L, letters,
             const up = callButton(L, k, 'up');
             const dn = callButton(L, k, 'down');
             return (
-              <group key={k}>
-                <mesh position={[up[0], (up[1] + dn[1]) / 2, D.frontOut + 0.01]} material={mats.stainless} receiveShadow>
-                  <boxGeometry args={[0.17, 0.38, 0.02]} />
-                </mesh>
-                {[
-                  {p: up, on: lit(k, 'up'), show: k < L.floors},
-                  {p: dn, on: lit(k, 'down'), show: k > 0},
-                ]
-                  .filter((b) => b.show)
-                  .map((b, j) => (
-                    <group key={j} position={b.p}>
-                      <mesh rotation={[Math.PI / 2, 0, 0]} material={mats.dark}>
-                        <cylinderGeometry args={[0.04, 0.04, 0.02, 20]} />
-                      </mesh>
-                      <mesh position={[0, 0, 0.008]} material={b.on ? mats.ring : mats.ringOff}>
-                        <torusGeometry args={[0.052, 0.015, 8, 28]} />
-                      </mesh>
-                    </group>
-                  ))}
+              <group key={k} position={[up[0], (up[1] + dn[1]) / 2, D.frontOut]}>
+                <HallCallPanel
+                  mats={kit}
+                  up={k < L.floors ? {lit: lit(k, 'up'), press: pressed.get(`${k}:up`)} : null}
+                  down={k > 0 ? {lit: lit(k, 'down'), press: pressed.get(`${k}:down`)} : null}
+                />
               </group>
             );
           })}
@@ -595,9 +667,11 @@ export const TowerSlice: React.FC<TowerSliceProps> = ({mood, layout: L, letters,
         return <Tick key={i} mats={mats} x={L.shaftX[shaft]} y={L.levelY(s.level) - (s.level === 0 ? 0.12 : D.hallSlab / 2)} z={frontOf(L, s.level) + 0.006} k={k} pulse={pulse} dashed={!!s.dashed} />;
       })}
 
-      <Controller L={L} lab={lab} mats={mats} />
+      <group position={[controllerAt(L).x, L.machineFloor, CABINET_Z]}>
+        <ControllerCabinet mats={kit} open={cabinetOpen} t={t + clockOffset} />
+      </group>
 
-      {hotel ? <HotelDressing L={L} mats={mats} lab={lab} /> : null}
+      {hotel ? <HotelDressing L={L} mats={mats} kit={kit} lab={lab} ready={ready} /> : null}
 
       {people.map((p, i) => (
         <Person key={i} spec={p} index={i} t={t} resolver={resolver} L={L} letters={letters} mats={mats} mood={mood} clockOffset={clockOffset} />
@@ -607,9 +681,23 @@ export const TowerSlice: React.FC<TowerSliceProps> = ({mood, layout: L, letters,
 };
 
 /** The static building: ground, slabs, walls, piers, corridor doorways; the hotel's lobby and wings. */
-const buildingBoxes = (L: TowerLayout, mats: Mats): CutBoxSpec[] => {
+const buildingBoxes = (L: TowerLayout, mats: Mats, fullDoors: number[] = []): CutBoxSpec[] => {
   const D = TOWER_DIM;
   const b: CutBoxSpec[] = [];
+  // a whole lobby wall on the full-door levels: clad beside and above each door, up to the slab
+  for (const k of fullDoors) {
+    if (k < 0 || k > L.floors || (L.hotel && k === 0)) continue;
+    const y0 = L.levelY(k);
+    const y1 = k === L.floors ? L.top : L.levelY(k + 1) - D.hallSlab;
+    const gap = D.door.w / 2 + 0.012;
+    for (const cx of L.shaftX) {
+      // no shadow casting: lit from the front, they'd only shade the shaft behind (and they speckled the
+      // wall's own face with blocky self-shadow at the close framings)
+      b.push({min: [cx - D.shaftW / 2, y0, D.frontIn], max: [cx - gap, y1, D.frontOut], mat: mats.pier, cast: false});
+      b.push({min: [cx + gap, y0, D.frontIn], max: [cx + D.shaftW / 2, y1, D.frontOut], mat: mats.pier, cast: false});
+      b.push({min: [cx - gap, y0 + D.door.h + 0.012, D.frontIn], max: [cx + gap, y1, D.frontOut], mat: mats.pier, cast: false});
+    }
+  }
   const g0 = -D.pit - D.ground;
   const lob = L.lobby;
   const floorMat = L.hotel ? mats.lobbyStone : mats.stone;
@@ -695,12 +783,12 @@ const buildingBoxes = (L: TowerLayout, mats: Mats): CutBoxSpec[] => {
  * A pair of centre-opening door leaves. Cut (default): low stubs with hatched tops; `full`: whole
  * brushed-steel leaves (the hotel lobby). `open` 0–1 slides them to the jambs.
  */
-const DoorLeaves: React.FC<{mats: Mats; open: number; z: number; full?: boolean; w?: number}> = ({mats, open, z, full = false, w = TOWER_DIM.door.w}) => {
+const DoorLeaves: React.FC<{mats: Mats; kit: KitMaterials; open: number; z: number; full?: boolean; w?: number}> = ({mats, kit, open, z, full = false, w = TOWER_DIM.door.w}) => {
   const h = full ? TOWER_DIM.door.h : TOWER_DIM.stub;
   const lw = w / 2;
   const boxes: CutBoxSpec[] = [-1, 1].map((s) => {
     const cx = s * (lw / 2 + open * lw * 0.94);
-    return {min: [cx - lw / 2 + 0.004, 0.03, z - 0.015], max: [cx + lw / 2 - 0.004, h, z + 0.015], mat: mats.door, cut: full ? [] : ['py']};
+    return {min: [cx - lw / 2 + 0.003, 0.02, z - 0.015], max: [cx + lw / 2 - 0.003, h, z + 0.015], mat: kit.door, cut: full ? [] : ['py']};
   });
   return <Boxes boxes={boxes} cut={mats.cut} />;
 };
@@ -713,6 +801,13 @@ const DoorLeaves: React.FC<{mats: Mats; open: number; z: number; full?: boolean;
  */
 const Car: React.FC<{
   mats: Mats;
+  kit: KitMaterials;
+  ready: boolean;
+  /** Floor labels bottom to top, for the operating panel. */
+  labels: string[];
+  /** Where it is (fractional level) and its speed (floors/s), for the display. */
+  level: number;
+  v: number;
   position: V3;
   car: TowerCar;
   open: number;
@@ -724,16 +819,16 @@ const Car: React.FC<{
   mood: Mood;
   t: number;
   clockOffset: number;
-}> = ({mats, position, car, open, load, loadShown, chevron, dir, seed, mood, t, clockOffset}) => {
+}> = ({mats, kit, ready, labels, level, v, position, car, open, load, loadShown, chevron, dir, seed, mood, t, clockOffset}) => {
   const {w, d, h} = TOWER_DIM.car;
   const hw = w / 2;
   const hd = d / 2;
   const boxes: CutBoxSpec[] = [
-    {min: [-hw, -0.16, -hd], max: [hw, 0, hd], mat: mats.carFloor, cut: ['pz']},
-    {min: [-hw, 0, -hd], max: [-hw + 0.05, h, hd], mat: mats.carWall, cut: ['pz']},
+    {min: [-hw, -0.16, -hd], max: [hw, 0, hd], mat: kit.granite, cut: ['pz']},
+    {min: [-hw, 0, -hd], max: [-hw + 0.05, h, hd], mat: kit.laminate, cut: ['pz']},
     // the right wall is cut back too (a second cut, hatched): from the 3/4 view it would hide the riders
-    {min: [hw - 0.05, 0, -hd], max: [hw, h, -0.25], mat: mats.carWall, cut: ['pz']},
-    {min: [-hw, 0, -hd], max: [hw, h, -hd + 0.05], mat: mats.carWall},
+    {min: [hw - 0.05, 0, -hd], max: [hw, h, -0.25], mat: kit.laminate, cut: ['pz']},
+    {min: [-hw, 0, -hd], max: [hw, h, -hd + 0.05], mat: kit.laminate},
     {min: [-hw, h, -hd], max: [hw, h + 0.1, hd], mat: mats.stainless, cut: ['pz']},
     // the door operator above the (cut-away) front
     {min: [-hw, h + 0.1, hd - 0.25], max: [hw, h + 0.3, hd], mat: mats.dark, cut: ['pz']},
@@ -747,22 +842,55 @@ const Car: React.FC<{
       <mesh position={[0, 0.015, hd + 0.04]} material={mats.stainless}>
         <boxGeometry args={[1.12, 0.03, 0.1]} />
       </mesh>
-      <DoorLeaves mats={mats} open={open} z={hd - 0.02} />
-      {/* handrail on the back wall, the operating panel on the left wall (it faces the camera) */}
-      <mesh position={[0, 0.92, -hd + 0.1]} rotation={[0, 0, Math.PI / 2]} material={mats.stainless}>
-        <cylinderGeometry args={[0.02, 0.02, w - 0.3, 10]} />
-      </mesh>
-      {[-1, 1].map((s) => (
-        <mesh key={s} position={[(s * (w - 0.3)) / 2, 0.92, -hd + 0.075]} rotation={[Math.PI / 2, 0, 0]} material={mats.stainless}>
-          <cylinderGeometry args={[0.015, 0.015, 0.06, 8]} />
+      <DoorLeaves mats={mats} kit={kit} open={open} z={hd - 0.02} />
+      {/* panel joints (stainless trims) and kick plates on the back and left walls */}
+      {[-w / 6, w / 6].map((x) => (
+        <mesh key={x} position={[x, h / 2, -hd + 0.052]} material={kit.steelV}>
+          <boxGeometry args={[0.022, h, 0.004]} />
         </mesh>
       ))}
-      <mesh position={[-hw + 0.06, 1.25, hd - 0.3]} material={mats.stainless}>
-        <boxGeometry args={[0.02, 0.9, 0.22]} />
+      <mesh position={[-hw + 0.052, h / 2, -0.2]} material={kit.steelV}>
+        <boxGeometry args={[0.004, h, 0.022]} />
       </mesh>
-      <mesh position={[-hw + 0.072, 1.3, hd - 0.3]} material={mats.dark}>
-        <boxGeometry args={[0.005, 0.5, 0.1]} />
+      <mesh position={[0, 0.06, -hd + 0.053]} material={kit.steelH} receiveShadow>
+        <boxGeometry args={[w - 0.1, 0.12, 0.004]} />
       </mesh>
+      <mesh position={[-hw + 0.053, 0.06, 0.02]} material={kit.steelH} receiveShadow>
+        <boxGeometry args={[0.004, 0.12, d - 0.1]} />
+      </mesh>
+      {/* the handrail on the back wall, on its brackets */}
+      <mesh position={[0, 0.92, -hd + 0.11]} rotation={[0, 0, Math.PI / 2]} material={kit.polished} castShadow>
+        <cylinderGeometry args={[0.019, 0.019, w - 0.3, 20]} />
+      </mesh>
+      {[-1, 1].map((s) => (
+        <group key={s} position={[(s * (w - 0.42)) / 2, 0.92, -hd + 0.08]}>
+          <mesh rotation={[Math.PI / 2, 0, 0]} material={kit.polished}>
+            <cylinderGeometry args={[0.011, 0.011, 0.06, 12]} />
+          </mesh>
+          <mesh position={[0, 0, -0.028]} rotation={[Math.PI / 2, 0, 0]} material={kit.polished}>
+            <cylinderGeometry args={[0.03, 0.03, 0.006, 20]} />
+          </mesh>
+        </group>
+      ))}
+      {/* the operating panel on the left wall (it faces the camera's side) */}
+      <group position={[-hw + 0.05, 1.12, hd - 0.2]} rotation={[0, Math.PI / 2, 0]}>
+        <CarOperatingPanel
+          mats={kit}
+          ready={ready}
+          light={0.85 / MOODS[mood].exposure}
+          h={Math.max(0.95, 0.52 + Math.ceil(labels.length / 2) * 0.072)}
+          state={{
+            labels,
+            lit: (car.buttons ?? []).flatMap((b) => {
+              const o = typeof b === 'number' ? {level: b} : b;
+              return t >= (o.at ?? -Infinity) && t < (o.until ?? Infinity) ? [o.level] : [];
+            }),
+            floor: labels[Math.max(0, Math.min(labels.length - 1, Math.round(level)))] ?? '',
+            dir: Math.abs(v) > 0.02 ? Math.sign(v) : 0,
+            full: car.full === true || (typeof car.full === 'number' && t >= car.full),
+          }}
+        />
+      </group>
       {/* the ceiling light panel (neutral) and its light into the car (always mounted) */}
       <mesh position={[0, h - 0.005, 0]} rotation={[Math.PI / 2, 0, 0]} material={mats.light}>
         <planeGeometry args={[w - 0.4, d - 0.4]} />
@@ -787,6 +915,12 @@ const Car: React.FC<{
           <mesh position={[0, Math.max(0.001, load * 2.0) / 2, 0.004]} material={mats.orange} userData={{glow: true}} scale={[1, 1, 1]}>
             <boxGeometry args={[0.085, Math.max(0.001, load * 2.0), 0.01]} />
           </mesh>
+          {/* the gauge's quarter ticks (ink), so the fill reads as a reading */}
+          {[0.5, 1.0, 1.5].map((y) => (
+            <mesh key={y} position={[0.07, y, 0.004]} material={mats.ink}>
+              <boxGeometry args={[0.05, 0.014, 0.006]} />
+            </mesh>
+          ))}
         </group>
       ) : null}
       {chevron > 0.001 ? (
@@ -858,50 +992,8 @@ const BrakeMark: React.FC<{mats: Mats; x: number; carY: number; targetY: number;
   );
 };
 
-const Controller: React.FC<{L: TowerLayout; lab: ReturnType<typeof useLabMaterials>; mats: Mats}> = ({L, lab, mats}) => {
-  const {x} = controllerAt(L);
-  const y0 = L.machineFloor;
-  const [w, h, d] = [1.0, 2.0, 0.6];
-  const zF = -1.3;
-  const zBk = zF - d;
-  const shell: CutBoxSpec[] = [
-    {min: [x - w / 2, y0, zBk], max: [x - w / 2 + 0.04, y0 + h, zF], mat: lab.cabinet, cut: ['pz']},
-    {min: [x + w / 2 - 0.04, y0, zBk], max: [x + w / 2, y0 + h, zF], mat: lab.cabinet, cut: ['pz']},
-    {min: [x - w / 2, y0 + h - 0.04, zBk], max: [x + w / 2, y0 + h, zF], mat: lab.cabinet, cut: ['pz']},
-    {min: [x - w / 2, y0, zBk], max: [x + w / 2, y0 + 0.1, zF], mat: lab.cabinet, cut: ['pz']},
-    {min: [x - w / 2, y0, zBk], max: [x + w / 2, y0 + h, zBk + 0.04], mat: lab.cabinet},
-  ];
-  return (
-    <group>
-      <Boxes boxes={shell} cut={mats.cut} />
-      <mesh position={[x, y0 + 1.3, zBk + 0.05]} material={mats.pcb}>
-        <boxGeometry args={[0.78, 0.9, 0.02]} />
-      </mesh>
-      {[
-        [-0.2, 1.5, 0.22],
-        [0.15, 1.5, 0.16],
-        [-0.15, 1.12, 0.14],
-        [0.18, 1.1, 0.2],
-      ].map(([dx, dy, s], i) => (
-        <mesh key={i} position={[x + dx, y0 + dy, zBk + 0.07]} material={mats.chip}>
-          <boxGeometry args={[s, s, 0.02]} />
-        </mesh>
-      ))}
-      {[0.55, 0.35].map((dy, i) => (
-        <mesh key={i} position={[x, y0 + dy, zBk + 0.07]} material={mats.terminal}>
-          <boxGeometry args={[0.8, 0.08, 0.05]} />
-        </mesh>
-      ))}
-      {/* the grey cable bundle from the cabinet's foot into the shafts */}
-      <mesh position={[x - w / 2 - 0.25, y0 + 0.06, zF - 0.3]} material={lab.cable}>
-        <boxGeometry args={[0.5, 0.08, 0.12]} />
-      </mesh>
-    </group>
-  );
-};
-
 /** The hotel lobby's furniture: reception desk and its wall panel, the keypad pedestal, a plant. */
-const HotelDressing: React.FC<{L: TowerLayout; mats: Mats; lab: ReturnType<typeof useLabMaterials>}> = ({L, mats, lab}) => {
+const HotelDressing: React.FC<{L: TowerLayout; mats: Mats; kit: KitMaterials; lab: ReturnType<typeof useLabMaterials>; ready: boolean}> = ({L, mats, kit, lab, ready}) => {
   const lob = L.lobby;
   const k = keypadAt(L);
   const dx = lob.x0 + D_DESK.x;
@@ -916,23 +1008,9 @@ const HotelDressing: React.FC<{L: TowerLayout; mats: Mats; lab: ReturnType<typeo
       <mesh position={[(lob.x0 + L.x0) / 2, 1.7, -0.19]} material={mats.walnut} receiveShadow>
         <boxGeometry args={[L.x0 - lob.x0 - 0.5, 2.2, 0.02]} />
       </mesh>
-      {/* the destination keypad: a brushed-steel pedestal, the screen tilted back toward its user (−z) */}
+      {/* the destination keypad, its screen tilted toward its user (−z) */}
       <group position={[k.x, 0, k.z]}>
-        <mesh position={[0, 0.02, 0]} material={mats.stainless} receiveShadow castShadow>
-          <cylinderGeometry args={[0.22, 0.24, 0.04, 28]} />
-        </mesh>
-        <mesh position={[0, 0.55, 0]} material={mats.stainless} castShadow>
-          <boxGeometry args={[0.16, 1.06, 0.12]} />
-        </mesh>
-        <group position={[0, 1.13, -0.03]} rotation={[0.55, Math.PI, 0]}>
-          <mesh material={mats.stainless} castShadow>
-            <boxGeometry args={[0.34, 0.26, 0.04]} />
-          </mesh>
-          {/* the screen faces its user: the camera sees the housing's back */}
-          <mesh position={[0, 0, 0.021]} material={mats.keypadBack}>
-            <planeGeometry args={[0.3, 0.22]} />
-          </mesh>
-        </group>
+        <DestinationKeypad mats={kit} ready={ready} />
       </group>
       {/* a plant in the right wing */}
       <group position={[lob.xR - 0.9, 0, lob.front - 1.2]}>
@@ -977,19 +1055,33 @@ const Person: React.FC<{
   const {pos, rot} = s;
   // the button at their spot (only once they're there: no reaching from across the hall)
   const spot = typeof s.spot === 'string' && !s.walking ? s.spot : '';
-  let button: V3 | null = null;
-  if (spot === 'panel') button = callButton(L, Math.round(s.level), 'down');
-  else if (spot === 'keypad') button = keypadAt(L).screen;
-  else if (spot.startsWith('wall:')) {
-    const i = letters.indexOf(spot.split(':')[1]);
-    if (i >= 0) button = [L.pierX(Math.min(i, L.shafts - 2)), L.levelY(Math.round(s.level)) + 1.2, TOWER_DIM.frontOut + 0.03];
-  }
   const hand = handAt(spec, t);
+  // the fingertip's target and the way it pushes (the surface's normal)
+  let tip: V3 | null = null;
+  let normal: V3 = [0, 0, 1];
+  if (spot === 'panel') {
+    const dir = spec.button ?? 'down';
+    const b = callButton(L, Math.round(s.level), dir);
+    // on the cap's face, a touch below its centre (the arrow and most of the ring show above the finger)
+    tip = [b[0] - 0.004, b[1] - 0.01, CAP_FACE_Z];
+  } else if (spot === 'keypad') {
+    const keys = spec.keys?.length ? spec.keys : [9];
+    const i = Math.max(0, pushIndex(spec.pushes, t));
+    const kk = keypadKey(L, keys[Math.min(i, keys.length - 1)]);
+    tip = kk.at;
+    normal = kk.normal;
+  } else if (spot.startsWith('wall:')) {
+    const i = letters.indexOf(spot.split(':')[1]);
+    if (i >= 0) tip = [L.pierX(Math.min(i, L.shafts - 2)), L.levelY(Math.round(s.level)) + 1.2, TOWER_DIM.frontOut + 0.005];
+  }
   let right: V3 = HANDS_DOWN[0];
-  if (button && hand.up > 0) {
-    // fingertip on the button's lower left (so most of a lit ring shows past the hand), pushing in
-    const tgt: V3 = spot === 'keypad' ? [button[0] - 0.03, button[1] + 0.02, button[2] - 0.04 + 0.03 * hand.push] : [button[0] - 0.035, button[1] - 0.03, button[2] + 0.04 - 0.035 * hand.push];
+  let point = 0;
+  if (tip && hand.up > 0) {
+    // hover off the surface, then push in: the finger touches at PUSH_CONTACT and carries the cap in
+    const off = spot === 'wall:' || spot.startsWith('wall:') ? 0.02 - 0.02 * hand.push : HOVER - (HOVER + CAP_TRAVEL) * hand.push;
+    const tgt: V3 = [tip[0] + normal[0] * off, tip[1] + normal[1] * off, tip[2] + normal[2] * off];
     right = lerp3(HANDS_DOWN[0], toLocal(tgt, pos, rot), hand.up);
+    point = spot.startsWith('wall:') ? 0 : hand.up;
   }
   const raiseK = bump(spec.raise, t, 1.2, 0.35);
   right = lerp3(right, HAND_RAISED, raiseK);
@@ -1017,6 +1109,7 @@ const Person: React.FC<{
         rotationY={rot}
         phone={false}
         hands={[right, left]}
+        point={[point, 0]}
         gestures={gestures}
         stance="stand"
         walk={s.walk}

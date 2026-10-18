@@ -46,7 +46,18 @@ type V3 = [number, number, number];
  * arriving at `at` seconds into the scene, then holds until the next key. `ease`: 'inOut' (cubic,
  * default), 'out' (cubic ease-out: moves from the first frame, settles gently) or 'sine' (sine in-out).
  */
-export type CameraKey = {at: number; look: V3; distance: number; ease?: 'out' | 'inOut' | 'sine'};
+export type CameraKey = {
+  at: number;
+  look: V3;
+  distance: number;
+  ease?: 'out' | 'inOut' | 'sine';
+  /**
+   * Interpolate the distance on a log scale (a steady dolly over a big range, e.g. a pull from a
+   * button close-up to the whole building), the look-at point following the distance so the subject
+   * stays put until the move opens up. Default false (linear).
+   */
+  log?: boolean;
+};
 
 const EASES = {
   inOut: Easing.inOut(Easing.cubic),
@@ -69,6 +80,11 @@ export const framingAtKeys = (keys: CameraKey[], base: {look: V3; distance: numb
     }
     if (t < k.at) {
       const u = interpolate(t, [t0, k.at], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: EASES[k.ease ?? 'inOut']});
+      if (k.log && prev.distance > 0 && k.distance > 0 && Math.abs(k.distance - prev.distance) > 1e-6) {
+        const distance = Math.exp(Math.log(prev.distance) + (Math.log(k.distance) - Math.log(prev.distance)) * u);
+        const w = (distance - prev.distance) / (k.distance - prev.distance);
+        return {look: prev.look.map((v, i) => v + (k.look[i] - v) * w) as V3, distance};
+      }
       return {
         look: prev.look.map((v, i) => v + (k.look[i] - v) * u) as V3,
         distance: prev.distance + (k.distance - prev.distance) * u,

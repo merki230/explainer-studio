@@ -9,6 +9,7 @@ import {projectToFrame, SectionCamera, sectionCameraAt, type Framing} from '../t
 import {SectionLights, SectionStage} from '../three/section/SectionStage';
 import {skyTexture} from '../three/section/textures';
 import {
+  CABINET_Z,
   callButton,
   controllerAt,
   LINE_IN,
@@ -22,26 +23,77 @@ import {
   type StopTick,
   type TowerCall,
   type TowerCar,
+  type TowerLantern,
   type TowerLayout,
 } from '../three/section/TowerSlice';
-import {carStateAt, doorsAt, personAt, type CarKey, type DoorKey, type PersonSpec} from '../three/section/towerMotion';
+import {carStateAt, doorsAt, personAt, pushContacts, type CarKey, type DoorKey, type PersonSpec} from '../three/section/towerMotion';
 import {ease, framingAtKeys, type CameraKey} from './keyframes';
 
 type V3 = [number, number, number];
-export type TowerFraming = 'tower' | 'shafts' | 'top' | 'landing';
+/**
+ * Framing presets. Fixed: 'tower', 'shafts', 'top'. Placed from the layout and YOU's level (default 4):
+ * 'landing' (the lobby medium), 'button' (the call panel close-up), 'controller' (the cabinet),
+ * 'car:X' (inside car X where it is at the scene's start), 'ride:X' (the same, following it),
+ * 'arrival:X' (car X's shaft from YOU's floor to the one above: a car braking in, its doors opening).
+ */
+export type TowerFraming = 'tower' | 'shafts' | 'top' | 'landing' | 'button' | 'controller' | `car:${string}` | `ride:${string}` | `arrival:${string}`;
 export type DecisionState = 'tentative' | 'steady' | 'locked';
 
 /**
- * Framings for the default tower (4 shafts, 5 floors). `tower`: the whole building, machine room top
- * at ≈ y 470 under the title block, lobby floor at ≈ y 1500. `shafts`: floors 1 to 5 and the four
- * cars; `top`: the machine room and floors 4 to 5; `landing`: floor 4, YOU, the call panel and B's door.
+ * Fixed framings for the default tower (4 shafts, 5 floors). `tower`: the whole building, machine room
+ * top at ≈ y 470 under the title block, lobby floor at ≈ y 1500. `shafts`: floors 1 to 5 and the four
+ * cars; `top`: the machine room and floors 4 to 5. `landing` here is its value for floor 4 (the scene
+ * places it on YOU's level; see `towerFraming`).
  */
-export const TOWER_FRAMINGS: Record<TowerFraming, Framing> = {
+export const TOWER_FRAMINGS: Record<'tower' | 'shafts' | 'top' | 'landing', Framing> = {
   tower: {look: [1.5, 12.1, 0], distance: 88.25},
   shafts: {look: [0.9, 9.6, -0.3], distance: 64},
   top: {look: [0.7, 15.6, -0.4], distance: 40},
-  landing: {look: [-0.2, 13.2, 0.2], distance: 21},
+  landing: {look: [-0.45, 13.65, 0.1], distance: 12.5},
 };
+
+/** A framing by name, or a function from a name and the scene time to a framing. */
+export type FramingTable = Record<string, Framing> | ((name: string, t: number) => Framing | undefined);
+const lookUp = (table: FramingTable, name: string, t: number) => (typeof table === 'function' ? table(name, t) : table[name]);
+
+/**
+ * The close framings, placed on the layout (pure). `button`: the call panel YOU presses fills the
+ * frame's middle, YOU's hand and finger coming in from the left, the lantern-side door jamb at the
+ * edge. `landing`: standing in the elevator lobby: YOU at the panel, B's door and frame, the lantern,
+ * C's door beyond. `controller`: the cabinet, door open, its boards and the lines fanning out.
+ * `car:X` / `ride:X`: into car X through its cut front (walls, handrail, operating panel, riders).
+ * `arrival:X`: X's shaft from YOU's floor to the next, so a car braking in and its doors read.
+ */
+export const towerFraming = (p: Partial<TowerSliceSceneProps>, name: string, t = 0): Framing | undefined => {
+  const letters = p.letters ?? ['A', 'B', 'C', 'D'];
+  const L = towerLayout(letters.length, p.floors ?? 5);
+  const level = p.you?.level ?? 4;
+  const [kind, arg] = name.split(':');
+  if (kind === 'button') {
+    const b = callButton(L, level, p.you?.button ?? 'down');
+    const mid = (callButton(L, level, 'up')[1] + callButton(L, level, 'down')[1]) / 2;
+    return {look: [b[0] - 0.2, mid + 0.08, b[2]], distance: 3.3};
+  }
+  if (kind === 'landing') {
+    const b = callButton(L, level, 'down');
+    return {look: [b[0] - 0.45, L.levelY(level) + 1.45, 0.1], distance: 12.5};
+  }
+  if (kind === 'controller') {
+    const {x} = controllerAt(L);
+    return {look: [x - 0.12, L.machineFloor + 1.05, CABINET_Z - 0.25], distance: 6.6};
+  }
+  const shaft = letters.indexOf(arg ?? '');
+  const car = p.cars?.[arg ?? ''] ?? DEFAULT_CARS[arg ?? ''];
+  if ((kind === 'car' || kind === 'ride') && shaft >= 0 && car) {
+    const lv = carStateAt(car, kind === 'ride' ? t : 0).level;
+    return {look: [L.shaftX[shaft] - 0.42, levelYAt(L, lv) + 1.15, TOWER_DIM.car.front - TOWER_DIM.car.d / 2 + 0.3], distance: 6.8};
+  }
+  if (kind === 'arrival' && shaft >= 0) return {look: [L.shaftX[shaft] + 0.3, L.levelY(level) + 2.3, -0.2], distance: 15};
+  return (TOWER_FRAMINGS as Record<string, Framing>)[name];
+};
+
+/** A camera key by framing name instead of a look-at and distance (resolved at the key's time). */
+export type TowerCameraKey = CameraKey | (Omit<CameraKey, 'look' | 'distance'> & {framing: string; look?: undefined; distance?: undefined});
 
 /** The frame-0 positions of No. 003 (A/V script, 🎭 illustrative): A lobby empty, B 5 (1), C 1 (6), D 2 (2). */
 export const DEFAULT_CARS: Record<string, TowerCar> = {
@@ -98,12 +150,22 @@ export type PreviewSpec = {
   ramp?: number;
 };
 
+/** A line focus window: lines to `cars` stay, the others fade to `dim` (see `focus`). */
+export type LineFocus = {cars: string[]; at?: number; until?: number; dim?: number};
+
 export type YouSpec = {
   level: number;
   /** The right hand on the down button: true (held, default), false, or keys [{at, on}]. */
   press?: boolean | {at: number; on: boolean}[];
   /** Finger pushes (s): the finger pushes in and eases back (rising first if the hand is down). */
   pushes?: number[];
+  /** Which button the hand is on (default 'down'). */
+  button?: 'up' | 'down';
+  /**
+   * Each push lights the button it presses as the fingertip lands (default true), so a press reads
+   * without timing `calls` by hand. Set false to drive the ring from `calls` only.
+   */
+  lights?: boolean;
   gestures?: PersonSpec['gestures'];
   watch?: number[];
 };
@@ -132,6 +194,12 @@ export type TowerSliceSceneProps = {
   /** Orange decision lines from the controller (default: one tentative line to A). */
   lines?: DecisionLine[];
   /**
+   * Show the lines (and flicker links) to these cars only: the others fade to `dim` (default 0,
+   * hidden; 0.2 leaves a faint trace) over 0.3 s from `at`, and come back by `until`. A list of
+   * windows for several changes.
+   */
+  focus?: LineFocus | LineFocus[];
+  /**
    * Plan flicker: from `at` to `until` every line jumps between cars `rate` times a second (default 8),
    * and (unless `links: false`) every lit call gets its own flickering link (controller → a car's shaft
    * → the call), so a plan of call → car links visibly recombines. The links go at `until`.
@@ -139,8 +207,12 @@ export type TowerSliceSceneProps = {
   flicker?: {at: number; until: number; rate?: number; seed?: string; links?: boolean};
   /** Promised stops: ink ticks on the slab's cut face under a shaft [{car, level, at?, until?, pulse?, dashed?}]. */
   stops?: StopTick[];
-  /** Orange load bars on the cars' cut faces (riders / capacity, default 6). */
-  loadBars?: {at: number; until?: number; capacity?: number};
+  /**
+   * Orange load bars on the cars' cut faces (riders / capacity, default 6), with quarter ticks.
+   * `readout`: a reading beside each bar (or only the listed cars), percent of capacity by default,
+   * or kg (`unit: 'kg'`, `kgPerRider` default 75).
+   */
+  loadBars?: {at: number; until?: number; capacity?: number; readout?: boolean | string[]; unit?: '%' | 'kg'; kgPerRider?: number};
   /** Orange direction chevrons on moving cars. */
   chevrons?: {at: number; until?: number};
   /** Score readouts beside the cars: keys [{at, values: {A: 16, …}, count?}] (each counts up over `count` s, default 1.2). */
@@ -151,14 +223,31 @@ export type TowerSliceSceneProps = {
   winnerAt?: number;
   /** Unit after the digits (default 's'). */
   scoreUnit?: string;
+  /**
+   * Where the score readouts sit: 'roof' (default, above each car), 'side' (beside each car's cut face,
+   * at mid height, on its right, kept inside the safe zone with a leader if pushed), or 'clamp' (above the roof, but kept inside the safe zone x 120–888,
+   * y 288–1248; a readout pushed off its car gets a 2 px ink leader back to the roof). 'side' and
+   * 'clamp' let a true medium hold all four.
+   */
+  scorePlace?: 'roof' | 'side' | 'clamp';
   /** Dashed preview outlines. */
   previews?: PreviewSpec[];
-  /** Framing preset (default 'tower'). */
+  /** Levels whose landing doors are whole (a real lobby wall with full leaves), e.g. [4] for YOU's floor. */
+  fullDoors?: number[];
+  /** Lit hall lanterns: [{car, level, dir, at?, until?}] (warning yellow, flat). */
+  lanterns?: TowerLantern[];
+  /** The controller cabinet's door, 0 shut to 1 open (default 1). */
+  cabinetOpen?: number;
+  /** Framing preset (default 'tower'; see `TowerFraming`). */
   framing?: TowerFraming;
   /** A custom move instead of a preset (look-at + distance at the fixed angle). */
   camera?: {from: Framing; to?: Framing};
-  /** Camera keyframes (as the car and wheel slices); overrides `camera` and `push`. */
-  cameraKeys?: CameraKey[];
+  /**
+   * Camera keyframes (as the car and wheel slices); overrides `camera` and `push`. A key may name a
+   * framing (`{at, framing: 'tower'}`) instead of a look-at and distance; `log: true` on a key makes
+   * that move a steady dolly (for a pull from 'button' out to 'tower').
+   */
+  cameraKeys?: TowerCameraKey[];
   /** Push toward the subject, units/s (default 0). */
   push?: number;
   /** Idle sideways drift, ± units (default 0: frame 0 and the loop must match). */
@@ -173,20 +262,43 @@ export type TowerSliceSceneProps = {
   cameraGlide?: number;
 };
 
+type CameraProps = {framing?: string; camera?: {from: Framing; to?: Framing}; cameraKeys?: TowerCameraKey[]; push?: number; cameraFrom?: Framing; cameraGlide?: number};
+
+/** The tower's framing table for a scene's props (fixed presets plus the placed close framings). */
+export const towerFramings =
+  (p: Partial<TowerSliceSceneProps>): FramingTable =>
+  (name, t) =>
+    towerFraming(p, name, t);
+
 export const towerCameraMove = (
-  p: {framing?: string; camera?: {from: Framing; to?: Framing}; cameraKeys?: CameraKey[]; push?: number; cameraFrom?: Framing; cameraGlide?: number},
+  p: CameraProps,
   durationInFrames: number,
   fps: number,
   frame?: number,
-  presets: Record<string, Framing> = TOWER_FRAMINGS,
+  presets: FramingTable = towerFramings(p as Partial<TowerSliceSceneProps>),
   dflt = 'tower',
 ) => {
-  const base = p.camera?.from ?? presets[p.framing ?? dflt] ?? presets[dflt];
+  const t = frame === undefined ? durationInFrames / fps : frame / fps;
+  const name = p.framing ?? dflt;
+  const base = p.camera?.from ?? lookUp(presets, name, 0) ?? lookUp(presets, dflt, 0)!;
   if (p.cameraKeys && p.cameraKeys.length) {
     // a glide in from the last scene's end is the first segment
     const from = p.cameraFrom && p.cameraGlide ? p.cameraFrom : base;
-    const f = framingAtKeys(p.cameraKeys, from, frame === undefined ? Infinity : frame / fps);
+    const keys: CameraKey[] = p.cameraKeys.flatMap((k) => {
+      if (k.look) return [k];
+      const f = lookUp(presets, (k as {framing: string}).framing, k.at);
+      return f ? [{at: k.at, ease: k.ease, log: k.log, look: f.look, distance: f.distance}] : [];
+    });
+    const f = framingAtKeys(keys, from, frame === undefined ? Infinity : frame / fps);
     return {from: f, to: f, pre: undefined};
+  }
+  if (!p.camera && name.startsWith('ride:')) {
+    // following a car: the framing at this frame (a glide in eases from the last scene's end)
+    const f = lookUp(presets, name, t) ?? base;
+    const g = p.cameraGlide && p.cameraFrom ? Math.min(1, t / p.cameraGlide) : 1;
+    const e = g < 1 ? ease(g, 0, 1) : 1;
+    const mixed = g < 1 && p.cameraFrom ? {look: p.cameraFrom.look.map((v, i) => v + (f.look[i] - v) * e) as V3, distance: p.cameraFrom.distance + (f.distance - p.cameraFrom.distance) * e} : f;
+    return {from: mixed, to: mixed, pre: undefined};
   }
   const pre =
     p.cameraGlide && p.cameraFrom
@@ -205,7 +317,7 @@ export const towerCameraEnd = (p: Partial<TowerSliceSceneProps>, d: number, fps:
 export const towerCameraAt = (
   p: Parameters<typeof towerCameraMove>[0] & {drift?: number; startFrame?: number},
   o: {frame: number; fps: number; durationInFrames: number},
-  presets: Record<string, Framing> = TOWER_FRAMINGS,
+  presets: FramingTable = towerFramings(p as Partial<TowerSliceSceneProps>),
   dflt = 'tower',
 ) => {
   const {from, to, pre} = towerCameraMove(p, o.durationInFrames, o.fps, o.frame, presets, dflt);
@@ -224,17 +336,54 @@ export const towerPeople = (p: Partial<TowerSliceSceneProps>): PersonSpec[] => {
       start: 'panel',
       press: you.press ?? true,
       pushes: you.pushes,
+      button: you.button,
       gestures: you.gestures,
       watch: you.watch,
     });
   return [...list, ...(p.people ?? [])];
 };
 
+/**
+ * The lit call buttons: `calls` (default YOU's down button), plus YOU's pushes lighting the button
+ * they press as the fingertip lands (unless `you.lights` is false or that button is already lit then).
+ */
+export const towerCalls = (p: Partial<TowerSliceSceneProps>): TowerCall[] => {
+  const base: TowerCall[] = p.calls ?? [{level: 4, dir: 'down'}];
+  const you = p.you === undefined ? {level: 4, press: true} : p.you;
+  if (!you || you.lights === false || !you.pushes?.length) return base;
+  const dir = you.button ?? 'down';
+  const litAt = (t: number) => base.some((c) => c.level === you.level && c.dir === dir && t >= (c.at ?? -Infinity) && t < (c.until ?? Infinity));
+  const extra = pushContacts({press: you.press ?? true, pushes: you.pushes})
+    .filter((at) => !litAt(at))
+    .map((at) => ({level: you.level, dir, at}));
+  return [...base, ...extra];
+};
+
+/**
+ * How much lines and node dots thin as the camera comes in: in proportion to the distance from the
+ * scene's widest framing (`wide`), never below 0.2 (≈ the style guide's 0.018 core at a room's distance).
+ */
+export const closeScale = (distance: number, wide: number) => Math.max(0.2, Math.min(1, distance / wide));
+
 /** Line widths per state (§ 5's 0.018 / 0.055 scaled ≈ 2.2× for the far `tower` framing; values 🧪). */
 const LINE = {tentative: 0.04, steady: 0.05, locked: 0.075};
 const NODE_R = 0.1;
 /** Frames a re-assignment flick takes. */
 const SNAP = 4;
+
+/** How much of a line to car `to` the focus leaves at t (1 = shown, `dim` = faded). */
+const focusAt = (focus: TowerSliceSceneProps['focus'], to: string, t: number) => {
+  let k = 1;
+  for (const f of focus ? (Array.isArray(focus) ? focus : [focus]) : []) {
+    if (f.cars.includes(to)) continue;
+    const at = f.at ?? -Infinity;
+    const inK = at === -Infinity ? 1 : ease(t, at, at + 0.3);
+    const outK = f.until === undefined ? 0 : ease(t, f.until - 0.3, f.until);
+    const w = inK * (1 - outK);
+    k = Math.min(k, 1 - (1 - (f.dim ?? 0)) * w);
+  }
+  return k;
+};
 
 const stateAt = (ln: DecisionLine, t: number): DecisionState => {
   let s = ln.state ?? 'tentative';
@@ -257,16 +406,22 @@ const glowAt = (ln: DecisionLine, t: number) => {
 };
 
 /**
- * A decision line's route (right angles): out of the cabinet, down to the machine room floor, forward
- * to the shafts' line plane, across to the car's shaft (its left side, behind the shaft front), down
- * the shaft beside the car, and in to the car's crosshead, or forward to a call button.
+ * A decision line's route (right angles): from the node on the controller's main board straight out of
+ * the open cabinet, down its front, and across the machine room floor to the car's shaft, the lines
+ * fanning out (the farther the shaft, the higher its run peels off, so no two cross); then down the
+ * shaft beside the car (its left side, behind the shaft front) to the car's crosshead, or forward to
+ * a call button.
  */
 export const decisionRoute = (L: TowerLayout, shaft: number, endY: number, end: 'car' | V3): V3[][] => {
-  const {node} = controllerAt(L);
+  const {node, front} = controllerAt(L);
   const z = LINE_IN.z;
   const x = shaftLineX(L, shaft);
-  const y = L.machineFloor + 0.12;
-  const pts: V3[] = [node, [node[0], y, node[2]], [node[0], y, z], [x, y, z], [x, endY, z]];
+  const zOut = front + 0.09;
+  // rank among the shafts on the same side of the cabinet: nearest runs lowest
+  const side = Math.sign(x - node[0]) || 1;
+  const rank = L.shaftX.map((_, i) => shaftLineX(L, i)).filter((sx) => (Math.sign(sx - node[0]) || 1) === side && Math.abs(sx - node[0]) < Math.abs(x - node[0])).length;
+  const y = L.machineFloor + 0.12 + 0.09 * rank;
+  const pts: V3[] = [node, [node[0], node[1], zOut], [node[0], y, zOut], [x, y, zOut], [x, y, z], [x, endY, z]];
   // to a car the vertical leg ends on the car's top, in the shaft (no hook across the doorway)
   if (end !== 'car') pts.push([x, endY, TOWER_DIM.frontOut + 0.06], [end[0], endY, TOWER_DIM.frontOut + 0.06], end);
   return pts.slice(0, -1).map((p, i) => [p, pts[i + 1]]);
@@ -315,7 +470,19 @@ const dotPhase = (ln: DecisionLine, state: DecisionState, t: number): number | u
   return f0 + (target - f0) * (1 - Math.pow(1 - u, 2));
 };
 
-type LiveLine = {key: string; legs: V3[][]; end: V3; radius: number; glow: number; progress: number; flow?: number; locked: boolean; pulses: number[]};
+type LiveLine = {
+  key: string;
+  legs: V3[][];
+  end: V3;
+  radius: number;
+  glow: number;
+  progress: number;
+  flow?: number;
+  locked: boolean;
+  pulses: number[];
+  /** The end node's size (a focus fades it with the line; default 1). */
+  node?: number;
+};
 
 /** Every line's drawable state at t (flicker and snaps included). */
 const liveLines = (p: TowerSliceSceneProps, L: TowerLayout, letters: string[], cars: Record<string, TowerCar>, t: number, fps: number): LiveLine[] => {
@@ -324,7 +491,7 @@ const liveLines = (p: TowerSliceSceneProps, L: TowerLayout, letters: string[], c
   const fl0 = p.flicker;
   const links: DecisionLine[] =
     fl0 && fl0.links !== false && t >= fl0.at && t < fl0.until
-      ? (p.calls ?? [{level: 4, dir: 'down' as const}])
+      ? towerCalls(p)
           .filter((c) => t >= (c.at ?? -Infinity) && t < (c.until ?? Infinity))
           .map((c) => ({to: valid[0], call: c.level, callDir: c.dir, state: 'steady' as const, until: fl0.until}))
       : [];
@@ -355,7 +522,8 @@ const liveLines = (p: TowerSliceSceneProps, L: TowerLayout, letters: string[], c
     }
     const shaft = letters.indexOf(to);
     if (shaft < 0 || !cars[to]) return;
-    const out0 = ln.until === undefined ? 1 : 1 - ease(t, ln.until - 0.4, ln.until);
+    const fk = focusAt(p.focus, to, t);
+    const out0 = (ln.until === undefined ? 1 : 1 - ease(t, ln.until - 0.4, ln.until)) * fk;
     const glow = glowAt(ln, t) * out0;
     const progress = flickering ? 1 : ln.at === undefined ? 1 : ease(t, ln.at, ln.at + (ln.draw ?? 1.3));
     if (progress <= 0 || out0 <= 0.001) return;
@@ -363,7 +531,7 @@ const liveLines = (p: TowerSliceSceneProps, L: TowerLayout, letters: string[], c
     const snapK = since * fps < SNAP ? 1 - (since * fps) / SNAP : 0;
     // a flickering plan draws at least at the steady width, so it reads in motion
     const radius = (flickering ? LINE.locked : LINE[state]) * (1 + 0.8 * snapK);
-    out.push({key: `${i}`, legs, end, radius, glow, progress, flow: dotPhase(ln, state, t), locked: state === 'locked', pulses: ln.pulses ?? []});
+    out.push({key: `${i}`, legs, end, radius, glow, progress, flow: dotPhase(ln, state, t), locked: state === 'locked', pulses: ln.pulses ?? [], node: fk});
     // the flick: the old route fades out over the snap
     if (prev && snapK > 0 && letters.indexOf(prev) >= 0 && cars[prev]) {
       const r = routeTo(L, letters, cars, ln, letters.indexOf(prev), t);
@@ -421,7 +589,8 @@ export const towerAnchorOnScreen = (
  * re-assigning, flickering through plans). In-set readouts and dashed preview outlines on top.
  */
 export const TowerSliceScene: React.FC<TowerSliceSceneProps> = (props) => {
-  const {durationInFrames, mood = 'day', floors = 5, letters = ['A', 'B', 'C', 'D'], cars = DEFAULT_CARS, calls = [{level: 4, dir: 'down'}], startFrame = 0} = props;
+  const {durationInFrames, mood = 'day', floors = 5, letters = ['A', 'B', 'C', 'D'], cars = DEFAULT_CARS, startFrame = 0} = props;
+  const calls = useMemo(() => towerCalls(props), [props]);
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
   const t = frame / fps;
@@ -430,11 +599,11 @@ export const TowerSliceScene: React.FC<TowerSliceSceneProps> = (props) => {
   const {from, to, pre} = towerCameraMove(props, durationInFrames, fps, frame);
   const people = useMemo(() => towerPeople(props), [props]);
   // line widths are set for the far `tower` framing: closer in, they thin with the camera distance
-  const k = Math.max(0.35, Math.min(1, cam.position.distanceTo(cam.look) / TOWER_FRAMINGS.tower.distance));
+  const k = closeScale(cam.position.distanceTo(cam.look), TOWER_FRAMINGS.tower.distance);
   const lines = liveLines(props, L, letters, cars, t, fps).map((ln) => ({...ln, radius: ln.radius * k}));
   return (
     <AbsoluteFill>
-      <TowerStage mood={mood} L={L} from={from} to={to} pre={pre} durationInFrames={durationInFrames} drift={props.drift ?? 0} startFrame={startFrame} fps={fps} lines={lines} t={t}>
+      <TowerStage mood={mood} L={L} from={from} to={to} pre={pre} durationInFrames={durationInFrames} drift={props.drift ?? 0} startFrame={startFrame} fps={fps} lines={lines} t={t} nodeScale={k}>
         <TowerSlice
           mood={mood}
           layout={L}
@@ -445,6 +614,9 @@ export const TowerSliceScene: React.FC<TowerSliceSceneProps> = (props) => {
           stops={props.stops}
           loadBars={props.loadBars}
           chevrons={props.chevrons}
+          fullDoors={props.fullDoors}
+          lanterns={props.lanterns}
+          cabinetOpen={props.cabinetOpen}
           t={t}
           clockOffset={startFrame / fps}
         />
@@ -469,8 +641,10 @@ export const TowerStage: React.FC<{
   t: number;
   /** Where the controller's node sits (default the tower's cabinet); null hides it. */
   node?: V3 | null;
+  /** Node dots' size factor (the scene thins lines and nodes as the camera comes close; default 1). */
+  nodeScale?: number;
   children: React.ReactNode;
-}> = ({mood, L, from, to, pre, durationInFrames, drift, startFrame, fps, lines, t, node, children}) => {
+}> = ({mood, L, from, to, pre, durationInFrames, drift, startFrame, fps, lines, t, node, nodeScale = 1, children}) => {
   const m = MOODS[mood];
   const mats = useMemo(
     () => ({
@@ -491,7 +665,7 @@ export const TowerStage: React.FC<{
       </mesh>
       {children}
       {lines.length && ctrl ? (
-        <mesh position={ctrl} material={mats.node} userData={{glow: true}}>
+        <mesh position={ctrl} material={mats.node} userData={{glow: true}} scale={nodeScale}>
           <sphereGeometry args={[NODE_R, 16, 12]} />
         </mesh>
       ) : null}
@@ -509,8 +683,8 @@ export const TowerStage: React.FC<{
             flow={ln.flow}
             dots={DOTS}
           />
-          {ln.progress >= 1 && !ln.key.endsWith('-old') ? (
-            <mesh position={ln.end} material={mats.node} userData={{glow: true}} scale={ln.locked ? 1.4 : 1}>
+          {ln.progress >= 1 && !ln.key.endsWith('-old') && (ln.node ?? 1) > 0.02 ? (
+            <mesh position={ln.end} material={mats.node} userData={{glow: true}} scale={(ln.locked ? 1.4 : 1) * (ln.node ?? 1) * nodeScale}>
               <sphereGeometry args={[NODE_R, 16, 12]} />
             </mesh>
           ) : null}
@@ -593,13 +767,38 @@ const TowerOverlay: React.FC<{
     const finals = letters.filter((l) => cars[l]).map((l) => ({l, v: valueAt(l)}));
     const winner = p.winnerAt !== undefined && t >= p.winnerAt ? finals.reduce((a, b) => (b.v < a.v ? b : a), finals[0])?.l : undefined;
     const winK = p.winnerAt !== undefined ? ease(t, p.winnerAt, p.winnerAt + 0.3) : 0;
+    const place = p.scorePlace ?? 'roof';
+    const leaders: React.ReactNode[] = [];
     readouts = finals.map(({l, v}, i) => {
       const shaft = letters.indexOf(l);
       const st = carStateAt(cars[l], t);
-      const [sx, sy] = proj([L.shaftX[shaft], levelYAt(L, st.level) + D.car.h + 1.15, D.car.front]);
+      const y0 = levelYAt(L, st.level);
       const inK = ease(t, keys[0].at + i * 0.2, keys[0].at + i * 0.2 + 0.35) * out;
       if (inK <= 0.001) return null;
       const win = winner === l;
+      // box anchor (px) and its CSS shift: above the roof (bottom-centre) or beside the car (left-middle)
+      let [sx, sy] = proj([L.shaftX[shaft], y0 + (place === 'clamp' ? D.car.h + 0.6 : D.car.h + 1.15), D.car.front]);
+      let shift = 'translate(-50%, -100%)';
+      if (place === 'side') {
+        const [ax, ay] = proj([L.shaftX[shaft] + D.car.w / 2 + 0.12, y0 + D.car.h * 0.55, D.car.front + D.car.d / 2 - 0.9]);
+        shift = 'translate(0, -50%)';
+        // kept inside the safe zone (box ≈ 150 × 52 px); pushed off its car, a leader runs back to it
+        sx = Math.max(120, Math.min(888 - 150, ax));
+        sy = Math.max(288 + 26, Math.min(1248 - 26, ay));
+        if (Math.hypot(sx - ax, sy - ay) > 2) leaders.push(<polyline key={l} points={`${sx},${sy} ${ax},${sy} ${ax},${ay}`} opacity={inK} />);
+      } else if (place === 'clamp') {
+        // box ≈ 150 × 52 px: keep it whole inside the safe zone
+        const [rx, ry] = proj([L.shaftX[shaft], y0 + D.car.h + 0.12, D.car.front]);
+        const cx = Math.max(120 + 75, Math.min(888 - 75, sx));
+        const cy = Math.max(288 + 52, Math.min(1248, sy));
+        if (Math.hypot(cx - sx, cy - sy) > 2) {
+          // the leader: from the box's bottom centre (or top, if pushed below the roof) to the roof
+          const by = cy < ry ? cy : cy - 52;
+          leaders.push(<polyline key={l} points={`${cx},${by} ${cx},${ry} ${rx},${ry}`} opacity={inK} />);
+        }
+        sx = cx;
+        sy = cy;
+      }
       return (
         <div
           key={l}
@@ -607,7 +806,7 @@ const TowerOverlay: React.FC<{
             position: 'absolute',
             left: sx,
             top: sy,
-            transform: `translate(-50%, -100%) translateY(${(1 - inK) * 6}px)`,
+            transform: `${shift} translateY(${(1 - inK) * 6}px)`,
             opacity: inK,
             background: paper,
             border: `3px solid ${ink}`,
@@ -626,6 +825,60 @@ const TowerOverlay: React.FC<{
         </div>
       );
     });
+    if (leaders.length)
+      readouts = (
+        <>
+          <svg width={1080} height={1920} style={{position: 'absolute', inset: 0}}>
+            <g fill="none" stroke={ink} strokeWidth={2}>
+              {leaders}
+            </g>
+          </svg>
+          {readouts}
+        </>
+      );
+  }
+
+  // load readouts beside the bars (a reading of the orange fill: percent of capacity, or kg)
+  const lb = p.loadBars;
+  let loads: React.ReactNode = null;
+  if (lb?.readout) {
+    const k = ease(t, lb.at, lb.at + 0.4) * (lb.until === undefined ? 1 : 1 - ease(t, lb.until - 0.4, lb.until));
+    if (k > 0.001)
+      loads = letters
+        .filter((l) => cars[l] && (lb.readout === true || (Array.isArray(lb.readout) && lb.readout.includes(l))))
+        .map((l) => {
+          const shaft = letters.indexOf(l);
+          const st = carStateAt(cars[l], t);
+          const riders = cars[l].riders ?? 0;
+          const ratio = Math.min(1, riders / (lb.capacity ?? 6));
+          const v = lb.unit === 'kg' ? riders * (lb.kgPerRider ?? 75) * k : ratio * 100 * k;
+          const [sx, sy] = proj([L.shaftX[shaft] - D.car.w / 2 + 0.03, levelYAt(L, st.level) + 2.3, D.car.front + 0.012]);
+          return (
+            <div
+              key={l}
+              style={{
+                position: 'absolute',
+                left: sx,
+                top: sy,
+                transform: `translate(-50%, -100%) translateY(${(1 - k) * 6}px)`,
+                opacity: k,
+                background: paper,
+                border: `3px solid ${ink}`,
+                padding: '2px 10px 4px 10px',
+                fontFamily: fonts.sans,
+                fontWeight: 700,
+                fontSize: 32,
+                color: ink,
+                lineHeight: 1.05,
+                fontVariantNumeric: 'tabular-nums',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {Math.round(v)}
+              <span style={{fontWeight: 600, fontSize: 22, marginLeft: 4}}>{lb.unit === 'kg' ? 'kg' : '%'}</span>
+            </div>
+          );
+        });
   }
 
   return (
@@ -636,6 +889,7 @@ const TowerOverlay: React.FC<{
         </g>
       </svg>
       {readouts}
+      {loads}
     </AbsoluteFill>
   );
 };

@@ -1,7 +1,7 @@
 import type {VideoSpec} from '../../types';
 
 /**
- * Exhibit No. 003 · The Elevator, in The Section (style guide v0.11.1). Rough cut, from `av-script.md`,
+ * Exhibit No. 003 · The Elevator, in The Section (style guide v0.11.1). From `av-script.md` (Revision 2),
  * adapted to the owner-approved **dollhouse front cut** (out/review/tower-test/dollhouse-frame0-full.png):
  * floors as horizontal bands with thin slabs, the four shafts A–D behind, YOU on floor 4 in front of B's
  * doors at the call panel between B and C, B at 5 straight above YOU, A empty in the lobby, C at 1 (6
@@ -10,8 +10,13 @@ import type {VideoSpec} from '../../types';
  * Two locations, all Day: T, the office tower (`tower-slice`); K, the hotel (`hotel-lobby`, framings
  * `lobby` and `mid`).
  *
- * Opening and loop (§ 8): frame 0 is T at `tower` with the title block up; the last scene glides back to
- * that picture (every car at its frame-0 floor by the end of line 16, YOU's hand on the lit down button,
+ * Shot plan: Revision 2 in `av-script.md` (owner feedback on the rough cut: the start too wide, the rest
+ * the same wide animation). Sizes alternate close / medium / wide; each scene glides into its framing with
+ * `cameraKeys` and most push, crane or pull back on a key word. Framings are named below.
+ *
+ * Opening and loop (§ 8): frame 0 is the close-up on YOU's hand at the lit down button on 4 (title block
+ * up); on "computer's already picking" the camera pulls back to the whole tower. The last scene pushes back
+ * in to that close-up (every car at its frame-0 floor by the end of line 16, YOU's hand on the lit button,
  * one tentative line to A whose dots ease back to rest). Drift is 0 on the first and last scenes.
  *
  * Timing: scene starts are cues copied from script.txt. Props inside a scene are seconds into it. To
@@ -77,23 +82,64 @@ const DAY = {mood: 'day'} as const;
 
 // ---------------------------------------------------------------- framings (fixed 3/4 angle)
 
-/** Frame 0's framing (= TOWER_FRAMINGS.tower), the loop's picture. */
+/** A camera key: arrive at framing `f` at `at` s into the scene (eased from the previous key). */
+const key = (at: number, f: Framing, ease?: 'out' | 'inOut' | 'sine') => ({at, ...f, ...(ease ? {ease} : {})});
+/** A camera key by the scene's named framing ('button', 'landing', 'controller', 'arrival:B', 'keypad', …); `log` for a steady dolly. */
+const fk = (at: number, framing: string, o: {log?: boolean; ease?: 'out' | 'inOut' | 'sine'} = {}) => ({at, framing, ...o});
+
+// close: one subject fills the frame · medium: two or three shafts, one or two floors · wide: the tower
+
+/** The whole tower (the reveal, the five calls and the 1,024 flicker). */
 const TOWER: Framing = {look: [1.5, 12.1, 0], distance: 88.25};
-/** Scene 1's push during the question: toward floors 3–5 (YOU, B, the line). */
-const PUSH: Framing = {look: [0.6, 12.4, 0], distance: 76};
+/** The question: a slow push from the whole tower toward floors 3–5 (YOU, B, the line skipping it). */
+const PUSH: Framing = {look: [0.9, 12.3, 0], distance: 80};
+/** Line 3a, medium: B at 5 straight above YOU at 4, its promised stop. */
+const B_MED: Framing = {look: [-0.7, 12.4, -0.3], distance: 31};
+/** Line 3b, medium-close: A parked in the lobby, then a crane up its shaft with the preview to floor 4. */
+const A_LOBBY: Framing = {look: [-3.0, 0.4, -0.3], distance: 22};
+const A_UP: Framing = {look: [-2.0, 11.6, -0.3], distance: 24};
+/** Line 4, medium: A's shaft from the lobby and B at 5, for the race of the two previews. */
+const RACE: Framing = {look: [-2.0, 7.2, -0.4], distance: 62};
+/** Line 5a's end, medium-wide: the lines down to every car, C and D starting to move. */
+const KNOW: Framing = {look: [0.6, 6.6, -0.5], distance: 60};
+/** Line 5b, close: inside full car C (six riders) rising, tracked to its stop at 2. */
+const C_CLOSE: Framing = {look: [1.4, 4.6, -1.0], distance: 17};
+const C_ARRIVED: Framing = {look: [1.4, 6.5, -1.0], distance: 17};
+/** Lines 6a and 8, medium: the four readouts, clamped into the safe zone (`scorePlace: 'clamp'`). */
+const SCORES: Framing = {look: [0.2, 10.6, -0.4], distance: 46};
+/** Line 6b, medium-close: B's promised stop at 5 and its readout, YOU below. */
+const B_STOP: Framing = {look: [-0.7, 14.2, -0.4], distance: 32};
+/** Line 7, medium: YOU at 4 and the riders in C and D checking their watches, their readouts. */
+const DELAY: Framing = {look: [2.0, 6.85, -0.5], distance: 22};
+/** Line 8's end, medium-close: A, the winner, starting up from the lobby. */
+const A_WIN: Framing = {look: [-3.2, 1.7, -0.4], distance: 24};
+/** Line 10, medium-close: floor 5, the new caller at the panel and B's doors. */
+const F5: Framing = {look: [-0.5, 15.25, -0.2], distance: 20};
+/** Line 11, medium: floors 3–5, A climbing in its shaft on the left, B at 5, YOU at 4. */
+const MIND: Framing = {look: [-1.6, 12.3, -0.4], distance: 34};
+/** Line 12a's push: B and YOU. */
+const LOCK_PUSH: Framing = {look: [-0.6, 12.5, -0.2], distance: 27};
 /**
- * The shafts beats (lines 3–8): a gentle push from frame 0 so the riders read, the whole building still
- * in frame (B at 5, YOU at 4, A in the lobby in one picture), the sky band kept for B's callout, and
- * aimed low enough that A's lobby readout sits between the caption band and the safe zone's bottom.
- * Replaces the `shafts` preset (a first guess that filled the frame edge to edge).
+ * Line 12b: the scene's 'arrival:B' (B's shaft from floor 4 up one, distance 15) aimed 0.55 lower, so YOU's
+ * head on 4 clears the caption band while B brakes in from above.
  */
-const SHAFTS: Framing = {look: [1.5, 10.5, 0], distance: 78};
-/** Lines 11–12a: the controller, floors 4–5 and A climbing below (replaces the `top` preset). */
-const TOP: Framing = {look: [0.5, 13.8, 0], distance: 56};
-/** Line 12b: the `landing` preset aimed 0.6 lower, so YOU's feet clear the caption band. */
-const LANDING: Framing = {look: [-0.6, 12.7, 0], distance: 22};
-/** Line 16: a touch wider than frame 0. */
+const ARRIVAL_B: Framing = {look: [-1.0, 13.95, -0.2], distance: 15};
+/** Line 16a: a touch wider than frame 0. */
 const TOWER_WIDE: Framing = {look: [1.5, 11.6, 0], distance: 94};
+
+// K, the hotel
+/** Line 13a, close: the keypad on its pedestal and YOU's hand typing. */
+const KEYPAD: Framing = {look: [0.5, 0.87, 1.9], distance: 11};
+/** Line 13b, medium: the lobby doors, the line to C, YOU walking to it. */
+const LOBBY_DOORS: Framing = {look: [0.2, -0.1, 0.8], distance: 34};
+/** Line 14a, wide lobby: the guests typing and walking to their doors. */
+const LOBBY_WIDE: Framing = {look: [-0.2, 1.4, 1.6], distance: 56};
+/** Line 14b: the hotel's upper floors (the `mid` preset). */
+const MID: Framing = {look: [0.6, 22.6, -0.5], distance: 64};
+/** Line 15a, close: the guest at the bare wall by B. */
+const WALL_B: Framing = {look: [-0.2, 0.5, 0.5], distance: 13};
+/** Line 15b, medium: the lobby, two more guests arriving. */
+const LOBBY_MED: Framing = {look: [1.6, 0.2, 1.4], distance: 44};
 
 // ---------------------------------------------------------------- T: cars (video seconds)
 
@@ -109,7 +155,7 @@ const CAR_TRIPS: Record<string, {at: number; level: number}[]> = {
     {at: 0, level: 5},
     {at: 57.57, level: 4}, // brakes from ≈ 59.4 ("start braking"), levels at 4 ≈ 61.2
     {at: 70.0, level: 3}, // unseen (K on screen)
-    {at: 82.67, level: 5}, // with B_FAST: passes 4 on "wait" (84.00) without stopping; at 5 by ≈ 85.3
+    {at: 83.3, level: 5}, // with B_FAST: passes 4 just after "wait longer" (≈ 84.6, once 16b's glide has landed); at 5 by ≈ 86.0
   ],
   C: [
     {at: 0, level: 1},
@@ -165,7 +211,7 @@ const bStop = (start: number, pulse?: number) => [
  * "weigh" (25.08; riders / 6, so C's is full); both gone early in line 6.
  */
 const knows = (start: number) => ({
-  chevrons: {at: r(23.36, start), until: r(27.6, start)},
+  chevrons: {at: r(23.36, start), until: r(26.7, start)}, // gone as C arrives at 2
   loadBars: {at: r(25.08, start), until: r(27.6, start)},
 });
 
@@ -215,20 +261,22 @@ type Leg = {at: number; to: string};
 const legs = (start: number, path: Leg[]) => path.map((l) => ({at: r(l.at, start), to: l.to}));
 
 /**
- * The lobby cast, rebased to a lobby scene start: YOU types 9 and is sent to C (line 13); four guests
+ * The lobby cast, rebased to a lobby scene start: YOU, already at the keypad, types 9 and is sent to C (line 13); four guests
  * type in turn and wait at C (two, with YOU) and A (two) (line 14); a guest with a suitcase pats the bare
  * wall by B where a button would be, raises a hand and heads back to the keypad; two more guests with
  * luggage arrive on "in hotels", one looking round (line 15). Spots: 'entrance', 'keypad', 'desk',
  * 'door:X', 'wall:X'. 🎭
  */
 const lobbyCast = (start: number) => ({
+  // YOU stands at the keypad from the slide in (the walk in from the street took ≈ 5 s and arrived after
+  // the typing), raises a hand and taps 9 as the detail box opens, then walks to C
   you: {
-    start: 'entrance',
+    start: 'keypad',
     path: legs(start, [
-      {at: 62.2, to: 'keypad'},
       {at: 67.3, to: 'door:C'}, // after "which elevator" (67.12): to its door
     ]),
-    pushes: rs(start, [64.56]), // TIMED: "enter" (64.56)
+    pushes: rs(start, [64.1]), // TIMED: the hand rises 0.5 s, the finger taps on "enter" (64.56)
+    keys: [9],
   },
   guests: [
     {seed: 'g1', start: 'desk', path: legs(start, [{at: 68.3, to: 'keypad'}, {at: 69.4, to: 'door:C'}]), pushes: rs(start, [68.95])},
@@ -247,8 +295,9 @@ const lobbyCast = (start: number) => ({
       raise: rs(start, [75.4]),
       path: legs(start, [{at: 77.9, to: 'keypad'}]),
     },
-    {seed: 's2', start: 'entrance', appear: r(76.8, start), suitcase: true, path: legs(start, [{at: 76.8, to: 'door:D'}])}, // TIMED: "in hotels"
-    {seed: 's3', start: 'entrance', appear: r(77.0, start), suitcase: true, path: legs(start, [{at: 77.0, to: 'door:B'}]), lookAround: rs(start, [78.0])},
+    // they set off from the vestibule ≈ 1 s before "in hotels" (77.00) so they are in the lobby by it
+    {seed: 's2', start: 'entrance', appear: r(75.9, start), suitcase: true, path: legs(start, [{at: 75.9, to: 'door:D'}])}, // TIMED
+    {seed: 's3', start: 'entrance', appear: r(76.2, start), suitcase: true, path: legs(start, [{at: 76.2, to: 'door:B'}]), lookAround: rs(start, [78.2])},
   ],
   // orange keypad → door lines, one per entry (YOU's to C on "tell", 66.56); they fade to traces
   entries: [
@@ -264,37 +313,47 @@ const lobbyCast = (start: number) => ({
 
 /** Callout offsets, px, read off stills (the anchors are the scenes' named points, followed live). */
 const CALLOUT = {
-  closest: {anchor: 'carRoof:B', place: 'above', dy: -170},
+  // beside B's car: above its roof would leave the safe zone at the medium framing
+  closest: {anchor: 'car:B', place: 'side', dx: 200, dy: -60},
   // A in the lobby sits below the safe zone: the label goes up to just under the caption band
-  farther: {anchor: 'car:A', place: 'above', dy: -120},
-  controller: {anchor: 'controllerAt', place: 'above', dy: -110},
-  // beside B's car (its roof rides above y 288 at the landing framing)
-  locked: {anchor: 'car:B', place: 'side', dx: 170, dy: -120},
-  noUp: {anchor: 'wall:B', place: 'above', dy: -160},
+  farther: {anchor: 'car:A', place: 'above', dy: -260},
+  // at the 'controller' close-up the anchor sits near the top: the label goes left, over the open door
+  controller: {anchor: 'controllerAt', place: 'side', dx: -170, dy: 120},
+  // on YOU's call button, straight up the pier: B's roof rides above the frame while it brakes
+  locked: {anchor: 'callButton:4', place: 'above', dy: -330},
+  noUp: {anchor: 'wall:B', place: 'above', dy: -260},
 } as const;
+
+/** A's line as a trace (node dots only) while the readouts do the talking (lines 6–8). */
+const traceA = (start: number, extra: Record<string, unknown> = {}) => ({to: 'A', state: 'steady', glow: [{at: r(27.4, start), value: 0}], ...extra});
 
 export const spec: VideoSpec = {
   watermark: null,
-  tail: 1.2, // the end hold on frame 0's picture
+  tail: 1.2, // the end hold on frame 0's close-up
   scenes: [
-    // 1 · Frame 0, the hook and the question (lines 1 + 2, one scene so the title block holds past the
-    // question). YOU pushes the button, dots start down the line to A, B's rider turns to its doors; a
-    // slow push toward floors 3–5 during the question.
+    // 1 · Frame 0 is the close-up (lines 1 + 2): YOU's hand pushes the lit down button on 4, B's and C's
+    // doors round it. On "computer's already picking" the camera pulls back to the whole cut-open tower
+    // (dots start down the line to A, past B); B's rider turns to its doors on "not"; during the question
+    // a slow push, and a bright dot runs past B down to A on "skip".
     {
       scene: 'tower-slice',
       cue: 'When you press',
       props: {
         ...DAY,
         drift: 0, // loop: frame 0 must match the last frame
+        framing: 'button',
         cameraKeys: [
-          {at: 0, ...TOWER},
-          {at: 6.48, ...TOWER}, // TIMED: "So" (6.48)
-          {at: 9.1, ...PUSH, ease: 'sine'},
+          fk(0, 'button'),
+          fk(1.5, 'button'), // TIMED: "computer's" (1.60)
+          fk(2.9, 'landing', {log: true}), // "already picking" (2.24–3.04): out through the lobby…
+          fk(4.6, 'tower', {log: true}), // …to the whole tower
+          key(6.48, TOWER), // TIMED: "So" (6.48)
+          key(9.1, PUSH, 'sine'),
         ],
         cars: carsAt(T.hook),
         you: {...YOU_HOLD, pushes: [0.44]}, // TIMED: "press" (0.44)
         calls: [{level: 4, dir: 'down'}],
-        lines: [{to: 'A', state: 'tentative', dotsFrom: dotsA(T.hook)}],
+        lines: [{to: 'A', state: 'tentative', dotsFrom: dotsA(T.hook), pulses: [7.44]}], // TIMED: "skip" (7.44)
       },
       overlays: [
         {
@@ -308,46 +367,38 @@ export const spec: VideoSpec = {
         },
       ],
     },
-    // 2 · The closest car has a stop first (line 3a): glide to the shafts; the line fades to its node dots
-    // so the physical case reads; YOU's tag, then B with its stop tick.
+    // 2 · The closest car has a stop first (line 3a), medium: glide down to B at 5 straight above YOU;
+    // the line fades to its node dots so the physical case reads; YOU's tag, then B with its stop tick.
     {
       scene: 'tower-slice',
       cue: 'Look at the shafts',
       props: {
         ...DAY,
         ...GLIDE,
-        camera: {from: SHAFTS},
+        cameraKeys: [key(0.8, B_MED), key(3.88, {...B_MED, distance: 29}, 'sine')],
         cars: carsAt(T.shafts),
         you: YOU_HOLD,
-        lines: [
-          {
-            to: 'A',
-            state: 'tentative',
-            dotsFrom: dotsA(T.shafts),
-            glow: [
-              {at: 0.2, value: 1},
-              {at: 1.0, value: 0},
-            ],
-          },
-        ],
+        lines: [{to: 'A', state: 'tentative', dotsFrom: dotsA(T.shafts), glow: [{at: 0.2, value: 0}]}],
         stops: bStop(T.shafts), // the tick appears on "stop" (11.84)
       },
       overlays: [
-        {type: 'tag', who: 'you', at: 0.15, until: 'car has a stop'},
+        {type: 'tag', who: 'you', at: 0.9, until: 'car has a stop'},
         {type: 'callout', cue: 'car has a stop', ...CALLOUT.closest, title: 'Closest car', sub: 'a stop first'},
       ],
     },
-    // 3 · A farther car could come straight to you (line 3b): a dashed preview of A races up to 4.
+    // 3 · A farther car could come straight to you (line 3b), medium-close: glide down to A parked in
+    // the lobby; on "straight" its dashed preview races up the shaft and the camera cranes up with it to
+    // YOU's floor.
     {
       scene: 'tower-slice',
       cue: 'and a farther one',
       props: {
         ...DAY,
-        ...CONTINUE,
-        camera: {from: SHAFTS},
+        ...GLIDE,
+        cameraKeys: [key(0.8, A_LOBBY), key(r(14.3, T.farther), A_LOBBY), key(r(15.5, T.farther), A_UP, 'inOut')],
         cars: carsAt(T.farther),
         you: YOU_HOLD,
-        lines: [{to: 'A', state: 'tentative', dotsFrom: dotsA(T.farther), glow: [{at: 0, value: 0}]}],
+        lines: [{to: 'A', state: 'tentative', dotsFrom: dotsA(T.farther), glow: [{at: -1, value: 0}]}],
         stops: bStop(T.farther),
         // TIMED: shown from "could" (13.92), leaves on "straight" (14.32), at 4 ≈ 15.6 ("to you")
         previews: [
@@ -358,22 +409,20 @@ export const spec: VideoSpec = {
               {at: r(14.3, T.farther), level: 4},
             ],
             from: r(13.9, T.farther),
-            until: 2.5,
           },
         ],
       },
-      // the sub ("straight to you") would sit in the caption band; the voice says it
-      overlays: [{type: 'callout', cue: 'farther one', ...CALLOUT.farther, title: 'Farther car'}],
+      overlays: [{type: 'callout', cue: 'farther one', until: 'straight', ...CALLOUT.farther, title: 'Farther car'}],
     },
-    // 4 · Time, not distance (line 4): a race of two previews (A's reaches 4 first while B's waits out
-    // its stop at 5); on "farther car" A's line comes back to full glow and goes steady.
+    // 4 · Time, not distance (line 4), medium: pull back to A's shaft and B at 5; a race of two previews
+    // (A's reaches 4 first while B's waits out its stop at 5); on "farther car" A's line comes back.
     {
       scene: 'tower-slice',
       cue: 'Many systems pick',
       props: {
         ...DAY,
-        ...CONTINUE,
-        camera: {from: SHAFTS},
+        ...GLIDE,
+        cameraKeys: [key(0.8, RACE), key(5.96, {...RACE, distance: 59}, 'sine')],
         cars: carsAt(T.race),
         you: YOU_HOLD,
         lines: [
@@ -383,10 +432,10 @@ export const spec: VideoSpec = {
             dotsFrom: dotsA(T.race),
             states: [{at: r(19.68, T.race), state: 'steady'}], // TIMED: "farther" (19.68)
             glow: [
-              {at: 0, value: 0},
-              {at: r(19.68, T.race), value: 0},
-              {at: r(20.4, T.race), value: 1},
+              {at: -1, value: 0},
+              {at: r(19.68, T.race), value: 1},
             ],
+            pulses: [r(19.9, T.race)],
           },
         ],
         stops: bStop(T.race),
@@ -418,15 +467,16 @@ export const spec: VideoSpec = {
         ],
       },
     },
-    // 5 · It knows where every car is and which way it's moving (line 5a): glide out to the tower;
-    // lines to all four cars on "every car"; C and D start up, with chevrons.
+    // 5 · It knows where every car is and which way it's moving (line 5a), close: glide up to the
+    // controller cabinet; lines fan out to all four shafts on "every car"; on "which way" the camera
+    // follows them down to the cars (medium-wide) as C and D start up, with chevrons.
     {
       scene: 'tower-slice',
       cue: 'It knows where',
       props: {
         ...DAY,
         ...GLIDE,
-        framing: 'tower',
+        cameraKeys: [fk(0.8, 'controller'), fk(r(23.1, T.knows), 'controller'), {...key(r(24.5, T.knows), KNOW), log: true}],
         cars: carsAt(T.knows),
         you: YOU_HOLD,
         lines: [
@@ -437,80 +487,106 @@ export const spec: VideoSpec = {
         ...knows(T.knows),
       },
       overlays: [
-        {type: 'callout', at: 0.3, until: 'and it can weigh', ...CALLOUT.controller, title: 'Group controller', sub: "the building's computer"},
+        {type: 'callout', at: 0.8, until: 'which way', ...CALLOUT.controller, title: 'Group controller', sub: "the building's computer"},
       ],
     },
-    // 6 · It weighs each car (line 5b): glide to the shafts; load bars fill, C's to the top.
+    // 6 · It weighs each car (line 5b), close: inside full car C, rising, its six riders; its load bar
+    // fills to the top on "full".
     {
       scene: 'tower-slice',
       cue: 'and it can weigh',
-      props: {...DAY, ...GLIDE, camera: {from: SHAFTS}, cars: carsAt(T.weigh), you: YOU_HOLD, lines: KNOW_LINES, stops: bStop(T.weigh), ...knows(T.weigh)},
+      // close on C, tracking it up (at 'ride:C', distance 6.8, the load reading sits outside the safe zone);
+      // its load reading counts up beside the bar and the car's FULL sign lights on "full"
+      props: {
+        ...DAY,
+        ...GLIDE,
+        cameraKeys: [key(0.8, C_CLOSE), key(2.2, C_ARRIVED, 'sine')],
+        cars: carsAt(T.weigh, {C: {full: r(26.32, T.weigh)}}), // TIMED: "full" (26.32)
+        you: YOU_HOLD,
+        lines: KNOW_LINES,
+        stops: bStop(T.weigh),
+        ...knows(T.weigh),
+        loadBars: {at: r(25.08, T.weigh), until: r(27.6, T.weigh), readout: ['C']},
+      },
     },
-    // 7 · Seconds to reach you (line 6a): the four readouts count up (one in-set group = the one card).
+    // 7 · Seconds to reach you (line 6a), medium-wide: the four readouts count up (one in-set group =
+    // the one card); the decision lines fade (A's to its node dots) so only the numbers talk.
     {
       scene: 'tower-slice',
       cue: 'For each car',
       props: {
         ...DAY,
-        ...CONTINUE,
-        camera: {from: SHAFTS},
+        ...GLIDE,
+        cameraKeys: [key(0.8, SCORES)], // held: the counting readouts are the motion
         cars: carsAt(T.seconds),
         you: YOU_HOLD,
-        lines: KNOW_LINES,
+        lines: [traceA(T.seconds), ...(['B', 'C', 'D'] as const).map((to) => ({to, state: 'tentative', until: 0.5}))],
         stops: bStop(T.seconds),
         ...knows(T.seconds),
         ...readouts(T.seconds),
+        scorePlace: 'clamp',
       },
     },
-    // 8 · Counting the stops it's promised (line 6b): B's tick pulses, B's readout climbs 9 → 19.
+    // 8 · Counting the stops it's promised (line 6b), medium-close: B at 5 with its stop tick (it pulses)
+    // and its readout climbing 9 → 19; YOU below.
     {
       scene: 'tower-slice',
       cue: 'counting the stops',
       props: {
         ...DAY,
-        ...CONTINUE,
-        camera: {from: SHAFTS},
+        ...GLIDE,
+        cameraKeys: [key(0.7, B_STOP), key(2.24, {...B_STOP, distance: 30}, 'sine')],
         cars: carsAt(T.stops),
         you: YOU_HOLD,
-        lines: KNOW_LINES,
+        lines: [traceA(T.stops)],
         stops: bStop(T.stops, r(31.6, T.stops)), // TIMED: "stops" (31.60)
         ...readouts(T.stops),
       },
     },
-    // 9 · The delay to everyone else (line 7): riders check their watches (cars' `watch`), readouts climb.
+    // 9 · The delay to everyone else (line 7), medium: YOU at 4 and the riders in C and D; they check
+    // their watches on "delay" and C's and D's readouts climb.
     {
       scene: 'tower-slice',
       cue: 'Some systems also',
-      props: {...DAY, ...CONTINUE, camera: {from: SHAFTS}, cars: carsAt(T.delay), you: YOU_HOLD, lines: KNOW_LINES, stops: bStop(T.delay), ...readouts(T.delay)},
+      props: {
+        ...DAY,
+        ...GLIDE,
+        cameraKeys: [key(0.8, DELAY), key(4.12, {...DELAY, distance: 21}, 'sine')],
+        cars: carsAt(T.delay),
+        you: YOU_HOLD,
+        lines: [traceA(T.delay)],
+        stops: bStop(T.delay),
+        ...readouts(T.delay),
+      },
     },
-    // 10 · Every car gets a score, the lowest gets you (line 8): A's readout marked; the other lines
-    // snap onto A; A starts up its shaft.
+    // 10 · Every car gets a score, the lowest gets you (line 8): back to the four readouts; on "lowest"
+    // A's readout is marked, its line comes back with a bright dot, and the camera pushes in on A as it
+    // starts up.
     {
       scene: 'tower-slice',
       cue: 'In those systems',
       props: {
         ...DAY,
-        ...CONTINUE,
-        camera: {from: SHAFTS},
+        ...GLIDE,
+        cameraKeys: [key(0.8, SCORES), key(r(40.7, T.score), SCORES), key(r(42.3, T.score), A_WIN, 'inOut')],
         cars: carsAt(T.score),
         you: YOU_HOLD,
-        lines: [
-          STEADY_A,
-          ...(['B', 'C', 'D'] as const).map((to) => ({to, state: 'tentative', switchTo: {to: 'A', at: r(40.64, T.score)}})), // TIMED: "lowest"
-        ],
+        lines: [traceA(T.score, {glow: [{at: -1, value: 0}, {at: r(40.64, T.score), value: 1}], pulses: [r(40.7, T.score)]})], // TIMED: "lowest"
         stops: bStop(T.score),
         ...readouts(T.score),
+        scorePlace: 'clamp',
+        scoresUntil: r(42.93, T.score), // A's marked readout holds through the push in
       },
     },
-    // 11 · Four elevators, five floors calling (line 9a): glide out; a caller on L, 1, 2, 3 pushes and
-    // each button lights.
+    // 11 · Four elevators, five floors calling (line 9a), wide: pull out to the whole tower; a caller on
+    // L, 1, 2, 3 pushes and each button lights.
     {
       scene: 'tower-slice',
       cue: 'With four elevators',
       props: {
         ...DAY,
         ...GLIDE,
-        framing: 'tower',
+        cameraKeys: [key(0.9, TOWER)],
         cars: carsAt(T.calls),
         you: YOU_HOLD,
         people: callers(T.calls),
@@ -519,14 +595,14 @@ export const spec: VideoSpec = {
         stops: bStop(T.calls),
       },
     },
-    // 12 · 1,024 ways (line 9b): the plan flicker; the counter.
+    // 12 · 1,024 ways (line 9b), wide: the plan flicker; the counter; a slow push.
     {
       scene: 'tower-slice',
       cue: 'there are already',
       props: {
         ...DAY,
         ...CONTINUE,
-        framing: 'tower',
+        cameraKeys: [key(0, TOWER), key(3.76, {...TOWER, distance: 84}, 'sine')],
         cars: carsAt(T.ways),
         you: YOU_HOLD,
         people: callers(T.ways),
@@ -539,15 +615,15 @@ export const spec: VideoSpec = {
         {type: 'counter', cue: '1,024 ways', from: 0, to: 1024, label: 'ways', sub: '4 × 4 × 4 × 4 × 4', duration: 1.6, x: 0.111, y: 0.156},
       ],
     },
-    // 13 · Re-deciding as new calls come in (line 10): a caller on 5 pushes; D's link snaps to B, B opens
-    // and the caller boards.
+    // 13 · Re-deciding as new calls come in (line 10), medium-close on floor 5: a caller pushes; D's
+    // link snaps to B, B opens and the caller boards.
     {
       scene: 'tower-slice',
       cue: 'And most systems',
       props: {
         ...DAY,
-        ...CONTINUE,
-        framing: 'tower',
+        ...GLIDE,
+        cameraKeys: [key(0.8, F5), key(3.44, {...F5, distance: 19}, 'sine')],
         cars: carsAt(T.redecide),
         you: YOU_HOLD,
         people: callers(T.redecide),
@@ -556,35 +632,34 @@ export const spec: VideoSpec = {
         stops: bStop(T.redecide),
       },
     },
-    // 14 · It changes its mind (line 11): glide to the top; YOU's line snaps from A (climbing below) to B,
-    // its stop done and doors closing.
+    // 14 · It changes its mind (line 11), medium: floors 3–5, A climbing on the left; YOU's line snaps
+    // from A to B, its stop done and doors closing.
     {
       scene: 'tower-slice',
       cue: 'It can even change',
       props: {
         ...DAY,
         ...GLIDE,
-        camera: {from: TOP},
+        cameraKeys: [key(0.8, MIND)],
         cars: carsAt(T.mind),
         you: YOU_HOLD,
         people: callers(T.mind),
         calls: fiveCalls(T.mind),
         lines: [
           {to: 'A', state: 'steady', switchTo: {to: 'B', at: r(53.6, T.mind)}}, // TIMED: "change its mind" (53.44)
-          {to: 'B', state: 'tentative'},
           {to: 'C', state: 'tentative'},
         ],
       },
     },
-    // 15 · Only locks in a car… (line 12a): B starts down; YOU's line stays open, dots running, and hops
-    // B → A → B.
+    // 15 · Only locks in a car… (line 12a): a push in on B and YOU; B starts down; YOU's line stays
+    // open, dots running, and hops B → A → B.
     {
       scene: 'tower-slice',
       cue: "In one maker's design",
       props: {
         ...DAY,
         ...CONTINUE,
-        camera: {from: TOP},
+        cameraKeys: [key(0, MIND), key(2.8, LOCK_PUSH, 'sine')],
         cars: carsAt(T.maker),
         you: YOU_HOLD,
         people: callers(T.maker),
@@ -603,15 +678,15 @@ export const spec: VideoSpec = {
         ],
       },
     },
-    // 16 · …once it has to brake for your floor (line 12b): glide to the landing; B brakes (its braking
-    // mark), the line locks on "braking", B levels at 4 and opens; YOU looks up.
+    // 16 · …once it has to brake for your floor (line 12b), close: B brakes down to 4 (its braking mark),
+    // the line locks on "braking", B levels and opens in front of YOU, who looks up.
     {
       scene: 'tower-slice',
       cue: 'once that car',
       props: {
         ...DAY,
         ...GLIDE,
-        camera: {from: LANDING},
+        cameraKeys: [key(0.8, ARRIVAL_B)],
         cars: carsAt(T.brake, {B: {brakeMark: true}}),
         you: {...YOU_HOLD, gestures: [{pose: 'look-up', at: r(61.2, T.brake)}]}, // B levels ≈ 61.2
         people: callers(T.brake),
@@ -623,24 +698,30 @@ export const spec: VideoSpec = {
       },
       overlays: [{type: 'callout', cue: 'start braking', ...CALLOUT.locked, title: 'Locked in', sub: 'once it brakes'}],
     },
-    // 17 · The destination keypad (line 13): slide to the hotel lobby; YOU walks in to the keypad and
-    // types 9 (detail box), the screen answers C, an orange line runs to door C, YOU walks to it.
+    // 17 · The destination keypad (line 13): slide to the hotel, close on the keypad with YOU standing
+    // at it; YOU types 9 on "enter" (detail box); on "tell you" the screen answers C, an orange line runs
+    // to door C and the camera pulls back to the doors as YOU walks to it.
     {
       scene: 'hotel-lobby',
       cue: 'Since around 1990',
-      props: {...DAY, ...SLIDE, framing: 'lobby', ...lobbyCast(T.keypad)},
+      props: {
+        ...DAY,
+        ...SLIDE,
+        cameraKeys: [key(0, KEYPAD), key(r(63.6, T.keypad), KEYPAD), fk(r(64.5, T.keypad), 'keypad', {log: true}), fk(r(66.5, T.keypad), 'keypad'), {...key(r(68.0, T.keypad), LOBBY_DOORS), log: true}],
+        ...lobbyCast(T.keypad),
+      },
       overlays: [
         {type: 'tag', who: 'you', at: 0.5, until: 'enter your floor'},
         // the answer on "tell" (66.56), 2.0 s after the box enters on "enter" (64.56). TIMED
-        {type: 'detail', who: 'you', content: 'keypad', floor: '9', car: 'C', answerAt: 2.0, cue: 'enter your floor', until: 'That lets the system'},
+        {type: 'detail', who: 'you', content: 'keypad', side: 'left', top: 330, floor: '9', car: 'C', answerAt: 2.0, cue: 'enter your floor', until: 'That lets the system'},
       ],
     },
-    // 18 · Grouping people going to the same floors (line 14a): four guests type in turn; lines from the
-    // keypad to C and A; two join YOU at C, two wait at A.
+    // 18 · Grouping people going to the same floors (line 14a), wide lobby: four guests type in turn;
+    // lines from the keypad to C and A; two join YOU at C, two wait at A.
     {
       scene: 'hotel-lobby',
       cue: 'That lets the system',
-      props: {...DAY, ...CONTINUE, framing: 'lobby', ...lobbyCast(T.group)},
+      props: {...DAY, ...GLIDE, cameraKeys: [key(0.8, LOBBY_WIDE), key(3.04, {...LOBBY_WIDE, distance: 53}, 'sine')], ...lobbyCast(T.group)},
     },
     // 19 · So each car makes fewer stops (line 14b): glide up to the hotel's upper floors; C rises with
     // its group (YOU among them) and A with its pair, one solid stop tick each (9 and 6); the dashed
@@ -651,7 +732,7 @@ export const spec: VideoSpec = {
       props: {
         ...DAY,
         ...GLIDE,
-        framing: 'mid',
+        cameraKeys: [key(0.8, MID)],
         cars: {
           A: {keys: [{at: -1, level: 5.0}, {at: 0, level: 6}], riders: 0},
           B: {level: 8, riders: 0},
@@ -673,30 +754,31 @@ export const spec: VideoSpec = {
         ],
       },
     },
-    // 20 · It can be confusing (line 15): glide back to the lobby; a guest with a suitcase pats the bare
-    // wall by B, raises a hand; two more guests arrive on "hotels", one looking round for the keypad.
+    // 20 · It can be confusing (line 15), close: a guest with a suitcase at the bare wall by B pats it
+    // where a button would be and raises a hand; on "in hotels" the camera pulls back to the lobby as
+    // two more guests arrive, one looking round for the keypad.
     {
       scene: 'hotel-lobby',
       cue: 'It can be confusing',
       props: {
         ...DAY,
         ...GLIDE,
-        framing: 'lobby',
+        cameraKeys: [key(0.8, WALL_B), key(r(76.6, T.confusing), {...WALL_B, distance: 12}, 'sine'), key(r(78.0, T.confusing), LOBBY_MED, 'inOut')],
         you: null, // gone up in C with g1 and g3; g2 and g4 in A
         guests: lobbyCast(T.confusing).guests.filter((g) => g.seed.startsWith('s')),
         cars: {A: {level: 6}, B: {level: 8}, C: {level: 9}, D: {level: 12}},
       },
       overlays: [{type: 'callout', cue: 'confusing', until: 'and in hotels', ...CALLOUT.noUp, title: 'No up button'}],
     },
-    // 21 · Picking for everyone at once (line 16a): slide back to the tower, a touch wider; lines to all
-    // four cars, dots flowing; the cars head home. Statement card, low.
+    // 21 · Picking for everyone at once (line 16a), wide: slide back to the tower, a touch wider; lines
+    // to all four cars, dots flowing; the cars head home. Statement card, low.
     {
       scene: 'tower-slice',
       cue: 'Button or keypad',
       props: {
         ...DAY,
         ...SLIDE,
-        camera: {from: TOWER_WIDE},
+        cameraKeys: [key(0, TOWER_WIDE), key(3.76, {...TOWER_WIDE, distance: 91}, 'sine')],
         cars: carsAt(T.everyone, {B: B_FAST}),
         you: {level: 4, press: false},
         calls: [
@@ -708,17 +790,17 @@ export const spec: VideoSpec = {
       },
       overlays: [{type: 'statement', cue: 'everyone at once', text: 'Everyone\nat once.', place: 'low'}],
     },
-    // 22 · Which can mean you wait longer (line 16b): B slides past floor 4 on "wait"; YOU looks up after
-    // it. Every car is at its frame-0 floor by ≈ 85.3 (CAR_TRIPS).
+    // 22 · Which can mean you wait longer (line 16b), medium-close: glide in to YOU at 4; B slides past
+    // without stopping; YOU looks up after it.
     {
       scene: 'tower-slice',
       cue: 'which can mean',
       props: {
         ...DAY,
-        ...CONTINUE,
-        camera: {from: TOWER_WIDE},
+        ...GLIDE,
+        cameraKeys: [fk(0.8, 'landing')],
         cars: carsAt(T.wait, {B: B_FAST}),
-        you: {level: 4, press: false, gestures: [{pose: 'look-up', at: r(83.9, T.wait)}]}, // TIMED: "wait" (84.00)
+        you: {level: 4, press: false, gestures: [{pose: 'look-up', at: r(84.4, T.wait)}]}, // TIMED: B passes 4 ≈ 84.6
         calls: [
           {level: 0, dir: 'up'},
           {level: 2, dir: 'up'},
@@ -727,40 +809,41 @@ export const spec: VideoSpec = {
         lines: [STEADY_A, ...(['B', 'C', 'D'] as const).map((to) => ({to, state: 'steady', switchTo: {to: 'A', at: r(84.9, T.wait)}}))],
       },
     },
-    // 23 · Next time you press that button (line 17a): glide to frame 0's framing; the other calls go
-    // out; YOU raises a hand to the button and presses; dots run down the line to A on "farther car".
+    // 23 · Next time you press that button… (line 17a): YOU's hand rises to the button and presses (the
+    // ring lights); on "farther car shows up" the camera pulls back to the whole tower as the line to A
+    // draws.
     {
       scene: 'tower-slice',
       cue: 'Next time you press',
       props: {
         ...DAY,
-        ...GLIDE,
-        framing: 'tower',
+        ...CONTINUE,
+        cameraKeys: [fk(0, 'landing'), fk(r(86.9, T.next), 'landing'), fk(r(88.6, T.next), 'tower', {log: true})],
         cars: carsAt(T.next, {B: B_FAST}), // B_FAST kept so B's trip home stays continuous
         you: {level: 4, press: [{at: r(85.8, T.next), on: true}], pushes: [r(86.0, T.next)]}, // TIMED: "press" (86.00)
         calls: [
           {level: 0, dir: 'up', until: 0.6},
           {level: 2, dir: 'up', until: 1.0},
           {level: 3, dir: 'down', until: 1.4},
-          {level: 4, dir: 'down', at: r(86.1, T.next)},
-        ],
-        lines: [{to: 'A', state: 'tentative', dotsFrom: r(87.2, T.next)}], // TIMED: "farther" (87.20)
+        ], // YOU's push lights the down button itself
+        lines: [{to: 'A', state: 'tentative', at: r(87.2, T.next), dotsFrom: r(87.2, T.next)}], // TIMED: "farther" (87.20)
       },
     },
-    // 24 · …the one the computer scored lowest (line 17b): the end hold on frame 0's picture (the loop);
-    // the dots ease back to rest by the end of "lowest".
+    // 24 · …the one the computer scored lowest (line 17b): a bright dot runs down to A, then the camera
+    // pushes back in to frame 0's close-up (the loop) and holds; the dots ease back to rest.
     {
       scene: 'tower-slice',
       cue: 'it was probably',
       props: {
         ...DAY,
         ...CONTINUE,
-        framing: 'tower',
         drift: 0, // loop
+        framing: 'button',
+        cameraKeys: [key(0, TOWER), key(0.4, TOWER), fk(2.7, 'button', {log: true})], // in frame 0's close-up by ≈ 91.4
         cars: carsAt(T.lowest, {B: B_FAST}),
         you: YOU_HOLD,
         calls: [{level: 4, dir: 'down'}],
-        lines: [{to: 'A', state: 'tentative', dotsFrom: r(87.2, T.lowest), dotsUntil: r(91.2, T.lowest)}], // TIMED: "lowest" ends ≈ 91.3
+        lines: [{to: 'A', state: 'tentative', dotsFrom: r(87.2, T.lowest), dotsUntil: r(91.2, T.lowest), pulses: [r(89.0, T.lowest)]}], // TIMED: "lowest" ends ≈ 91.3
       },
     },
   ],

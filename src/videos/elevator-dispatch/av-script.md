@@ -49,7 +49,71 @@ generic UI with an `ink` letter. Brushed steel and any brass trim below 60% satu
 "the closest elevator?"; the spoken "So" dropped and "one" made "elevator" so it reads on frame 0 without the first
 sentence; Decision 4); line 2 `NO. 003 · THE ELEVATOR · 8:52 AM`.
 
-## The table
+## Revision 2 (2026-10-18): shot plan for variety and clarity
+
+Owner feedback on the rough cut: "the start is weak" (frame 0 was the whole tower, too wide to read as "I'm pressing a
+button in a lobby with four cars"), and "the rest of the video is the same wide animation". Script, voice and timings
+unchanged; this revision replaces the **framings and camera moves** of the table below (what happens in each beat stays
+as written there unless noted). Times are the directed take (`transcript.json`, 92.9 s with the tail). Built in `spec.ts`.
+
+**Framing sizes** (one fixed 3/4 angle, fov 26°; `distance` is along that angle): **C** close, one subject fills the frame
+(distance 9.5 to 21); **M** medium, two or three shafts, one to three floors (22 to 34); **MW** medium-wide (42 to 71);
+**W** the whole tower (88 to 94), only where the whole picture is the point. Camera keys (`cameraKeys`) do the moves:
+a glide into each new framing (0.7 to 0.9 s), then a slow push, a crane or a pull-back on a line's key word.
+**Subject band:** on C and M shots YOU's feet and the subject sit above y ≈ 1030, clear of the caption band.
+
+| # | Words (cue) | In → out (s) | Size | On screen and camera | Overlays |
+|---|---|---|---|---|---|
+| 1 | When you press… (hook + question) | 0.00 → 9.12 | **C → W → MW** | **Frame 0, close:** YOU's hand pushes the lit down button on 4 (ring `warning` yellow), B's doors behind YOU and C's on the right, B's rider at 5 just above. 1.5 → 3.4 s (on "computer's already picking") the camera pulls back to the whole cut-open tower; dots start down the line to A; B's rider turns on "not". Question: slow push toward floors 3–5; a bright dot runs past B down to A on "skip" (7.44) | Title block (to 9.12), captions |
+| 2 | Look at the shafts… closest car has a stop | 9.12 → 13.00 | **M** | Glide to B at 5 straight above YOU at 4 (B_MED), slow push; the line fades to its node dots; B's stop tick on "stop" | Tag YOU (to "car has a stop"), then callout CLOSEST CAR / a stop first (beside B) |
+| 3 | and a farther one could come straight to you | 13.00 → 15.56 | **C/M, crane** | Glide down to A parked in the lobby (A_LOBBY); on "straight" (14.3) A's dashed preview races up and the camera cranes up with it to YOU's floor (A_UP) | Callout FARTHER CAR (to "straight") |
+| 4 | Many systems pick by time… | 15.56 → 21.52 | **MW** | Pull back to A's shaft from the lobby and B at 5 (RACE); the race of the two previews; A's line comes back with a dot on "farther car" | Captions |
+| 5 | It knows where every car is… | 21.52 → 24.56 | **C → MW** | Glide up to the **controller cabinet** (CTRL, door open on its board); on "every car" lines fan out of it across the machine room; on "which way" the camera follows them down (KNOW) as C and D start up with chevrons | Callout GROUP CONTROLLER / the building's computer (to "which way") |
+| 6 | and it can weigh each one… | 24.56 → 27.28 | **C, track** | Inside full **car C** (six riders), the camera tracking it up to 2; its load bar fills | Callout FULL (beside C, from "how full") |
+| 7 | For each car… seconds… | 27.28 → 31.24 | **MW** | The four readouts count up (SCORES, held). **Fix:** the decision lines fade on the cut (B, C, D gone, A's to its node dots), so only the numbers talk | Readouts (the one card) |
+| 8 | counting the stops it's already promised | 31.24 → 33.48 | **M** | B at 5 with its stop tick (pulses) and its readout 9 → 19; YOU below (B_STOP) | Readouts |
+| 9 | Some systems also add up… delay everyone else | 33.48 → 37.60 | **M** | Full car C and D's two riders (DELAY); they check their watches on "delay"; C 14 → 32, D 22 → 24 | Readouts |
+| 10 | In those systems, every car gets a score… | 37.60 → 42.93 | **MW → M** | Back to the four readouts; on "lowest" A's readout gets its orange mark, A's line returns with a bright dot (no other lines) and the camera pushes in on A starting up (A_WIN); the readouts hold to the cut | Readouts |
+| 11 | With four elevators and five floors calling | 42.93 → 45.76 | **W** | Pull out to the whole tower; a caller on L, 1, 2, 3 pushes, each button lights | Captions |
+| 12 | there are already 1,024 ways… | 45.76 → 49.52 | **W** | The plan flicker; slow push | Counter 1,024 |
+| 13 | And most systems keep re-deciding… | 49.52 → 52.96 | **M** | Floor 5 (F5): the new caller pushes, D's link snaps to B, B opens and the caller boards; YOU below | Captions |
+| 14 | It can even change its mind… | 52.96 → 55.44 | **M** | Floors 3–5 (MIND), A climbing on the left; YOU's line snaps from A to B | Captions |
+| 15 | In one maker's design, it only locks in a car | 55.44 → 58.24 | **M → M-close, push** | Push in on B and YOU (LOCK_PUSH); B starts down; the line hops B → A → B | Captions |
+| 16 | once that car has to start braking… | 58.24 → 61.88 | **C** | B brakes down into floor 4 right behind YOU (BRAKE), levels and opens; the line locks on "braking"; YOU looks up | Callout LOCKED IN / once it brakes, on YOU's call button (straight up the pier) |
+| 17 | Since around 1990… tell you which elevator | 61.88 → 68.48 | **C → M** | Slide to K, **close on the keypad with YOU standing at it** (KEYPAD, slow push). **Fix:** YOU is at the keypad from the first frame (the walk in from the street arrived after the typing); the hand rises and taps 9 on "enter". On "tell you" the screen answers C, the orange line runs to door C and the camera pulls back to the doors (LOBBY_DOORS) as YOU walks to C | Tag YOU (to "enter your floor"), detail box (keypad, left, from "enter your floor" to the cut) |
+| 18 | That lets the system group people… | 68.48 → 71.52 | **W (lobby)** | The whole lobby (LOBBY_WIDE): four guests type in turn, lines to C and A, the groups walk to their doors | Captions |
+| 19 | so each car makes fewer stops | 71.52 → 73.76 | **MW** | The hotel's upper floors (`mid`); one solid stop tick per car | Captions |
+| 20 | It can be confusing… in hotels… | 73.76 → 79.48 | **C → M** | Close on the guest at the bare wall by B (WALL_B): pats it, raises a hand; on "in hotels" pull back to the lobby (LOBBY_MED) as two more guests arrive (they now set off ≈ 1 s earlier so they are in frame) | Callout NO UP BUTTON (to "and in hotels") |
+| 21 | Button or keypad… everyone at once | 79.48 → 83.24 | **W** | Slide back to the tower, a touch wider; lines to all four cars | Statement "Everyone / at once." (low) |
+| 22 | which can mean you wait longer | 83.24 → 85.44 | **M** | Glide in to YOU at 4 (YOU_MC); B slides past without stopping (its trip moved to 83.3 so it passes ≈ 84.6, after the glide lands); YOU looks up | Captions |
+| 23 | Next time you press that button… | 85.44 → 88.68 | **M → W** | YOU's hand rises and presses (the ring lights); on "farther car shows up" the camera pulls back to the whole tower as the line to A draws | Captions |
+| 24 | it was probably the one the computer scored lowest | 88.68 → end | **W → C** | A bright dot runs down to A, then the camera pushes back in to **frame 0's close-up** (by ≈ 91.4) and holds; dots ease to rest. **Last frame = frame 0** minus the title block | Captions end before the hold |
+
+Rhythm: C W | M | C | MW | C | C | MW | M | M | MW-M | W | W | M | M | M | C | C-M | W | MW | C-M | W | M | M-W | W-C. No more
+than two whole-tower scenes in a row (11–12, the five calls and the flicker); every other change of scene changes size.
+
+**Motion rule:** in every scene a camera move lands within its first second, and a story event (a press, a preview, a
+line, a door, a readout, a walk) follows within 2 to 3 s. To check in Studio playback.
+
+**Revision 2a (same day): built on the scene-builder's close-ups.** Frame 0 and the last frame are the `button` framing
+(the call panel, YOU's finger on the lit down button); the hook pulls back `button` → `landing` → `tower` (log dolly,
+1.5 → 4.6 s) on "computer's already picking", and line 17b pushes back to `button`. Scene 5 uses `controller` (cabinet
+open); 16 the `arrival:B` framing aimed 0.55 lower so YOU's head clears the captions; 17 pushes into the hotel `keypad`
+close-up as YOU types (`you.keys: [9]`); 22–23 use `landing`. Scores (7, 10) are a true medium (distance 46) with
+`scorePlace: 'clamp'`; 8 and 9 keep the readouts on the roofs. Line 5b shows C's load reading (100 %) and FULL sign
+instead of a callout. YOU's push lights the button itself (no hand-timed call). Not used: `fullDoors` (it would hide
+B braking into 4 and change floor 4 between cuts), `lanterns` (the late lantern is unsourced, B5 note), `focus` (the
+scoring lines are already reduced to A's trace).
+
+**Open items for the scene-builder** (resolved by the close-up pass: node dots now shrink, `scorePlace` exists):
+
+- Keypad node dot: at the close keypad framing the controller-style node dot on the pedestal (r 0.1) reads as a large
+  orange ball when the entry line starts (66.7 s). Scale node dots with camera distance, as the line radius already is.
+- Score readouts force a near-wide framing (all four readouts span 15 world units, A's in the lobby has to stay above
+  y 1248): a readout placement option (for example beside the car's cut face, or clamped into the safe zone with a
+  leader) would let 7 and 10 come in to a true medium.
+
+## The table (rough cut; framings superseded by Revision 2 above)
 
 | # | Words | In → out (s) | On screen | What moves (2–3 s rule) | Transition into next | Overlays | New or existing | Flag |
 |---|---|---|---|---|---|---|---|---|
@@ -152,6 +216,11 @@ frame, `Figure` (YOU, extras; `stance: 'stand'`, `walk`, `hands`; poses `look-up
 `OrangePath`, `cameraKeys`, `slide` / `continue` / glide transitions.
 
 ## Frame 0 and the loop
+
+**Revision 2:** frame 0 and the last frame are now the **close-up** on YOU's hand at the lit button on 4 (B's and C's
+doors round it, B's rider just above; framing `CLOSE` in `spec.ts`); the tower framing below is reached by the pull-back
+at 1.5 to 3.4 s. The rest of this section (cars, riders, lit things) still holds. The cover idea below is the
+publisher's call and is unchanged.
 
 **Frame 0** (Day): T at the `tower` framing, the fixed 3/4 angle. The whole cut-open building in the vertical frame, its
 machine room top at about y 470 (under the title block, top y 300, two lines to ≈ y 440), the lobby floor at about y 1500,

@@ -437,6 +437,28 @@ export const TOWER = {
   handle: '#9a9ea5',
   /** The destination keypad's screen glass seen from behind (dark, like a phone's back). */
   keypadBack: '#1d1f24',
+  /** Close-up kit (No. 003 rework): the car's laminate grain (a shade under `carWall`) and its kick plate seam. */
+  laminateGrain: '#d3ccbd',
+  /** Display glass (car operating panel, keypad) and its lit digits (neutral, like `screenLight`). */
+  displayGlass: '#0b0c0f',
+  displayInk: '#dbe6ff',
+  /** A hall lantern's lens when dark (milky acrylic). */
+  lensOff: '#cfccc5',
+  /** Engraved button and panel markings (dark fill in the stainless). */
+  engrave: '#3a3c41',
+  /** The group-controller cabinet: light grey enamel, galvanised mounting plate, grey PVC ducts, terminals, contactors. */
+  cabinetPaint: '#c9cbc8',
+  mountPlate: '#aeb2b5',
+  duct: '#8e918f',
+  terminalBlock: '#7f858c',
+  contactor: '#3b3e44',
+  /** Control wiring: black, grey and blue cores (never amber or orange). */
+  wireGrey: '#7a7d82',
+  wireBlue: '#3d5d9c',
+  /** The wiring diagram in the cabinet door's pocket (paper) and its ink. */
+  paper: '#e4e1d8',
+  /** Car floor: dark granite tile with paler flecks. */
+  carFloorFleck: '#5b5e64',
 };
 
 /**

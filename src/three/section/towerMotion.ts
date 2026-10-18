@@ -155,6 +155,10 @@ export type PersonSpec = {
   press?: boolean | {at: number; on: boolean}[];
   /** Finger pushes (s): with the hand off, it rises, pushes, and drops again; on, it pushes in and eases back. */
   pushes?: number[];
+  /** At a call panel: which button the hand is on (default 'down'; the lobby has only 'up'). */
+  button?: 'up' | 'down';
+  /** At the keypad: the key each push lands on (0–9; the last one repeats; default 9). */
+  keys?: number[];
   /** A hand raised, puzzled (s; held ≈ 1.2 s). */
   raise?: number[];
   /** Looks round (s; left, right, back over ≈ 2 s). */
@@ -340,6 +344,28 @@ export const handAt = (p: Pick<PersonSpec, 'press' | 'pushes'>, t: number): {up:
   }
   return {up, push};
 };
+
+/** How far the fingertip is in at a push (0–1) when it touches the button (the cap moves after this). */
+export const PUSH_CONTACT = 0.75;
+
+/** Which push (index) is current at t: the last push started by t (−1 before the first). */
+export const pushIndex = (pushes: number[] | undefined, t: number) => {
+  let i = -1;
+  [...(pushes ?? [])].sort((a, b) => a - b).forEach((at, k) => {
+    if (t >= at) i = k;
+  });
+  return i;
+};
+
+/** The moments (s) each push touches its button: for lighting it as the finger lands. */
+export const pushContacts = (p: Pick<PersonSpec, 'press' | 'pushes'>): number[] =>
+  (p.pushes ?? []).map((at) => {
+    for (let x = at; x < at + 1.5; x += 1 / 240) {
+      const h = handAt(p, x);
+      if (h.push * h.up >= PUSH_CONTACT) return Math.round(x * 240) / 240;
+    }
+    return at;
+  });
 
 /** 0–1 bump for a timed action lasting `len` s with `blend` s in and out. */
 export const bump = (times: number[] | undefined, t: number, len: number, blend = 0.4) =>
