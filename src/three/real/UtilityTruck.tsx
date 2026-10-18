@@ -35,12 +35,13 @@ export const TRUCK = {
   receiver: [0.35, 2.5, -0.9] as V3,
   receiverBase: [0.35, 2.03, -0.9] as V3,
   /** The driver's figure origin (cab floor, under the pelvis), the steering wheel, the cab's centre. */
-  driver: [-0.45, 0.45, -0.75] as V3,
-  steering: [-0.45, 1.48, -1.18] as V3,
+  driver: [-0.45, 0.45, -1.1] as V3,
+  /** 0.43 m behind the windshield's base (lz −1.96), at the seated driver's chest, on a column out of the binnacle. */
+  steering: [-0.45, 1.48, -1.53] as V3,
   cab: [0, 1.5, -1.1] as V3,
   /** The rugged laptop (its pedestal top) and where its screen looks (the driver's eyes). */
-  laptop: [0.12, 1.36, -1.28] as V3,
-  eyes: [-0.45, 1.81, -0.72] as V3,
+  laptop: [0.14, 1.4, -1.6] as V3,
+  eyes: [-0.45, 1.81, -1.07] as V3,
 };
 
 export type TruckDirection = 'away' | 'toward';
@@ -305,8 +306,29 @@ export const UtilityTruck: React.FC<UtilityTruckProps> = ({
       <mesh material={mats.floor} position={[0, 0.405, -1.17]} receiveShadow>
         <boxGeometry args={[1.86, 0.09, 1.56]} />
       </mesh>
-      <mesh material={mats.dash} position={[0, 1.1, -1.78]} castShadow receiveShadow>
-        <boxGeometry args={[1.86, 0.34, 0.36]} />
+      {/* the dashboard: a deep padded top under the windshield, the instrument binnacle in front of the
+          wheel, the lower dash and centre stack down to the floor */}
+      <mesh material={mats.dash} position={[0, 1.12, -1.8]} castShadow receiveShadow>
+        <boxGeometry args={[1.86, 0.3, 0.34]} />
+      </mesh>
+      <mesh
+        geometry={roundedBox(1.86, 0.06, 0.4, 0.025, 3)}
+        material={mats.dash}
+        position={[0, 1.28, -1.79]}
+        castShadow
+        receiveShadow
+      />
+      <mesh
+        geometry={roundedBox(0.44, 0.13, 0.18, 0.04, 3)}
+        material={mats.dash}
+        position={[TRUCK.steering[0], 1.33, -1.67]}
+        castShadow
+      />
+      <mesh material={mats.dash} position={[0, 0.78, -1.86]} receiveShadow>
+        <boxGeometry args={[1.86, 0.42, 0.2]} />
+      </mesh>
+      <mesh material={mats.dash} position={[0, 0.85, -1.6]} receiveShadow>
+        <boxGeometry args={[0.3, 0.6, 0.3]} />
       </mesh>
       {[-0.45, 0.45].map((x) => (
         <group key={x} position={[x, D[1], D[2]]}>
@@ -336,11 +358,25 @@ export const UtilityTruck: React.FC<UtilityTruckProps> = ({
           />
         </group>
       ))}
-      <group position={TRUCK.steering} rotation={[0.45, 0, 0]}>
+      <group position={TRUCK.steering} rotation={[-0.45, 0, 0]}>
         <mesh material={mats.dash}>
           <torusGeometry args={[0.19, 0.02, 12, 40]} />
         </mesh>
-        <mesh material={mats.dash} position={[0, 0, -0.12]} rotation={[Math.PI / 2, 0, 0]}>
+        {/* the hub and three spokes, the column running forward and down into the binnacle */}
+        <mesh material={mats.dash} position={[0, 0, -0.02]} rotation={[Math.PI / 2, 0, 0]}>
+          <cylinderGeometry args={[0.055, 0.06, 0.05, 20]} />
+        </mesh>
+        {[0, (2 * Math.PI) / 3, (4 * Math.PI) / 3].map((a) => (
+          <mesh
+            key={a}
+            material={mats.dash}
+            position={[Math.sin(a) * 0.1, -Math.cos(a) * 0.1, -0.01]}
+            rotation={[0, 0, a]}
+          >
+            <boxGeometry args={[0.03, 0.14, 0.015]} />
+          </mesh>
+        ))}
+        <mesh material={mats.dash} position={[0, 0, -0.15]} rotation={[Math.PI / 2, 0, 0]}>
           <cylinderGeometry args={[0.03, 0.04, 0.24, 12]} />
         </mesh>
       </group>
