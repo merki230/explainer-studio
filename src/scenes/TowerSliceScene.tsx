@@ -22,6 +22,7 @@ import {
   TowerSlice,
   type StopTick,
   type TowerCall,
+  type DoorStyle,
   type TowerCar,
   type TowerLantern,
   type TowerLayout,
@@ -238,6 +239,8 @@ export type TowerSliceSceneProps = {
   lanterns?: TowerLantern[];
   /** The controller cabinet's door, 0 shut to 1 open (default 1). */
   cabinetOpen?: number;
+  /** Landing door design: 'glass' (default, panoramic), 'stub', 'closed', 'section' (see `DoorStyle`). */
+  doorStyle?: DoorStyle;
   /** Framing preset (default 'tower'; see `TowerFraming`). */
   framing?: TowerFraming;
   /** A custom move instead of a preset (look-at + distance at the fixed angle). */
@@ -617,6 +620,7 @@ export const TowerSliceScene: React.FC<TowerSliceSceneProps> = (props) => {
           fullDoors={props.fullDoors}
           lanterns={props.lanterns}
           cabinetOpen={props.cabinetOpen}
+          doorStyle={props.doorStyle}
           t={t}
           clockOffset={startFrame / fps}
         />
@@ -658,7 +662,7 @@ export const TowerStage: React.FC<{
   const ctrl = node === undefined ? controllerAt(L).node : node;
   return (
     <SectionStage mood={mood} post={{softFocus: 0}} far={500}>
-      <SectionCamera from={from} to={to} pre={pre} durationInFrames={durationInFrames} drift={drift} clockOffset={startFrame / fps} />
+      <SectionCamera from={from} to={to} pre={pre} durationInFrames={durationInFrames} drift={drift} clockOffset={startFrame / fps} fitClip />
       <SectionLights mood={mood} target={[0, 10, 0]} lamp={0} extent={16} />
       <mesh position={[0, 10, -90]} material={mats.sky}>
         <planeGeometry args={[700, 480]} />

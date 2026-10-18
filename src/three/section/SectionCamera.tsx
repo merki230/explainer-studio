@@ -112,13 +112,25 @@ export const SectionCamera: React.FC<{
   clockOffset?: number;
   pre?: {from: Framing; hold: number; move: number; ease?: 'sine' | 'cubic'};
   post?: {to: Framing; at: number; move: number};
-}> = ({from, to, durationInFrames, drift = 0, clockOffset = 0, pre, post}) => {
+  /**
+   * Fit the clip planes to the framing each frame: near = 15% of the distance to the look-at point,
+   * far = 2 × distance + 200. A fixed near 0.1 with a far of 500 (a whole building) leaves ≈ 5 mm of
+   * depth resolution at the tower framing, so stacked parts (frames, rings, decals) z-fight and
+   * flicker while the camera moves. Default off (the room-sized slices keep the stage's planes).
+   */
+  fitClip?: boolean;
+}> = ({from, to, durationInFrames, drift = 0, clockOffset = 0, pre, post, fitClip = false}) => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
-  const camera = useThree((s) => s.camera);
+  const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera;
   const {position, look} = sectionCameraAt({from, to, frame, fps, durationInFrames, drift, clockOffset, pre, post});
   camera.position.copy(position);
   camera.lookAt(look);
+  if (fitClip) {
+    const d = position.distanceTo(look);
+    camera.near = Math.max(0.1, d * 0.15);
+    camera.far = d * 2 + 200;
+  }
   camera.updateProjectionMatrix();
   return null;
 };

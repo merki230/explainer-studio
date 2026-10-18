@@ -436,10 +436,20 @@ export type TowerSliceProps = {
   lanterns?: TowerLantern[];
   /** The controller cabinet's door, 0 shut to 1 open (default 1). */
   cabinetOpen?: number;
+  /** How landing doors are drawn on the levels that aren't `fullDoors` (see `DoorStyle`; default 'glass', the owner's pick). */
+  doorStyle?: DoorStyle;
   /** Seconds into the scene, for timed things. */
   t: number;
   clockOffset?: number;
 };
+
+/**
+ * Landing door designs: 'glass' (the default, owner's pick 2026-10-18: panoramic: brushed stainless stiles round a lightly tinted glass leaf; the car doors left
+ * out so riders are behind one pane only), 'stub' (cut to low hatched stubs, the earlier look), 'closed' (whole brushed stainless leaves, open only where
+ * a car stands with its doors open; the shaft shows beside and above them), 'section' (whole leaves
+ * with a section window cut through them: a hatched reveal band and ink edges, riders seen through it).
+ */
+export type DoorStyle = 'stub' | 'glass' | 'closed' | 'section';
 
 /** A hall lantern lit over car `car`'s door on `level`, showing `dir`, from `at` until `until` (s). */
 export type TowerLantern = {car: string; level: number; dir: 'up' | 'down'; at?: number; until?: number};
@@ -472,6 +482,7 @@ export const TowerSlice: React.FC<TowerSliceProps> = ({
   fullDoors = [],
   lanterns = [],
   cabinetOpen = 1,
+  doorStyle = 'glass',
   t,
   clockOffset = 0,
 }) => {
@@ -584,7 +595,13 @@ export const TowerSlice: React.FC<TowerSliceProps> = ({
                     </group>
                   )}
                   {/* whole leaves sit behind the wall (they slide into it); stubs stand at the face */}
-                  <DoorLeaves mats={mats} kit={kit} open={here} z={full ? -0.072 : 0.035} full={full} />
+                  {full ? (
+                    <DoorLeaves mats={mats} kit={kit} open={here} z={-0.072} full />
+                  ) : doorStyle === 'stub' ? (
+                    <DoorLeaves mats={mats} kit={kit} open={here} z={0.035} />
+                  ) : (
+                    <StyledLeaves style={doorStyle} mats={mats} kit={kit} open={here} z={0.035} />
+                  )}
                   {hotel && k === 0 ? (
                     // the lobby's lettered sign beside the door at eye height, on the wall right of it (ink on a
                     // stainless plate; above the door the podium's slab would hide it from the 3/4 view)
@@ -620,6 +637,7 @@ export const TowerSlice: React.FC<TowerSliceProps> = ({
               <Car
                 mats={mats}
                 kit={kit}
+                doorStyle={doorStyle}
                 ready={ready}
                 labels={levels.map((k) => (k === 0 ? 'L' : `${k}`))}
                 level={st.level}
@@ -794,6 +812,117 @@ const DoorLeaves: React.FC<{mats: Mats; kit: KitMaterials; open: number; z: numb
 };
 
 /**
+ * The panoramic doors' glass, two layers: a faint cool tint (so the riders behind read clearly) and,
+ * just in front, the studio HDRI's reflections added on top (black, additive: only the glints and the
+ * sheen show). Both transparent without depth writes, so they never z-fight each other.
+ */
+const useGlassMats = () => {
+  const env = useStudioEnv();
+  const envScale = useEnvStrength();
+  const m = useMemo(
+    () => ({
+      tint: new THREE.MeshBasicMaterial({color: raw(TOWER.glass), transparent: true, opacity: 0.1, depthWrite: false}),
+      sheen: new THREE.MeshPhysicalMaterial({
+        color: raw('#000000'),
+        roughness: 0.05,
+        clearcoat: 1,
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      }),
+    }),
+    [],
+  );
+  applyEnv(env, [[m.sheen, 1.6]], envScale);
+  return m;
+};
+
+/**
+ * Whole-height landing door leaves in one of the non-stub designs (see `DoorStyle`), centre-opening,
+ * `open` 0–1 sliding them to the jambs. Origin: the door's foot centre; `z` their mid-plane.
+ */
+const StyledLeaves: React.FC<{style: DoorStyle; mats: Mats; kit: KitMaterials; open: number; z: number}> = ({style, mats, kit, open, z}) => {
+  const glass = useGlassMats();
+  const {w, h} = TOWER_DIM.door;
+  const lw = w / 2;
+  const T = 0.03;
+  return (
+    <group>
+      {[-1, 1].map((s) => {
+        const cx = s * (lw / 2 + open * lw * 0.94);
+        const x0 = cx - lw / 2 + 0.003;
+        const x1 = cx + lw / 2 - 0.003;
+        if (style === 'closed') {
+          return <Boxes key={s} boxes={[{min: [x0, 0.02, z - T / 2], max: [x1, h, z + T / 2], mat: kit.door}]} cut={mats.cut} />;
+        }
+        if (style === 'glass') {
+          // stainless stiles and rails round the pane
+          const st = 0.045;
+          const frame: CutBoxSpec[] = [
+            {min: [x0, 0.02, z - T / 2], max: [x1, 0.14, z + T / 2], mat: kit.steelV},
+            {min: [x0, h - 0.06, z - T / 2], max: [x1, h, z + T / 2], mat: kit.steelV},
+            {min: [x0, 0.02, z - T / 2], max: [x0 + st, h, z + T / 2], mat: kit.steelV},
+            {min: [x1 - st, 0.02, z - T / 2], max: [x1, h, z + T / 2], mat: kit.steelV},
+          ];
+          return (
+            <group key={s}>
+              <Boxes boxes={frame} cut={mats.cut} />
+              <mesh position={[(x0 + x1) / 2, (0.14 + h - 0.06) / 2, z]} material={glass.tint} renderOrder={6}>
+                <planeGeometry args={[x1 - x0 - 2 * st, h - 0.2]} />
+              </mesh>
+              <mesh position={[(x0 + x1) / 2, (0.14 + h - 0.06) / 2, z + 0.004]} material={glass.sheen} renderOrder={7}>
+                <planeGeometry args={[x1 - x0 - 2 * st, h - 0.2]} />
+              </mesh>
+            </group>
+          );
+        }
+        // 'section': a real leaf with a window cut through it (hatched reveal band, ink edges)
+        const y0 = TOWER_DIM.stub;
+        const y1 = h - 0.2;
+        const xi0 = s < 0 ? x0 + 0.09 : x0;
+        const xi1 = s < 0 ? x1 : x1 - 0.09;
+        const parts: CutBoxSpec[] = [
+          {min: [x0, 0.02, z - T / 2], max: [x1, y0, z + T / 2], mat: kit.door, cut: ['py']},
+          {min: [x0, y1, z - T / 2], max: [x1, h, z + T / 2], mat: kit.door, cut: ['ny']},
+          s < 0
+            ? {min: [x0, y0, z - T / 2], max: [xi0, y1, z + T / 2], mat: kit.door, cut: ['px']}
+            : {min: [xi1, y0, z - T / 2], max: [x1, y1, z + T / 2], mat: kit.door, cut: ['nx']},
+        ];
+        // the hatched band on the leaf's face round the window (as the X-ray's reveal, 0.055 wide)
+        const B = 0.055;
+        const zf = z + T / 2 + 0.002;
+        const wx0 = s < 0 ? xi0 : x0;
+        const wx1 = s < 0 ? x1 : xi1;
+        const band: [number, number, number, number][] = [
+          [wx0, y0 - B, wx1, y0],
+          [wx0, y1, wx1, y1 + B],
+          s < 0 ? [xi0 - B, y0 - B, xi0, y1 + B] : [xi1, y0 - B, xi1 + B, y1 + B],
+        ];
+        return (
+          <group key={s}>
+            <Boxes boxes={parts} cut={mats.cut} />
+            {band.map(([a, b, c, d], i) => (
+              <mesh key={i} position={[(a + c) / 2, (b + d) / 2, zf]} material={mats.cut}>
+                <planeGeometry args={[c - a, d - b]} />
+              </mesh>
+            ))}
+            <CutOutline
+              rects={band.map(
+                ([a, b, c, d]) =>
+                  [
+                    [a, b, zf + 0.001],
+                    [c, d, zf + 0.001],
+                  ] as Rect,
+              )}
+            />
+          </group>
+        );
+      })}
+    </group>
+  );
+};
+
+/**
  * A realistic car, cut open at its front (the door wall removed, cut faces hatched): laminate walls
  * with a stainless handrail, a dark floor, a ceiling light, the car operating panel on the side wall,
  * the door operator and sill, the crosshead on the roof, the cut door stubs; the riders. The
@@ -802,6 +931,7 @@ const DoorLeaves: React.FC<{mats: Mats; kit: KitMaterials; open: number; z: numb
 const Car: React.FC<{
   mats: Mats;
   kit: KitMaterials;
+  doorStyle: DoorStyle;
   ready: boolean;
   /** Floor labels bottom to top, for the operating panel. */
   labels: string[];
@@ -819,7 +949,7 @@ const Car: React.FC<{
   mood: Mood;
   t: number;
   clockOffset: number;
-}> = ({mats, kit, ready, labels, level, v, position, car, open, load, loadShown, chevron, dir, seed, mood, t, clockOffset}) => {
+}> = ({mats, kit, doorStyle, ready, labels, level, v, position, car, open, load, loadShown, chevron, dir, seed, mood, t, clockOffset}) => {
   const {w, d, h} = TOWER_DIM.car;
   const hw = w / 2;
   const hd = d / 2;
@@ -842,7 +972,7 @@ const Car: React.FC<{
       <mesh position={[0, 0.015, hd + 0.04]} material={mats.stainless}>
         <boxGeometry args={[1.12, 0.03, 0.1]} />
       </mesh>
-      <DoorLeaves mats={mats} kit={kit} open={open} z={hd - 0.02} />
+      {doorStyle === 'glass' ? null : <DoorLeaves mats={mats} kit={kit} open={open} z={hd - 0.02} />}
       {/* panel joints (stainless trims) and kick plates on the back and left walls */}
       {[-w / 6, w / 6].map((x) => (
         <mesh key={x} position={[x, h / 2, -hd + 0.052]} material={kit.steelV}>

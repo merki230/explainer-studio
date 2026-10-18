@@ -797,8 +797,9 @@ export const ControllerCabinet: React.FC<{mats: KitMaterials; open?: number; t: 
       <mesh position={[0, h / 2, zb + T / 2]} material={mats.paint} receiveShadow>
         <boxGeometry args={[w, h, T]} />
       </mesh>
-      <mesh position={[0, plinth / 2, -d / 2]} material={mats.dark} castShadow receiveShadow>
-        <boxGeometry args={[w, plinth, d]} />
+      {/* the plinth, set in a little (flush with the sides it z-fought them) */}
+      <mesh position={[0, plinth / 2, -d / 2 - 0.006]} material={mats.dark} castShadow receiveShadow>
+        <boxGeometry args={[w - 2 * T - 0.004, plinth, d - 0.02]} />
       </mesh>
       {/* the folded front frame round the opening, with its gasket */}
       {[
@@ -969,7 +970,8 @@ export const ControllerCabinet: React.FC<{mats: KitMaterials; open?: number; t: 
         <mesh
           position={[w / 2, (h - plinth) / 2, 0.0125]}
           material={mats.paint}
-          geometry={rbox(w, h - plinth, 0.025, 0.006)}
+          // a few mm short of the top, so its edge never sits on the body's top face
+          geometry={rbox(w - 0.004, h - plinth - 0.01, 0.025, 0.006)}
           castShadow
           receiveShadow
         />
