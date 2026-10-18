@@ -6,9 +6,9 @@ import type {VideoSpec} from '../../types';
  *  1. Frame 0 is the meter `box` close-up (meter, radio, lid cap). A burst leaves the cap on "…your water
  *     meter", and the camera pulls back to the truck as the burst reaches it. The last scene cranes back
  *     to that close-up for the loop.
- *  2. The truck is a whole, realistic white pickup, never cut by the plane: here it is always whole and
- *     behind the cut while in frame (1: driving away, already past the plane by the pull-back; 6:
- *     driving toward us down the near lane, stopping its scene 4 m short of the plane).
+ *  2. The truck is a whole, realistic white pickup, never cut by the plane and never over the front of
+ *     the section: 1, it comes down the near lane and stops beside the box ≈ 1.5 m behind the plane;
+ *     6, it comes down the near lane again and the scene ends with it ≈ 3.7 m behind the plane.
  *  3. The pedestal tank is seen in the wide framing only (9–10).
  * Plus the scene-builder's advice: the medium-wide street framing starts at the sidewalk (STREET_MW),
  * and YOU has a `kitchen` framing (KITCHEN).
@@ -81,9 +81,9 @@ const CAP: Framing = {look: [0.45, 0.12, -0.09], distance: 1.8};
 /** M: the box with the air above the lid, for the bursts' rhythm. */
 const BOX_AIR: Framing = {look: [0.6, 0.0, -0.2], distance: 5};
 /** MW, the reveal of line 1: the cap and the far lane with the truck (the scene's 'cap' preset). */
-const REVEAL: Framing = {look: [2.4, 2.3, -3.5], distance: 34};
+const REVEAL: Framing = {look: [2.4, 0.9, -3.5], distance: 34};
 /** The question: a slow push from the reveal toward the box. */
-const Q_PUSH: Framing = {look: [1.9, 1.9, -2.5], distance: 30};
+const Q_PUSH: Framing = {look: [1.9, 0.5, -2.5], distance: 30};
 /** MW: the cut face from the sidewalk to the far curb, the near street behind (scene-builder's advice). */
 const STREET_MW: Framing = {look: [2.7, 2.3, -1.5], distance: 34};
 /** MW tracking line 6: the truck coming down the near lane, start (up the street) and end (near YOUR house). */
@@ -138,9 +138,9 @@ export const spec: VideoSpec = {
   tail: 1.0, // the end hold on frame 0's close-up
   scenes: [
     // 1 · Lines 1–2. Frame 0, C: the box close-up. A burst leaves the cap on "water" (1.20) and runs to
-    // the truck, which is driving away up the far lane, whole and past the plane by the time the camera
-    // pulls back (1.3 → 3.3 s, log dolly) to the reveal. Question: a slow push toward the box, and a
-    // second burst on "talk" (5.40) reaches the truck far up the street on "moving truck".
+    // the truck coming down the near lane toward us, whole and behind the plane, as the camera
+    // pulls back (1.3 → 3.3 s, log dolly) to the reveal as the truck slows to a stop beside the box. Question:
+    // a slow push toward the box, and a second burst on "talk" (5.40) reaches the waiting truck.
     {
       scene: 'street-slice',
       cue: 'A truck can read',
@@ -148,10 +148,23 @@ export const spec: VideoSpec = {
         drift: 0, // loop: frame 0 must match the last frame
         framing: 'box',
         cameraKeys: [key(0, BOX), key(1.3, BOX), key(3.3, REVEAL, {log: true}), key(7.0, Q_PUSH, {ease: 'sine'})],
-        // down the near lane toward us, whole (never cut): ≈ 14 m up the street as the first burst lands
-        // (≈ 1.77 s), beside the box at ≈ 3.3 s, then on out over the front of the section (9 m/s ≈ 20 mph,
-        // Decision 6; owner: a whole truck in front of or behind the cut). TIMED
-        truck: {direction: 'toward', through: -30, speed: [{at: 0, speed: 9}], beyond: 'show'},
+        // down the near lane toward us at road speed (9 m/s ≈ 20 mph, Decision 6), whole: ≈ 13 m up the
+        // street as the first burst lands (≈ 1.77 s), then a smooth stop (≈ 3 m/s², from 1.4 s) beside the
+        // box, front bumper ≈ 1.5 m behind the plane by ≈ 4.2 s; it idles there (owner: never over the
+        // front of the section). Integrated: 27.06 m travelled. TIMED
+        truck: {
+          direction: 'toward',
+          through: -28.6,
+          speed: [
+            {at: 0, speed: 9},
+            {at: 1.4, speed: 7.5},
+            {at: 2.0, speed: 5.5},
+            {at: 2.6, speed: 3.5},
+            {at: 3.2, speed: 1.6},
+            {at: 3.8, speed: 0},
+          ],
+          beyond: 'hide',
+        },
         bursts: [
           {at: 1.2, lid: 0, to: 'truck'}, // TIMED: "water" (1.20)
           {at: 5.4, lid: 0, to: 'truck'}, // TIMED: "talk" (5.40)
