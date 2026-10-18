@@ -308,15 +308,16 @@ export const TireBay: React.FC<{mood: Mood; t: number} & Partial<TireBayProps>> 
             const gq = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), gDir);
             // the clipboard faces up and back toward the face
             const cq = new THREE.Quaternion().setFromEuler(new THREE.Euler(-1.1 + 0.5 * gK, rot, 0, 'YXZ'));
-            // tablet: both hands at its two sides, in front of the chest at reading height; a tap dips the
-            // right hand's fingers onto the screen
+            // tablet: both hands at its two sides, in front of the chest at reading height; a tap brings the
+            // right hand in over the screen side (toward the body)
             const tap = tapK * Math.max(0, Math.sin(t * 9)) * 0.03;
             const tabletHands: [V3, V3] = [
-              [-0.13 + tapK * 0.05, 0.9 + lift - tap, 0.24 + tapK * 0.02],
+              [-0.13 + tapK * 0.05, 0.9 + lift + tap * 0.5, 0.24 - tapK * 0.03 - tap],
               [0.13, 0.9 + lift, 0.24],
             ];
-            // the slate faces up and back toward the eyes
-            const tq = new THREE.Quaternion().setFromEuler(new THREE.Euler(0.75, rot, 0, 'YXZ'));
+            // the screen faces its owner (§ 3): tipped up and back toward the eyes, so the camera sees the
+            // slate's back and edge
+            const tq = new THREE.Quaternion().setFromEuler(new THREE.Euler(-0.95, rot, 0, 'YXZ'));
             const gestures = [
               ...acts
                 .filter((a) => a.kind === 'gauge')
