@@ -136,7 +136,21 @@ export const musicGain = (
   const outP = clamp01((lastFrame - frame) / (fadeOut * fps));
   const fade = Math.sin((inP * Math.PI) / 2) * Math.sin((outP * Math.PI) / 2);
   const d = duck[Math.min(duck.length - 1, Math.max(0, frame))] ?? 0;
-  return fade * dbToGain(level - duckDb * d);
+  return fade * dbToGain(level - duckDb * d - dipDbAt(music.dips, frame / fps));
+};
+
+/** dB down from the music's timed `dips` at t seconds (0 with none): the deepest dip, sine-eased at its edges. */
+export const dipDbAt = (dips: MusicSpec['dips'], t: number): number => {
+  if (!dips || !dips.length) return 0;
+  let down = 0;
+  for (const dip of dips) {
+    const fade = Math.max(1e-3, dip.fade ?? 0.25);
+    const inK = clamp01((t - (dip.from - fade)) / fade);
+    const outK = clamp01((dip.to + fade - t) / fade);
+    const k = Math.min(inK, outK);
+    down = Math.max(down, Math.abs(dip.db) * (0.5 - 0.5 * Math.cos(Math.PI * k)));
+  }
+  return down;
 };
 
 /**

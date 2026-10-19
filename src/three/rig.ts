@@ -80,7 +80,18 @@ export const PHONE_PITCH_TO_FACE = 0.75;
 
 // ---------------------------------------------------------------- poses
 
-export type PoseName = 'idle' | 'scroll' | 'lean-in' | 'lift-phone' | 'look-up' | 'turn-to' | 'glance-down' | 'drive' | 'gauge';
+export type PoseName =
+  | 'idle'
+  | 'scroll'
+  | 'lean-in'
+  | 'lift-phone'
+  | 'look-up'
+  | 'turn-to'
+  | 'glance-down'
+  | 'drive'
+  | 'gauge'
+  | 'nod-off'
+  | 'jolt';
 export const POSE_NAMES: PoseName[] = [
   'idle',
   'scroll',
@@ -91,6 +102,8 @@ export const POSE_NAMES: PoseName[] = [
   'glance-down',
   'drive',
   'gauge',
+  'nod-off',
+  'jolt',
 ];
 
 /** Every joint as a delta from rest. Angles in radians, Euler [x pitch (forward +), y yaw (to +x), z roll]. */
@@ -111,6 +124,8 @@ export type PoseParams = {
   shrug: number;
   /** Gaze: the dot eyes move up the face (radians on the head sphere; > 0 up, < 0 down). */
   eyesUp: number;
+  /** Eyelids, 0 (open) → 1 (shut), on top of the blinks (drowsy: ≈ 0.7). */
+  lids: number;
 };
 
 const Z: V3 = [0, 0, 0];
@@ -125,6 +140,7 @@ const base = (p: Partial<PoseParams>): PoseParams => ({
   scroll: 0.35,
   shrug: 0,
   eyesUp: 0,
+  lids: 0,
   ...p,
 });
 
@@ -160,6 +176,30 @@ const FIXED: Record<Exclude<PoseName, 'look-up' | 'turn-to'>, PoseParams> = {
   drive: base({spine: [-0.05, 0, 0], chest: [-0.03, 0, 0], neck: [-0.04, 0, 0], head: [-0.24, 0, 0], scroll: 0, eyesUp: 0.06}),
   // Leaning in to read a tire gauge (No. 002's Lab extras; hands: Figure `hands`, at the valve).
   gauge: base({spine: [0.16, 0, 0], chest: [0.08, 0, 0], neck: [0.04, 0, 0], head: [0.08, 0, 0], scroll: 0}),
+  // Nodding off at the wheel (No. 005): the back slumps a little, the head drops forward and tips to one
+  // side, the eyes droop half shut (hands stay on the wheel: Figure `hands`).
+  'nod-off': base({
+    spine: [0.07, 0, 0],
+    chest: [0.05, 0, 0],
+    neck: [0.2, 0, 0.04],
+    head: [0.42, 0.05, 0.1],
+    headShift: [0, -0.02, 0.02],
+    scroll: 0,
+    shrug: -0.01,
+    eyesUp: -0.12,
+    lids: 0.75,
+  }),
+  // Jolted awake: bolt upright, chin up, eyes wide on the road, shoulders up (a startle).
+  jolt: base({
+    spine: [-0.1, 0, 0],
+    chest: [-0.06, 0, 0],
+    neck: [-0.06, 0, 0],
+    head: [-0.3, 0, 0],
+    headShift: [0, 0.015, -0.01],
+    scroll: 0,
+    shrug: 0.025,
+    eyesUp: 0.1,
+  }),
 };
 
 const clamp = (x: number, a: number, b: number) => Math.max(a, Math.min(b, x));
@@ -247,6 +287,7 @@ export const lerpPose = (a: PoseParams, b: PoseParams, w: number): PoseParams =>
   scroll: lerpN(a.scroll, b.scroll, w),
   shrug: lerpN(a.shrug, b.shrug, w),
   eyesUp: lerpN(a.eyesUp, b.eyesUp, w),
+  lids: lerpN(a.lids, b.lids, w),
 });
 
 /** A cue-driven change of pose for one figure. Times are seconds into the scene. */

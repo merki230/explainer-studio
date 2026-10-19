@@ -532,10 +532,69 @@ export const STREET = {
  */
 export const CAR: Record<
   Mood,
-  {asphalt: string; lane: string; verge: string; bodies: {you: string; mom: string}}
+  {asphalt: string; lane: string; verge: string; bodies: {you: string; mom: string; extra: string}}
 > = {
-  day: {asphalt: '#5a5d63', lane: '#e4e2da', verge: '#8f9a7e', bodies: {you: '#9fb0c4', mom: '#5f7d6e'}},
-  night: {asphalt: '#3b3e46', lane: '#c9c7c0', verge: '#4a5246', bodies: {you: '#6d7d92', mom: '#45594f'}},
+  day: {
+    asphalt: '#5a5d63',
+    lane: '#e4e2da',
+    verge: '#8f9a7e',
+    bodies: {you: '#9fb0c4', mom: '#5f7d6e', extra: '#b4b7bb'},
+  },
+  night: {
+    asphalt: '#3b3e46',
+    lane: '#c9c7c0',
+    verge: '#4a5246',
+    bodies: {you: '#6d7d92', mom: '#45594f', extra: '#7d8187'},
+  },
+};
+
+/**
+ * The highway slice (No. 005): a divided rural interstate cut square to the road, its paint, the
+ * shoulder's milled grooves, the guardrail and the road signs; the cars' lamps. Real materials, the
+ * same in both moods (the lights change). Nothing here is the system: the grooves turn `orange` only
+ * when the scene lights them. Values for the brand-director (A/V script S6):
+ *  - `lineYellow` #d6bc45 is HSL ≈ 49°, 64%, 56%: above the reserved band (8–40°), like `STREET.centreLine`.
+ *  - `signGreen` #14674a ≈ 159° (MUTCD guide green), `signWhite` a step under white (§ 1 no pure white).
+ *  - `tailLight` #e23a52 ≈ 351° (lit lamp, flat emissive, never bloomed), `tailLens` the unlit lens.
+ */
+export const HIGHWAY = {
+  /** Interstate asphalt, the darker wheel paths, the fresh milled faces in the grooves (coarser, darker). */
+  asphalt: '#4b4e54',
+  wheelPath: '#43464c',
+  milled: '#36373b',
+  /** Pavement markings: the white right edge line and lane line, the yellow left edge line. */
+  lineWhite: '#dedcd4',
+  lineYellow: '#d6bc45',
+  /** The gravel edge beyond the shoulders, the median and verge grass. */
+  gravel: '#8b867d',
+  grass: '#62794c',
+  grassDry: '#77845a',
+  /** Galvanized steel: guardrail, sign posts and breakaway bases, the signs' backs. */
+  galvanized: '#a4a9ae',
+  /** Sign sheeting (retroreflective): guide green, white, the black legend. */
+  signGreen: '#14674a',
+  signWhite: '#e9e8e2',
+  signInk: '#18191c',
+  /** Car lamps: lit tail-light red, the unlit lens; the headlights' light (a light, not a surface). */
+  tailLight: '#e23a52',
+  tailLens: '#6a1d29',
+  headlight: '#eef1ff',
+};
+
+/**
+ * The musical road (No. 005, L): a generic two-lane desert road. Real materials, the same in both
+ * moods (the lights change). Nothing here is the system: the groove groups turn `orange` only when the scene lights them. Asphalt, paint and
+ * grooves reuse `HIGHWAY`; the house reuses `STREET` sidings and roof; the lit window is the lamp
+ * practical (`MOODS.night.lamp`). Values for the brand-director: all under 30% saturation, so none is
+ * in the reserved band (sand ≈ 41° at 13%, sandDark ≈ 41° at 12%, scrub ≈ 80° at 16%).
+ */
+export const DESERT = {
+  /** Packed sand and the sand on the cut (warm grey-beige), a darker sand for the road's dirt verge. */
+  sand: '#a49b87',
+  sandDark: '#8c836f',
+  /** Creosote-like scrub clumps: two dusty olive greens. */
+  scrub: '#6f7a58',
+  scrubDark: '#56603f',
 };
 
 export type CastName = 'you' | 'friend' | 'mom' | 'extra';
@@ -555,6 +614,13 @@ export const CAST: Record<CastName, CastLook> = {
   mom: {top: '#7d4e8f', bottom: '#3b3a40', skin: '#f1c9a5', hair: '#8c8a86', detail: 'bob-glasses'},
   extra: {top: '#8a909c', bottom: '#5b606b', skin: '#d9a77f', hair: '#3a3532', detail: 'none'},
 };
+
+/**
+ * A warm neutral grey for an unnamed extra seen through a car's tinted glass at Night (No. 005): the
+ * extra's cool `CAST.extra` grey read as YOU's blue there. HSL ≈ 36°, 4%, 54% / 40°, 5%, 33%: grey,
+ * not in the reserved orange band (saturation ≈ 4%).
+ */
+export const CAST_NEUTRAL: Pick<CastLook, 'top' | 'bottom'> = {top: '#8f8b85', bottom: '#57544f'};
 
 // Frame is 1080x1920 (9:16). Overlay positions are fractions of it.
 export const FPS = 30;

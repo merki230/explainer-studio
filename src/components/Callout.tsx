@@ -33,10 +33,16 @@ export type CalloutProps = {
   /** ≤ 3 words, shown uppercase. */
   title: string;
   sub?: string;
+  /**
+   * Type size × this (default 1: Inter 700 26 px, sub 600 20 px). From 1.15 up the title goes to 800
+   * and the sub-line to 700, and the leader to 2.5 px (No. 005 visual review: 1.2 reads at phone size
+   * over a busy close-up).
+   */
+  size?: number;
 };
 
-const TITLE = 26;
-const SUB = 20;
+const BASE_TITLE = 26;
+const BASE_SUB = 20;
 /** Inter 700 uppercase with 0.08em tracking: ≈ 0.72 em a letter plus the tracking. */
 const width = (s: string, size: number, spacing: number) => s.length * size * (0.72 + spacing);
 
@@ -57,8 +63,12 @@ export const Callout: React.FC<CalloutProps & {mood?: Mood; scene?: AnchorScene}
   via,
   title,
   sub,
+  size = 1,
   mood = 'day',
 }) => {
+  const TITLE = BASE_TITLE * size;
+  const SUB = BASE_SUB * size;
+  const bold = size >= 1.15;
   const frame = useCurrentFrame();
   const {width: W, height: H, fps} = useVideoConfig();
   const {ink, inkSub} = overlayInk(mood);
@@ -87,7 +97,7 @@ export const Callout: React.FC<CalloutProps & {mood?: Mood; scene?: AnchorScene}
   return (
     <div style={{position: 'absolute', inset: 0}}>
       <svg width={W} height={H} style={{position: 'absolute', inset: 0, opacity: line}}>
-        <polyline points={points} fill="none" stroke={ink} strokeWidth={2} strokeLinejoin="miter" />
+        <polyline points={points} fill="none" stroke={ink} strokeWidth={bold ? 2.5 : 2} strokeLinejoin="miter" />
       </svg>
       <div
         style={{
@@ -103,7 +113,7 @@ export const Callout: React.FC<CalloutProps & {mood?: Mood; scene?: AnchorScene}
         <div
           style={{
             fontFamily: fonts.sans,
-            fontWeight: 700,
+            fontWeight: bold ? 800 : 700,
             fontSize: TITLE,
             letterSpacing: '0.08em',
             textTransform: 'uppercase',
@@ -119,7 +129,7 @@ export const Callout: React.FC<CalloutProps & {mood?: Mood; scene?: AnchorScene}
           <div
             style={{
               fontFamily: fonts.sans,
-              fontWeight: 600,
+              fontWeight: bold ? 700 : 600,
               fontSize: SUB,
               letterSpacing: '0.04em',
               color: inkSub,

@@ -74,6 +74,7 @@ updates them in the same step. Before closing a rule change, grep the repo for t
   `src/videos/<slug>/audio/sfx/<name>.mp3` (`--take` writes `out/<slug>/raw/sfx/` for auditions). Existing files are never overwritten.
 - `yarn sfx:click <slug> [--name click] [--force]`: free, local. Self-made deterministic phone-lock click (0.35 s) encoded to
   `src/videos/<slug>/audio/sfx/<name>.mp3`; same samples every run; refuses to overwrite without `--force`; no `audio-log.md` entry.
+- `yarn sfx:rumble <slug> [--name roar-synth] [--out <file>] [--seconds 4] [--lufs -15] [--pitch 1] [--reso 110] [--cutoff 500] [--drive 0] [--attack 0]` (brutal: `--lufs -12 --drive 4 --attack 6 --reso 130 --cutoff 1200`; high: add `--pitch 2.1 --reso 220`): free, local. Deterministic rumble-strip roar (88 impacts/s, low-passed, mono, 4 s) for auditions in `out/<slug>/raw/sfx/<name>.mp3`; never writes into `src/`; no `audio-log.md` entry. Measure with `loudnorm ... print_format=json`.
 - Both cost credits: ask the owner first. `--dry-run` prints the request (no key) and writes nothing; `--help`
   lists the options.
 - Every generated file is appended to `src/videos/<slug>/audio-log.md` (date, plan, endpoint, model, prompt,

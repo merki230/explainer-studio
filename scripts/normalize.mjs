@@ -5,7 +5,8 @@
 //   Input is out/<slug>/raw/<slug>.raw.mp4 (the raw Remotion mix). If only the release mp4 exists, it is
 //   treated as the raw render and moved to the raw path first. Output: src/videos/<slug>/release/<slug>.mp4 (git-ignored).
 //
-// Target: -14 LUFS integrated, -1.5 dBTP, LRA 11 (edit TARGET to change).
+// Target: -14 LUFS integrated, -1.5 dBTP, LRA 11 (edit TARGET to change). loudnorm itself runs with a
+// tighter TP (INTERNAL_TP, -2.5) because its dynamic mode overshoots; the result is checked against -1.5.
 // Pass 1 measures, pass 2 applies with linear=true. When linear can't reach the target without the true
 // peak passing TP (typical for a quiet voice mix), loudnorm falls back to dynamic mode; the script
 // reports which mode ran. The bundled ffmpeg has no alimiter, so there is no other way to reach -14.
@@ -17,6 +18,9 @@ import {dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 
 const TARGET = {I: -14, TP: -1.5, LRA: 11};
+// loudnorm in dynamic mode overshoots the TP it is given (and the AAC encode adds a little), so it is
+// fed a tighter internal TP; the final file is still checked against TARGET.TP.
+const INTERNAL_TP = -2.5;
 const FPS = 30;
 
 const ffmpeg = (args) => {
@@ -62,14 +66,14 @@ export const normalize = (slug) => {
     renameSync(final, raw);
   }
   mkdirSync(dirname(final), {recursive: true});
-  const target = `I=${TARGET.I}:TP=${TARGET.TP}:LRA=${TARGET.LRA}`;
+  const target = `I=${TARGET.I}:TP=${INTERNAL_TP}:LRA=${TARGET.LRA}`;
   const rawInfo = probe(raw);
   if (rawInfo.aStart === null) throw new Error(`${raw} has no audio stream.`);
 
   console.log(`Measuring ${raw} ...`);
   const m = loudnormJson(ffmpeg(['-i', raw, '-vn', '-af', `loudnorm=${target}:print_format=json`, '-f', 'null', '-']));
   const gain = TARGET.I - Number(m.input_i);
-  const linearOk = Number(m.input_tp) + gain <= TARGET.TP;
+  const linearOk = Number(m.input_tp) + gain <= INTERNAL_TP;
   const measured =
     `measured_I=${m.input_i}:measured_TP=${m.input_tp}:measured_LRA=${m.input_lra}:` +
     `measured_thresh=${m.input_thresh}:offset=${m.target_offset}`;
@@ -90,6 +94,7 @@ export const normalize = (slug) => {
   const out = probe(final);
   const frame = 1 / FPS;
   const problems = [];
+  if (Number(after.input_tp) > TARGET.TP) problems.push(`true peak ${after.input_tp} dBTP is above ${TARGET.TP}`);
   if (out.frames !== rawInfo.frames) problems.push(`frame count ${rawInfo.frames} -> ${out.frames}`);
   if (Math.abs(out.vDur - rawInfo.vDur) > 1e-3) problems.push(`video duration ${rawInfo.vDur} -> ${out.vDur}`);
   if (Math.abs(out.aStart - out.vStart) > frame) problems.push(`audio starts ${(out.aStart - out.vStart).toFixed(3)} s off video`);

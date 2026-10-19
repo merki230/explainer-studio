@@ -95,3 +95,10 @@ export const framingAtKeys = (keys: CameraKey[], base: {look: V3; distance: numb
   }
   return prev;
 };
+
+/** A value that is either constant or keyed (eased cubic between keys, see `keyed`). */
+export type Keyed = number | {at: number; value: number}[];
+
+/** A `Keyed` value at t (the default when undefined). */
+export const keyedValue = (k: Keyed | undefined, t: number, dflt: number) =>
+  k === undefined ? dflt : typeof k === 'number' ? k : keyed(k, t, dflt);

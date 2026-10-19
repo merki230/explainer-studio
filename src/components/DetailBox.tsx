@@ -46,6 +46,8 @@ export type DetailBoxProps = {
   trip?: number;
   /** 'dashboard': the speed shown, mph (default 38). */
   speed?: number;
+  /** 'dashboard': draw the tire-pressure symbol (default true; false: not drawn at all). */
+  tireLight?: boolean;
   /** 'auto' (default): the part of the screen that matters (the field, the ad); 'full': the whole screen. */
   crop?: 'auto' | 'full';
   /** Inner width in px (default 336; the box is 344 wide with its border, inside the guide's 324–360). */
@@ -277,6 +279,7 @@ const DashboardBox: React.FC<DetailBoxProps & {mood?: Mood; scene: SceneCtx}> = 
   warning,
   trip = 760,
   speed = 38,
+  tireLight = true,
   mood = 'day',
   scene,
 }) => {
@@ -292,12 +295,12 @@ const DashboardBox: React.FC<DetailBoxProps & {mood?: Mood; scene: SceneCtx}> = 
   const tripText = `TRIP ${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`;
   const innerW = size;
   const innerH = Math.round(size * 0.58);
-  const key = `${on}|${tripText}|${speed}|${innerW}`;
+  const key = `${on}|${tripText}|${speed}|${innerW}|${tireLight}`;
   useLayoutEffect(() => {
     const handle = delayRender('Drawing the dashboard box');
     fontsReady().then(() => {
       const cx = ref.current?.getContext('2d');
-      if (cx) drawCluster(cx, innerW, innerH, {warning: on, speed, trip: tripText});
+      if (cx) drawCluster(cx, innerW, innerH, {warning: on, speed, trip: tripText, tireLight});
       continueRender(handle);
     });
     // `key` captures everything the drawing depends on

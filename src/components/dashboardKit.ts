@@ -13,6 +13,8 @@ export type ClusterState = {
   speed?: number;
   /** The trip line, e.g. "TRIP 12:40". */
   trip?: string;
+  /** Draw the tire-pressure symbol at all (default true). False: no symbol, not even dimmed (a cluster with no tire story). */
+  tireLight?: boolean;
 };
 
 /**
@@ -107,6 +109,7 @@ export const drawCluster = (cx: CanvasRenderingContext2D, w: number, h: number, 
   cx.textAlign = 'right';
   cx.fillText(s.trip ?? 'TRIP 12:40', w - 18 * k, h * 0.2);
   // the tire-pressure symbol, bottom right
-  drawTireSymbol(cx, w * 0.75, h * 0.64, h * 0.42, s.warning ? section.warning : section.ledOff);
+  if (s.tireLight !== false)
+    drawTireSymbol(cx, w * 0.75, h * 0.64, h * 0.42, s.warning ? section.warning : section.ledOff);
   cx.restore();
 };

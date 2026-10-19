@@ -114,7 +114,7 @@ const roadTexture = () => {
 };
 
 /** A fixed (index-hashed, no randomness) mottled texture for lawn and concrete. */
-const mottle = (base: string, amount: number) => {
+export const mottle = (base: string, amount: number) => {
   const W = 128;
   const data = new Uint8Array(W * W * 4);
   const b = [1, 3, 5].map((i) => parseInt(base.slice(i, i + 2), 16));
@@ -158,8 +158,12 @@ const Block: React.FC<{min: V3; max: V3; mats: Six | THREE.Material; shadow?: bo
   </mesh>
 );
 
-/** A neighbour's house: a box with a gable roof (ridge along x, the house's front facing +x). */
-const House: React.FC<{
+/**
+ * A neighbour's house: a box with a gable roof (ridge along x, the house's front facing +x). Also used
+ * by the musical road (No. 005), which stands it on its own ground (`ground`) and lights one window
+ * (`windows`: a material per window, the one nearer the door first; default `win` for both).
+ */
+export const House: React.FC<{
   x0: number;
   x1: number;
   z0: number;
@@ -169,7 +173,10 @@ const House: React.FC<{
   trim: THREE.Material;
   win: THREE.Material;
   faceX: 1 | -1;
-}> = ({x0, x1, z0, z1, siding, roof, trim, win, faceX}) => {
+  ground?: number;
+  windows?: THREE.Material[];
+}> = ({x0, x1, z0, z1, siding, roof, trim, win, faceX, ground, windows}) => {
+  const g0 = ground ?? GRADE;
   const h = 2.9;
   const w = z0 - z1;
   const roofGeo = useMemo(() => {
@@ -186,27 +193,27 @@ const House: React.FC<{
   const fx = faceX > 0 ? x1 + 0.005 : x0 - 0.005;
   return (
     <group>
-      <Block min={[x0, GRADE, z1]} max={[x1, GRADE + 0.3 + h, z0]} mats={siding} />
+      <Block min={[x0, g0, z1]} max={[x1, g0 + 0.3 + h, z0]} mats={siding} />
       <mesh
         geometry={roofGeo}
         material={roof}
-        position={[(x0 + x1) / 2, GRADE + 0.3 + h, (z0 + z1) / 2]}
+        position={[(x0 + x1) / 2, g0 + 0.3 + h, (z0 + z1) / 2]}
         castShadow
         receiveShadow
       />
       {/* front door and two windows on the street face */}
       <mesh
         material={trim}
-        position={[fx, GRADE + 1.35, (z0 + z1) / 2 + 1.5]}
+        position={[fx, g0 + 1.35, (z0 + z1) / 2 + 1.5]}
         rotation={[0, faceX > 0 ? Math.PI / 2 : -Math.PI / 2, 0]}
       >
         <planeGeometry args={[1.0, 2.1]} />
       </mesh>
-      {[-1.2, -3.2].map((dz) => (
+      {[-1.2, -3.2].map((dz, i) => (
         <mesh
           key={dz}
-          material={win}
-          position={[fx, GRADE + 1.9, (z0 + z1) / 2 + dz + 1.5]}
+          material={windows?.[i] ?? win}
+          position={[fx, g0 + 1.9, (z0 + z1) / 2 + dz + 1.5]}
           rotation={[0, faceX > 0 ? Math.PI / 2 : -Math.PI / 2, 0]}
         >
           <planeGeometry args={[1.3, 1.2]} />

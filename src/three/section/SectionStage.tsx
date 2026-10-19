@@ -75,7 +75,12 @@ export const SectionLights: React.FC<{
    * grows to 2048.
    */
   extent?: number;
-}> = ({mood, palette, target = [0, 0.6, -0.2], lamp = 1, lampAt = [-1.45, 1.3, -0.75], extent}) => {
+  /**
+   * Night's narrow cool spot on the people (default true). It is aimed at the living room's couch
+   * (near the origin); a slice with no one there (a car on a road) switches it off.
+   */
+  figureSpot?: boolean;
+}> = ({mood, palette, target = [0, 0.6, -0.2], lamp = 1, lampAt = [-1.45, 1.3, -0.75], extent, figureSpot = true}) => {
   const m = palette ?? MOODS[mood];
   // created once; colours and intensities set every frame (so a blended palette just works)
   const lights = useMemo(() => {
@@ -108,7 +113,7 @@ export const SectionLights: React.FC<{
   lights.bounce.color.copy(raw(m.bounce?.color ?? '#000000'));
   lights.bounce.intensity = (m.bounce?.intensity ?? 0) * Math.PI;
   lights.fig.color.copy(raw(m.figureLight?.color ?? '#000000'));
-  lights.fig.intensity = m.figureLight?.intensity ?? 0;
+  lights.fig.intensity = figureSpot ? (m.figureLight?.intensity ?? 0) : 0;
   if (extent) {
     // same direction as the room's key (its position toward the room's default target), from far back
     const dir = new THREE.Vector3(...m.key.position).sub(new THREE.Vector3(0, 0.6, -0.2)).normalize();
