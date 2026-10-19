@@ -5,6 +5,7 @@ import type {CounterProps} from './components/Counter';
 import type {DetailBoxProps} from './components/DetailBox';
 import type {FullScreenProps} from './components/FullScreen';
 import type {NameTagProps} from './components/NameTag';
+import type {NoteStaffProps} from './components/NoteStaff';
 import type {SearchBarProps} from './components/SearchBar';
 import type {StatementProps} from './components/Statement';
 import type {TitleBlockProps} from './components/TitleBlock';
@@ -71,6 +72,13 @@ export type MusicSpec = {
    * entry (with a console warning). Remove it once a take is chosen.
    */
   audition?: string[];
+  /**
+   * Timed dips (video seconds), e.g. while the tires are on the grooves: the bed sits `db` lower
+   * (dB down; the sign is ignored) from `from` to `to`, easing down over `fade` s before `from` and back
+   * up over `fade` s after `to` (default 0.25, sine). Overlapping dips take the deepest. On top of the
+   * fades and the ducking. Omit for none.
+   */
+  dips?: {from: number; to: number; db: number; fade?: number}[];
 };
 
 export type OverlaySpec = Timing & {
@@ -97,6 +105,7 @@ export type OverlaySpec = Timing & {
     | ({type: 'tag'} & NameTagProps)
     | ({type: 'detail'} & DetailBoxProps)
     | ({type: 'screen'} & FullScreenProps)
+    | ({type: 'staff'} & NoteStaffProps)
     | SfxOverlay
   );
 

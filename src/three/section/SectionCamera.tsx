@@ -1,5 +1,5 @@
 import {useThree} from '@react-three/fiber';
-import {Easing, interpolate, useCurrentFrame, useVideoConfig} from 'remotion';
+import {Easing, interpolate, random, useCurrentFrame, useVideoConfig} from 'remotion';
 import * as THREE from 'three';
 
 type V3 = [number, number, number];
@@ -121,13 +121,42 @@ export const SectionCamera: React.FC<{
   fitClip?: boolean;
   /** With `fitClip`: the far plane at least this far (a backdrop or a long street behind the subject). */
   farMin?: number;
-}> = ({from, to, durationInFrames, drift = 0, clockOffset = 0, pre, post, fitClip = false, farMin = 0}) => {
+  /**
+   * A buzz felt through the car (No. 005): every frame a new seeded jitter of the camera's position
+   * (≈ 0.12% of the distance at 1, a few px) and a small roll / pitch / yaw (≈ 0.1°), so it reads as
+   * a fast tremble, not a wobble. 0 or omitted: none (the camera is exactly as before).
+   */
+  shake?: number;
+  /** Seed for the shake (default 'section-shake'). */
+  shakeSeed?: string;
+}> = ({
+  from,
+  to,
+  durationInFrames,
+  drift = 0,
+  clockOffset = 0,
+  pre,
+  post,
+  fitClip = false,
+  farMin = 0,
+  shake = 0,
+  shakeSeed = 'section-shake',
+}) => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera;
   const {position, look} = sectionCameraAt({from, to, frame, fps, durationInFrames, drift, clockOffset, pre, post});
   camera.position.copy(position);
   camera.lookAt(look);
+  if (shake > 0) {
+    const j = (k: string) => (random(`${shakeSeed}-${k}-${frame}`) - 0.5) * 2;
+    const d = position.distanceTo(look);
+    const a = 0.0012 * d * shake;
+    camera.position.add(new THREE.Vector3(j('x') * a, j('y') * a, j('z') * a));
+    camera.rotateZ(j('roll') * 0.002 * shake);
+    camera.rotateX(j('pitch') * 0.0012 * shake);
+    camera.rotateY(j('yaw') * 0.0012 * shake);
+  }
   if (fitClip) {
     const d = position.distanceTo(look);
     camera.near = Math.max(0.1, d * 0.15);

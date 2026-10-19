@@ -1,26 +1,52 @@
 import React, {useMemo} from 'react';
-import {AbsoluteFill, useCurrentFrame, useVideoConfig} from 'remotion';
+import {AbsoluteFill, random, useCurrentFrame, useVideoConfig} from 'remotion';
 import * as THREE from 'three';
 import {fonts} from '../fonts';
-import {CAR, MOODS, section, type CastName, type Mood} from '../theme';
+import {CAR, HIGHWAY, MOODS, section, type CastName, type Mood} from '../theme';
 import {OrangePath} from '../three/OrangePath';
 import {raw} from '../three/plaster';
 import {CAR_LAYOUT, RealCar} from '../three/real/RealCar';
 import {RealWheel, WHEEL} from '../three/real/RealWheel';
 import {TireSensor} from '../three/real/TireSensor';
 import type {Gesture} from '../three/rig';
-import {CutOutline, cutMaterial} from '../three/section/cutLook';
+import {CutOutline, cutMaterial, INK} from '../three/section/cutLook';
+import {
+  bandMaterial,
+  CurveStrip,
+  GROOVE,
+  GrooveCut,
+  MAX_AMP,
+  profileY,
+  STRIP_N,
+  tireDrop,
+} from '../three/section/GrooveCut';
+import {asphaltMaterial, HIGHWAY_LAYOUT} from '../three/section/HighwaySlice';
 import {Figure} from '../three/section/Figure';
-import {projectToFrame, SECTION_ANGLE, SectionCamera, sectionCameraAt, type Framing} from '../three/section/SectionCamera';
+import {
+  projectToFrame,
+  SECTION_ANGLE,
+  SectionCamera,
+  sectionCameraAt,
+  type Framing,
+} from '../three/section/SectionCamera';
 import {SectionLights, SectionStage} from '../three/section/SectionStage';
 import {skyTexture} from '../three/section/textures';
 import {useFontsLoaded} from '../three/section/useFontsLoaded';
 import {RadioPulse, WireWind} from '../three/TirePieces';
-import {ease, framingAtKeys, integrateSpeed, type CameraKey, type SpeedKey} from './keyframes';
+import {
+  ease,
+  framingAtKeys,
+  integrateSpeed,
+  keyedValue,
+  speedAt,
+  type CameraKey,
+  type Keyed,
+  type SpeedKey,
+} from './keyframes';
 
 type V3 = [number, number, number];
 export type WheelId = 'FL' | 'FR' | 'RL' | 'RR';
-export type CarFraming = 'wide' | 'cabin' | 'frontWheel' | 'allWheels' | 'lowWheels';
+export type CarFraming = 'wide' | 'cabin' | 'frontWheel' | 'allWheels' | 'lowWheels' | 'frontTire' | 'contact';
 
 const C = CAR_LAYOUT;
 const R = C.wheelR;
@@ -46,6 +72,13 @@ export const CAR_FRAMINGS: Record<CarFraming, Framing> = {
   frontWheel: {look: [1.3, 0.62, 0.75], distance: 7.5},
   allWheels: {look: [0, 0.05, 0], distance: 19},
   lowWheels: {look: [0, 0.48, 0.8], distance: 12.5},
+  /**
+   * The near front tire whole on the cut, a few dips either side (highway: ½ in ≈ 11 px); the contact
+   * patch at y ≈ 880, above the captions.
+   */
+  frontTire: {look: [1.35, -0.09, 0.8], distance: 4.6},
+  /** Close on the near front tire's contact patch: the tread, the dip under it, the trapped air (½ in ≈ 26 px), at y ≈ 850. */
+  contact: {look: [1.35, -0.055, 0.8], distance: 2.0},
 };
 
 export type CarSliceSceneProps = {
@@ -72,7 +105,10 @@ export type CarSliceSceneProps = {
   push?: number;
   /** Idle sideways drift, ± units (default 0.08). */
   drift?: number;
-  /** Speed keyframes in wheel revolutions per second (1 ≈ a slow drive); eased over 0.8 s. The road scrolls with it. */
+  /**
+   * Speed keyframes in wheel revolutions per second (1 ≈ a slow drive; `MPH60_REVS` ≈ 11.9 is 60 mph);
+   * eased over 0.8 s. The road scrolls with it. Default 1, or 60 mph on the highway.
+   */
   driving?: SpeedKey[];
   /** Radio pulses: from `at`, an orange route from that wheel's sensor to the receiver (ignored when 'indirect'). */
   pulses?: {at: number; wheel: WheelId}[];
@@ -96,6 +132,60 @@ export type CarSliceSceneProps = {
   fasterBy?: number;
   /** The wire gag: a grey cable from under the dash winds round the front near axle from `at`, fades by `until`. */
   wire?: {at: number; until?: number};
+  /**
+   * The road: 'street' (default, No. 002: a lane with a broken line) or 'highway' (No. 005: the
+   * interstate shoulder; the near wheels ride the groove row and the front cut face runs down its
+   * centreline, so it shows the dips; the white edge line just behind the cut; default speed 60 mph).
+   */
+  road?: 'street' | 'highway';
+  /**
+   * Playback rate, a constant or keys (1 = real time, 0.05 = 20× slow motion): scales how fast the road,
+   * the wheels and the drops go (not the driver, not the camera). Default 1.
+   */
+  timeScale?: Keyed;
+  /** Highway: an orange impact flash at the contact patch on each drop, from this time (s); null for none. Default 0. */
+  impactsAt?: number | null;
+  /** Highway: the tread squeezes into each dip it crosses, from this time (s); null for none. Default 0. */
+  squeezeAt?: number | null;
+  /** Highway: the air trapped under the tread in each dip fills orange and puffs out at the dip's edges, from this time (s). Default null. */
+  airAt?: number | null;
+  /**
+   * Highway: the drops blur into one continuous orange band behind each near tire: 'auto' (default:
+   * from the drop rate on screen, full above ≈ 18 a second) or a constant / keys 0 → 1.
+   */
+  band?: 'auto' | Keyed;
+  /**
+   * Highway: the tires leave the grooves at this time (s): the car eases left (the road slides across
+   * under the cut, the white line toward it, the dips flatten out), the drops, the band and the
+   * vibration path go dark. Default null (they stay on the grooves).
+   */
+  leaveAt?: number | null;
+  /**
+   * Highway: the vibration path (orange, the system): from `at` it draws from the near front tire's
+   * contact patch → the hub → an unlabelled run up through the body → the steering wheel, arriving at
+   * `wheelAt` (default at + 1.7); a branch → the seat rails → the seat arrives at `seatAt` (default
+   * wheelAt + 1.4). Node dots at the hub, the wheel and the seat; once the path reaches the wheel the
+   * driver's hands buzz on the rim. The suspension is not labelled. Null for none (default).
+   */
+  vibration?: {at: number; wheelAt?: number; seatAt?: number} | null;
+  /** The speed on the cluster's face in the car (mph, default 38). The dashboard detail box has its own `speed`. */
+  clusterSpeed?: number;
+  /**
+   * Highway: the dips' depth and the tire's drop drawn this many times real (default 2.5, 🎭 an
+   * illustrative scale, disclosed in the post: at 1 the ½ in dip read as a wavy line at phone size).
+   * A dotted ink line at flat-road level runs across the dips in close-ups, so the tire is seen going below it.
+   */
+  dipScale?: number;
+  /**
+   * "Feel it": a fast seeded tremble (0 → 1, constant or keys) of the camera, the car's body, the
+   * steering wheel and the driver's hands, like the buzz through the car. On the highway it only runs
+   * while the near tires are on the grooves (not after `leaveAt`). Default 0 (off).
+   */
+  shake?: Keyed;
+  /** Scene seconds of a short hard kick on the shake (≈ 3×, gone in 0.35 s): the first hit on the grooves. */
+  shakeKick?: number[];
+  /** The tire-pressure symbol on the in-car cluster (default true; false: not drawn). The detail box has its own `tireLight`. */
+  tireLight?: boolean;
   location?: string;
   transition?: 'auto' | 'continue' | 'glide' | 'cut' | 'dissolve' | 'slide' | 'follow';
   follow?: {direction?: 'down' | 'up' | 'left' | 'right'; at?: number};
@@ -133,7 +223,8 @@ const carCameraMove = (
 
 export const carCameraStart = (p: Partial<CarSliceSceneProps>, d: number, fps: number): Framing =>
   carCameraMove({...p, cameraFrom: undefined, cameraGlide: undefined}, d, fps, 0).from;
-export const carCameraEnd = (p: Partial<CarSliceSceneProps>, d: number, fps: number): Framing => carCameraMove(p, d, fps).to;
+export const carCameraEnd = (p: Partial<CarSliceSceneProps>, d: number, fps: number): Framing =>
+  carCameraMove(p, d, fps).to;
 
 const cameraAtFrame = (p: Partial<CarSliceSceneProps>, o: {frame: number; fps: number; durationInFrames: number}) => {
   const {from, to, pre} = carCameraMove(p, o.durationInFrames, o.fps, o.frame);
@@ -182,12 +273,40 @@ export const carHeadBoxOnScreen = (
 };
 
 /** The instrument cluster on screen (px), for the dashboard detail box's leader. */
-export const clusterOnScreen = (p: Partial<CarSliceSceneProps>, o: {frame: number; fps: number; durationInFrames: number}) =>
-  projectToFrame(cameraAtFrame(p, o), [C.cluster[0] + 0.07, C.cluster[1] + 0.06, C.cluster[2]]);
+export const clusterOnScreen = (
+  p: Partial<CarSliceSceneProps>,
+  o: {frame: number; fps: number; durationInFrames: number},
+) => projectToFrame(cameraAtFrame(p, o), [C.cluster[0] + 0.07, C.cluster[1] + 0.06, C.cluster[2]]);
 
 /** A wheel's turn (rev) at t: the driving speed, faster for the low wheel with the indirect rings. */
+/** 60 mph in wheel revolutions per second (the highway's default speed). */
+export const MPH60_REVS = 26.82 / (2 * Math.PI * R);
+
+/** The speed keys in rev/s (default: 1, a slow drive; 60 mph on the highway). */
+const drivingOf = (p: Partial<CarSliceSceneProps>): SpeedKey[] =>
+  p.driving ?? [{at: 0, speed: p.road === 'highway' ? MPH60_REVS : 1}];
+
+/** The rate everything on the road plays at, t s into the scene (`timeScale`). */
+const rateAt = (p: Partial<CarSliceSceneProps>, t: number) => Math.max(0, keyedValue(p.timeScale, t, 1));
+
+/** The wheels' turn (rev) at t: ∫ speed × playback rate (a fixed-step sum, deterministic). */
+const simRevs = (p: Partial<CarSliceSceneProps>, t: number, fps = 30) => {
+  const drv = drivingOf(p);
+  // highway: the road before the scene began ran at its first speed and rate, so consecutive scenes
+  // at a steady speed join without the dips jumping (the street keeps No. 002's reset per scene)
+  const before = p.road === 'highway' ? speedAt(drv, 0, 0.8) * rateAt(p, 0) * ((p.startFrame ?? 0) / fps) : 0;
+  if (p.timeScale === undefined || p.timeScale === 1) return before + integrateSpeed(drv, t, 0.8);
+  const STEP = 1 / 120;
+  let a = 0;
+  for (let x = 0; x < t; x += STEP) {
+    const m = x + Math.min(STEP, t - x) / 2;
+    a += speedAt(drv, m, 0.8) * rateAt(p, m) * Math.min(STEP, t - x);
+  }
+  return before + a;
+};
+
 const wheelRevs = (p: Partial<CarSliceSceneProps>, id: WheelId, t: number) => {
-  const revs = integrateSpeed(p.driving ?? [{at: 0, speed: 1}], t, 0.8);
+  const revs = simRevs(p, t);
   const faster = p.variant === 'indirect' && p.speedRings && p.lowWheel === id ? (p.fasterBy ?? 1.1) : 1;
   return revs * faster;
 };
@@ -210,7 +329,10 @@ const routeFor = (id: WheelId, from: V3): V3[][] => {
   const [rx, ry, rz] = C.receiver;
   // a low arc through the body and along the cabin floor, under the seat cushions, so the route's glow
   // stays on the system and off the seats (§ 5): out of the wheel arch, along the floor, up to the receiver
-  if (w.x > 0) return [[from, [1.02, 0.62, w.z * 0.8], [(1.02 + rx) / 2 + 0.05, 0.56, (w.z * 0.8 + rz) / 2], [rx, ry + 0.035, rz]]];
+  if (w.x > 0)
+    return [
+      [from, [1.02, 0.62, w.z * 0.8], [(1.02 + rx) / 2 + 0.05, 0.56, (w.z * 0.8 + rz) / 2], [rx, ry + 0.035, rz]],
+    ];
   return [[from, [-0.8, 0.55, w.z * 0.8], [0.0, 0.48, (w.z * 0.8 + rz) / 2], [rx, ry + 0.035, rz]]];
 };
 
@@ -223,7 +345,12 @@ const pulseState = (age: number) => ({
 });
 
 /** An ID tag (Inter on a paper chip with an ink border), facing the camera. */
-const IdTag: React.FC<{text: string; position: V3; opacity: number; mood: Mood}> = ({text, position, opacity, mood}) => {
+const IdTag: React.FC<{text: string; position: V3; opacity: number; mood: Mood}> = ({
+  text,
+  position,
+  opacity,
+  mood,
+}) => {
   const ready = useFontsLoaded();
   const tex = useMemo(() => {
     const c = document.createElement('canvas');
@@ -256,7 +383,11 @@ const IdTag: React.FC<{text: string; position: V3; opacity: number; mood: Mood}>
   mat.opacity = opacity;
   mat.color.setScalar(1 / m.exposure);
   const q = useMemo(
-    () => new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), new THREE.Vector3(...SECTION_ANGLE).normalize()),
+    () =>
+      new THREE.Quaternion().setFromUnitVectors(
+        new THREE.Vector3(0, 0, 1),
+        new THREE.Vector3(...SECTION_ANGLE).normalize(),
+      ),
     [],
   );
   return (
@@ -265,6 +396,45 @@ const IdTag: React.FC<{text: string; position: V3; opacity: number; mood: Mood}>
     </mesh>
   );
 };
+
+/** The highway's ground block (metres): its ends, the front cut down the groove row (the near wheels' mid-plane), the back, depth. */
+const HWY = {x: 3.8, front: C.cutZ, back: -4.2, depth: 0.7};
+
+/**
+ * The vibration path (🎭 illustrative route, ✅ ends), drawn like a run through a section (style guide
+ * § 5): from the near front tire's contact patch up across the tire's cut to the hub, on up the body's
+ * cut face (25 mm proud) over the wheel arch, across the dashboard's cut end and along its top to the
+ * steering column and the wheel's centre (unlabelled: no part of the car is named). The branch leaves
+ * above the arch, runs down the door opening's front edge, across the cabin floor between the seats
+ * and up to the near side of the driver's backrest.
+ */
+const PROUD = C.cutZ + 0.025;
+const VIB_MAIN: V3[] = [
+  [WHEELS.FR.x, 0.012, PROUD],
+  [WHEELS.FR.x, R, PROUD],
+  [WHEELS.FR.x - 0.02, 0.84, PROUD],
+  [1.13, 0.99, PROUD],
+  [1.04, 1.235, C.cutZ - 0.02],
+  [0.95, 1.245, 0.2],
+  [0.88, 1.27, -0.26],
+  // the node on the wheel's hub, on its camera side (the driver's side is hidden by the hub)
+  [C.steering[0] + 0.06, C.steering[1] - 0.02, C.steering[2] + 0.02],
+];
+const VIB_SEAT: V3[] = [
+  [WHEELS.FR.x - 0.02, 0.84, PROUD],
+  [1.0, 0.8, PROUD],
+  [0.93, 0.44, PROUD],
+  [0.8, 0.37, 0.5],
+  [0.42, 0.37, 0.02],
+  [0.16, 0.5, -0.04],
+  [0.06, 0.95, -0.1],
+  // the node on the near side of the driver's backrest (its cushion is hidden by the passenger seat)
+  [-0.03, 1.24, -0.12],
+];
+/** The path's core radius: § 5's 0.018 × 1.25 (visual review: thicker so it reads at phone size); the halo keeps § 5's ratio. */
+const VIB_R = 0.0225;
+/** How far along the main path the branch leaves it (above the arch). */
+const VIB_BRANCH = 0.3;
 
 /** The road on a cut ground block: lane paint that scrolls (DataTexture, u along x). */
 const ROAD = {x: 3.8, z: 1.75, depth: 0.7, tile: 7.6};
@@ -325,7 +495,9 @@ export const CarSliceScene: React.FC<CarSliceSceneProps> = (props) => {
   const {fps} = useVideoConfig();
   const t = frame / fps;
   const m = MOODS[mood];
-  const sensors = variant === 'sensors';
+  const hw = props.road === 'highway';
+  // the highway's car has no tire sensors (no orange but the grooves, the drops and the path)
+  const sensors = variant === 'sensors' && !hw;
   const {from, to, pre} = carCameraMove(props, durationInFrames, fps, frame);
 
   const mats = useMemo(() => {
@@ -338,12 +510,121 @@ export const CarSliceScene: React.FC<CarSliceSceneProps> = (props) => {
       cut: cutMaterial(),
       node: new THREE.MeshBasicMaterial({color: raw(section.orange)}),
       nodeOff: new THREE.MeshStandardMaterial({color: raw(section.ledOff), roughness: 0.4}),
+      // the highway: interstate asphalt with the white edge line and the milled row, along x
+      asphalt: asphaltMaterial({across: '(vRoadPos.z - uAcross)', along: '(-vRoadPos.x)', key: 'car-slice-asphalt'}),
+      hidden: new THREE.MeshBasicMaterial({visible: false}),
+      air: new THREE.MeshBasicMaterial({color: raw(section.orange), transparent: true, depthWrite: false, opacity: 0}),
+      rubberCut: new THREE.MeshBasicMaterial({color: raw(section.cut)}),
+      ink: new THREE.MeshBasicMaterial({color: raw(section.cutLine)}),
+      band: [bandMaterial(), bandMaterial()],
+      // the dotted flat-road reference line (ink, unlit): dots `uPeriod` apart along x
+      refLine: new THREE.ShaderMaterial({
+        transparent: true,
+        depthWrite: false,
+        uniforms: {uPeriod: {value: 0.01}, uAlpha: {value: 0}, cInk: {value: raw(section.cutLine)}},
+        vertexShader: `varying float vX; void main() { vec4 w = modelMatrix * vec4(position, 1.0); vX = w.x; gl_Position = projectionMatrix * viewMatrix * w; }`,
+        fragmentShader: `varying float vX; uniform float uPeriod, uAlpha; uniform vec3 cInk;
+          void main() { if (fract(vX / uPeriod) > 0.45 || uAlpha < 0.003) discard; gl_FragColor = vec4(cInk, uAlpha); }`,
+      }),
     };
   }, [mood, m.earth]);
+  const headlamps = useMemo(
+    () => [-0.55, 0.55].map(() => new THREE.SpotLight(raw(HIGHWAY.headlight), 0, 30, 0.42, 0.6, 1)),
+    [],
+  );
+  [-0.55, 0.55].forEach((zz, i) => {
+    const l = headlamps[i];
+    l.intensity = hw && mood === 'night' ? 14 : 0;
+    l.position.set(2.3, 0.8, zz);
+    l.target.position.set(12, 0, zz * 2);
+    l.target.updateMatrixWorld();
+  });
   mats.sky.color.setScalar(1 / m.exposure);
-  const revs = integrateSpeed(props.driving ?? [{at: 0, speed: 1}], t, 0.8);
+  mats.rubberCut.color.copy(raw(section.cut)).multiplyScalar(0.8 / m.exposure);
+  const revs = simRevs(props, t, fps);
   const distance = revs * Math.PI * 2 * R;
   mats.road.map!.offset.x = -distance / ROAD.tile;
+
+  // ---- the highway (No. 005): the groove row under the near wheels, the drops, the system
+  const night = mood === 'night';
+  // close-ups thin the ink (≈ 3 px held from the wide framing in) and shrink the rings
+  const camNow = cameraAtFrame(props, {frame, fps, durationInFrames});
+  const camD = camNow.position.distanceTo(camNow.look);
+  const inkK = hw ? Math.max(0.2, Math.min(1, camD / 12.75)) : 1;
+  const ringK = hw ? Math.max(0.35, Math.min(1, camD / 7.5)) : 1;
+  const vRoad = speedAt(drivingOf(props), t, 0.8) * rateAt(props, t) * 2 * Math.PI * R; // m/s on screen
+  const blurM = vRoad * (0.5 / fps); // metres the road moves while the shutter is open
+  // the dips smear out once the road moves more than about a dip while the shutter is open
+  const smear = hw ? Math.max(0, Math.min(1, (blurM - 0.3 * GROOVE.length) / GROOVE.period)) : 0;
+  const leaveK = hw && props.leaveAt != null ? ease(t, props.leaveAt, props.leaveAt + 0.8) : 0;
+  const lateral = 0.45 * leaveK;
+  // where the cut is across the row (its centre at 0), and how much of a dip it cuts
+  const rowAt = -lateral;
+  const onRow = hw ? Math.max(0, Math.min(1, (GROOVE.half - Math.abs(rowAt)) / 0.03)) : 0;
+  const dipScale = Math.max(0, Math.min(MAX_AMP, props.dipScale ?? 2.5));
+  const ampShow = onRow * (1 - smear) * dipScale;
+  const asphaltU = mats.asphalt.userData.uniforms as Record<string, {value: number}>;
+  asphaltU.uScroll.value = distance;
+  asphaltU.uBlur.value = blurM;
+  asphaltU.uAcross.value = C.cutZ - (HIGHWAY_LAYOUT.groove.x0 + HIGHWAY_LAYOUT.groove.x1) / 2 + lateral;
+  const nearWheels = (['FR', 'RR'] as WheelId[]).map((id) => {
+    const xw = WHEELS[id].x;
+    // the rigid tire resting on the dips; at speed (smeared) a fine deterministic hum instead
+    const hum = (random(`car-hum-${id}-${frame}`) - 0.5) * 2;
+    const drop = hw
+      ? tireDrop(xw, distance, R, onRow * (1 - smear)) * dipScale + smear * onRow * (1 - leaveK) * 0.0016 * (1 + hum)
+      : 0;
+    // the dips this tire has crossed: seconds since each of the last three centres passed under it
+    const u = -xw - distance;
+    const since = Math.ceil(u / GROOVE.period) * GROOVE.period - u;
+    const ages = [0, 1, 2].map((j) => (since + j * GROOVE.period) / Math.max(vRoad, 1e-4));
+    return {id, xw, drop, ages};
+  });
+  const dropOf = (id: WheelId) => nearWheels.find((n) => n.id === id)?.drop ?? 0;
+  // a drop counts while the tires were on the row and before they left it
+  const onAt = (tt: number) => (props.leaveAt == null || tt < props.leaveAt) && onRow > 0.5;
+  const impactsAt = props.impactsAt === undefined ? 0 : props.impactsAt;
+  const bandAmt = !hw
+    ? 0
+    : props.band === undefined || props.band === 'auto'
+      ? Math.max(0, Math.min(1, (vRoad / GROOVE.period - 6) / 12)) *
+        onRow *
+        (1 - leaveK) *
+        (impactsAt === null || t < impactsAt ? 0 : 1)
+      : Math.max(0, Math.min(1, keyedValue(props.band, t, 0))) * (1 - leaveK);
+  const squeezeK = hw && props.squeezeAt !== null ? ease(t, props.squeezeAt ?? 0, (props.squeezeAt ?? 0) + 0.4) : 0;
+  const airK = hw && props.airAt != null ? ease(t, props.airAt, props.airAt + 0.3) : 0;
+  mats.air.opacity = 0.85 * airK;
+  // the band ≈ 25 px tall at any framing (visual review: +30%)
+  const bandH = Math.max(0.039, 0.00585 * camD);
+  // the reference line: ≈ 7 px dots at the contact framing, ≈ 2.6 dot-widths apart, only in close-ups
+  const refH = INK * Math.max(inkK, 0.3) * 1.1;
+  mats.refLine.uniforms.uPeriod.value = refH * 2.6;
+  mats.refLine.uniforms.uAlpha.value = hw ? 0.95 * (1 - ease(camD, 5, 8)) * onRow : 0;
+  // the band behind each near tire (FR, RR): how much, and where its bright head is (just ahead of the contact)
+  mats.band.forEach((b, i) => {
+    b.uniforms.uAmt.value = bandAmt;
+    b.uniforms.uHead.value = WHEELS[i === 0 ? 'FR' : 'RR'].x + 0.03;
+  });
+  // the body shivers with the drops (a third of the tires' sink), hums at speed
+  const bodyY = hw ? (-0.3 * (dropOf('FR') + dropOf('RR'))) / 2 : 0;
+  // the trapped air and the tread's bulge under each near tire (strips in the cut plane)
+  const contact = nearWheels.map((n) => {
+    const xs = [...Array(STRIP_N).keys()].map((i) => n.xw - 0.1 + (0.2 * i) / (STRIP_N - 1));
+    const yc = R - n.drop;
+    const yt = xs.map((x) => yc - Math.sqrt(Math.max(0, R * R - (x - n.xw) ** 2)));
+    const floor = xs.map((x) => profileY(x, distance, ampShow));
+    const tread = yt.map((y, i) => {
+      const inDip = floor[i] < -1e-5;
+      const win = Math.max(0, 1 - ((xs[i] - n.xw) / 0.1) ** 2);
+      return y - (inDip ? squeezeK * 0.45 * Math.max(0, y - floor[i]) * win : 0);
+    });
+    const pocketTop = tread.map((y, i) =>
+      floor[i] < -1e-5 && Math.abs(xs[i] - n.xw) < 0.09 ? Math.max(floor[i], Math.min(0, y)) : floor[i],
+    );
+    const bulging = tread.map((y, i) => yt[i] - y > 2e-4);
+    return {...n, xs, yt, floor, tread, pocketTop, bulging};
+  });
 
   const warn = warningAt !== null && t >= warningAt;
 
@@ -354,9 +635,28 @@ export const CarSliceScene: React.FC<CarSliceSceneProps> = (props) => {
     ...(glanceAt === null ? [] : [{pose: 'glance-down' as const, at: glanceAt, hold: 1.4}]),
     ...(props.gestures ?? []),
   ];
+  // the vibration path (highway): draw progress, glow, and the hands' buzz once it reaches the wheel
+  const vib = hw && props.vibration ? props.vibration : null;
+  const vibWheelAt = vib ? (vib.wheelAt ?? vib.at + 1.7) : 0;
+  const vibSeatAt = vib ? (vib.seatAt ?? vibWheelAt + 1.4) : 0;
+  const vibMain = vib ? ease(t, vib.at, vibWheelAt) : 0;
+  const vibBranch = vib ? ease(t, vib.at + VIB_BRANCH * (vibWheelAt - vib.at), vibSeatAt) : 0;
+  const vibGlow = vib ? 1 - (props.leaveAt == null ? 0 : ease(t, props.leaveAt, props.leaveAt + 0.6)) : 0;
+  const buzz = vib ? ease(t, vibWheelAt - 0.1, vibWheelAt + 0.2) * vibGlow * onRow : 0;
+  // the "feel it" tremble: keyed, gated to the grooves on the highway, plus short kicks
+  const kick = (props.shakeKick ?? []).reduce((a, k) => {
+    const age = t - k;
+    return age < 0 || age > 0.35 ? a : a + 2 * (1 - age / 0.35) ** 2;
+  }, 0);
+  const shakeAmt = Math.max(0, keyedValue(props.shake, t, 0)) * (hw ? onRow * (1 - leaveK) : 1) + kick;
+  const sj = (k: string, a: number) =>
+    shakeAmt > 0 ? (random(`car-shake-${k}-${frame}`) - 0.5) * 2 * a * shakeAmt : 0;
+  const bodyJ: V3 = [sj('bx', 0.0025), sj('by', 0.003), sj('bz', 0.0025)];
+  const jig = (k: string) =>
+    (random(`car-buzz-${k}-${frame}`) - 0.5) * 2 * 0.006 * Math.max(buzz, Math.min(1.5, shakeAmt));
   const hands: [V3, V3] = [
-    [-0.16, 1.02, 0.4],
-    [0.16, 1.04, 0.41],
+    [-0.16 + jig('rx'), 1.02 + jig('ry'), 0.4 + jig('rz')],
+    [0.16 + jig('lx'), 1.04 + jig('ly'), 0.41 + jig('lz')],
   ];
 
   // pulses: live ones draw their routes; the receiver's dot lights once one has arrived (trace)
@@ -373,44 +673,102 @@ export const CarSliceScene: React.FC<CarSliceSceneProps> = (props) => {
   return (
     <AbsoluteFill>
       <SectionStage mood={mood} post={{focusY: 0.5}} ao>
-        <SectionCamera from={from} to={to} pre={pre} durationInFrames={durationInFrames} drift={props.drift ?? 0.08} clockOffset={startFrame / fps} />
+        <SectionCamera
+          from={from}
+          to={to}
+          pre={pre}
+          durationInFrames={durationInFrames}
+          drift={props.drift ?? 0.08}
+          clockOffset={startFrame / fps}
+          shake={shakeAmt}
+          shakeSeed="car-slice-shake"
+        />
         <SectionLights mood={mood} target={[0, 0.8, 0]} lamp={0} />
         <mesh position={[0, 8, -14]} material={mats.sky}>
           <planeGeometry args={[80, 50]} />
         </mesh>
 
-        {/* the ground block: the road on top, cut on the front and right faces */}
-        <mesh
-          position={[0, -ROAD.depth / 2, 0]}
-          material={[mats.cut, mats.earth, mats.road, mats.earth, mats.cut, mats.earth]}
-          receiveShadow
-        >
-          <boxGeometry args={[2 * ROAD.x, ROAD.depth, 2 * ROAD.z]} />
-        </mesh>
-        <CutOutline
-          rects={[
-            [
-              [-ROAD.x, -ROAD.depth, ROAD.z],
-              [ROAD.x, 0, ROAD.z],
-            ],
-            [
-              [ROAD.x, -ROAD.depth, -ROAD.z],
-              [ROAD.x, 0, ROAD.z],
-            ],
-          ]}
-          edges={[
-            [
-              [-ROAD.x, 0, ROAD.z],
-              [ROAD.x, 0, ROAD.z],
-            ],
-          ]}
-        />
+        {hw ? (
+          // the highway's ground block: asphalt on top, its front cut face down the groove row's centreline
+          <>
+            <mesh
+              position={[0, -HWY.depth / 2, (HWY.front + HWY.back) / 2]}
+              material={[mats.cut, mats.earth, mats.asphalt, mats.earth, mats.hidden, mats.earth]}
+              receiveShadow
+            >
+              <boxGeometry args={[2 * HWY.x, HWY.depth, HWY.front - HWY.back]} />
+            </mesh>
+            <GrooveCut
+              scroll={distance}
+              amp={ampShow}
+              x0={-HWY.x}
+              x1={HWY.x}
+              depth={HWY.depth}
+              z={HWY.front}
+              ink={inkK}
+            />
+            <CutOutline
+              rects={[
+                [
+                  [HWY.x, -HWY.depth, HWY.back],
+                  [HWY.x, 0, HWY.front],
+                ],
+              ]}
+            />
+          </>
+        ) : (
+          <>
+            {/* the ground block: the road on top, cut on the front and right faces */}
+            <mesh
+              position={[0, -ROAD.depth / 2, 0]}
+              material={[mats.cut, mats.earth, mats.road, mats.earth, mats.cut, mats.earth]}
+              receiveShadow
+            >
+              <boxGeometry args={[2 * ROAD.x, ROAD.depth, 2 * ROAD.z]} />
+            </mesh>
+            <CutOutline
+              rects={[
+                [
+                  [-ROAD.x, -ROAD.depth, ROAD.z],
+                  [ROAD.x, 0, ROAD.z],
+                ],
+                [
+                  [ROAD.x, -ROAD.depth, -ROAD.z],
+                  [ROAD.x, 0, ROAD.z],
+                ],
+              ]}
+              edges={[
+                [
+                  [-ROAD.x, 0, ROAD.z],
+                  [ROAD.x, 0, ROAD.z],
+                ],
+              ]}
+            />
+          </>
+        )}
+        {/* headlights on the road ahead (highway at Night; always mounted, 0 otherwise) */}
+        {headlamps.map((l, i) => (
+          <React.Fragment key={i}>
+            <primitive object={l} />
+            <primitive object={l.target} />
+          </React.Fragment>
+        ))}
 
-        <RealCar mood={mood} body={driver === 'mom' ? 'mom' : 'you'} warning={warn} />
+        <group position={[bodyJ[0], bodyY + bodyJ[1], bodyJ[2]]}>
+          <RealCar
+            steeringJitter={shakeAmt > 0 ? [sj('sx', 0.004), sj('sy', 0.005), sj('sz', 0.004)] : undefined}
+            mood={mood}
+            body={driver === 'mom' ? 'mom' : 'you'}
+            warning={warn}
+            tail={hw && night ? 1 : 0}
+            speed={props.clusterSpeed ?? 38}
+            tireLight={props.tireLight ?? true}
+          />
+        </group>
         <Figure
           who={driver}
           mood={mood}
-          position={C.driver}
+          position={[C.driver[0] + bodyJ[0], C.driver[1] + bodyY + bodyJ[1], C.driver[2] + bodyJ[2]]}
           rotationY={Math.PI / 2}
           gestures={gestures}
           phone={false}
@@ -423,12 +781,12 @@ export const CarSliceScene: React.FC<CarSliceSceneProps> = (props) => {
           const spin = wheelRevs(props, id, t) * Math.PI * 2;
           // the turn while the shutter is open (half a frame): the wheel's motion blur
           const blur = (wheelRevs(props, id, t + 0.25 / fps) - wheelRevs(props, id, t - 0.25 / fps)) * Math.PI * 2;
-          const cutNear = w.near && sensors;
+          const cutNear = w.near && (sensors || hw);
           return (
             <RealWheel
               key={id}
               mood={mood}
-              position={[w.x, R, w.z]}
+              position={[w.x, R - (w.near ? dropOf(id) : 0), w.z]}
               yaw={w.near ? -Math.PI / 2 : Math.PI / 2}
               radius={R}
               cut={cutNear ? 'mid' : 'none'}
@@ -441,13 +799,137 @@ export const CarSliceScene: React.FC<CarSliceSceneProps> = (props) => {
               toneRing={!sensors && speedRings && w.near}
               sensor={sensors ? <TireSensor dot={1} /> : null}
               sensorScale={1.7}
+              inkScale={w.near ? Math.round(inkK * 20) / 20 : 1}
             />
           );
         })}
 
+        {hw
+          ? contact.map((c) => (
+              <group key={c.id}>
+                {/* the trapped air under the tread in the dip (orange once `airAt` is reached) */}
+                <CurveStrip
+                  xs={c.xs}
+                  top={c.pocketTop}
+                  bottom={c.floor}
+                  z={HWY.front + 0.004}
+                  material={mats.air}
+                  visible={airK > 0.01}
+                  glow
+                  renderOrder={4}
+                />
+                {/* the tread squeezed into the dip: the tire's cut grows into it, inked */}
+                <CurveStrip
+                  xs={c.xs}
+                  top={c.yt}
+                  bottom={c.tread}
+                  z={HWY.front + 0.002}
+                  material={mats.rubberCut}
+                  visible={squeezeK > 0.01}
+                />
+                <CurveStrip
+                  xs={c.xs}
+                  top={c.tread.map((y, i) => (c.bulging[i] ? y + INK * 0.5 * inkK : y))}
+                  bottom={c.tread.map((y, i) => (c.bulging[i] ? y - INK * 0.5 * inkK : y))}
+                  z={HWY.front + 0.003}
+                  material={mats.ink}
+                  visible={squeezeK > 0.01}
+                />
+                {/* an impact flash at the contact patch on each drop (slow enough to count) */}
+                {impactsAt !== null && bandAmt < 0.6
+                  ? c.ages.map((age, j) =>
+                      t - age >= impactsAt && onAt(t - age) ? (
+                        <group key={j} position={[c.xw, 0.004, HWY.front + 0.02]} scale={ringK}>
+                          <RadioPulse position={[0, 0, 0]} age={age} reach={0.09} weight={0.6} arc={Math.PI} />
+                        </group>
+                      ) : null,
+                    )
+                  : null}
+                {/* the air puffs out at the dip's edges (it travels back with the road) */}
+                {airK > 0.01 && bandAmt < 0.6
+                  ? c.ages.slice(0, 1).map((age, j) =>
+                      t - age >= (props.airAt ?? 0) && onAt(t - age)
+                        ? [-1, 1].map((e) => (
+                            <group
+                              key={`${j}${e}`}
+                              position={[c.xw - vRoad * age + e * (GROOVE.length / 2), 0.002, HWY.front + 0.02]}
+                              scale={ringK}
+                            >
+                              <RadioPulse position={[0, 0, 0]} age={age} reach={0.045} weight={0.4} arc={Math.PI} />
+                            </group>
+                          ))
+                        : null,
+                    )
+                  : null}
+                {/* at real speed: one continuous band behind the tire (≈ 19 px tall at any framing) */}
+                <mesh
+                  position={[c.xw - 0.35, 0.1 * bandH, HWY.front + 0.005]}
+                  scale={[1, bandH, 1]}
+                  material={mats.band[c.id === 'FR' ? 0 : 1]}
+                  visible={bandAmt > 0.003}
+                  userData={{glow: true}}
+                  renderOrder={5}
+                >
+                  <planeGeometry args={[0.85, 1]} />
+                </mesh>
+              </group>
+            ))
+          : null}
+        {hw ? (
+          <mesh
+            position={[0, 0, HWY.front + 0.006]}
+            scale={[2 * HWY.x, refH, 1]}
+            material={mats.refLine}
+            renderOrder={6}
+          >
+            <planeGeometry args={[1, 1]} />
+          </mesh>
+        ) : null}
+        {vib ? (
+          <>
+            <OrangePath
+              legs={[VIB_MAIN]}
+              progress={vibMain}
+              glow={vibGlow}
+              stain={false}
+              radius={VIB_R}
+              coreColor={section.orange}
+              halo={{scale: 0.055 / 0.018, opacity: 0.25}}
+            />
+            <OrangePath
+              legs={[VIB_SEAT]}
+              progress={vibBranch}
+              glow={vibGlow}
+              stain={false}
+              runner={false}
+              radius={VIB_R}
+              coreColor={section.orange}
+              halo={{scale: 0.055 / 0.018, opacity: 0.25}}
+            />
+            {/* node dots: the hub, the steering wheel, the seat (they stay lit: the trace) */}
+            {(
+              [
+                [VIB_MAIN[1], vibMain > 0.12],
+                [VIB_MAIN[VIB_MAIN.length - 1], vibMain >= 0.999],
+                [VIB_SEAT[VIB_SEAT.length - 1], vibBranch >= 0.999],
+              ] as [V3, boolean][]
+            ).map(([p, on], i) =>
+              on ? (
+                <mesh key={i} position={p} material={mats.node} userData={{glow: true}}>
+                  <sphereGeometry args={[0.035, 16, 12]} />
+                </mesh>
+              ) : null,
+            )}
+          </>
+        ) : null}
+
         {/* the receiver's node dot: lit once a pulse has arrived, and it stays (trace) */}
         {sensors ? (
-          <mesh position={[C.receiver[0], C.receiver[1] + 0.035, C.receiver[2]]} material={arrived ? mats.node : mats.nodeOff} userData={{glow: arrived}}>
+          <mesh
+            position={[C.receiver[0], C.receiver[1] + 0.035, C.receiver[2]]}
+            material={arrived ? mats.node : mats.nodeOff}
+            userData={{glow: arrived}}
+          >
             <sphereGeometry args={[0.025, 16, 12]} />
           </mesh>
         ) : null}
@@ -492,7 +974,10 @@ export const CarSliceScene: React.FC<CarSliceSceneProps> = (props) => {
             width={0.08}
             turns={Math.min(5, (t - wire.at) * 2.5)}
             taut={ease(t - wire.at, 0, 1.8) * (1 - ease(t - wire.at, 2.0, 2.6))}
-            opacity={ease(t, wire.at, wire.at + 0.3) * (1 - ease(t, (wire.until ?? wire.at + 2.8) - 0.6, wire.until ?? wire.at + 2.8))}
+            opacity={
+              ease(t, wire.at, wire.at + 0.3) *
+              (1 - ease(t, (wire.until ?? wire.at + 2.8) - 0.6, wire.until ?? wire.at + 2.8))
+            }
             radius={0.012}
           />
         ) : null}

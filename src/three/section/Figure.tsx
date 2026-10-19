@@ -2,7 +2,7 @@ import React, {useMemo} from 'react';
 import {random, useCurrentFrame, useVideoConfig} from 'remotion';
 import * as THREE from 'three';
 import {drawScreen, drawScreenFit, SCREEN_H, SCREEN_W, screenKey, type ScreenState} from '../../components/screenKit';
-import {CAST, MOODS, section, type CastName, type Mood} from '../../theme';
+import {CAST, MOODS, section, type CastLook, type CastName, type Mood} from '../../theme';
 import {limb, plaster as matte, raw, roundedBox} from '../plaster';
 import {REAL_DISPLAY, REAL_PHONE, RealPhone} from '../real/RealPhone';
 import {
@@ -186,6 +186,8 @@ export type FigureProps = {
    * the tip lands on it), so a button target can be given as the button itself.
    */
   point?: [number, number];
+  /** Colour overrides on top of the cast's look (e.g. `CAST_NEUTRAL` for an extra behind tinted glass). */
+  look?: Partial<CastLook>;
 };
 
 /** How far the body rises standing up (the thigh's length): the seated hip at 0.6 → 1.07. */
@@ -215,6 +217,7 @@ export const Figure: React.FC<FigureProps> = ({
   stance = 'sit',
   walk,
   point = [0, 0],
+  look: lookOverride,
 }) => {
   const frame = useCurrentFrame();
   const stand = stance === 'stand';
@@ -228,7 +231,9 @@ export const Figure: React.FC<FigureProps> = ({
   const {fps} = useVideoConfig();
   const t = frame / fps;
   const clock = t + clockOffset;
-  const look = CAST[who];
+  // keyed on the override's values, so a fresh object each render doesn't rebuild the materials
+  const lookKey = JSON.stringify(lookOverride ?? {});
+  const look = useMemo(() => ({...CAST[who], ...(JSON.parse(lookKey) as Partial<CastLook>)}), [who, lookKey]);
   const key = seed ?? who;
   const mats = useMemo(
     () => ({
@@ -310,7 +315,9 @@ export const Figure: React.FC<FigureProps> = ({
       .applyQuaternion(spineQ.clone().invert())
       .sub(REST.chest.clone().sub(REST.spine))
       .applyQuaternion(chestQ.clone().invert());
-  const grips = hands ? [toChest([hands[0][0], hands[0][1] - lift, hands[0][2]]), toChest([hands[1][0], hands[1][1] - lift, hands[1][2]])] : ph.grips;
+  const grips = hands
+    ? [toChest([hands[0][0], hands[0][1] - lift, hands[0][2]]), toChest([hands[1][0], hands[1][1] - lift, hands[1][2]])]
+    : ph.grips;
   const arms = [0, 1].map((i) => {
     const s = i === 0 ? -1 : 1;
     const shoulder = REST.shoulder(s)
@@ -321,7 +328,8 @@ export const Figure: React.FC<FigureProps> = ({
     // the target is the fingertip: solve, then pull the wrist back along the forearm by the finger's
     // reach (twice, so the forearm's direction settles), the finger growing with `point`
     const restFore = REST.wrist(s).sub(REST.elbow(s)).normalize();
-    const reach = FINGER.from + (FINGER_TIP - FINGER.from + FINGER.out) * pk + REST.hand(s).sub(REST.wrist(s)).dot(restFore);
+    const reach =
+      FINGER.from + (FINGER_TIP - FINGER.from + FINGER.out) * pk + REST.hand(s).sub(REST.wrist(s)).dot(restFore);
     let sol = solveArm(s, shoulder, grips[i]);
     for (let it = 0; it < 3; it++) {
       const dir = restFore.clone().applyQuaternion(sol.upper.clone().multiply(sol.fore));
@@ -355,9 +363,15 @@ export const Figure: React.FC<FigureProps> = ({
             rotation={[stand ? Math.PI / 2 - 0.06 - swing(side.s) : 0, idle.hipYaw * L * (stand ? 0.3 : 1), 0]}
           >
             <PartMesh part={side.thigh} material={mats.bottom} />
-            <group position={rel(REST.knee(side.s), REST.hip(side.s))} rotation={[stand ? -Math.PI / 2 + 0.12 + kneeBend(side.s) : 0, 0, 0]}>
+            <group
+              position={rel(REST.knee(side.s), REST.hip(side.s))}
+              rotation={[stand ? -Math.PI / 2 + 0.12 + kneeBend(side.s) : 0, 0, 0]}
+            >
               <PartMesh part={side.shin} material={mats.bottom} />
-              <group position={rel(REST.ankle(side.s), REST.knee(side.s))} rotation={[stand ? -0.06 + swing(side.s) - kneeBend(side.s) : 0, 0, 0]}>
+              <group
+                position={rel(REST.ankle(side.s), REST.knee(side.s))}
+                rotation={[stand ? -0.06 + swing(side.s) - kneeBend(side.s) : 0, 0, 0]}
+              >
                 <PartMesh part={side.foot} material={mats.shoe} />
               </group>
             </group>
@@ -395,7 +409,7 @@ export const Figure: React.FC<FigureProps> = ({
                       geometry={EYE}
                       material={mats.eye}
                       position={eyeAt(s, pose.eyesUp)}
-                      scale={[1, 1 - 0.9 * blink, 1]}
+                      scale={[1, 1 - 0.9 * Math.max(blink, pose.lids), 1]}
                     />
                   ))}
                   {look.detail === 'bob-glasses' ? (
@@ -440,7 +454,12 @@ export const Figure: React.FC<FigureProps> = ({
                     <PartMesh part={side.fore} material={mats.top} />
                     {a.pk > 0 ? (
                       // pointing: the hand comes out of the sleeve a little, the index finger out of it
-                      <group position={REST.wrist(a.s).sub(REST.elbow(a.s)).normalize().multiplyScalar(FINGER.out * a.pk)}>
+                      <group
+                        position={REST.wrist(a.s)
+                          .sub(REST.elbow(a.s))
+                          .normalize()
+                          .multiplyScalar(FINGER.out * a.pk)}
+                      >
                         <PartMesh part={side.hand} material={mats.skin} />
                         <Finger s={a.s} k={a.pk} material={mats.skin} />
                       </group>

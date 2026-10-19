@@ -395,6 +395,13 @@ export type RealWheelProps = {
   grounded?: boolean;
   /** Scale of the sensor on the rim (default 1; the floating wheel uses ≈ 1.25 so it reads at frame 0). */
   sensorScale?: number;
+  /**
+   * × the studio reflections on the rim, tire and rotor (default 1). A focus wheel in a dark place (a
+   * car's near wheel in its own shadow at Night) keeps its spokes, lip and tread readable; it adds no light.
+   */
+  envBoost?: number;
+  /** × the cut edges' ink thickness (default 1): a close-up keeps the ink ≈ 3 px (e.g. 0.25 at a contact patch). */
+  inkScale?: number;
 };
 
 const UNIT_CYL = new THREE.CylinderGeometry(1, 1, 1, 40);
@@ -521,6 +528,8 @@ export const RealWheel: React.FC<RealWheelProps> = ({
   axle = false,
   grounded = false,
   sensorScale = 1,
+  envBoost = 1,
+  inkScale = 1,
 }) => {
   const gl = useThree((s) => s.gl);
   gl.localClippingEnabled = true;
@@ -622,7 +631,7 @@ export const RealWheel: React.FC<RealWheelProps> = ({
       [mats.tread, 0.12],
       [mats.tone, 0.5],
     ],
-    envScale,
+    envScale * envBoost,
   );
   applyAlbedo(
     [
@@ -710,7 +719,7 @@ export const RealWheel: React.FC<RealWheelProps> = ({
         <mesh key={i} geometry={g} material={mats.cut} receiveShadow />
       ))}
       {ink
-        ? geo.ink.map((pts, i) => <InkLine key={i} points={pts} thickness={(low ? 0.02 : 0.011) / radius} />)
+        ? geo.ink.map((pts, i) => <InkLine key={i} points={pts} thickness={((low ? 0.02 : 0.011) * inkScale) / radius} />)
         : null}
 
       {axle ? (
