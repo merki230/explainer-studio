@@ -32,6 +32,7 @@ The owner has seen the shopping cart, car key and hotel key card covered too oft
 
 | Object | The hidden surprise | Sample hook | Status |
 |---|---|---|---|
+| One-pedal driving (EVs) | Lifting your foot turns the motor into a generator: it brakes the car and recharges the battery, and the car can switch on the brake lights by itself | "Your brake lights can come on even though you never touched the brake." | **Next: No. 006** (owner idea, 2026-10-19; angle to agree before research) |
 | Rain-sensing wipers | Invisible light bounces inside the windshield; raindrops change the reflection | "Your windshield knows it's raining before you do, because it's shining a light through the glass." | **shortlisted** |
 | Railroad crossing | The train's wheels and axles close a circuit between the rails | "The train lowers the crossing gates itself, with its own wheels." | candidate |
 | Ambulance and the green light | Emergency vehicles signal the traffic light ahead | "That fire truck just turned the light green." | candidate |
