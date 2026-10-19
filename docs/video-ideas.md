@@ -26,6 +26,23 @@ This is a hypothesis, not a rule: judge it on two or three more videos (metrics 
 
 All claims above are unverified until researched.
 
+## Shortlist (owner, 2026-10-18)
+
+The owner has seen the shopping cart, car key and hotel key card covered too often.
+
+| Object | The hidden surprise | Sample hook | Status |
+|---|---|---|---|
+| Rain-sensing wipers | Invisible light bounces inside the windshield; raindrops change the reflection | "Your windshield knows it's raining before you do, because it's shining a light through the glass." | **shortlisted** |
+| Railroad crossing | The train's wheels and axles close a circuit between the rails | "The train lowers the crossing gates itself, with its own wheels." | candidate |
+| Ambulance and the green light | Emergency vehicles signal the traffic light ahead | "That fire truck just turned the light green." | candidate |
+| Pet microchip | No battery; powered for an instant by the scanner | "The chip in your dog has no battery, and it still answers when someone asks." | candidate |
+| Seatbelt lock | A swinging weight jams the reel in a hard stop, no electronics | "Your seatbelt locks in a crash using a little swinging weight, no computer needed." | candidate |
+| Self-dimming mirror | A gel layer darkens when bright headlights are behind you | "Your rear-view mirror dims itself, and there's a layer of gel inside it doing the work." | candidate |
+| Trucks weighed at speed | Sensors in the highway weigh trucks while they drive | "Some trucks get weighed at highway speed, by sensors buried in the road." | candidate |
+| EV charging plug | The plug and the car agree on safe current before power flows | "When you plug in an electric car, the cable and the car talk before any power flows." | candidate |
+
+All unverified until researched.
+
 ## Other ideas
 
 - Light to data (bits ↔ light): researched and scripted, parked in `src/videos/light-to-data/` for a possible long-form video.
