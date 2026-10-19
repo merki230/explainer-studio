@@ -35,6 +35,32 @@ First two data points: No. 002 (evening, about 7 PM, 2026-10-17) and No. 003 (mi
 
 ---
 
+## No. 005 · rumble-strips (`rumble-strips`): owner decisions in production (not published)
+
+- **Decided:** 2026-10-18, owner, during the previews, relayed by the main session · **Applies to:** No. 005 onward
+
+**Owner's notes** (quoted as relayed)
+
+- On the rumble moments: "I want viewer to feel it… the animation should be in a way the viewer can feel it or remember it." After preview 5: "It's perfect".
+- On the rumble's level: "much higher and much more brutal".
+- The ElevenLabs roar takes sounded "like a phone vibrating on a wood table"; the self-made `yarn sfx:rumble` was kept.
+- Approved: the `HIGHWAY` and `DESERT` palettes, the grey extra `CAST_NEUTRAL` (the slate extra read as YOU through tinted glass), the vibration path at 0.0225, the Overpass sign font (deferred to the next highway video).
+
+**What we're changing** (✅ owner decision; values 🧪; CHANGELOG v0.12)
+
+| Rule (file § name) | Change | Note |
+|---|---|---|
+| style-guide § 1 Location palettes; § 8 The cast | `HIGHWAY`, `DESERT`, `CAST_NEUTRAL` documented; two open checks (`lineYellow` clearance, `tailLight` near `leakRed`) | Note 4 |
+| style-guide § 5 Glow | Vibration path core 0.0225 | Note 4 |
+| style-guide § 8 "Feel it" shake; § 5; motion principle 3; checklist 14 | New tool: tremble while the cause happens, onset kick, music dip ≈ 11 dB, never in slow motion, captions still | Note 1 |
+| style-guide § 9 SFX | Subject-sound exception: ≈ 10 dB under the voice | Note 2 |
+| style-guide § 9 Making a sound | Physical sounds: self-made first | Note 3 |
+| style-guide § 6 fonts | Overpass pending | Note 4 |
+
+**To watch once published:** comments on the rumble ("I felt that", "too loud"), retention around the first shake (≈ 2.5 s) and the "You feel it" beat (≈ 25.6 s); whether the shake reads as a render glitch.
+
+---
+
 ## No. 004 · water-meter (`water-meter`): leak-indicator colour (not published)
 
 - **Decided:** 2026-10-18, owner, relayed by the main session · **Applies to:** No. 004 onward

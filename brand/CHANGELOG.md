@@ -2,6 +2,19 @@
 
 Every change to `brand.md` or `style-guide.md` gets a line here: date, what changed, why (pointing to a `feedback.md` entry or a research section). Nothing changes silently.
 
+## v0.12 · 2026-10-18 · Location palettes, the "feel it" shake, louder subject sounds, self-made SFX (owner decisions, No. 005)
+
+Owner decisions of 2026-10-18 from No. 005 `rumble-strips`, relayed by the main session (✅); values 🧪, read in `src/theme.ts`, `src/scenes/{HighwaySliceScene,CarSliceScene}.tsx`, `src/three/section/SectionCamera.tsx`, `src/components/soundMix.ts`, `src/videos/rumble-strips/spec.ts`, `scripts/sfx-rumble.mjs`. Logged in `feedback.md` ("No. 005 · rumble-strips: owner decisions in production"). No code changed.
+
+- **Location palettes.** style-guide § 1: new "Location palettes" table with `HIGHWAY` (asphalt, wheel paths, milled faces, white and yellow lines `#d6bc45`, gravel, grass, galvanized steel, sign green `#14674a` / white `#e9e8e2` / ink `#18191c`, tail light `#e23a52` and lens `#6a1d29`, headlight `#eef1ff`), `DESERT` (sand, sandDark, scrub, scrubDark, all ≤ 21% saturation) and `CAST_NEUTRAL` (`#8f8b85` / `#57544f`). None in the reserved band. Two open checks written under the table: `lineYellow` clears the band by only 9° (the palette's clearance is 15°) at 64% saturation; `tailLight` (351°) is a near-twin of `leakRed` (350°). Both for the owner; values unchanged.
+- **Grey extra behind tinted glass.** style-guide § 8 The cast: a row for `CAST_NEUTRAL` and an exception to "clothes stay cool or mid hues": the slate extra read as YOU's blue through tinted glass at Night; a 4%-saturation warm grey doesn't.
+- **Vibration path radius.** style-guide § 5 Glow: core 0.0225 (1.25 × 0.018), halo at the same ratio, so the path reads at phone size. Owner-approved.
+- **The "feel it" shake** (new motion tool). style-guide § 8 new row: seeded per-frame tremble of the camera and the object, only while the cause is happening; a kick on onset (up to 3×, 0.35 s); music dips ≈ 11 dB; never in slow motion; captions and 2D overlays stay still; as-built amplitudes and the props (`shake`, `shakeKick`, `music.dips`). § 5 "Only the system moves fast" and § 8 motion principle 3 name it as the one exception. Checklist 14. Why: owner, "I want viewer to feel it… the animation should be in a way the viewer can feel it or remember it"; after preview 5, "It's perfect".
+- **Effect sound level exception.** style-guide § 9 SFX: when the sound is the story's subject, it may sit ≈ 10 dB under the voice (No. 005 rumble), with the music dipped; not a new default, 12 to 19 dB stays. No. 005's levels added to "Used so far". Why: owner, "much higher and much more brutal".
+- **Self-made SFX first for physical sounds** (lesson). style-guide § 9 new "Making a sound" row: try a physics-based self-made sound (`yarn sfx:click`, `yarn sfx:rumble`) before a generator. Why: the ElevenLabs roar takes sounded "like a phone vibrating on a wood table"; the self-made rumble won.
+- **Pending asset.** style-guide § 6 fonts: highway sign lettering in Overpass (OFL), approved, deferred to the next highway video; No. 005 signs use Inter 700.
+- Header updated to v0.12.
+
 ## v0.11.3 · 2026-10-18 · Real red indicators (owner decision, No. 004 onward)
 
 Owner decision of 2026-10-18, relayed by the main session (✅); value 🧪. Logged in `feedback.md` ("No. 004 · water-meter: leak-indicator colour").
