@@ -1,0 +1,900 @@
+{
+  "audio": "audio/voiceover.mp3",
+  "words": [
+    {
+      "text": "Drift",
+      "start": 0,
+      "end": 0.267
+    },
+    {
+      "text": "toward",
+      "start": 0.32,
+      "end": 0.616
+    },
+    {
+      "text": "the",
+      "start": 0.64,
+      "end": 0.773
+    },
+    {
+      "text": "edge",
+      "start": 0.8,
+      "end": 1
+    },
+    {
+      "text": "of",
+      "start": 1.04,
+      "end": 1.1
+    },
+    {
+      "text": "the",
+      "start": 1.12,
+      "end": 1.28
+    },
+    {
+      "text": "highway,",
+      "start": 1.36,
+      "end": 2.16
+    },
+    {
+      "text": "and",
+      "start": 2.24,
+      "end": 2.32
+    },
+    {
+      "text": "the",
+      "start": 2.36,
+      "end": 2.4
+    },
+    {
+      "text": "road",
+      "start": 2.48,
+      "end": 2.72
+    },
+    {
+      "text": "itself",
+      "start": 2.84,
+      "end": 3.36
+    },
+    {
+      "text": "starts",
+      "start": 3.52,
+      "end": 3.68
+    },
+    {
+      "text": "yelling",
+      "start": 3.84,
+      "end": 4.16
+    },
+    {
+      "text": "at",
+      "start": 4.24,
+      "end": 4.32
+    },
+    {
+      "text": "you.",
+      "start": 4.4,
+      "end": 4.64
+    },
+    {
+      "text": "How",
+      "start": 5.168,
+      "end": 5.2
+    },
+    {
+      "text": "does",
+      "start": 5.28,
+      "end": 5.36
+    },
+    {
+      "text": "a",
+      "start": 5.44,
+      "end": 5.56
+    },
+    {
+      "text": "road",
+      "start": 5.68,
+      "end": 6
+    },
+    {
+      "text": "make",
+      "start": 6.08,
+      "end": 6.16
+    },
+    {
+      "text": "that",
+      "start": 6.24,
+      "end": 6.4
+    },
+    {
+      "text": "noise?",
+      "start": 6.48,
+      "end": 7.24
+    },
+    {
+      "text": "Look",
+      "start": 7.52,
+      "end": 7.6
+    },
+    {
+      "text": "at",
+      "start": 7.68,
+      "end": 7.72
+    },
+    {
+      "text": "the",
+      "start": 7.76,
+      "end": 7.84
+    },
+    {
+      "text": "shoulder,",
+      "start": 7.92,
+      "end": 8.64
+    },
+    {
+      "text": "where",
+      "start": 8.72,
+      "end": 8.8
+    },
+    {
+      "text": "there's",
+      "start": 8.84,
+      "end": 8.96
+    },
+    {
+      "text": "a",
+      "start": 9.04,
+      "end": 9.12
+    },
+    {
+      "text": "row",
+      "start": 9.2,
+      "end": 9.28
+    },
+    {
+      "text": "of",
+      "start": 9.36,
+      "end": 9.44
+    },
+    {
+      "text": "grooves",
+      "start": 9.52,
+      "end": 9.92
+    },
+    {
+      "text": "about",
+      "start": 10.08,
+      "end": 10.24
+    },
+    {
+      "text": "half",
+      "start": 10.36,
+      "end": 10.48
+    },
+    {
+      "text": "an",
+      "start": 10.56,
+      "end": 10.64
+    },
+    {
+      "text": "inch",
+      "start": 10.72,
+      "end": 10.8
+    },
+    {
+      "text": "deep",
+      "start": 10.88,
+      "end": 11.12
+    },
+    {
+      "text": "and",
+      "start": 11.2,
+      "end": 11.28
+    },
+    {
+      "text": "a",
+      "start": 11.333,
+      "end": 11.387
+    },
+    {
+      "text": "foot",
+      "start": 11.44,
+      "end": 11.6
+    },
+    {
+      "text": "apart.",
+      "start": 11.68,
+      "end": 12.56
+    },
+    {
+      "text": "Your",
+      "start": 12.68,
+      "end": 12.8
+    },
+    {
+      "text": "tires",
+      "start": 12.933,
+      "end": 13.2
+    },
+    {
+      "text": "drop",
+      "start": 13.28,
+      "end": 13.52
+    },
+    {
+      "text": "into",
+      "start": 13.64,
+      "end": 13.76
+    },
+    {
+      "text": "each",
+      "start": 13.84,
+      "end": 14.08
+    },
+    {
+      "text": "one,",
+      "start": 14.16,
+      "end": 14.64
+    },
+    {
+      "text": "and",
+      "start": 14.72,
+      "end": 14.8
+    },
+    {
+      "text": "that",
+      "start": 14.88,
+      "end": 14.96
+    },
+    {
+      "text": "squeezes",
+      "start": 15.04,
+      "end": 15.52
+    },
+    {
+      "text": "the",
+      "start": 15.6,
+      "end": 15.68
+    },
+    {
+      "text": "rubber",
+      "start": 15.76,
+      "end": 16.08
+    },
+    {
+      "text": "and",
+      "start": 16.12,
+      "end": 16.16
+    },
+    {
+      "text": "the",
+      "start": 16.24,
+      "end": 16.4
+    },
+    {
+      "text": "air",
+      "start": 16.48,
+      "end": 16.72
+    },
+    {
+      "text": "trapped",
+      "start": 16.8,
+      "end": 17.04
+    },
+    {
+      "text": "underneath.",
+      "start": 17.16,
+      "end": 18.16
+    },
+    {
+      "text": "At",
+      "start": 18.28,
+      "end": 18.4
+    },
+    {
+      "text": "60",
+      "start": 18.52,
+      "end": 18.72
+    },
+    {
+      "text": "miles",
+      "start": 18.8,
+      "end": 18.96
+    },
+    {
+      "text": "an",
+      "start": 19.04,
+      "end": 19.12
+    },
+    {
+      "text": "hour,",
+      "start": 19.24,
+      "end": 19.6
+    },
+    {
+      "text": "that's",
+      "start": 19.64,
+      "end": 19.76
+    },
+    {
+      "text": "about",
+      "start": 19.96,
+      "end": 20.16
+    },
+    {
+      "text": "88",
+      "start": 20.28,
+      "end": 20.64
+    },
+    {
+      "text": "times",
+      "start": 20.72,
+      "end": 20.96
+    },
+    {
+      "text": "a",
+      "start": 21.04,
+      "end": 21.2
+    },
+    {
+      "text": "second,",
+      "start": 21.4,
+      "end": 22
+    },
+    {
+      "text": "so",
+      "start": 22.16,
+      "end": 22.4
+    },
+    {
+      "text": "fast",
+      "start": 22.6,
+      "end": 22.8
+    },
+    {
+      "text": "it",
+      "start": 22.88,
+      "end": 23.04
+    },
+    {
+      "text": "blurs",
+      "start": 23.12,
+      "end": 23.52
+    },
+    {
+      "text": "into",
+      "start": 23.68,
+      "end": 23.84
+    },
+    {
+      "text": "one",
+      "start": 23.92,
+      "end": 24.16
+    },
+    {
+      "text": "loud",
+      "start": 24.24,
+      "end": 24.56
+    },
+    {
+      "text": "hum.",
+      "start": 24.64,
+      "end": 25.52
+    },
+    {
+      "text": "You",
+      "start": 25.64,
+      "end": 25.76
+    },
+    {
+      "text": "feel",
+      "start": 25.84,
+      "end": 26
+    },
+    {
+      "text": "it",
+      "start": 26.08,
+      "end": 26.16
+    },
+    {
+      "text": "in",
+      "start": 26.2,
+      "end": 26.24
+    },
+    {
+      "text": "the",
+      "start": 26.32,
+      "end": 26.4
+    },
+    {
+      "text": "steering",
+      "start": 26.48,
+      "end": 26.8
+    },
+    {
+      "text": "wheel",
+      "start": 26.96,
+      "end": 27.12
+    },
+    {
+      "text": "and",
+      "start": 27.16,
+      "end": 27.2
+    },
+    {
+      "text": "the",
+      "start": 27.24,
+      "end": 27.28
+    },
+    {
+      "text": "seat,",
+      "start": 27.44,
+      "end": 28
+    },
+    {
+      "text": "which",
+      "start": 28.08,
+      "end": 28.16
+    },
+    {
+      "text": "is",
+      "start": 28.2,
+      "end": 28.24
+    },
+    {
+      "text": "how",
+      "start": 28.32,
+      "end": 28.4
+    },
+    {
+      "text": "it",
+      "start": 28.48,
+      "end": 28.56
+    },
+    {
+      "text": "warns",
+      "start": 28.64,
+      "end": 28.96
+    },
+    {
+      "text": "drowsy",
+      "start": 29.04,
+      "end": 29.44
+    },
+    {
+      "text": "or",
+      "start": 29.48,
+      "end": 29.52
+    },
+    {
+      "text": "distracted",
+      "start": 29.6,
+      "end": 30.08
+    },
+    {
+      "text": "drivers.",
+      "start": 30.16,
+      "end": 30.667
+    },
+    {
+      "text": "On",
+      "start": 31.44,
+      "end": 31.6
+    },
+    {
+      "text": "rural",
+      "start": 31.68,
+      "end": 31.92
+    },
+    {
+      "text": "freeways,",
+      "start": 32,
+      "end": 32.72
+    },
+    {
+      "text": "studies",
+      "start": 32.8,
+      "end": 33.2
+    },
+    {
+      "text": "credit",
+      "start": 33.28,
+      "end": 33.52
+    },
+    {
+      "text": "them",
+      "start": 33.6,
+      "end": 33.68
+    },
+    {
+      "text": "with",
+      "start": 33.76,
+      "end": 33.84
+    },
+    {
+      "text": "up",
+      "start": 33.92,
+      "end": 34.08
+    },
+    {
+      "text": "to",
+      "start": 34.12,
+      "end": 34.16
+    },
+    {
+      "text": "a",
+      "start": 34.24,
+      "end": 34.4
+    },
+    {
+      "text": "fifth",
+      "start": 34.48,
+      "end": 34.72
+    },
+    {
+      "text": "fewer",
+      "start": 34.8,
+      "end": 35.2
+    },
+    {
+      "text": "cars",
+      "start": 35.4,
+      "end": 35.6
+    },
+    {
+      "text": "running",
+      "start": 35.72,
+      "end": 35.84
+    },
+    {
+      "text": "off",
+      "start": 35.92,
+      "end": 36.08
+    },
+    {
+      "text": "the",
+      "start": 36.12,
+      "end": 36.16
+    },
+    {
+      "text": "road.",
+      "start": 36.24,
+      "end": 37.04
+    },
+    {
+      "text": "The",
+      "start": 37.12,
+      "end": 37.2
+    },
+    {
+      "text": "pitch",
+      "start": 37.28,
+      "end": 37.52
+    },
+    {
+      "text": "depends",
+      "start": 37.72,
+      "end": 37.92
+    },
+    {
+      "text": "on",
+      "start": 38,
+      "end": 38.08
+    },
+    {
+      "text": "your",
+      "start": 38.16,
+      "end": 38.24
+    },
+    {
+      "text": "speed",
+      "start": 38.32,
+      "end": 38.72
+    },
+    {
+      "text": "and",
+      "start": 38.8,
+      "end": 38.88
+    },
+    {
+      "text": "the",
+      "start": 38.92,
+      "end": 38.96
+    },
+    {
+      "text": "spacing,",
+      "start": 39.04,
+      "end": 40.08
+    },
+    {
+      "text": "which",
+      "start": 40.16,
+      "end": 40.24
+    },
+    {
+      "text": "means",
+      "start": 40.32,
+      "end": 40.56
+    },
+    {
+      "text": "the",
+      "start": 40.6,
+      "end": 40.64
+    },
+    {
+      "text": "right",
+      "start": 40.72,
+      "end": 40.96
+    },
+    {
+      "text": "gaps",
+      "start": 41,
+      "end": 41.36
+    },
+    {
+      "text": "can",
+      "start": 41.44,
+      "end": 41.6
+    },
+    {
+      "text": "play",
+      "start": 41.68,
+      "end": 41.76
+    },
+    {
+      "text": "a",
+      "start": 41.84,
+      "end": 41.92
+    },
+    {
+      "text": "tune.",
+      "start": 41.96,
+      "end": 42.32
+    },
+    {
+      "text": "In",
+      "start": 43.024,
+      "end": 43.04
+    },
+    {
+      "text": "Lancaster,",
+      "start": 43.12,
+      "end": 43.68
+    },
+    {
+      "text": "California,",
+      "start": 44,
+      "end": 44.56
+    },
+    {
+      "text": "a",
+      "start": 44.64,
+      "end": 44.72
+    },
+    {
+      "text": "road",
+      "start": 44.8,
+      "end": 44.96
+    },
+    {
+      "text": "was",
+      "start": 45.04,
+      "end": 45.2
+    },
+    {
+      "text": "built",
+      "start": 45.28,
+      "end": 45.36
+    },
+    {
+      "text": "to",
+      "start": 45.44,
+      "end": 45.52
+    },
+    {
+      "text": "play",
+      "start": 45.6,
+      "end": 45.76
+    },
+    {
+      "text": "the",
+      "start": 45.8,
+      "end": 45.84
+    },
+    {
+      "text": "William",
+      "start": 46,
+      "end": 46.32
+    },
+    {
+      "text": "Tell",
+      "start": 46.4,
+      "end": 46.64
+    },
+    {
+      "text": "Overture,",
+      "start": 46.72,
+      "end": 47.6
+    },
+    {
+      "text": "but",
+      "start": 47.72,
+      "end": 47.84
+    },
+    {
+      "text": "it",
+      "start": 47.92,
+      "end": 48.08
+    },
+    {
+      "text": "kept",
+      "start": 48.2,
+      "end": 48.32
+    },
+    {
+      "text": "neighbors",
+      "start": 48.52,
+      "end": 48.72
+    },
+    {
+      "text": "up",
+      "start": 48.8,
+      "end": 48.88
+    },
+    {
+      "text": "at",
+      "start": 48.92,
+      "end": 48.96
+    },
+    {
+      "text": "night",
+      "start": 49.04,
+      "end": 49.28
+    },
+    {
+      "text": "and",
+      "start": 49.36,
+      "end": 49.44
+    },
+    {
+      "text": "got",
+      "start": 49.56,
+      "end": 49.68
+    },
+    {
+      "text": "moved.",
+      "start": 49.76,
+      "end": 50.56
+    },
+    {
+      "text": "And",
+      "start": 50.6,
+      "end": 50.64
+    },
+    {
+      "text": "the",
+      "start": 50.72,
+      "end": 50.8
+    },
+    {
+      "text": "city",
+      "start": 50.88,
+      "end": 51.12
+    },
+    {
+      "text": "says",
+      "start": 51.2,
+      "end": 51.44
+    },
+    {
+      "text": "the",
+      "start": 51.52,
+      "end": 51.6
+    },
+    {
+      "text": "notes",
+      "start": 51.68,
+      "end": 51.92
+    },
+    {
+      "text": "are",
+      "start": 51.96,
+      "end": 52
+    },
+    {
+      "text": "off.",
+      "start": 52.08,
+      "end": 52.72
+    },
+    {
+      "text": "Next",
+      "start": 53.12,
+      "end": 53.28
+    },
+    {
+      "text": "time",
+      "start": 53.36,
+      "end": 53.52
+    },
+    {
+      "text": "your",
+      "start": 53.6,
+      "end": 53.68
+    },
+    {
+      "text": "car",
+      "start": 53.76,
+      "end": 54
+    },
+    {
+      "text": "roars",
+      "start": 54.16,
+      "end": 54.56
+    },
+    {
+      "text": "on",
+      "start": 54.6,
+      "end": 54.64
+    },
+    {
+      "text": "the",
+      "start": 54.72,
+      "end": 54.76
+    },
+    {
+      "text": "shoulder",
+      "start": 54.8,
+      "end": 55.12
+    },
+    {
+      "text": "at",
+      "start": 55.2,
+      "end": 55.28
+    },
+    {
+      "text": "night,",
+      "start": 55.36,
+      "end": 56.16
+    },
+    {
+      "text": "that's",
+      "start": 56.24,
+      "end": 56.4
+    },
+    {
+      "text": "the",
+      "start": 56.44,
+      "end": 56.48
+    },
+    {
+      "text": "road",
+      "start": 56.56,
+      "end": 56.88
+    },
+    {
+      "text": "telling",
+      "start": 56.96,
+      "end": 57.28
+    },
+    {
+      "text": "you",
+      "start": 57.32,
+      "end": 57.36
+    },
+    {
+      "text": "to",
+      "start": 57.44,
+      "end": 57.52
+    },
+    {
+      "text": "steer",
+      "start": 57.6,
+      "end": 57.84
+    },
+    {
+      "text": "back.",
+      "start": 57.92,
+      "end": 58.56
+    }
+  ]
+}

@@ -13,6 +13,8 @@ import {spec as elevatorDispatch} from './elevator-dispatch/spec';
 import elevatorDispatchTranscript from './elevator-dispatch/transcript.json';
 import {spec as waterMeter} from './water-meter/spec';
 import waterMeterTranscript from './water-meter/transcript.json';
+import {spec as rumbleStrips} from './rumble-strips/spec';
+import rumbleStripsTranscript from './rumble-strips/transcript.json';
 // </imports>
 
 export type VideoEntry = {spec: VideoSpec; transcript: Transcript};
@@ -29,5 +31,6 @@ export const VIDEOS: Record<string, VideoEntry> = {
   'tire-sensor': {spec: tireSensor, transcript: tireSensorTranscript as Transcript},
   'elevator-dispatch': {spec: elevatorDispatch, transcript: elevatorDispatchTranscript as Transcript},
   'water-meter': {spec: waterMeter, transcript: waterMeterTranscript as Transcript},
+  'rumble-strips': {spec: rumbleStrips, transcript: rumbleStripsTranscript as Transcript},
   // </entries>
 };
