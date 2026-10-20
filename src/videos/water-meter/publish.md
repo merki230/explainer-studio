@@ -4,17 +4,17 @@ Handle: `@thesecretlyworks` on all three. Master: `release/water-meter.mp4` (abo
 
 ## Title
 
-How does your water meter talk to a truck?
+How does your water meter get read?
 
-Use it as the YouTube Shorts title (42 characters; the hook is in the first 40). TikTok and Instagram have no title field, so it isn't used there.
+Use it as the YouTube Shorts title (35 characters, a question people type). TikTok and Instagram have no title field, so it isn't used there.
 
 ## Description (YouTube)
 
-A truck can read your water meter just by driving past your house.
+How is my water meter read? Many water meters have a small battery radio that sends the reading every few seconds, so a utility truck can read it just by driving past.
 
 Illustrative: the radio and sensor IDs, the addresses, the meter reading digits, the notification text, the hourly bars and burst timing, and the plate "UT 4471" are examples, not real data.
 
-Most newer meter radios send a short burst every few seconds, and a passing truck or a receiver on a pole picks it up. About 75% of water meters in the US and Canada were read by radio at the end of 2022, according to the market-research firm Berg Insight.
+This is called drive-by meter reading (AMR). Most newer meter radios send a short burst every few seconds, and a passing truck or a receiver on a pole picks it up. About 75% of water meters in the US and Canada were read by radio at the end of 2022, according to the market-research firm Berg Insight.
 
 Sources: Berg Insight (2023), maker and utility documents on meter radios, EPA WaterSense (2022), City of Tampa.
 
@@ -40,23 +40,23 @@ Paste the caption, then the hashtags below. The sources go in the pinned comment
 
 **TikTok:**
 
-Your water meter can talk to a passing truck. Seen the round cap on your meter box lid? Tell me. Numbers shown are examples. Sources in the pinned comment.
+How is my water meter read? Many have a radio that a passing truck can pick up. Numbers shown are examples.
 
 **Instagram:**
 
-Same text as TikTok.
+How is my water meter read? Many smart water meters have a small radio, so a truck driving past can read it and nobody comes to your door. Drive-by meter reading, explained. Numbers shown are examples.
 
-(About 155 characters before the hashtags. The platform AI label stays on. The 75% stat is in the YouTube description only.)
+(The platform AI label stays on. The 75% stat is in the YouTube description only. Sources are in the pinned comment.)
 
 ## Hashtags
 
-#watermeter #howthingswork #engineering #technology
+#watermeter #smartmeter #howitworks #utilities #waterbill
 
-(4, within Instagram's cap of 5. On YouTube add #shorts only if you want; the Shorts shelf does not need it.)
+(5, within Instagram's cap of 5. On YouTube add #shorts only if you want; the Shorts shelf does not need it.)
 
 ## Pinned comment
 
-Sources: Berg Insight (2023), maker documents from Itron and Neptune, utility pages (Middlesex Centre, Broomfield, Newport Beach, Norfolk, Valdese, Chandler, Mercer Island, Tampa), EPA WaterSense (2022). Full list with links in the YouTube description. The IDs, addresses and readings in the video are made up. Have you spotted a round cap on your meter box lid? Tell me where you live, and whether your utility shows your use hour by hour.
+Sources: Berg Insight (2023), meter-maker documents, city utility pages and EPA WaterSense (2022). Full list with links in the YouTube description. The IDs, addresses and readings in the video are made up. Have you spotted a round cap on your meter box lid? Tell me where you live, and whether your utility shows your use hour by hour.
 
 ## Cover
 
