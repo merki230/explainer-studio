@@ -3,11 +3,10 @@ import {AbsoluteFill, random, useCurrentFrame, useVideoConfig} from 'remotion';
 import * as THREE from 'three';
 import {HIGHWAY, MOODS, type Mood} from '../theme';
 import {raw} from '../three/plaster';
-import {CAR_LAYOUT, RealCar} from '../three/real/RealCar';
-import {RealWheel} from '../three/real/RealWheel';
+import {CAR_LAYOUT} from '../three/real/RealCar';
+import {carToWorld, DrivingCar} from '../three/real/DrivingCar';
 import type {RoadSignKind} from '../three/real/RoadSigns';
 import {SIGN_SIZE} from '../three/real/RoadSigns';
-import {Figure} from '../three/section/Figure';
 import {bandMaterial} from '../three/section/GrooveCut';
 import {RadioPulse} from '../three/TirePieces';
 import {groundAt, HIGHWAY_LAYOUT, HighwaySlice, SIGN_SPOTS} from '../three/section/HighwaySlice';
@@ -268,13 +267,6 @@ export const highwayCarAt = (car: HighwayCar, t: number) => {
   };
 };
 
-/** Car-local (x forward, z right) → world, for a car at (x, z) heading −z, turned by `yaw` toward +x. */
-const carToWorld = (p: V3, at: {x: number; z: number; yaw: number}): V3 => {
-  const th = Math.PI / 2 - at.yaw;
-  // rotation about y by th: (x, z) → (x cos + z sin, −x sin + z cos)
-  return [at.x + p[0] * Math.cos(th) + p[2] * Math.sin(th), p[1], at.z - p[0] * Math.sin(th) + p[2] * Math.cos(th)];
-};
-
 /** How lit the grooves are at t, and over which z span. */
 export const grooveLitAt = (p: Partial<HighwaySliceSceneProps>, t: number) => {
   const car = p.car === undefined ? {} : p.car;
@@ -341,69 +333,6 @@ export const highwayAnchorOnScreen = (
 
 /** How far behind the look-at point the sky card stands (m): past the road's far end. */
 const BACKDROP = 700;
-
-/** One whole car driving away: the body (whole), four turning wheels, optionally YOU at the wheel. */
-const DrivingCar: React.FC<{
-  mood: Mood;
-  at: {x: number; z: number; yaw: number};
-  travelled: number;
-  blur: number;
-  body: 'you' | 'mom' | 'extra';
-  tail: number;
-  driver: boolean;
-  plate: string;
-  clockOffset: number;
-  /** × reflections on the near (right) wheels (RealWheel `envBoost`). */
-  envBoost?: number;
-  /** Offset of the body (not the wheels), m: the shake's tremble. */
-  jitter?: V3;
-}> = ({mood, at, travelled, blur, body, tail, driver, plate, clockOffset, envBoost = 1, jitter = [0, 0, 0]}) => {
-  const R = C.wheelR;
-  const spin = travelled / R;
-  return (
-    <group>
-      <group position={[at.x + jitter[0], jitter[1], at.z + jitter[2]]} rotation={[0, Math.PI / 2 - at.yaw, 0]}>
-        <RealCar mood={mood} body={body} whole tail={tail} plate={plate} />
-        {driver ? (
-          <Figure
-            who="you"
-            mood={mood}
-            position={[C.driver[0], C.driver[1] - C.wholeSink, C.driver[2]]}
-            rotationY={Math.PI / 2}
-            gestures={[{pose: 'drive', at: -1}]}
-            phone={false}
-            hands={[
-              [-0.16, 1.02, 0.4],
-              [0.16, 1.04, 0.41],
-            ]}
-            clockOffset={clockOffset}
-          />
-        ) : null}
-      </group>
-      {[C.axleX.front, C.axleX.rear].map((ax) =>
-        [-1, 1].map((s) => (
-          <RealWheel
-            key={`${ax}${s}`}
-            mood={mood}
-            position={carToWorld([ax, R, s * C.track], at)}
-            yaw={(s > 0 ? 0 : Math.PI) - at.yaw}
-            radius={R}
-            cut="none"
-            spin={s > 0 ? spin : -spin}
-            motionBlur={s > 0 ? blur : -blur}
-            low={s < 0}
-            ink={false}
-            valve={false}
-            axle
-            envBoost={s > 0 ? envBoost : 1}
-            // loaded: the tire squats a little where it meets the road
-            pressure={0.95}
-          />
-        )),
-      )}
-    </group>
-  );
-};
 
 /**
  * H, the highway slice (No. 005): a divided rural interstate at night cut square to the road (median,

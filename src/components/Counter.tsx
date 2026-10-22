@@ -19,6 +19,14 @@ export type CounterProps = {
   duration?: number;
   /** Where the sub-line sits: 'below' (default, like the title block's line 2) or 'above' (reads first: "UP TO ABOUT / 10 years"). */
   subPlace?: 'above' | 'below';
+  /**
+   * A range (No. 006): the upper end, shown after the counted number with an en dash and one unit
+   * ("64–95 %"). The first number counts `from` → `to`; then "–95" lands (fades in with a 6 px rise
+   * over 8 frames) at `rangeAt`. Its room is kept from the start, so nothing shifts. Default none.
+   */
+  rangeTo?: number;
+  /** Seconds after the counter enters when the range's upper end lands (default `duration` + 0.3). */
+  rangeAt?: number;
 };
 
 /**
@@ -36,6 +44,8 @@ export const Counter: React.FC<CounterProps & {mood?: Mood}> = ({
   y = 0.55,
   duration = 1.6,
   subPlace = 'below',
+  rangeTo,
+  rangeAt,
   mood = 'day',
 }) => {
   const frame = useCurrentFrame();
@@ -91,7 +101,29 @@ export const Counter: React.FC<CounterProps & {mood?: Mood}> = ({
             fontVariantNumeric: 'tabular-nums lining-nums',
           }}
         >
-          {Math.round(value).toLocaleString('en-US')}
+          {rangeTo === undefined ? (
+            Math.round(value).toLocaleString('en-US')
+          ) : (
+            <>
+              {/* the counted number in a box as wide as its final value (tabular digits), so the range never shifts */}
+              <span style={{display: 'inline-block', minWidth: `${to.toLocaleString('en-US').length}ch`, textAlign: 'right'}}>
+                {Math.round(value).toLocaleString('en-US')}
+              </span>
+              <span
+                style={{
+                  display: 'inline-block',
+                  opacity: ease(frame, (rangeAt ?? duration + 0.3) * fps, (rangeAt ?? duration + 0.3) * fps + 8),
+                  transform: `translateY(${interpolate(
+                    ease(frame, (rangeAt ?? duration + 0.3) * fps, (rangeAt ?? duration + 0.3) * fps + 8),
+                    [0, 1],
+                    [6, 0],
+                  )}px)`,
+                }}
+              >
+                {`\u2013${rangeTo.toLocaleString('en-US')}`}
+              </span>
+            </>
+          )}
         </span>
         <span style={{fontFamily: fonts.sans, fontWeight: 600, fontSize: 34, color: ink}}>{label}</span>
       </div>

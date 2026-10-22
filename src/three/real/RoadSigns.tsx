@@ -21,9 +21,11 @@ type V3 = [number, number, number];
  *    line (the real three-digit layout), 12 × 48 in, one post.
  *  - 'guide': a generic white-on-green guide sign of two lines (e.g. NEXT EXIT / 2 MILES), 13 × 7 ft,
  *    two breakaway I-beam posts.
+ *  - 'oneway': R6-2 ONE WAY, 24 × 30 in, white with a black border, ONE / WAY over a black arrow
+ *    pointing ahead (up), one square post (city slice, No. 006).
  */
 
-export type RoadSignKind = 'speed' | 'mile' | 'guide';
+export type RoadSignKind = 'speed' | 'mile' | 'guide' | 'oneway';
 
 const IN = 0.0254;
 
@@ -32,6 +34,7 @@ export const SIGN_SIZE: Record<RoadSignKind, {w: number; h: number; ppi: number;
   speed: {w: 48 * IN, h: 60 * IN, ppi: 10, r: 3 * IN},
   mile: {w: 12 * IN, h: 48 * IN, ppi: 20, r: 1.5 * IN},
   guide: {w: 156 * IN, h: 84 * IN, ppi: 8, r: 9 * IN},
+  oneway: {w: 24 * IN, h: 30 * IN, ppi: 16, r: 1.5 * IN},
 };
 
 const roundRect = (cx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) => {
@@ -61,13 +64,14 @@ const drawSign = (c: HTMLCanvasElement, kind: RoadSignKind, text: string[]) => {
   c.height = H;
   const cx = c.getContext('2d')!;
   cx.clearRect(0, 0, W, H);
-  const bg = kind === 'speed' ? HIGHWAY.signWhite : HIGHWAY.signGreen;
-  const ink = kind === 'speed' ? HIGHWAY.signInk : HIGHWAY.signWhite;
+  const white = kind === 'speed' || kind === 'oneway';
+  const bg = white ? HIGHWAY.signWhite : HIGHWAY.signGreen;
+  const ink = white ? HIGHWAY.signInk : HIGHWAY.signWhite;
   roundRect(cx, 0, 0, W, H, (s.r / IN) * k);
   cx.fillStyle = bg;
   cx.fill();
   // the border: inset and width per the sign's size (in inches)
-  const [inset, bw] = kind === 'speed' ? [0.75, 1.25] : kind === 'mile' ? [0.5, 0.75] : [1.0, 1.5];
+  const [inset, bw] = kind === 'speed' ? [0.75, 1.25] : kind === 'mile' || kind === 'oneway' ? [0.5, 0.75] : [1.0, 1.5];
   const o = (inset + bw / 2) * k;
   roundRect(cx, o, o, W - 2 * o, H - 2 * o, Math.max(2, (s.r / IN - inset - bw / 2) * k));
   cx.strokeStyle = ink;
@@ -98,6 +102,22 @@ const drawSign = (c: HTMLCanvasElement, kind: RoadSignKind, text: string[]) => {
     const digits = (text[0] ?? '112').split('');
     line('MILE', 3.2, 6.5, 10);
     digits.forEach((d, i) => line(d, 8, 18 + i * 10.5, 10));
+  } else if (kind === 'oneway') {
+    // R6-2 24 × 30: ONE / WAY in 4 in capitals over a black arrow pointing ahead
+    line(text[0] ?? 'ONE', 4, 6.5, 18);
+    line(text[1] ?? 'WAY', 4, 12, 18);
+    const u = k;
+    const cx0 = W / 2;
+    cx.beginPath();
+    cx.moveTo(cx0, 13.6 * u);
+    cx.lineTo(cx0 + 6 * u, 20 * u);
+    cx.lineTo(cx0 + 2 * u, 20 * u);
+    cx.lineTo(cx0 + 2 * u, 27.6 * u);
+    cx.lineTo(cx0 - 2 * u, 27.6 * u);
+    cx.lineTo(cx0 - 2 * u, 20 * u);
+    cx.lineTo(cx0 - 6 * u, 20 * u);
+    cx.closePath();
+    cx.fill();
   } else {
     // two lines of 13.3 in capitals, centred
     line(text[0] ?? 'NEXT EXIT', 13.3, 36, 140);
@@ -108,7 +128,7 @@ const drawSign = (c: HTMLCanvasElement, kind: RoadSignKind, text: string[]) => {
 export type RoadSignProps = {
   mood: Mood;
   kind: RoadSignKind;
-  /** The legend: 'speed' [SPEED, LIMIT, nn] (or just [nn] via `value`), 'mile' [digits], 'guide' [line 1, line 2]. */
+  /** The legend: 'speed' [SPEED, LIMIT, nn] (or just [nn] via `value`), 'mile' [digits], 'guide' [line 1, line 2], 'oneway' [ONE, WAY]. */
   text: string[];
   /** The foot of the sign (its centre line on the ground). */
   position: V3;
@@ -171,13 +191,15 @@ export const RoadSign: React.FC<RoadSignProps> = ({mood, kind, text, position, b
     return g;
   }, [s]);
   const [x, gy, z] = position;
-  // posts: 'speed' two 2.5 in square tubes, 'mile' one U-channel, 'guide' two W6 I-beams with breakaway bases
+  // posts: 'speed' two 2.5 in square tubes, 'mile' one U-channel, 'oneway' one square tube, 'guide' two W6 I-beams with breakaway bases
   const posts =
     kind === 'speed'
       ? [-0.38, 0.38].map((dx) => ({dx, w: 0.064, d: 0.064}))
-      : kind === 'mile'
-        ? [{dx: 0, w: 0.07, d: 0.045}]
-        : [-1.25, 1.25].map((dx) => ({dx, w: 0.1, d: 0.15}));
+      : kind === 'oneway'
+        ? [{dx: 0, w: 0.064, d: 0.064}]
+        : kind === 'mile'
+          ? [{dx: 0, w: 0.07, d: 0.045}]
+          : [-1.25, 1.25].map((dx) => ({dx, w: 0.1, d: 0.15}));
   const top = b + s.h - 0.08;
   return (
     <group position={[x, 0, z]}>

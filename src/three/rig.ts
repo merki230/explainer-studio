@@ -91,7 +91,8 @@ export type PoseName =
   | 'drive'
   | 'gauge'
   | 'nod-off'
-  | 'jolt';
+  | 'jolt'
+  | 'lean';
 export const POSE_NAMES: PoseName[] = [
   'idle',
   'scroll',
@@ -104,6 +105,7 @@ export const POSE_NAMES: PoseName[] = [
   'gauge',
   'nod-off',
   'jolt',
+  'lean',
 ];
 
 /** Every joint as a delta from rest. Angles in radians, Euler [x pitch (forward +), y yaw (to +x), z roll]. */
@@ -199,6 +201,17 @@ const FIXED: Record<Exclude<PoseName, 'look-up' | 'turn-to'>, PoseParams> = {
     scroll: 0,
     shrug: 0.025,
     eyesUp: 0.1,
+  }),
+  // Driving, swayed gently forward against the belt as the car slows (No. 006: lift-off braking pulls
+  // you forward, smoothly; not the 'jolt'). Eyes stay on the road; hands stay on the wheel.
+  lean: base({
+    spine: [0.035, 0, 0],
+    chest: [0.025, 0, 0],
+    neck: [-0.035, 0, 0],
+    head: [-0.2, 0, 0],
+    headShift: [0, -0.005, 0.02],
+    scroll: 0,
+    eyesUp: 0.06,
   }),
 };
 

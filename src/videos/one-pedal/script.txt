@@ -1,0 +1,13 @@
+Some electric cars stop at red lights without the driver touching the brake.
+So what's doing the braking?
+Say you're driving one, and you lift your foot as a red light comes up.
+The wheels keep spinning, and now they're the ones turning the motor.
+That turns the motor into a generator, and making that electricity is what slows you down.
+The electricity flows back into your battery, and the car keeps slowing until you're stopped at the line.
+Some electric cars can't stop all the way, and those only slow until you press the brake.
+Either way, the driver behind you can't see your foot, so they're watching your brake lights.
+Testers found most electric cars they checked turn those lights on by themselves when they slow firmly.
+And with the motor doing so much of the slowing, your regular brakes get a lot less work.
+One modeling study estimates brake wear drops by 64 to 95 percent.
+There's a catch, though, since a brake supplier says discs used this rarely can rust.
+Still, next time you lift your foot in an electric car and feel it pull back, that's the motor charging your battery.

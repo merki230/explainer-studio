@@ -1,3 +1,4 @@
+import {cityAnchorOnScreen, type CitySliceSceneProps} from '../scenes/CitySliceScene';
 import {highwayAnchorOnScreen, type HighwaySliceSceneProps} from '../scenes/HighwaySliceScene';
 import {hotelAnchorOnScreen, type HotelLobbySceneProps} from '../scenes/HotelLobbyScene';
 import {musicalAnchorOnScreen, type MusicalRoadSceneProps} from '../scenes/MusicalRoadScene';
@@ -8,7 +9,14 @@ import {towerAnchorOnScreen, type TowerSliceSceneProps} from '../scenes/TowerSli
 export type AnchorScene = {props: Record<string, unknown>; durationInFrames: number; offset: number; name?: string};
 
 /** Scenes whose overlays can follow a named point (`anchor` on callouts, the head on name tags). */
-export const ANCHOR_SCENES = ['tower-slice', 'hotel-lobby', 'street-slice', 'highway-slice', 'musical-road'];
+export const ANCHOR_SCENES = [
+  'tower-slice',
+  'hotel-lobby',
+  'street-slice',
+  'highway-slice',
+  'musical-road',
+  'city-slice',
+];
 
 /**
  * A named point of the scene on screen (px) at this overlay's frame, following the camera and
@@ -17,7 +25,8 @@ export const ANCHOR_SCENES = ['tower-slice', 'hotel-lobby', 'street-slice', 'hig
  * 'youSpot', 'person:n', 'carRoof:C', 'car:C'. `street-slice`: 'cap', 'radio', 'register', 'meter', 'pole',
  * 'tank', 'cab', 'laptop', 'truckRoof', 'youSpot' (= 'youHead'), 'phone', 'tap', 'lid:k'. `highway-slice`: 'tire',
  * 'tail', 'grooveDepth', 'grooveNext', 'whiteLine', 'sign:speed' | 'sign:mile' | 'sign:guide'. `musical-road`: 'group:k', 'tire',
- * 'rearTire', 'car', 'window', 'house'. Undefined elsewhere
+ * 'rearTire', 'car', 'window', 'house'. `city-slice`: 'car:k', 'lamps:k', 'youSpot', 'signal', 'stopLine',
+ * 'sign:oneway' | 'sign:speed'. Undefined elsewhere
  * or for an unknown name.
  */
 export const anchorOnScreen = (
@@ -35,5 +44,6 @@ export const anchorOnScreen = (
     return highwayAnchorOnScreen(scene.props as Partial<HighwaySliceSceneProps>, anchor, o);
   if (scene.name === 'musical-road')
     return musicalAnchorOnScreen(scene.props as Partial<MusicalRoadSceneProps>, anchor, o);
+  if (scene.name === 'city-slice') return cityAnchorOnScreen(scene.props as Partial<CitySliceSceneProps>, anchor, o);
   return undefined;
 };
