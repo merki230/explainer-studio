@@ -32,7 +32,15 @@ The owner has seen the shopping cart, car key and hotel key card covered too oft
 
 | Object | The hidden surprise | Sample hook | Status |
 |---|---|---|---|
-| One-pedal driving (EVs) | Lifting your foot turns the motor into a generator: it brakes the car and recharges the battery, and the car can switch on the brake lights by itself | "Your brake lights can come on even though you never touched the brake." | **Next: No. 006** (owner idea, 2026-10-19; angle to agree before research) |
+| One-pedal driving (EVs) | Lifting your foot turns the motor into a generator: it brakes the car and recharges the battery, and the car can switch on the brake lights by itself | "Your brake lights can come on even though you never touched the brake." | **Done: No. 006** (posted; best so far, 2026-10-22) |
+| Car black box (event data recorder) | Many cars keep a record of the seconds before a crash | "Your car is quietly recording the last few seconds before a crash." | **shortlisted** (owner, 2026-10-22; car topics work: No. 002 and No. 006) |
+| Do EVs wear out tires faster? | Weight and instant torque; follow-up from No. 006 comments, continues No. 002 | "Electric cars might be eating their tires faster than you think." | **shortlisted** (owner, 2026-10-22; from a No. 006 TikTok comment) |
+| The fake sound EVs must make | Quiet EVs play an artificial sound at low speed so pedestrians can hear them | "Your silent electric car is required to make noise, and the sound is fake." | **shortlisted** (owner, 2026-10-22; answers the "space noises" comment on No. 006) |
+| Why EV range drops in winter | Cold slows the battery's chemistry, and heating the cabin uses power | "Your electric car loses miles in winter before you even drive." | **shortlisted** (owner, 2026-10-22) |
+| Drive-by-wire | In most modern cars the gas pedal is just a sensor; a computer decides the power. A few new cars also steer by wire | "Your gas pedal isn't connected to your engine." | **shortlisted** (owner, 2026-10-22; No. 008 candidate; "most" and steer-by-wire to verify) |
+| Bathroom outlet with buttons (GFCI) | It compares current going out and coming back and cuts power in a split second if some leaks, e.g. through you | "That outlet with two buttons is watching for electricity leaking through your body." | **shortlisted** (owner, 2026-10-22; home topic) |
+| Smoke detector | Many contain a tiny amount of radioactive material that makes the air conduct | "There's a speck of radioactive material on your ceiling, and it's keeping you safe." | **shortlisted** (owner, 2026-10-22; home topic) |
+| Freezer defrost heater | The freezer switches on a heater on purpose to melt frost | "Your freezer has a heater inside, and it switches it on every day." | **shortlisted** (owner, 2026-10-22; home topic) |
 | Rain-sensing wipers | Invisible light bounces inside the windshield; raindrops change the reflection | "Your windshield knows it's raining before you do, because it's shining a light through the glass." | **shortlisted** |
 | Railroad crossing | The train's wheels and axles close a circuit between the rails | "The train lowers the crossing gates itself, with its own wheels." | candidate |
 | Ambulance and the green light | Emergency vehicles signal the traffic light ahead | "That fire truck just turned the light green." | candidate |

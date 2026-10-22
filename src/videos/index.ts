@@ -17,6 +17,8 @@ import {spec as rumbleStrips} from './rumble-strips/spec';
 import rumbleStripsTranscript from './rumble-strips/transcript.json';
 import {spec as onePedal} from './one-pedal/spec';
 import onePedalTranscript from './one-pedal/transcript.json';
+import {spec as evSound} from './ev-sound/spec';
+import evSoundTranscript from './ev-sound/transcript.json';
 // </imports>
 
 export type VideoEntry = {spec: VideoSpec; transcript: Transcript};
@@ -35,5 +37,6 @@ export const VIDEOS: Record<string, VideoEntry> = {
   'water-meter': {spec: waterMeter, transcript: waterMeterTranscript as Transcript},
   'rumble-strips': {spec: rumbleStrips, transcript: rumbleStripsTranscript as Transcript},
   'one-pedal': {spec: onePedal, transcript: onePedalTranscript as Transcript},
+  'ev-sound': {spec: evSound, transcript: evSoundTranscript as Transcript},
   // </entries>
 };
