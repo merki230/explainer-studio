@@ -188,6 +188,49 @@ export type FigureProps = {
   point?: [number, number];
   /** Colour overrides on top of the cast's look (e.g. `CAST_NEUTRAL` for an extra behind tinted glass). */
   look?: Partial<CastLook>;
+  /**
+   * Seated only: where each foot goes instead of its rest place, [right, left] like `hands` (null: rest).
+   * `ankle` is a figure-local point (origin on the floor under the pelvis, facing +z); the leg solves
+   * to it in its own plane (hip, knee up, ankle; two-bone IK). `pitch` tips the foot, toes up (radians,
+   * default 0: flat). For a foot on a pedal (No. 006). Default none.
+   */
+  legs?: [LegTarget | null, LegTarget | null];
+  /** 🎭 Each foot's size, [right, left], scaled about the ankle (default 1: as the rig). For a foot the shot is about. */
+  footScale?: [number, number];
+  /** The shoes' colour (a theme neutral; default `section.shoe`, dark). */
+  shoe?: string;
+};
+
+/** A seated foot's target (see `FigureProps.legs`). */
+export type LegTarget = {ankle: V3; pitch?: number};
+
+/** The leg's rest angles in its (y up, z forward) plane, as atan2(z, y), and its two lengths. */
+const LEG = (() => {
+  const th = REST.knee(1).sub(REST.hip(1));
+  const sh = REST.ankle(1).sub(REST.knee(1));
+  return {
+    l1: Math.hypot(th.y, th.z),
+    l2: Math.hypot(sh.y, sh.z),
+    thigh: Math.atan2(th.z, th.y),
+    shin: Math.atan2(sh.z, sh.y),
+  };
+})();
+
+/** Two-bone IK in the leg's plane: rotations (about x) of the hip, the knee and the ankle for a foot target. */
+const legIK = (leg: LegTarget, side: number) => {
+  const hip = REST.hip(side);
+  const dy = leg.ankle[1] - hip.y;
+  const dz = leg.ankle[2] - hip.z;
+  const dist = Math.max(Math.abs(LEG.l1 - LEG.l2) + 1e-3, Math.min(LEG.l1 + LEG.l2 - 1e-3, Math.hypot(dy, dz)));
+  const a = Math.acos(Math.max(-1, Math.min(1, (LEG.l1 ** 2 + dist ** 2 - LEG.l2 ** 2) / (2 * LEG.l1 * dist))));
+  // the knee on the upper side of the hip–ankle line (as at rest)
+  const thigh = Math.atan2(dz, dy) - a;
+  const ky = hip.y + LEG.l1 * Math.cos(thigh);
+  const kz = hip.z + LEG.l1 * Math.sin(thigh);
+  const shin = Math.atan2(leg.ankle[2] - kz, leg.ankle[1] - ky);
+  const h = thigh - LEG.thigh;
+  const k = shin - LEG.shin - h;
+  return {hip: h, knee: k, ankle: -(leg.pitch ?? 0) - h - k};
 };
 
 /** How far the body rises standing up (the thigh's length): the seated hip at 0.6 → 1.07. */
@@ -218,6 +261,9 @@ export const Figure: React.FC<FigureProps> = ({
   walk,
   point = [0, 0],
   look: lookOverride,
+  legs,
+  footScale,
+  shoe: shoeColor,
 }) => {
   const frame = useCurrentFrame();
   const stand = stance === 'stand';
@@ -241,12 +287,12 @@ export const Figure: React.FC<FigureProps> = ({
       bottom: matte(look.bottom, 0.9),
       skin: matte(look.skin, 0.75),
       hair: matte(look.hair, 0.9),
-      shoe: matte(section.shoe, 0.8),
+      shoe: matte(shoeColor ?? section.shoe, 0.8),
       eye: matte(section.eye, 0.4),
       glasses: matte(section.glasses, 0.5),
       device: matte(MOODS[mood].device, 0.4),
     }),
-    [look, mood],
+    [look, mood, shoeColor],
   );
   const screenMat = useMemo(() => new THREE.MeshBasicMaterial({color: raw(MOODS[mood].ui)}), [mood]);
   // the screen texture: a small canvas, redrawn only when what it shows changes
@@ -356,27 +402,41 @@ export const Figure: React.FC<FigureProps> = ({
   return (
     <group position={position} rotation={[0, rotationY, 0]}>
       <group position={[REST.pelvis.x, REST.pelvis.y + lift, REST.pelvis.z]}>
-        {P.side.map((side) => (
-          <group
-            key={side.s}
-            position={rel(REST.hip(side.s), REST.pelvis)}
-            rotation={[stand ? Math.PI / 2 - 0.06 - swing(side.s) : 0, idle.hipYaw * L * (stand ? 0.3 : 1), 0]}
-          >
-            <PartMesh part={side.thigh} material={mats.bottom} />
+        {P.side.map((side) => {
+          const leg = stand ? null : legs?.[side.s < 0 ? 0 : 1];
+          const ik = leg ? legIK(leg, side.s) : null;
+          return (
             <group
-              position={rel(REST.knee(side.s), REST.hip(side.s))}
-              rotation={[stand ? -Math.PI / 2 + 0.12 + kneeBend(side.s) : 0, 0, 0]}
+              key={side.s}
+              position={rel(REST.hip(side.s), REST.pelvis)}
+              rotation={[
+                stand ? Math.PI / 2 - 0.06 - swing(side.s) : (ik?.hip ?? 0),
+                idle.hipYaw * L * (stand ? 0.3 : 1),
+                0,
+              ]}
             >
-              <PartMesh part={side.shin} material={mats.bottom} />
+              <PartMesh part={side.thigh} material={mats.bottom} />
               <group
-                position={rel(REST.ankle(side.s), REST.knee(side.s))}
-                rotation={[stand ? -0.06 + swing(side.s) - kneeBend(side.s) : 0, 0, 0]}
+                position={rel(REST.knee(side.s), REST.hip(side.s))}
+                rotation={[stand ? -Math.PI / 2 + 0.12 + kneeBend(side.s) : (ik?.knee ?? 0), 0, 0]}
               >
-                <PartMesh part={side.foot} material={mats.shoe} />
+                <PartMesh part={side.shin} material={mats.bottom} />
+                <group
+                  position={rel(REST.ankle(side.s), REST.knee(side.s))}
+                  rotation={[stand ? -0.06 + swing(side.s) - kneeBend(side.s) : (ik?.ankle ?? 0), 0, 0]}
+                >
+                  {footScale ? (
+                    <group scale={footScale[side.s < 0 ? 0 : 1]}>
+                      <PartMesh part={side.foot} material={mats.shoe} />
+                    </group>
+                  ) : (
+                    <PartMesh part={side.foot} material={mats.shoe} />
+                  )}
+                </group>
               </group>
             </group>
-          </group>
-        ))}
+          );
+        })}
         <group position={rel(REST.spine, REST.pelvis)} rotation={spineE}>
           <PartMesh part={P.torso} material={mats.top} scale={[1 + 0.012 * b, 1, 1 + 0.018 * b]} />
           <group position={[0, REST.chest.y - REST.spine.y + 0.008 * b, REST.chest.z - REST.spine.z]} rotation={chestE}>

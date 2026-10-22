@@ -12,7 +12,7 @@ import type {CastName, Mood} from '../theme';
 import {ease} from './card';
 import {drawScreen, focusRect, screenKey, SCREEN_H, SCREEN_W} from './screenKit';
 import {LEFT, overlayInk, RIGHT} from './sectionStyle';
-import {drawCluster} from './dashboardKit';
+import {drawCluster, drawEvCluster} from './dashboardKit';
 import {carHeadBoxOnScreen, clusterOnScreen, type CarSliceSceneProps} from '../scenes/CarSliceScene';
 import {anchorOnScreen} from './anchors';
 import {MOODS} from '../theme';
@@ -26,7 +26,7 @@ export type DetailBoxProps = {
    * instrument cluster of a `car-slice`: speed, a trip timer counting on, the tire-pressure light, off or
    * lit in warning yellow from the scene's `warningAt`).
    */
-  content?: 'phone' | 'dashboard' | 'keypad' | 'laptop' | 'usage' | 'register';
+  content?: 'phone' | 'dashboard' | 'ev-dashboard' | 'keypad' | 'laptop' | 'usage' | 'register';
   /** 'usage' (street-slice): seconds after the box enters when the "Possible leak" banner gives way to the hourly page (default 1.2; 0 = the page at once). */
   pageAt?: number;
   /** 'usage': seconds after the box enters when the hourly bars start drawing (default `pageAt` + 0.3), and how long (default 1.2). */
@@ -44,8 +44,17 @@ export type DetailBoxProps = {
   warning?: boolean;
   /** 'dashboard': the trip timer's value at the scene's start, seconds (default 760, "12:40"); it counts on. */
   trip?: number;
-  /** 'dashboard': the speed shown, mph (default 38). */
-  speed?: number;
+  /**
+   * 'dashboard': the speed shown, mph (default 38). 'ev-dashboard': a number or keys
+   * `{at, value}` (seconds after the box enters, eased between them), e.g. falling 28 → 19.
+   */
+  speed?: number | {at: number; value: number}[];
+  /**
+   * 'ev-dashboard' (No. 006, an electric car's cluster: the speed and a power meter): the meter, −1
+   * (full charge) → 1 (full power), a number or keys like `speed`. Below 0 its CHARGE zone fills
+   * `orange` (the system's mark on a screen). Default −0.6.
+   */
+  power?: number | {at: number; value: number}[];
   /** 'dashboard': draw the tire-pressure symbol (default true; false: not drawn at all). */
   tireLight?: boolean;
   /** 'auto' (default): the part of the screen that matters (the field, the ad); 'full': the whole screen. */
@@ -81,7 +90,7 @@ type SceneCtx = {props: Partial<SectionRoomSceneProps>; durationInFrames: number
 export const DetailBox: React.FC<DetailBoxProps & {mood?: Mood; scene: SceneCtx}> = (p) =>
   p.content === 'laptop' || p.content === 'usage' || p.content === 'register' ? (
     <StreetBox {...p} content={p.content} scene={{...p.scene, props: p.scene.props as Record<string, unknown>}} />
-  ) : p.content === 'dashboard' ? (
+  ) : p.content === 'dashboard' || p.content === 'ev-dashboard' ? (
     <DashboardBox {...p} />
   ) : p.content === 'keypad' ? (
     <KeypadBox {...p} />
@@ -278,14 +287,31 @@ const DashboardBox: React.FC<DetailBoxProps & {mood?: Mood; scene: SceneCtx}> = 
   leader = true,
   warning,
   trip = 760,
-  speed = 38,
+  speed,
   tireLight = true,
   mood = 'day',
   scene,
+  content,
+  power,
 }) => {
   const frame = useCurrentFrame();
   const {fps, width, height} = useVideoConfig();
   const ref = useRef<HTMLCanvasElement>(null);
+  const ev = content === 'ev-dashboard';
+  // a number or keys (seconds after the box enters), eased between keys
+  const at = (v: number | {at: number; value: number}[] | undefined, d: number) => {
+    if (v === undefined) return d;
+    if (typeof v === 'number') return v;
+    const ks = [...v].sort((a, b) => a.at - b.at);
+    const tt = frame / fps;
+    if (!ks.length) return d;
+    if (tt <= ks[0].at) return ks[0].value;
+    for (let i = 0; i < ks.length - 1; i++)
+      if (tt < ks[i + 1].at) return ks[i].value + (ks[i + 1].value - ks[i].value) * ease(tt, ks[i].at, ks[i + 1].at);
+    return ks[ks.length - 1].value;
+  };
+  const shownSpeed = Math.round(at(speed, ev ? 28 : 38));
+  const shownPower = Math.round(at(power, -0.6) * 100) / 100;
   const sceneFrame = frame + scene.offset;
   const t = sceneFrame / fps;
   const carProps = scene.props as Partial<CarSliceSceneProps>;
@@ -295,12 +321,15 @@ const DashboardBox: React.FC<DetailBoxProps & {mood?: Mood; scene: SceneCtx}> = 
   const tripText = `TRIP ${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`;
   const innerW = size;
   const innerH = Math.round(size * 0.58);
-  const key = `${on}|${tripText}|${speed}|${innerW}|${tireLight}`;
+  const key = ev
+    ? `ev|${shownSpeed}|${shownPower}|${innerW}`
+    : `${on}|${tripText}|${shownSpeed}|${innerW}|${tireLight}`;
   useLayoutEffect(() => {
     const handle = delayRender('Drawing the dashboard box');
     fontsReady().then(() => {
       const cx = ref.current?.getContext('2d');
-      if (cx) drawCluster(cx, innerW, innerH, {warning: on, speed, trip: tripText, tireLight});
+      if (cx && ev) drawEvCluster(cx, innerW, innerH, {speed: shownSpeed, power: shownPower});
+      else if (cx) drawCluster(cx, innerW, innerH, {warning: on, speed: shownSpeed, trip: tripText, tireLight});
       continueRender(handle);
     });
     // `key` captures everything the drawing depends on

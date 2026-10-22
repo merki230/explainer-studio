@@ -1,13 +1,13 @@
 import React, {useMemo} from 'react';
 import * as THREE from 'three';
 import {fonts} from '../../fonts';
-import {CAR, HIGHWAY, MOODS, REAL, STREET, type Mood} from '../../theme';
+import {CAR, HIGHWAY, MOODS, REAL, section, STREET, type Mood} from '../../theme';
 import {BlobShadow} from '../MuseumStage';
 import {raw, roundedBox} from '../plaster';
 import {CutOutline, cutMaterial, InkLine} from '../section/cutLook';
-import {drawCluster} from '../../components/dashboardKit';
+import {drawCluster, drawEvCluster} from '../../components/dashboardKit';
 import {useFontsLoaded} from '../section/useFontsLoaded';
-import {CarShell} from './CarShell';
+import {CarShell, shellSink} from './CarShell';
 import {applyAlbedo, applyEnv, useAlbedo, useEnvStrength, useStudioEnv} from './useStudioEnv';
 
 type V3 = [number, number, number];
@@ -47,7 +47,14 @@ export const CAR_LAYOUT = {
   wholeSink: 0.14,
 };
 
-const L = CAR_LAYOUT;
+/** The layout with the driver by the near cut (`driverSide: 'near'`): the wheel and cluster move across. */
+export const LAYOUT_NEAR = {
+  ...CAR_LAYOUT,
+  driver: [CAR_LAYOUT.driver[0], CAR_LAYOUT.driver[1], -CAR_LAYOUT.driver[2]] as V3,
+  passenger: [CAR_LAYOUT.passenger[0], CAR_LAYOUT.passenger[1], -CAR_LAYOUT.passenger[2]] as V3,
+  steering: [CAR_LAYOUT.steering[0], CAR_LAYOUT.steering[1], -CAR_LAYOUT.steering[2]] as V3,
+  cluster: [CAR_LAYOUT.cluster[0], CAR_LAYOUT.cluster[1], -CAR_LAYOUT.cluster[2]] as V3,
+};
 
 /** The side section: lower body with the cabin hollowed and two wheel arches (x forward, y up). */
 const arch = (cx: number, r = 0.44, n = 14): P2[] =>
@@ -89,8 +96,8 @@ const FAR: P2[] = [
   [2.22, 1.02],
   [1.7, 1.12],
   [1.12, 1.2],
-  [0.45, L.roofCut],
-  [-1.45, L.roofCut],
+  [0.45, CAR_LAYOUT.roofCut],
+  [-1.45, CAR_LAYOUT.roofCut],
   [-2.25, 1.34],
   [-2.3, 1.3],
   [-2.4, 1.1],
@@ -102,6 +109,46 @@ const FAR: P2[] = [
   [0.91, 0.24],
   ...arch(1.35),
   [1.79, 0.24],
+];
+/**
+ * The electric car's body (No. 006, `ev`): no engine, so the front is an open bay under the hood (the
+ * firewall, the hood's skin, the front structure), and no solid sill band between the arches (the
+ * battery pack fills it). Two pieces: the front (bumper, hood, bay, firewall) and the rear.
+ */
+const BODY_EV_FRONT: P2[] = [
+  [0.88, 0.34],
+  [0.925, 0.34],
+  [1.015, 0.8],
+  [1.06, 1.1],
+  [1.7, 1.05],
+  [2.08, 0.96],
+  [2.13, 0.86],
+  [2.13, 0.24],
+  [2.3, 0.24],
+  [2.37, 0.5],
+  [2.35, 0.82],
+  [2.22, 1.02],
+  [1.7, 1.12],
+  [1.12, 1.2],
+  [1.02, 1.18],
+  [0.97, 0.8],
+];
+/**
+ * The whole front (firewall, hood, front structure, bumper) is sectioned on one plane of its own,
+ * `EV_FIREWALL_Z`, behind the near wheel: one clean outline, and the drive unit shows in the bay.
+ */
+export const EV_FIREWALL_Z = 0.4;
+const BODY_EV_REAR: P2[] = [
+  [-0.88, 0.36],
+  [-0.88, 0.84],
+  [-1.85, 0.84],
+  [-1.9, 1.28],
+  [-2.3, 1.3],
+  [-2.4, 1.1],
+  [-2.4, 0.5],
+  [-2.32, 0.24],
+  [-1.79, 0.24],
+  ...arch(-1.35),
 ];
 const WINDOWS: P2[][] = [
   [
@@ -157,7 +204,36 @@ export type RealCarProps = {
   tireLight?: boolean;
   /** Offset of the steering wheel and column (m): a tremble from the scene. Default none. */
   steeringJitter?: [number, number, number];
+  /**
+   * The electric car (No. 006): an open bay under the hood for the drive unit, no sill band (the pack
+   * under the floor shows), no tire-sensor receiver. Default false.
+   */
+  ev?: boolean;
+  /**
+   * Which side the driver sits (default 'far', −z). 'near' (+z, the cut side) puts the seat's
+   * occupant, wheel and cluster by the cut: with the car drawn mirrored (facing −x), a left-hand-drive
+   * car seen from its driver's side.
+   */
+  driverSide?: 'far' | 'near';
+  /** The car is drawn mirrored (a parent scale of −1 in x): the cluster's face is flipped back so it reads. */
+  mirrored?: boolean;
+  /**
+   * The brake lamps lit (cut car), 0 → 1, flat emissive, never bloomed: both tail lamps and a centre
+   * high-mount lamp on the tailgate. Default undefined: the cut car keeps its one far tail lamp (as No. 002/005).
+   */
+  brake?: number;
+  /** × the cut edges' ink thickness (default 1; close framings thin it). */
+  inkScale?: number;
+  /** The cluster as an EV's (No. 006): speed and a power meter, its CHARGE zone orange while `power` < 0 (−1 → 1). */
+  evCluster?: {power: number};
+  /** The paint colour, overriding `body`'s (a theme token, e.g. `CITY.carBodies`; never red or orange). Default none. */
+  paint?: string;
+  /** The whole car's shape (`CarShell` `profile`): 'crossover' (default) or 'sedan' (lower roof, a trunk). */
+  shape?: 'crossover' | 'sedan';
 };
+
+const TAIL_RED = raw(HIGHWAY.tailLight);
+const BRAKE_RED = raw(section.brakeLit);
 
 /** The car body, cabin and fittings (see the file comment). */
 export const RealCar: React.FC<RealCarProps> = ({
@@ -170,8 +246,17 @@ export const RealCar: React.FC<RealCarProps> = ({
   speed = 38,
   tireLight = true,
   steeringJitter,
+  ev = false,
+  driverSide = 'far',
+  mirrored = false,
+  brake,
+  inkScale = 1,
+  evCluster,
+  paint,
+  shape = 'crossover',
 }) => {
   const ready = useFontsLoaded();
+  const L = driverSide === 'near' ? LAYOUT_NEAR : CAR_LAYOUT;
   const face = useMemo(() => {
     const c = document.createElement('canvas');
     c.width = 380;
@@ -179,10 +264,14 @@ export const RealCar: React.FC<RealCarProps> = ({
     const tx = new THREE.CanvasTexture(c);
     return {c, tx, key: '', mat: new THREE.MeshBasicMaterial({map: tx})};
   }, []);
-  if (ready && face.key !== `${warning}|${speed}|${tireLight}`) {
-    drawCluster(face.c.getContext('2d')!, 380, 120, {warning, speed, trip: 'TRIP 12:40', tireLight});
+  const faceKey = evCluster
+    ? `ev|${speed}|${Math.round(evCluster.power * 100)}`
+    : `${warning}|${speed}|${tireLight}`;
+  if (ready && face.key !== faceKey) {
+    if (evCluster) drawEvCluster(face.c.getContext('2d')!, 380, 120, {speed, power: evCluster.power});
+    else drawCluster(face.c.getContext('2d')!, 380, 120, {warning, speed, trip: 'TRIP 12:40', tireLight});
     face.tx.needsUpdate = true;
-    face.key = `${warning}|${speed}|${tireLight}`;
+    face.key = faceKey;
   }
   face.mat.color.setScalar(0.9 / MOODS[mood].exposure);
   const cluster = ready ? face.mat : null;
@@ -196,7 +285,7 @@ export const RealCar: React.FC<RealCarProps> = ({
     return {
       // the whole car's paint satin, not gloss: its rounded roof and beltline edges mirrored the key as
       // broad white bands (style guide § 2: only glints ≤ 12 px may clip)
-      paint: phys(CAR[mood].bodies[body], {
+      paint: phys(paint ?? CAR[mood].bodies[body], {
         roughness: whole ? 0.5 : 0.32,
         metalness: whole ? 0.2 : 0.35,
         clearcoat: whole ? 0.3 : 1,
@@ -239,10 +328,21 @@ export const RealCar: React.FC<RealCarProps> = ({
       bumper: phys(REAL.dash, {roughness: 0.55}),
       plate: new THREE.MeshStandardMaterial({color: raw('#ffffff'), roughness: 0.5}),
     };
-  }, [mood, body, whole]);
-  mats.tail.emissiveIntensity = ((whole ? 0.45 : 0.9) * Math.max(0, Math.min(1, tail))) / m.exposure;
+  }, [mood, body, whole, paint]);
+  const tailLit = Math.max(0, Math.min(1, tail));
+  const brakeLit = Math.max(0, Math.min(1, brake ?? 0));
+  const lit = Math.max(tailLit, brakeLit);
+  // Brake lamps (No. 006 `brake`, whole and cut cars): a saturated red (`section.brakeLit`, the signal
+  // red's hue) brighter than the running lights, held under the tone curve's shoulder so it stays red,
+  // not pink. Running lights keep `tailLight` at their old level; unchanged when `brake` is 0. Flat
+  // emissive, never bloomed.
+  const tailLevel = (whole ? 0.45 : 0.9) * tailLit;
+  const brakeOn = brakeLit > 0 && 1.7 * brakeLit >= tailLevel;
+  mats.tail.emissive.copy(brakeOn ? BRAKE_RED : TAIL_RED);
+  mats.tailBright.emissive.copy(brakeOn ? BRAKE_RED : TAIL_RED);
+  mats.tail.emissiveIntensity = (brakeOn ? 1.7 * brakeLit : tailLevel) / m.exposure;
   // the light guides and the light bar: the brightest part of a lit lamp (still flat, never bloomed)
-  mats.tailBright.emissiveIntensity = (1.5 * Math.max(0, Math.min(1, tail))) / m.exposure;
+  mats.tailBright.emissiveIntensity = (brakeOn ? 1.9 * brakeLit : 1.5 * lit) / m.exposure;
   // a plain plate with invented characters (no state name, no logo), drawn once the fonts are in
   const plateTex = useMemo(() => {
     const c = document.createElement('canvas');
@@ -287,13 +387,25 @@ export const RealCar: React.FC<RealCarProps> = ({
 
   const geo = useMemo(
     () => ({
-      body: extrude(shapeOf(BODY), -0.87, L.cutZ),
-      far: extrude(shapeOf(FAR, WINDOWS), L.farZ, -0.87),
+      body: extrude(shapeOf(BODY), -0.87, CAR_LAYOUT.cutZ),
+      evFront: extrude(shapeOf(BODY_EV_FRONT), -0.87, EV_FIREWALL_Z),
+      evRear: extrude(shapeOf(BODY_EV_REAR), -0.87, CAR_LAYOUT.cutZ),
+      far: extrude(shapeOf(FAR, WINDOWS), CAR_LAYOUT.farZ, -0.87),
       glass: WINDOWS.map((w) => new THREE.ShapeGeometry(shapeOf(w))),
     }),
     [],
   );
-  const bodyInk = useMemo(() => BODY.map(([x, y]) => [x, y, L.cutZ + 0.003] as V3), []);
+  const bodyInk = useMemo(
+    () =>
+      ev
+        ? [
+            BODY_EV_FRONT.map(([x, y]) => [x, y, EV_FIREWALL_Z + 0.003] as V3),
+            BODY_EV_REAR.map(([x, y]) => [x, y, CAR_LAYOUT.cutZ + 0.003] as V3),
+          ]
+        : [BODY.map(([x, y]) => [x, y, CAR_LAYOUT.cutZ + 0.003] as V3)],
+    [ev],
+  );
+  const inkT = 0.011 * inkScale;
   const ws = new THREE.Vector3(1.12, 1.2, 0);
   const we = new THREE.Vector3(0.45, L.roofCut, 0);
   const wLen = ws.distanceTo(we);
@@ -307,6 +419,7 @@ export const RealCar: React.FC<RealCarProps> = ({
       {whole ? (
         // the whole car's shell: rounded body, glasshouse, lamps, bumper, plate, cladding (CarShell)
         <CarShell
+          profile={shape}
           mats={{
             paint: mats.paint,
             glass: mats.tint,
@@ -323,8 +436,17 @@ export const RealCar: React.FC<RealCarProps> = ({
       ) : (
         <>
           {/* the lower body: cut face (hatched) at the near cut, paint elsewhere */}
-          <mesh geometry={geo.body} material={[mats.cut, mats.paint]} castShadow receiveShadow />
-          <InkLine points={bodyInk} />
+          {ev ? (
+            <>
+              <mesh geometry={geo.evFront} material={[mats.cut, mats.paint]} castShadow receiveShadow />
+              <mesh geometry={geo.evRear} material={[mats.cut, mats.paint]} castShadow receiveShadow />
+            </>
+          ) : (
+            <mesh geometry={geo.body} material={[mats.cut, mats.paint]} castShadow receiveShadow />
+          )}
+          {bodyInk.map((b, i) => (
+            <InkLine key={i} points={b} thickness={inkT} />
+          ))}
           {/* the far side with its windows, standing like a room's back wall; the roof rail cut on top */}
           <mesh geometry={geo.far} material={[mats.paint, mats.paint]} castShadow receiveShadow />
           {geo.glass.map((g, i) => (
@@ -344,6 +466,7 @@ export const RealCar: React.FC<RealCarProps> = ({
                 [0.45, L.roofCut + 0.002, -0.87],
               ],
             ]}
+            thickness={inkT}
           />
           {/* the windshield, cut at the roof and at the near cut */}
           <mesh position={[(ws.x + we.x) / 2, (ws.y + we.y) / 2, span.z]} rotation={[0, 0, wAng]} material={mats.glass}>
@@ -358,9 +481,18 @@ export const RealCar: React.FC<RealCarProps> = ({
           </mesh>
           {/* the tail lamps on the far side's back corner (lit at night, like the whole car's) */}
           <mesh geometry={roundedBox(0.04, 0.17, 0.3, 0.012)} material={mats.tail} position={[-2.39, 1.0, -0.68]} />
+          {brake !== undefined ? (
+            <>
+              {/* the brake lamps (No. 006): the near tail lamp, cut by the section, and the centre high-mount lamp */}
+              <mesh material={[mats.tail, mats.tail, mats.tail, mats.tail, mats.cut, mats.tail]} position={[-2.39, 1.0, 0.66]}>
+                <boxGeometry args={[0.04, 0.17, 0.28]} />
+              </mesh>
+              <mesh geometry={roundedBox(0.05, 0.035, 0.36, 0.01)} material={mats.tailBright} position={[-2.33, 1.315, 0]} />
+            </>
+          ) : null}
         </>
       )}
-      <group position={[0, whole ? -L.wholeSink : 0, 0]}>
+      <group position={[0, whole ? -L.wholeSink - shellSink(shape) : 0, 0]}>
         {/* the cabin: carpet, dashboard (cut at the near cut), seats */}
         <mesh
           position={[0, L.floor + 0.003, -0.03]}
@@ -386,6 +518,7 @@ export const RealCar: React.FC<RealCarProps> = ({
                 [1.12, 1.22, L.cutZ],
               ],
             ]}
+            thickness={inkT}
           />
         )}
         {/* the cluster's binnacle and face (the face looks at the driver, read in the detail box) */}
@@ -399,6 +532,7 @@ export const RealCar: React.FC<RealCarProps> = ({
           <mesh
             position={[L.cluster[0] + 0.005, L.cluster[1], L.cluster[2]]}
             rotation={[0, -Math.PI / 2, 0]}
+            scale={mirrored ? [-1, 1, 1] : undefined}
             material={cluster}
           >
             <planeGeometry args={[0.38, 0.12]} />
@@ -421,8 +555,10 @@ export const RealCar: React.FC<RealCarProps> = ({
             <cylinderGeometry args={[0.06, 0.06, 0.03, 20]} />
           </mesh>
         </group>
-        {/* the receiver under the dash (its node dot is drawn by the scene) */}
-        <mesh geometry={roundedBox(0.14, 0.05, 0.1, 0.008)} material={mats.receiver} position={L.receiver} castShadow />
+        {/* the receiver under the dash (its node dot is drawn by the scene); none on the electric car */}
+        {ev ? null : (
+          <mesh geometry={roundedBox(0.14, 0.05, 0.1, 0.008)} material={mats.receiver} position={L.receiver} castShadow />
+        )}
         {[L.driver, L.passenger].map((p, i) => (
           <Seat key={i} at={p} mats={mats} />
         ))}

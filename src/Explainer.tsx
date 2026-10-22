@@ -19,12 +19,13 @@ import {SCENES} from './scenes';
 import {labCameraEnd, labCameraStart} from './scenes/SectionLabScene';
 import {sectionCameraEnd, sectionCameraStart, TIME_PASSES} from './scenes/SectionRoomScene';
 import {wheelCameraEnd, wheelCameraStart} from './scenes/WheelSliceScene';
-import {carCameraEnd, carCameraStart} from './scenes/CarSliceScene';
+import {carCameraEnd, carCameraStart, carCarry} from './scenes/CarSliceScene';
 import {towerCameraEnd, towerCameraStart} from './scenes/TowerSliceScene';
 import {hotelCameraEnd, hotelCameraStart} from './scenes/HotelLobbyScene';
 import {streetCameraEnd, streetCameraStart} from './scenes/StreetSliceScene';
 import {highwayCameraEnd, highwayCameraStart} from './scenes/HighwaySliceScene';
 import {musicalCameraEnd, musicalCameraStart} from './scenes/MusicalRoadScene';
+import {cityCameraEnd, cityCameraStart} from './scenes/CitySliceScene';
 import type {Framing} from './three/section/SectionCamera';
 
 type CameraFn = (p: Record<string, unknown>, durationInFrames: number, fps: number) => Framing;
@@ -39,6 +40,7 @@ const CAMERAS: Record<string, {start: CameraFn; end: CameraFn}> = {
   'street-slice': {start: streetCameraStart as CameraFn, end: streetCameraEnd as CameraFn},
   'highway-slice': {start: highwayCameraStart as CameraFn, end: highwayCameraEnd as CameraFn},
   'musical-road': {start: musicalCameraStart as CameraFn, end: musicalCameraEnd as CameraFn},
+  'city-slice': {start: cityCameraStart as CameraFn, end: cityCameraEnd as CameraFn},
 };
 import {transitionInto, type Transition} from './scenes/transitions';
 import {clickOffFrame, type ClickOff} from './scenes/clickOff';
@@ -377,6 +379,8 @@ const ExplainerBody: React.FC<{
         const prev = timeline.scenes[i - 1];
         const end = cam.end({...props[i - 1], startFrame: prev.startFrame}, prev.endFrame - prev.startFrame, FPS);
         own.cameraFrom = end;
+        // state a continuing scene carries on from the last one (car-slice 'ev': the wheels' turn and the road)
+        if (s.scene === 'car-slice') Object.assign(own, carCarry({...props[i - 1], startFrame: prev.startFrame}, prev.endFrame - prev.startFrame, FPS));
         // 'auto' turns a continue into a glide when this scene's framing is too far from where the
         // last one ended to continue smoothly (a preset with the same look-at keeps pushing instead)
         const start = cam.start(own, s.endFrame - s.startFrame, FPS);

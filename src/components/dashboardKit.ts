@@ -113,3 +113,62 @@ export const drawCluster = (cx: CanvasRenderingContext2D, w: number, h: number, 
     drawTireSymbol(cx, w * 0.75, h * 0.64, h * 0.42, s.warning ? section.warning : section.ledOff);
   cx.restore();
 };
+
+export type EvClusterState = {
+  /** The speed shown (mph). */
+  speed: number;
+  /** The power meter, −1 (full charge) → 0 → 1 (full power). Below 0 the CHARGE zone fills `orange` (the system's mark). */
+  power: number;
+};
+
+/**
+ * An electric car's cluster (No. 006), drawn into a w × h canvas (the detail box: 360 × 209): the
+ * speed large with MPH beside it, and a power meter across the bottom, its CHARGE zone (left of the
+ * zero mark) filling `orange` while the motor charges the battery (the system's mark on a screen,
+ * § 1), its POWER side in the face's ink. Text ≥ 28 px at the detail box's size. No brand.
+ */
+export const drawEvCluster = (cx: CanvasRenderingContext2D, w: number, h: number, s: EvClusterState) => {
+  cx.save();
+  cx.setTransform(1, 0, 0, 1, 0, 0);
+  cx.fillStyle = FACE;
+  cx.fillRect(0, 0, w, h);
+  const u = h / 209;
+  const pad = 20 * u;
+  // the speed, large, and its unit
+  cx.textBaseline = 'alphabetic';
+  cx.textAlign = 'left';
+  cx.fillStyle = INK;
+  cx.font = `800 ${Math.round(88 * u)}px ${fonts.sans}, Arial`;
+  const sp = String(Math.max(0, Math.round(s.speed)));
+  cx.fillText(sp, pad, 92 * u);
+  const sw = cx.measureText(sp).width;
+  cx.fillStyle = DIM;
+  cx.font = `700 ${Math.round(28 * u)}px ${fonts.sans}, Arial`;
+  cx.fillText('MPH', pad + sw + 12 * u, 92 * u);
+  // the power meter: a bar with the zero mark at 40 %, CHARGE to its left
+  const p = Math.max(-1, Math.min(1, s.power));
+  const x0 = pad;
+  const x1 = w - pad;
+  const zero = x0 + (x1 - x0) * 0.4;
+  const y0 = 120 * u;
+  const bh = 26 * u;
+  cx.strokeStyle = DIM;
+  cx.lineWidth = 2 * u;
+  cx.strokeRect(x0, y0, x1 - x0, bh);
+  if (p < 0) {
+    cx.fillStyle = section.orange;
+    cx.fillRect(zero + (zero - x0) * p, y0, -(zero - x0) * p, bh);
+  } else if (p > 0) {
+    cx.fillStyle = INK;
+    cx.fillRect(zero, y0, (x1 - zero) * p, bh);
+  }
+  cx.fillStyle = INK;
+  cx.fillRect(zero - 2 * u, y0 - 8 * u, 4 * u, bh + 16 * u);
+  cx.font = `700 ${Math.round(28 * u)}px ${fonts.sans}, Arial`;
+  cx.fillStyle = p < 0 ? INK : DIM;
+  cx.fillText('CHARGE', x0, 192 * u);
+  cx.textAlign = 'right';
+  cx.fillStyle = p > 0 ? INK : DIM;
+  cx.fillText('POWER', x1, 192 * u);
+  cx.restore();
+};

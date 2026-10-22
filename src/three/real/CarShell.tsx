@@ -99,7 +99,7 @@ const LOWER: P2[] = roundPoly([
 ]);
 
 /** The glasshouse's side profile (its foot hidden inside the lower body). */
-const GLASS: P2[] = roundPoly(
+const GLASS_CROSSOVER: P2[] = roundPoly(
   [
     [1.34, 1.03, 0],
     [0.3, 1.71, 0.22],
@@ -112,6 +112,26 @@ const GLASS: P2[] = roundPoly(
   ],
   8,
 );
+
+/**
+ * The sedan's glasshouse (No. 006, `profile: 'sedan'`): a lower roof (peak ≈ 1.62 against 1.77) and a
+ * raked rear window ending on a short trunk deck at x ≈ −1.9 (the lower body unchanged).
+ */
+const GLASS_SEDAN: P2[] = roundPoly(
+  [
+    [1.3, 1.03, 0],
+    [0.3, 1.56, 0.22],
+    [-0.65, 1.62, 0.55],
+    [-1.4, 1.52, 0.15],
+    [-1.9, 1.13, 0.05],
+    [-1.9, 1.03, 0],
+  ],
+  8,
+);
+/** The sedan's roof foot, and how much lower its interior (seats, dash, the driver) sits than the crossover's. */
+const SEDAN = {roofFoot: 1.5, sink: 0.14};
+/** How much lower a whole car's interior and driver sit for a shape (0 for the crossover). */
+export const shellSink = (profile: 'crossover' | 'sedan' = 'crossover') => (profile === 'sedan' ? SEDAN.sink : 0);
 
 const signedArea = (p: P2[]) =>
   p.reduce((s, [x, y], i) => s + x * p[(i + 1) % p.length][1] - p[(i + 1) % p.length][0] * y, 0) / 2;
@@ -253,12 +273,18 @@ export type ShellMats = {
 };
 
 /** The whole car's shell (see the file comment). The interior, wheels and figure are drawn by others. */
-export const CarShell: React.FC<{mats: ShellMats}> = ({mats}) => {
+export const CarShell: React.FC<{
+  mats: ShellMats;
+  /** 'crossover' (default, as No. 005) or 'sedan' (lower roof, a short trunk deck; no spoiler or rear wiper). */
+  profile?: 'crossover' | 'sedan';
+}> = ({mats, profile = 'crossover'}) => {
+  const sedan = profile === 'sedan';
   const geo = useMemo(() => {
     const H = SHELL.half;
     const G = SHELL.glassHalf;
+    const GLASS = sedan ? GLASS_SEDAN : GLASS_CROSSOVER;
     const lower = bevelExtrude(toShape(LOWER), -H, H, SHELL.bevel);
-    const RF = SHELL.roofFoot;
+    const RF = sedan ? SEDAN.roofFoot : SHELL.roofFoot;
     const glass = tumble(bevelExtrude(toShape(GLASS), -G, G, SHELL.glassBevel, 6));
     // the roof: the glasshouse's top above its foot, a little proud all round
     const top = GLASS.filter(([, y]) => y >= RF + 0.01);
@@ -324,7 +350,7 @@ export const CarShell: React.FC<{mats: ShellMats}> = ({mats}) => {
         Math.PI,
       ),
     };
-  }, []);
+  }, [sedan]);
   const {xr} = geo;
 
   return (
@@ -340,26 +366,45 @@ export const CarShell: React.FC<{mats: ShellMats}> = ({mats}) => {
         </group>
       ))}
       {/* the inside seen through the tint: a dark trim deck at the sills (the solid body under it) */}
-      <mesh position={[-0.62, 1.178, 0]} rotation={[-Math.PI / 2, 0, 0]} material={mats.trim}>
-        <planeGeometry args={[3.24, 2 * SHELL.glassHalf]} />
+      <mesh position={[sedan ? -0.44 : -0.62, 1.178, 0]} rotation={[-Math.PI / 2, 0, 0]} material={mats.trim}>
+        <planeGeometry args={[sedan ? 2.88 : 3.24, 2 * SHELL.glassHalf]} />
       </mesh>
       <mesh geometry={geo.garnish} material={mats.trim} castShadow />
-      {/* the spoiler over the rear window, the high brake lamp under it, the rear wiper */}
-      <mesh
-        geometry={roundedBox(0.22, 0.035, 1.36, 0.015, 3)}
-        material={mats.paint}
-        position={[-2.02, 1.725, 0]}
-        rotation={[0, 0, -0.12]}
-        castShadow
-      />
-      <mesh
-        geometry={roundedBox(0.02, 0.018, 0.3, 0.008, 2)}
-        material={mats.tailBright}
-        position={[-2.06, 1.695, 0]}
-        rotation={[0, 0, 0.4]}
-      />
-      <mesh geometry={roundedBox(0.012, 0.014, 0.46, 0.005, 2)} material={mats.trim} position={[-2.253, 1.25, 0.1]} />
-      <mesh geometry={roundedBox(0.03, 0.04, 0.05, 0.012, 2)} material={mats.trim} position={[-2.247, 1.24, 0.34]} />
+      {sedan ? (
+        // the sedan's high brake lamp at the foot of the rear window
+        <mesh
+          geometry={roundedBox(0.03, 0.022, 0.36, 0.008, 2)}
+          material={mats.tailBright}
+          position={[-1.88, 1.185, 0]}
+        />
+      ) : (
+        <>
+          {/* the spoiler over the rear window, the high brake lamp under it, the rear wiper */}
+          <mesh
+            geometry={roundedBox(0.22, 0.035, 1.36, 0.015, 3)}
+            material={mats.paint}
+            position={[-2.02, 1.725, 0]}
+            rotation={[0, 0, -0.12]}
+            castShadow
+          />
+          <mesh
+            geometry={roundedBox(0.02, 0.018, 0.3, 0.008, 2)}
+            material={mats.tailBright}
+            position={[-2.06, 1.695, 0]}
+            rotation={[0, 0, 0.4]}
+          />
+          <mesh
+            geometry={roundedBox(0.012, 0.014, 0.46, 0.005, 2)}
+            material={mats.trim}
+            position={[-2.253, 1.25, 0.1]}
+          />
+          <mesh
+            geometry={roundedBox(0.03, 0.04, 0.05, 0.012, 2)}
+            material={mats.trim}
+            position={[-2.247, 1.24, 0.34]}
+          />
+        </>
+      )}
       {/* tail lamps wrapping the rear corners (lens, light guide, reversing lamp), the light bar */}
       {[1, -1].map((s) => (
         <group key={s} scale={[1, 1, s]}>

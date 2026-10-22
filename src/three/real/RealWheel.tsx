@@ -8,6 +8,7 @@ import {cutMaterial, HATCH, InkLine} from '../section/cutLook';
 import {useFontsLoaded} from '../section/useFontsLoaded';
 import {ROTOR, rotorTexture, SIDE_BASE, SIDE_R0, sidewallTexture, TREAD_A, treadTexture} from './tireTextures';
 import {applyAlbedo, applyEnv, useAlbedo, useEnvStrength, useStudioEnv} from './useStudioEnv';
+import {BrakeCorner, capOutline, capProfile} from './BrakeCorner';
 
 type V3 = [number, number, number];
 
@@ -402,6 +403,15 @@ export type RealWheelProps = {
   envBoost?: number;
   /** × the cut edges' ink thickness (default 1): a close-up keeps the ink ≈ 3 px (e.g. 0.25 at a contact patch). */
   inkScale?: number;
+  /**
+   * The brake corner in section (No. 006, `BrakeCorner`; with `axle`): a vented disc, the caliper with
+   * its piston, two pads and their hairline gaps, instead of the cross-drilled rotor and block caliper.
+   * With the 'mid' cut, `wedge` [w0, w1] (radians, the wheel's φ: 0 at the top, increasing toward local
+   * +z) also opens the wheel's inner half there (tire, rim, disc sectioned on both faces; the caliper on
+   * w0), showing the axle and what is behind it. `rust` 0 → 1 on the disc's swept face; `padThickness`
+   * (radius-1 units, default 0.03). Default undefined (as before).
+   */
+  brake?: {wedge?: [number, number]; rust?: number; padThickness?: number; caliperAt?: number};
 };
 
 const UNIT_CYL = new THREE.CylinderGeometry(1, 1, 1, 40);
@@ -530,6 +540,7 @@ export const RealWheel: React.FC<RealWheelProps> = ({
   sensorScale = 1,
   envBoost = 1,
   inkScale = 1,
+  brake,
 }) => {
   const gl = useThree((s) => s.gl);
   gl.localClippingEnabled = true;
@@ -585,6 +596,9 @@ export const RealWheel: React.FC<RealWheelProps> = ({
       tick: clipped(new THREE.MeshStandardMaterial({color: raw(REAL.tick), roughness: 0.7})),
       tone: clipped(phys(REAL.toneRing, {metalness: 0.8, roughness: 0.45})),
       fill: clipped(cutFill),
+      brakeDisc: clipped(phys(REAL.rotor, {metalness: 0.6, roughness: 0.5, side: THREE.DoubleSide})),
+      // the brake corner's caliper: bare cast iron, lighter than the painted block caliper, so its edge reads
+      brakeCaliper: clipped(phys(REAL.steel, {metalness: 0.35, roughness: 0.55, side: THREE.DoubleSide})),
     };
   }, [plane]);
   mats.fill.color.copy(raw(section.cut)).multiplyScalar(0.8 / m.exposure);
@@ -623,6 +637,8 @@ export const RealWheel: React.FC<RealWheelProps> = ({
       [mats.rotorEdge, 0.5],
       [mats.hat, 0.5],
       [mats.caliper, 0.5],
+      [mats.brakeDisc, 0.5],
+      [mats.brakeCaliper, 0.5],
       [mats.stemAlu, 1],
       [mats.stem, 1],
       [mats.dark, 0.4],
@@ -652,6 +668,8 @@ export const RealWheel: React.FC<RealWheelProps> = ({
       mats.rotorEdge,
       mats.hat,
       mats.caliper,
+      mats.brakeDisc,
+      mats.brakeCaliper,
       mats.dark,
       mats.valve,
       mats.stemAlu,
@@ -670,16 +688,45 @@ export const RealWheel: React.FC<RealWheelProps> = ({
 
   const tire = useMemo(() => ccw(tireProfile()), []);
   const rim = useMemo(() => ccw(rimProfile()), []);
+  const wedge = brake && axle && cut === 'mid' ? brake.wedge : undefined;
+  const wedgeKey = wedge ? `${wedge[0].toFixed(4)},${wedge[1].toFixed(4)}` : '';
   const geo = useMemo(() => {
     const deform = sagDeform(pq);
-    const key = `${cut}:${pq}:${segs}`;
+    const key = `${cut}:${pq}:${segs}:${wedgeKey}`;
     return memo(key, () => {
+      if (cut === 'mid' && wedgeKey) {
+        // the inner half, opened over the wedge: both wedge faces are cut faces, inked
+        const [w0, w1] = wedgeKey.split(',').map(Number);
+        const t = clipInboard(tire);
+        const r = clipInboard(rim);
+        const rings = [...t.pts, ...r.pts].filter(([a]) => Math.abs(a) < 1e-9).map(([, rr]) => rr);
+        const arcs = rings.map((rr) => {
+          const n = 96;
+          return [...Array(n + 1).keys()].map((i) => {
+            const phi = w1 + ((w0 + Math.PI * 2 - w1) * i) / n;
+            return [0.003, rr * Math.cos(phi), rr * Math.sin(phi)] as V3;
+          });
+        });
+        return {
+          tire: revolve(t, w1, w0 + Math.PI * 2, segs, deform),
+          rim: revolve(r, w1, w0 + Math.PI * 2, segs),
+          caps: [capProfile(t.pts, w0, 0.0008), capProfile(t.pts, w1, -0.0008), capProfile(r.pts, w0, 0.0008), capProfile(r.pts, w1, -0.0008)],
+          ink: [
+            capOutline(t.pts, w0, 0.002),
+            capOutline(t.pts, w1, -0.002),
+            capOutline(r.pts, w0, 0.002),
+            capOutline(r.pts, w1, -0.002),
+          ],
+          arcs,
+        };
+      }
       if (cut === 'axle') {
         return {
           tire: revolve(tire, 0, Math.PI, segs, deform),
           rim: revolve(rim, 0, Math.PI, segs),
           caps: [cap(tire.pts, 0, deform), cap(tire.pts, Math.PI, deform), cap(rim.pts, 0), cap(rim.pts, Math.PI)],
           ink: [capInk(tire.pts, 0, deform), capInk(tire.pts, Math.PI, deform), capInk(rim.pts, 0), capInk(rim.pts, Math.PI)],
+          arcs: [] as V3[][],
         };
       }
       if (cut === 'mid') {
@@ -691,6 +738,7 @@ export const RealWheel: React.FC<RealWheelProps> = ({
           rim: revolve(r, 0, Math.PI * 2, segs),
           caps: [] as THREE.BufferGeometry[],
           ink: rings.map((rr) => circle(0.003, rr)),
+          arcs: [] as V3[][],
         };
       }
       return {
@@ -698,9 +746,10 @@ export const RealWheel: React.FC<RealWheelProps> = ({
         rim: revolve(rim, 0, Math.PI * 2, segs),
         caps: [] as THREE.BufferGeometry[],
         ink: [] as V3[][],
+        arcs: [] as V3[][],
       };
     });
-  }, [cut, pq, segs, tire, rim]);
+  }, [cut, pq, segs, tire, rim, wedgeKey]);
 
   // group materials by tag: SIDE_OUT, SIDE_IN, TREAD, LINER, BARREL, LIP, CUT
   const tireMats = [mats.sideOut, mats.sideIn, mats.tread, mats.liner, mats.barrel, mats.lip, mats.cut];
@@ -721,8 +770,25 @@ export const RealWheel: React.FC<RealWheelProps> = ({
       {ink
         ? geo.ink.map((pts, i) => <InkLine key={i} points={pts} thickness={((low ? 0.02 : 0.011) * inkScale) / radius} />)
         : null}
+      {ink
+        ? geo.arcs.map((pts, i) => (
+            <InkLine key={`a${i}`} points={pts} closed={false} thickness={((low ? 0.02 : 0.011) * inkScale) / radius} />
+          ))
+        : null}
+      {axle && brake ? (
+        <BrakeCorner
+          wedge={wedge ?? [brake.caliperAt ?? -2.1, -0.45]}
+          open={!!wedge}
+          spin={spin}
+          rust={brake.rust}
+          padThickness={brake.padThickness}
+          ink={((low ? 0.02 : 0.011) * inkScale) / radius}
+          mats={{disc: mats.brakeDisc, caliper: mats.brakeCaliper, dark: mats.dark}}
+          low={low}
+        />
+      ) : null}
 
-      {axle ? (
+      {axle && !brake ? (
         // the caliper: fixed, straddling the rotor at the back of the wheel (local +z), upper half
         <group rotation={[0.95, 0, 0]}>
           <mesh position={[-0.075, 0.42, 0]} material={mats.caliper} castShadow>
@@ -745,6 +811,10 @@ export const RealWheel: React.FC<RealWheelProps> = ({
           <>
             {/* the axle stub ends just inside the cut plane (no coplanar faces to flicker) */}
             <Axial a0={WHEEL.axleEnd} a1={-0.004} r={0.055} mats={solid(mats.stem)} low={low} />
+          </>
+        ) : null}
+        {axle && !brake ? (
+          <>
             <Axial a0={0.0} a1={0.12} r={0.1} mats={solid(mats.hat)} low={low} />
             {/* the rotor: its hat on the hub, the cross-drilled friction ring, its vented edge */}
             <Axial a0={-0.03} a1={-0.004} r={0.25} mats={solid(mats.hat)} low={low} />

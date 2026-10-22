@@ -94,6 +94,8 @@ export const SIGN_SPOTS: Record<RoadSignKind, {x: number; z: number}> = {
   speed: {x: 5.2, z: -8},
   mile: {x: 4.7, z: -28},
   guide: {x: 6.6, z: -34},
+  // not used on the highway (the city slice's sign)
+  oneway: {x: 5.2, z: -14},
 };
 
 /** A quad strip along the road: from (x0, y0) to (x1, y1) across, z0 → z1 along; uv in metres (x, z). */
@@ -211,7 +213,7 @@ export const asphaltMaterial = (
  * whose width is a uniform: the scene sets it every frame from the camera distance, so the line keeps
  * ≈ 3 px through a pull-back without rebuilding geometry (a stepped width popped). Unlit cutLine ink.
  */
-const FlatInk: React.FC<{points: V3[]; closed?: boolean; width: number}> = ({points, closed = false, width}) => {
+export const FlatInk: React.FC<{points: V3[]; closed?: boolean; width: number}> = ({points, closed = false, width}) => {
   const key = JSON.stringify([points, closed]);
   const geometry = useMemo(() => {
     const [pts, cl] = JSON.parse(key) as [V3[], boolean];

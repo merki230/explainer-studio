@@ -87,6 +87,8 @@ export const section = {
   screenLight: '#dbe6ff',
   /** Small set pieces the guide doesn't list, chosen outside the reserved band (hue 8–40°, sat ≥ 60%). */
   shoe: '#26272b',
+  /** Light sneakers (No. 006: YOU's shoes in the car, so the foot reads against the dark footwell). Neutral. */
+  sneaker: '#d9d5cc',
   glasses: '#2a2b30',
   /** The ink line along every cut edge (architect's-section look, both moods). */
   cutLine: '#24262c',
@@ -107,6 +109,22 @@ export const section = {
    * it may spin, never pulse.
    */
   leakRed: '#ef3957',
+  /**
+   * A traffic signal's lit lenses (No. 006, A/V script S6; added by the city-slice builder, values for the
+   * brand-director): flat emissive, never bloomed, never the system. Red = `brakeLit` (#e00208, renders
+   * ≈ 354°; `leakRed` read pink as a lit lens). Green ≈ 164°, 74%, 47%: a real signal's blue-green, far from the band. The
+   * yellow lens, if ever lit, is `warning`.
+   */
+  signalRed: '#e00208',
+  signalGreen: '#1fcf9f',
+  /**
+   * A lit brake lamp's emissive colour (No. 006, owner fix: "a clearly bright, saturated red, no pink
+   * cast"), used only while `brake` > 0 (running lights keep `HIGHWAY.tailLight`, dimmer, so No. 005 is
+   * unchanged). A true red: emissive values are linear, and the output encoding lifts small green/blue
+   * components, so `#e8102f` (351°) rendered at 341° (pink); this value renders ≈ 355°, ~95% saturated on
+   * the stills. Flat emissive, never bloomed.
+   */
+  brakeLit: '#e00208',
 };
 
 type Lamp = {light: string; intensity: number; reach: number; shade: string; glow: string; glowIntensity: number};
@@ -395,6 +413,30 @@ export const REAL = {
   receiver: '#25272c',
   /** A white tick mark on a sidewall (the indirect system's spin cue). */
   tick: '#e8e6e0',
+  /**
+   * No. 006 (A/V script S6; values for the brand-director). Rust on a brake disc's swept face, light and
+   * its pitting: HSL ≈ 17°, 25%, 37% / 17°, 26%, 23% (owner review: darker and browner, so it can't be
+   * read as the system's orange on a phone). Real rust's hue sits inside the reserved band (8–40°), so
+   * both stay far under its 60% saturation floor and below its 35% lightness floor. Never glows.
+   */
+  rust: '#775548',
+  rustDark: '#4a342b',
+  /**
+   * Copper (stator windings, bus bars), unlit: a dark, weathered copper-brown, ≈ 22°, 28%, 33% (final review: the
+   * brighter copper read as the system already lit). Under the band's 60% saturation and 35% lightness floor.
+   */
+  copper: '#6b4d3c',
+  /** The brake pads' friction material (a light grey-brown composite, ≈ 27°, 9%, 56%) and their steel backing plates (≈ 77% light): light, so the pads and their gaps read against the dark disc at phone size. */
+  friction: '#9a8f86',
+  backing: '#bfc4ca',
+  /** EV drive unit and battery: cast aluminium housings, electrical-steel laminations, magnets, the pack's modules and cells. */
+  housing: '#a9adb3',
+  lamination: '#80858d',
+  magnet: '#33363c',
+  module: '#575c64',
+  cell: '#3d4654',
+  /** The pedals' rubber pads and steel arms. */
+  pedal: '#232428',
 };
 
 /**
@@ -595,6 +637,45 @@ export const DESERT = {
   /** Creosote-like scrub clumps: two dusty olive greens. */
   scrub: '#6f7a58',
   scrubDark: '#56603f',
+};
+
+/**
+ * The city slice (No. 006, T): a one-way US downtown street. Real materials, the same in both moods (the
+ * lights change). Nothing here is the system. Lane paint reuses `HIGHWAY.lineWhite`, the sidewalk
+ * concrete `STREET.concrete`, the signs `HIGHWAY`, the lit lenses `section.signalRed` / `signalGreen`.
+ * Values for the brand-director: every colour under 35% saturation except the unlit lenses (dark, under
+ * 30% lightness), so none is in the reserved band (brick ≈ 15° at 17%, sandstone ≈ 38° at 20%).
+ */
+export const CITY = {
+  /** City asphalt (a little lighter and greyer than the interstate's), the concrete gutter pans. */
+  asphalt: '#53565c',
+  gutter: '#a9a69f',
+  /** Facades: limestone, brick, concrete, blue-grey panel, sandstone; their windows; flat roofs. */
+  facades: ['#bdb6aa', '#8e7469', '#a9aeb3', '#7d8892', '#c6bcab'],
+  window: '#3b4550',
+  roof: '#6b6e73',
+  /** Storefront awnings (blank, no names): slate, sage, plum-grey. */
+  awnings: ['#4d5b6c', '#5f6c5b', '#665c6b'],
+  /** Under the road: the duct bank's concrete, its grey conduits, the storm sewer's concrete pipe and its dark bore. */
+  ductBank: '#9d9b95',
+  conduit: '#6f7479',
+  stormPipe: '#8e8b85',
+  bore: '#2a2c30',
+  /** The bores on the cut face, mid grey (a near-black bore read as a stray object at phone size). */
+  boreCut: '#7b7f86',
+  /** The signal: housing and backplate (near black, painted), the mast arm and pole (dark grey), unlit lenses. */
+  signalHousing: '#1f2124',
+  mast: '#4a4d52',
+  lensRed: '#3b1d23',
+  lensYellow: '#3a3522',
+  lensGreen: '#183731',
+  /**
+   * The extras' car bodies (owner fix: variety): graphite, silver, slate blue, warm taupe, dark sage. All
+   * under 25% saturation, far from the reserved band; none near YOU's body.
+   */
+  carBodies: ['#3f434a', '#a7acb2', '#4f5d70', '#8d8478', '#4d5a50'],
+  /** The default body of an extra whose lamps are set 'dark' (the queue's odd one out): charcoal, ≈ 4% saturation. */
+  charcoal: '#25272b',
 };
 
 export type CastName = 'you' | 'friend' | 'mom' | 'extra';
