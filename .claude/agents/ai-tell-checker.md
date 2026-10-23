@@ -47,6 +47,17 @@ Check every sentence against each family. A sentence can hit several.
   "gonna", "wanna", "kinda", "gotta" where a real American narrator would naturally say them. Use those sparingly
   (they also appear in the captions), never inside a fact-checked hedge, and never two in one sentence.
 
+- **Template hooks and openers (owner, 2026-10-23):** formulas that sound like a thousand AI videos even when
+  every word is fine: "Do/Push/Try X, and you're (only) Y", "Here's why…", "Here's the thing", "You won't
+  believe…", "This is why…", "Ever wondered…", "What if I told you…", "Say/Picture/Imagine/Take…". Flag them
+  even when the owner picked the line, and offer a plain-statement version a person would actually say.
+- **Natural speech (owner, 2026-10-22/23; the owner rejected several scripts as "strange" and "unnatural"):**
+  read the whole text aloud as the narrator, start to finish, and judge it the way a listener would. Flag any
+  line a real person wouldn't say to a friend: written-only grammar (causatives like "has a motor open it",
+  stacked clauses, nominalisations), filler ("just", "actually", "exactly", "simply", "really"), ambiguous
+  "it/that", a rule or fact dropped into a story without a hand-off, and any jump between lines (each line
+  must pick up something from the one before). Story first, rule after: answer the moment, then state the fact.
+
 Do not flag things the brand deliberately allows (check brand.md), and do not flag a pattern just because
 it is common in human writing too: say how likely it is to read as AI (high / medium / low).
 
