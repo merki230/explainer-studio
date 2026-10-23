@@ -1,9 +1,10 @@
 import React, {useMemo} from 'react';
 import * as THREE from 'three';
-import {HIGHWAY, section, type Mood} from '../../theme';
+import {HIGHWAY, MOODS, section, type Mood} from '../../theme';
 import {raw} from '../plaster';
 import {RoadSign, type RoadSignKind} from '../real/RoadSigns';
 import {cutMaterial, INK} from './cutLook';
+import {bendDepthMaterial, bendMaterial, bendPoint, bendUniforms, BEND_GLSL, type BendUniforms, type RoadBend} from './roadBend';
 import {mottle} from './StreetSlice';
 
 type V3 = [number, number, number];
@@ -98,16 +99,38 @@ export const SIGN_SPOTS: Record<RoadSignKind, {x: number; z: number}> = {
   oneway: {x: 5.2, z: -14},
 };
 
-/** A quad strip along the road: from (x0, y0) to (x1, y1) across, z0 → z1 along; uv in metres (x, z). */
-const stripGeo = (x0: number, y0: number, x1: number, y1: number, z0: number, z1: number) => {
+/**
+ * A quad strip along the road: from (x0, y0) to (x1, y1) across, z0 → z1 along; uv in metres (x, z).
+ * `segs` > 1 splits it along the road (a bent road needs vertices to bend: `roadBend`).
+ */
+const stripGeo = (x0: number, y0: number, x1: number, y1: number, z0: number, z1: number, segs = 1) => {
   const g = new THREE.BufferGeometry();
-  const p = [x0, y0, z0, x1, y1, z0, x1, y1, z1, x0, y0, z1];
+  if (segs <= 1) {
+    const p = [x0, y0, z0, x1, y1, z0, x1, y1, z1, x0, y0, z1];
+    g.setAttribute('position', new THREE.Float32BufferAttribute(p, 3));
+    g.setAttribute('uv', new THREE.Float32BufferAttribute([x0, z0, x1, z0, x1, z1, x0, z1], 2));
+    g.setIndex([0, 1, 2, 0, 2, 3]);
+    g.computeVertexNormals();
+    return g;
+  }
+  const p: number[] = [];
+  const uv: number[] = [];
+  const idx: number[] = [];
+  for (let i = 0; i <= segs; i++) {
+    const z = z0 + ((z1 - z0) * i) / segs;
+    p.push(x0, y0, z, x1, y1, z);
+    uv.push(x0, z, x1, z);
+    if (i > 0) idx.push(2 * i - 2, 2 * i - 1, 2 * i + 1, 2 * i - 2, 2 * i + 1, 2 * i);
+  }
   g.setAttribute('position', new THREE.Float32BufferAttribute(p, 3));
-  g.setAttribute('uv', new THREE.Float32BufferAttribute([x0, z0, x1, z0, x1, z1, x0, z1], 2));
-  g.setIndex([0, 1, 2, 0, 2, 3]);
+  g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  g.setIndex(idx);
   g.computeVertexNormals();
   return g;
 };
+
+/** Segments along a bent road's strips: one every 2 m (none on a straight road). */
+const bendSegs = (bend: RoadBend | null | undefined, length: number) => (bend ? Math.ceil(length / 2) : 1);
 
 /**
  * The road surface: asphalt with its paint and the grooves, drawn in the shader from world position
@@ -119,7 +142,15 @@ const stripGeo = (x0: number, y0: number, x1: number, y1: number, z0: number, z1
  */
 export const asphaltMaterial = (
   axes: {across: string; along: string; key: string} = {across: 'vRoadPos.x', along: 'vRoadPos.z', key: 'highway-asphalt'},
+  /**
+   * After the rain (No. 008, off by default): `wet` darkens the asphalt (`HIGHWAY.asphaltWet`, the wheel
+   * paths drying lighter), adds standing water in seeded-noise puddles (shoulder and lane edges most)
+   * that stream with the road, lowers the roughness, and lays the mood's sky over it as a soft sheen,
+   * strongest at grazing angles and in the puddles. `bend` bends the surface (`roadBend`).
+   */
+  opts: {wet?: boolean; mood?: Mood; bend?: BendUniforms} = {},
 ) => {
+  const wet = opts.wet ?? false;
   const m = new THREE.MeshStandardMaterial({color: raw('#ffffff'), roughness: 0.88});
   const c = (h: string) => {
     const k = raw(h);
@@ -129,11 +160,18 @@ export const asphaltMaterial = (
     uScroll: {value: 0},
     uBlur: {value: 0},
     uAcross: {value: 0},
-    cAsphalt: {value: c(HIGHWAY.asphalt)},
-    cPath: {value: c(HIGHWAY.wheelPath)},
+    cAsphalt: {value: c(wet ? HIGHWAY.asphaltWet : HIGHWAY.asphalt)},
+    cPath: {value: c(wet ? HIGHWAY.wheelPathWet : HIGHWAY.wheelPath)},
     cMilled: {value: c(HIGHWAY.milled)},
     cWhite: {value: c(HIGHWAY.lineWhite)},
     cYellow: {value: c(HIGHWAY.lineYellow)},
+    ...(wet
+      ? {
+          cPuddle: {value: c(HIGHWAY.puddle)},
+          // the sheen: the sky's lower band (a reflection, so it is the sky, not a new colour)
+          cSheen: {value: c(MOODS[opts.mood ?? 'day'].sky[1])},
+        }
+      : {}),
   };
   m.userData.uniforms = uniforms;
   const f = (v: number) => v.toFixed(5);
@@ -150,7 +188,7 @@ export const asphaltMaterial = (
         uniform float uScroll;
         uniform float uBlur;
         uniform float uAcross;
-        uniform vec3 cAsphalt, cPath, cMilled, cWhite, cYellow;
+        uniform vec3 cAsphalt, cPath, cMilled, cWhite, cYellow;${wet ? '\n        uniform vec3 cPuddle, cSheen;\n        float wetPuddle = 0.0;' : ''}
         // coverage of [a, b] by a box filter of width w centred at x
         float boxF(float x, float a, float b, float w) {
           return clamp((min(x + 0.5 * w, b) - max(x - 0.5 * w, a)) / w, 0.0, 1.0);
@@ -199,14 +237,48 @@ export const asphaltMaterial = (
           float ph = clamp(mod(u + ${f(G.length / 2)}, ${f(G.period)}) / ${f(G.length)}, 0.0, 1.0);
           float detail = 1.0 - smoothstep(${f(0.25 * G.length)}, ${f(0.8 * G.length)}, wz);
           float shade = mix(1.0, mix(1.35, 0.7, ph), detail);
-          col = mix(col, cMilled * (0.9 + 0.2 * n) * shade, band * g * 0.9);
+          col = mix(col, cMilled * (0.9 + 0.2 * n) * shade, band * g * 0.9);${wet ? WET_COLOR : ''}
           diffuseColor.rgb = col;
         }`,
       );
+    if (wet)
+      shader.fragmentShader = shader.fragmentShader
+        .replace(
+          '#include <roughnessmap_fragment>',
+          `#include <roughnessmap_fragment>
+          // wet: satin, the puddles near a mirror (soft: the key's highlight stays broad, never a burn)
+          roughnessFactor = mix(0.5, 0.22, wetPuddle);`,
+        )
+        .replace(
+          '#include <emissivemap_fragment>',
+          `#include <emissivemap_fragment>
+          {
+            // the sky's sheen: faint face-on, stronger toward grazing, most in the standing water
+            float cosI = clamp(dot(normalize(vViewPosition), normal), 0.0, 1.0);
+            float fr = pow(1.0 - cosI, 4.0);
+            totalEmissiveRadiance += cSheen * (0.03 + 0.8 * fr) * (0.5 + 0.9 * wetPuddle);
+          }`,
+        );
   };
-  m.customProgramCacheKey = () => axes.key;
-  return m;
+  m.customProgramCacheKey = () => (wet ? `${axes.key}-wet` : axes.key);
+  return opts.bend ? bendMaterial(m, opts.bend, axes.key) : m;
 };
+
+/**
+ * The wet variant's colour pass (inside the asphalt's colour block, after the grooves): the paint a
+ * little darker (wet), and the puddles: seeded value noise in road space (streaming with the road),
+ * thresholded into soft-edged patches, more of them on the shoulder and along the lane edges, fewer in
+ * the wheel paths (traffic pushes the water out). Low frequency, so it neither shimmers nor strobes.
+ */
+const WET_COLOR = `
+          {
+            float pn = vnoise(vec2(x, u) * vec2(0.6, 0.09)) * 0.65 + vnoise(vec2(x, u) * vec2(1.9, 0.3)) * 0.35;
+            float edge = max(boxF(x, -0.6, ${(L.outsideEdge - 0.2).toFixed(5)}, 1.2), boxF(x, ${(L.laneLeft - 0.5).toFixed(5)}, ${(L.laneLeft + 0.7).toFixed(5)}, 1.2));
+            float thr = mix(0.7, 0.56, edge) + 0.08 * clamp(path, 0.0, 1.0);
+            wetPuddle = smoothstep(thr, thr + 0.07, pn);
+            col *= 0.9;
+            col = mix(col, cPuddle, wetPuddle * 0.85);
+          }`;
 
 /**
  * Ink along a polyline lying in a plane z = const (the cut face's outline and its layers), as flat quads
@@ -263,7 +335,7 @@ export const FlatInk: React.FC<{points: V3[]; closed?: boolean; width: number}> 
 };
 
 /** The lit grooves' orange wash (the system): unlit, bloomed, only on the milled stripes, between two z. */
-const washMaterial = () =>
+const washMaterial = (bend?: BendUniforms) =>
   new THREE.ShaderMaterial({
     transparent: true,
     depthWrite: false,
@@ -277,8 +349,20 @@ const washMaterial = () =>
       uNear: {value: 0},
       uFar: {value: -10},
       cOrange: {value: raw(section.orange)},
+      ...(bend ?? {}),
     },
-    vertexShader: `
+    vertexShader: bend
+      ? `
+      varying vec3 vP;
+      ${BEND_GLSL}
+      void main() {
+        vec4 w = modelMatrix * vec4(position, 1.0);
+        vP = w.xyz;
+        float th;
+        w.xyz = bendWorld(w.xyz, th);
+        gl_Position = projectionMatrix * viewMatrix * w;
+      }`
+      : `
       varying vec3 vP;
       void main() {
         vec4 w = modelMatrix * vec4(position, 1.0);
@@ -320,6 +404,10 @@ export type HighwaySliceProps = {
   signs?: {kind: RoadSignKind; text: string[]; x: number; z: number; retro?: number}[];
   /** The W-beam guardrail on the right verge (default true). */
   guardrail?: boolean;
+  /** After the rain: wet asphalt, puddles and the sky's sheen (`asphaltMaterial` `wet`), damp verges. Default false. */
+  wet?: boolean;
+  /** The road bends from `start` m up (`roadBend`); signs are placed and turned on it. Default none (straight). */
+  bend?: RoadBend | null;
 };
 
 /** The highway slice (see the file comment). */
@@ -332,18 +420,34 @@ export const HighwaySlice: React.FC<HighwaySliceProps> = ({
   ink = 1,
   signs = [],
   guardrail = true,
+  wet = false,
+  bend: bendProp = null,
 }) => {
+  // keyed on the values, so a new props object each frame doesn't rebuild the geometry
+  const bendKey = bendProp ? `${bendProp.start}|${bendProp.radius}|${bendProp.side}` : '';
+  const bend = useMemo((): RoadBend | null => {
+    if (!bendKey) return null;
+    const [start, radius, side] = bendKey.split('|');
+    return {start: Number(start), radius: Number(radius), side: side as RoadBend['side']};
+  }, [bendKey]);
+  const bu = useMemo(() => (bend ? bendUniforms(bend) : null), [bend]);
   const mats = useMemo(() => {
     const grass = new THREE.MeshStandardMaterial({color: raw('#ffffff'), roughness: 1, map: mottle(HIGHWAY.grass, 16)});
     grass.map!.repeat.set(0.22, 0.22);
     const gravel = new THREE.MeshStandardMaterial({color: raw('#ffffff'), roughness: 1, map: mottle(HIGHWAY.gravel, 60)});
     gravel.map!.repeat.set(3, 3);
+    if (wet) {
+      // damp verges: the same textures, darker (water darkens soil and grass)
+      grass.color.multiplyScalar(0.8);
+      gravel.color.multiplyScalar(0.72);
+    }
+    const b = <M extends THREE.Material>(m: M, k: string) => (bu ? bendMaterial(m, bu, `highway-${k}`) : m);
     return {
       cut: cutMaterial(),
-      asphalt: asphaltMaterial(),
-      wash: washMaterial(),
-      grass,
-      gravel,
+      asphalt: asphaltMaterial(undefined, {wet, mood, bend: bu ?? undefined}),
+      wash: washMaterial(bu ?? undefined),
+      grass: b(grass, 'grass'),
+      gravel: b(gravel, 'gravel'),
       milled: new THREE.MeshStandardMaterial({
         color: raw(HIGHWAY.milled),
         roughness: 1,
@@ -353,10 +457,15 @@ export const HighwaySlice: React.FC<HighwaySliceProps> = ({
       }),
       white: new THREE.MeshStandardMaterial({color: raw(HIGHWAY.lineWhite), roughness: 0.6}),
       yellow: new THREE.MeshStandardMaterial({color: raw(HIGHWAY.lineYellow), roughness: 0.6}),
-      steel: new THREE.MeshStandardMaterial({color: raw(HIGHWAY.galvanized), roughness: 0.4, metalness: 0.7}),
-      railCut: [cutMaterial(), new THREE.MeshStandardMaterial({color: raw(HIGHWAY.galvanized), roughness: 0.35, metalness: 0.75})],
+      steel: b(new THREE.MeshStandardMaterial({color: raw(HIGHWAY.galvanized), roughness: 0.4, metalness: 0.7}), 'steel'),
+      railCut: [
+        b(cutMaterial(), 'railcut'),
+        b(new THREE.MeshStandardMaterial({color: raw(HIGHWAY.galvanized), roughness: 0.35, metalness: 0.75}), 'rail'),
+      ],
+      endCut: b(cutMaterial(), 'endcut'),
+      depth: bu ? bendDepthMaterial(bu, 'highway') : undefined,
     };
-  }, []);
+  }, [wet, mood, bu]);
   const u = mats.asphalt.userData.uniforms as Record<string, {value: number}>;
   u.uScroll.value = scroll;
   u.uBlur.value = blur;
@@ -383,11 +492,43 @@ export const HighwaySlice: React.FC<HighwaySliceProps> = ({
           : (a >= L.insideEdge - 0.31 && b <= L.insideEdge) || (a >= L.outsideEdge && b <= 3.76)
             ? 'gravel'
             : 'grass';
+      const n = bendSegs(bend, D);
       if (kind === 'asphalt') {
-        strips.push({g: stripGeo(a, ya, G.x0, ya, 0, -D), m: kind});
-        strips.push({g: stripGeo(G.x0, 0, G.x1, 0, -G.length / 2, -D), m: kind});
-        strips.push({g: stripGeo(G.x1, 0, b, yb, 0, -D), m: kind});
-      } else strips.push({g: stripGeo(a, ya, b, yb, 0, -D), m: kind});
+        strips.push({g: stripGeo(a, ya, G.x0, ya, 0, -D, n), m: kind});
+        strips.push({g: stripGeo(G.x0, 0, G.x1, 0, -G.length / 2, -D, n), m: kind});
+        strips.push({g: stripGeo(G.x1, 0, b, yb, 0, -D, n), m: kind});
+      } else strips.push({g: stripGeo(a, ya, b, yb, 0, -D, n), m: kind});
+    }
+    // a bent road: the verge inside the bend widens from nothing at the bend's start to most of the way to
+    // its centre, so the ground fills the inside of the curve (no background showing through it)
+    if (bend) {
+      const inner = bend.side === 'left' ? 0 : PROFILE.length - 2;
+      const [ea, ey] = PROFILE[inner === 0 ? 0 : PROFILE.length - 1];
+      const W = bend.radius * 0.85;
+      const TAPER = 30;
+      const N = Math.ceil((D - bend.start) / 2);
+      const pos: number[] = [];
+      const uv: number[] = [];
+      const idx: number[] = [];
+      for (let i = 0; i <= N; i++) {
+        const sAlong = bend.start + ((D - bend.start) * i) / N;
+        const u = Math.min(1, (sAlong - bend.start) / TAPER);
+        const wide = W * u * u * (3 - 2 * u);
+        const xOut = bend.side === 'left' ? ea - wide : ea + wide;
+        pos.push(xOut, ey, -sAlong, ea, ey, -sAlong);
+        uv.push(xOut, -sAlong, ea, -sAlong);
+        if (i > 0) {
+          const k = 2 * (i - 1);
+          if (bend.side === 'left') idx.push(k, k + 1, k + 3, k, k + 3, k + 2);
+          else idx.push(k, k + 2, k + 3, k, k + 3, k + 1);
+        }
+      }
+      const fill = new THREE.BufferGeometry();
+      fill.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+      fill.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+      fill.setIndex(idx);
+      fill.computeVertexNormals();
+      strips.push({g: fill, m: 'grass'});
     }
     // the cut face: the profile with the groove notch, down to the bottom
     const face: P2[] = [[L.x0, L.bottom]];
@@ -438,10 +579,10 @@ export const HighwaySlice: React.FC<HighwaySliceProps> = ({
     const t = 0.004;
     const railShape = new THREE.Shape([...wb, ...[...wb].reverse().map(([x, y]) => [x + t, y] as P2)].map(([x, y]) => new THREE.Vector2(x, y)));
     const RAIL_LEN = 260;
-    const rail = new THREE.ExtrudeGeometry(railShape, {depth: RAIL_LEN, bevelEnabled: false});
+    const rail = new THREE.ExtrudeGeometry(railShape, {depth: RAIL_LEN, bevelEnabled: false, ...(bend ? {steps: RAIL_LEN / 2} : {})});
     rail.translate(0, 0, -RAIL_LEN);
     return {strips, face: new THREE.ShapeGeometry(shape), faceInk: face, scoop, walls: [wall(G.x0), wall(G.x1)], rail, RAIL_LEN};
-  }, [D]);
+  }, [D, bend]);
 
   // the guardrail posts and blockouts (instanced), every 6 ft 3 in
   const POST_GAP = 75 * IN;
@@ -458,12 +599,17 @@ export const HighwaySlice: React.FC<HighwaySliceProps> = ({
       block.setMatrixAt(i, mtx.makeTranslation(L.rail.x + 0.15, L.rail.height, z));
     }
     post.castShadow = block.castShadow = true;
+    if (mats.depth) post.customDepthMaterial = block.customDepthMaterial = mats.depth;
     post.instanceMatrix.needsUpdate = block.instanceMatrix.needsUpdate = true;
     return {post, block};
-  }, [geo.RAIL_LEN, POST_GAP, mats.steel]);
+  }, [geo.RAIL_LEN, POST_GAP, mats.steel, mats.depth]);
 
   const inkMat = useMemo(() => new THREE.MeshBasicMaterial({color: raw(section.cutLine)}), []);
-  const washGeo = useMemo(() => stripGeo(G.x0, 0, G.x1, 0, 0, -80), []);
+  const inkBent = useMemo(
+    () => (bu ? bendMaterial(new THREE.MeshBasicMaterial({color: raw(section.cutLine)}), bu, 'highway-ink') : inkMat),
+    [bu, inkMat],
+  );
+  const washGeo = useMemo(() => stripGeo(G.x0, 0, G.x1, 0, 0, -80, bend ? 40 : 1), [bend]);
   const inkT = INK * ink;
   const faceInk = useMemo(() => geo.faceInk.map(([x, y]) => [x, y, 0.003] as V3), [geo.faceInk]);
   // pavement layers on the cut: asphalt (10 in) over aggregate base (12 in), tapering at the edges
@@ -511,22 +657,52 @@ export const HighwaySlice: React.FC<HighwaySliceProps> = ({
         <planeGeometry args={[L.yellow[1] - L.yellow[0], 0.004]} />
       </mesh>
       {/* the slice's right end, cut */}
-      <mesh material={mats.cut} position={[L.x1, (L.bottom + topR) / 2, -D / 2]} rotation={[0, Math.PI / 2, 0]}>
-        <planeGeometry args={[D, topR - L.bottom]} />
-      </mesh>
-      <mesh material={inkMat} position={[L.x1, topR, -D / 2]} scale={[inkT, inkT, 1]}>
-        <boxGeometry args={[1, 1, D]} />
-      </mesh>
+      {bend ? (
+        <>
+          <mesh material={mats.endCut} position={[L.x1, (L.bottom + topR) / 2, -D / 2]} rotation={[0, Math.PI / 2, 0]}>
+            <planeGeometry args={[D, topR - L.bottom, bendSegs(bend, D), 1]} />
+          </mesh>
+          <mesh material={inkBent} position={[L.x1, topR, -D / 2]} scale={[inkT, inkT, 1]}>
+            <boxGeometry args={[1, 1, D, 1, 1, bendSegs(bend, D)]} />
+          </mesh>
+        </>
+      ) : (
+        <>
+          <mesh material={mats.cut} position={[L.x1, (L.bottom + topR) / 2, -D / 2]} rotation={[0, Math.PI / 2, 0]}>
+            <planeGeometry args={[D, topR - L.bottom]} />
+          </mesh>
+          <mesh material={inkMat} position={[L.x1, topR, -D / 2]} scale={[inkT, inkT, 1]}>
+            <boxGeometry args={[1, 1, D]} />
+          </mesh>
+        </>
+      )}
       {guardrail ? (
         <>
-          <mesh geometry={geo.rail} material={mats.railCut} position={[L.rail.x, L.rail.height, 0]} castShadow receiveShadow />
+          <mesh
+            geometry={geo.rail}
+            material={mats.railCut}
+            position={[L.rail.x, L.rail.height, 0]}
+            castShadow
+            receiveShadow
+            customDepthMaterial={mats.depth}
+          />
           <primitive object={posts.post} />
           <primitive object={posts.block} />
         </>
       ) : null}
-      {signs.map((s, i) => (
-        <RoadSign key={i} mood={mood} kind={s.kind} text={s.text} position={[s.x, groundAt(s.x), s.z]} retro={s.retro ?? 0} />
-      ))}
+      {signs.map((s, i) => {
+        if (!bend)
+          return (
+            <RoadSign key={i} mood={mood} kind={s.kind} text={s.text} position={[s.x, groundAt(s.x), s.z]} retro={s.retro ?? 0} />
+          );
+        // on a bent road: placed on the bend and turned with it, still facing oncoming traffic
+        const w = bendPoint(s.x, s.z, bend);
+        return (
+          <group key={i} position={[w.x, 0, w.z]} rotation={[0, -w.yaw, 0]}>
+            <RoadSign mood={mood} kind={s.kind} text={s.text} position={[0, groundAt(s.x), 0]} retro={s.retro ?? 0} />
+          </group>
+        );
+      })}
     </group>
   );
 };

@@ -201,8 +201,12 @@ export type FigureProps = {
   shoe?: string;
 };
 
-/** A seated foot's target (see `FigureProps.legs`). */
-export type LegTarget = {ankle: V3; pitch?: number};
+/**
+ * A seated foot's target (see `FigureProps.legs`). `side` (m, figure-local x, + toward the figure's left)
+ * swings the whole leg about the hip's vertical axis so the foot lands that far across, toes turned
+ * with it (a heel pivot from pedal to pedal, No. 008). Default 0: the leg's own plane.
+ */
+export type LegTarget = {ankle: V3; pitch?: number; side?: number};
 
 /** The leg's rest angles in its (y up, z forward) plane, as atan2(z, y), and its two lengths. */
 const LEG = (() => {
@@ -220,7 +224,10 @@ const LEG = (() => {
 const legIK = (leg: LegTarget, side: number) => {
   const hip = REST.hip(side);
   const dy = leg.ankle[1] - hip.y;
-  const dz = leg.ankle[2] - hip.z;
+  const lat = leg.side ?? 0;
+  const dz0 = leg.ankle[2] - hip.z;
+  // with a side offset the leg swings about the hip's vertical axis: solve in the swung plane
+  const dz = lat ? Math.hypot(dz0, lat) : dz0;
   const dist = Math.max(Math.abs(LEG.l1 - LEG.l2) + 1e-3, Math.min(LEG.l1 + LEG.l2 - 1e-3, Math.hypot(dy, dz)));
   const a = Math.acos(Math.max(-1, Math.min(1, (LEG.l1 ** 2 + dist ** 2 - LEG.l2 ** 2) / (2 * LEG.l1 * dist))));
   // the knee on the upper side of the hip–ankle line (as at rest)
@@ -230,7 +237,7 @@ const legIK = (leg: LegTarget, side: number) => {
   const shin = Math.atan2(leg.ankle[2] - kz, leg.ankle[1] - ky);
   const h = thigh - LEG.thigh;
   const k = shin - LEG.shin - h;
-  return {hip: h, knee: k, ankle: -(leg.pitch ?? 0) - h - k};
+  return {hip: h, knee: k, ankle: -(leg.pitch ?? 0) - h - k, yaw: lat ? Math.atan2(lat, dz0) : 0};
 };
 
 /** How far the body rises standing up (the thigh's length): the seated hip at 0.6 → 1.07. */
@@ -406,32 +413,33 @@ export const Figure: React.FC<FigureProps> = ({
           const leg = stand ? null : legs?.[side.s < 0 ? 0 : 1];
           const ik = leg ? legIK(leg, side.s) : null;
           return (
-            <group
-              key={side.s}
-              position={rel(REST.hip(side.s), REST.pelvis)}
-              rotation={[
-                stand ? Math.PI / 2 - 0.06 - swing(side.s) : (ik?.hip ?? 0),
-                idle.hipYaw * L * (stand ? 0.3 : 1),
-                0,
-              ]}
-            >
-              <PartMesh part={side.thigh} material={mats.bottom} />
+            // a side offset swings the leg about the hip's vertical axis, after its pitch (an outer group)
+            <group key={side.s} position={rel(REST.hip(side.s), REST.pelvis)} rotation={[0, ik?.yaw ?? 0, 0]}>
               <group
-                position={rel(REST.knee(side.s), REST.hip(side.s))}
-                rotation={[stand ? -Math.PI / 2 + 0.12 + kneeBend(side.s) : (ik?.knee ?? 0), 0, 0]}
+                rotation={[
+                  stand ? Math.PI / 2 - 0.06 - swing(side.s) : (ik?.hip ?? 0),
+                  idle.hipYaw * L * (stand ? 0.3 : 1),
+                  0,
+                ]}
               >
-                <PartMesh part={side.shin} material={mats.bottom} />
+                <PartMesh part={side.thigh} material={mats.bottom} />
                 <group
-                  position={rel(REST.ankle(side.s), REST.knee(side.s))}
-                  rotation={[stand ? -0.06 + swing(side.s) - kneeBend(side.s) : (ik?.ankle ?? 0), 0, 0]}
+                  position={rel(REST.knee(side.s), REST.hip(side.s))}
+                  rotation={[stand ? -Math.PI / 2 + 0.12 + kneeBend(side.s) : (ik?.knee ?? 0), 0, 0]}
                 >
-                  {footScale ? (
-                    <group scale={footScale[side.s < 0 ? 0 : 1]}>
+                  <PartMesh part={side.shin} material={mats.bottom} />
+                  <group
+                    position={rel(REST.ankle(side.s), REST.knee(side.s))}
+                    rotation={[stand ? -0.06 + swing(side.s) - kneeBend(side.s) : (ik?.ankle ?? 0), 0, 0]}
+                  >
+                    {footScale ? (
+                      <group scale={footScale[side.s < 0 ? 0 : 1]}>
+                        <PartMesh part={side.foot} material={mats.shoe} />
+                      </group>
+                    ) : (
                       <PartMesh part={side.foot} material={mats.shoe} />
-                    </group>
-                  ) : (
-                    <PartMesh part={side.foot} material={mats.shoe} />
-                  )}
+                    )}
+                  </group>
                 </group>
               </group>
             </group>

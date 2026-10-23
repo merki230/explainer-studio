@@ -151,10 +151,23 @@ export type DriveUnitProps = {
   slots?: number[];
   /** × the ink lines' thickness (close framings thin them). */
   inkScale?: number;
+  /** The inverter's control board on its near end (No. 008: the computer the pedal talks to). Default false. */
+  board?: boolean;
 };
 
+/** The inverter's control board (No. 008) on the inverter's near end face (x0, x1, y0, y1). */
+export const EV_BOARD: [number, number, number, number] = [1.14, 1.32, 0.868, 0.952];
+
 /** The front drive unit cut open (see the file comment). */
-export const DriveUnit: React.FC<DriveUnitProps> = ({mood, wheelSpin, rotorSpin, rotorBlur = 0, slots, inkScale = 1}) => {
+export const DriveUnit: React.FC<DriveUnitProps> = ({
+  mood,
+  wheelSpin,
+  rotorSpin,
+  rotorBlur = 0,
+  slots,
+  inkScale = 1,
+  board = false,
+}) => {
   const {env, envScale, albedo} = usePhys();
   const mats = useMemo(
     () => ({
@@ -169,6 +182,9 @@ export const DriveUnit: React.FC<DriveUnitProps> = ({mood, wheelSpin, rotorSpin,
       cable: phys(REAL.cable, {roughness: 0.55}),
       boot: phys(REAL.rubber, {roughness: 0.7}),
       ghost: phys(REAL.magnet, {metalness: 0.3, roughness: 0.4, transparent: true, opacity: 0.3, depthWrite: false}),
+      pcb: phys(REAL.pcb, {roughness: 0.38, clearcoat: 0.5}),
+      chip: phys(REAL.chip, {roughness: 0.4}),
+      connector: phys(REAL.receiver, {roughness: 0.55}),
       glow: [...Array(24).keys()].map(() => glowMat()),
     }),
     [],
@@ -228,8 +244,14 @@ export const DriveUnit: React.FC<DriveUnitProps> = ({mood, wheelSpin, rotorSpin,
       return extrude(shapeOf(pts), -0.2, z);
     });
     // the gear case behind the motor: a hull round the two gears, cut at its own plane
-    const caseOut = hull([...circlePts(EV.final.c, EV.final.r + 0.05, 32), ...circlePts(EV.inter.c, EV.inter.r + 0.05, 32)]);
-    const caseIn = hull([...circlePts(EV.final.c, EV.final.r + 0.022, 32), ...circlePts(EV.inter.c, EV.inter.r + 0.022, 32)]);
+    const caseOut = hull([
+      ...circlePts(EV.final.c, EV.final.r + 0.05, 32),
+      ...circlePts(EV.inter.c, EV.inter.r + 0.05, 32),
+    ]);
+    const caseIn = hull([
+      ...circlePts(EV.final.c, EV.final.r + 0.022, 32),
+      ...circlePts(EV.inter.c, EV.inter.r + 0.022, 32),
+    ]);
     const gearCase = extrude(shapeOf(caseOut, [caseIn.slice().reverse()]), -0.15, EV.gearZ);
     return {
       caseG,
@@ -247,8 +269,16 @@ export const DriveUnit: React.FC<DriveUnitProps> = ({mood, wheelSpin, rotorSpin,
       })(),
       magnet: new THREE.BoxGeometry(0.03, 0.009, 0.01),
       shaft: extrude(shapeOf(circlePts([0, 0], 0.024, 32)), -0.2, z),
-      final: extrude(shapeOf(gearPts(EV.final.r, EV.final.teeth, 0.012), [circlePts([0, 0], 0.03, 24)]), EV.gearZ - 0.05, EV.gearZ - 0.006),
-      inter: extrude(shapeOf(gearPts(EV.inter.r, EV.inter.teeth, 0.011), [circlePts([0, 0], 0.022, 24)]), EV.gearZ - 0.05, EV.gearZ - 0.006),
+      final: extrude(
+        shapeOf(gearPts(EV.final.r, EV.final.teeth, 0.012), [circlePts([0, 0], 0.03, 24)]),
+        EV.gearZ - 0.05,
+        EV.gearZ - 0.006,
+      ),
+      inter: extrude(
+        shapeOf(gearPts(EV.inter.r, EV.inter.teeth, 0.011), [circlePts([0, 0], 0.022, 24)]),
+        EV.gearZ - 0.05,
+        EV.gearZ - 0.006,
+      ),
       hub: extrude(shapeOf(circlePts([0, 0], 0.03, 24)), EV.gearZ - 0.06, EV.gearZ - 0.004),
       hv: new THREE.TubeGeometry(new THREE.CatmullRomCurve3(EV.hv.map((p) => new THREE.Vector3(...p))), 48, 0.016, 8),
       phase: [-1, 0, 1].map(
@@ -403,6 +433,27 @@ export const DriveUnit: React.FC<DriveUnitProps> = ({mood, wheelSpin, rotorSpin,
         <mesh key={i} geometry={g} material={mats.cable} castShadow />
       ))}
       <mesh geometry={geo.hv} material={mats.cable} castShadow />
+      {board ? (
+        // the control board on the inverter's near end: a green board, its processor and a connector
+        <group>
+          <mesh
+            position={[(EV_BOARD[0] + EV_BOARD[1]) / 2, (EV_BOARD[2] + EV_BOARD[3]) / 2, iz1 + 0.004]}
+            material={mats.pcb}
+            castShadow
+          >
+            <boxGeometry args={[EV_BOARD[1] - EV_BOARD[0], EV_BOARD[3] - EV_BOARD[2], 0.006]} />
+          </mesh>
+          <mesh position={[EV_BOARD[0] + 0.07, (EV_BOARD[2] + EV_BOARD[3]) / 2, iz1 + 0.01]} material={mats.chip}>
+            <boxGeometry args={[0.04, 0.04, 0.006]} />
+          </mesh>
+          <mesh
+            position={[EV_BOARD[1] - 0.035, (EV_BOARD[2] + EV_BOARD[3]) / 2, iz1 + 0.014]}
+            material={mats.connector}
+          >
+            <boxGeometry args={[0.04, 0.05, 0.02]} />
+          </mesh>
+        </group>
+      ) : null}
     </group>
   );
 };
@@ -534,7 +585,14 @@ export const BatteryPack: React.FC<BatteryPackProps> = ({mood, fill, glow = 1, i
           <group key={k}>
             <mesh
               position={[(a + b) / 2, (MODULE_Y[0] + MODULE_Y[1]) / 2, (z - 0.01 + zb + 0.03) / 2]}
-              material={[mats.moduleSide, mats.moduleSide, mats.moduleSide, mats.moduleSide, mats.module, mats.moduleSide]}
+              material={[
+                mats.moduleSide,
+                mats.moduleSide,
+                mats.moduleSide,
+                mats.moduleSide,
+                mats.module,
+                mats.moduleSide,
+              ]}
               castShadow
               receiveShadow
             >
@@ -561,6 +619,8 @@ export type PedalBoxProps = {
   mood: Mood;
   /** How far the accelerator is pressed, 0 (up) → 1 (floored). */
   accel?: number;
+  /** A sealed position sensor at the accelerator's hinge (No. 008). Default false. */
+  sensor?: boolean;
 };
 
 /** The accelerator's pad angle from the floor (radians, its top forward) for a press (0 → 1). */
@@ -569,7 +629,7 @@ export const accelAngle = (press: number) => 0.9 - 0.45 * Math.max(0, Math.min(1
 export const ACCEL_LEN = 0.27;
 
 /** The pedal box (see the file comment): a floor-hinged accelerator and a hanging brake pedal. */
-export const PedalBox: React.FC<PedalBoxProps> = ({mood, accel = 0}) => {
+export const PedalBox: React.FC<PedalBoxProps> = ({mood, accel = 0, sensor = false}) => {
   const {env, envScale, albedo} = usePhys();
   const mats = useMemo(
     () => ({
@@ -577,6 +637,7 @@ export const PedalBox: React.FC<PedalBoxProps> = ({mood, accel = 0}) => {
       pad: phys(REAL.alu, {metalness: 0.7, roughness: 0.38}),
       arm: phys(REAL.steel, {metalness: 0.8, roughness: 0.4}),
       ribs: phys(REAL.pedal, {roughness: 0.8}),
+      sensor: phys(REAL.receiver, {roughness: 0.5}),
     }),
     [],
   );
@@ -588,7 +649,7 @@ export const PedalBox: React.FC<PedalBoxProps> = ({mood, accel = 0}) => {
     ],
     envScale,
   );
-  applyAlbedo([mats.pad, mats.arm, mats.ribs], albedo);
+  applyAlbedo([mats.pad, mats.arm, mats.ribs, mats.sensor], albedo);
   void mood;
   const ang = accelAngle(accel);
   const [hx, hy] = EV.accelHinge;
@@ -598,7 +659,12 @@ export const PedalBox: React.FC<PedalBoxProps> = ({mood, accel = 0}) => {
       {/* the accelerator: a narrow, tall pad hinged at the floor, its top leaning forward (set back from the
           brake, so the two read side by side from the camera) */}
       <group position={[hx, hy, EV.pedalZ]} rotation={[0, 0, ang]}>
-        <mesh geometry={roundedBox(ACCEL_LEN, 0.022, 0.085, 0.008)} material={mats.pad} position={[ACCEL_LEN / 2, 0.011, 0]} castShadow />
+        <mesh
+          geometry={roundedBox(ACCEL_LEN, 0.022, 0.085, 0.008)}
+          material={mats.pad}
+          position={[ACCEL_LEN / 2, 0.011, 0]}
+          castShadow
+        />
         {[...Array(7).keys()].map((k) => (
           <mesh key={k} position={[0.03 + k * 0.034, 0.023, 0]} material={mats.ribs}>
             <boxGeometry args={[0.008, 0.004, 0.07]} />
@@ -608,8 +674,21 @@ export const PedalBox: React.FC<PedalBoxProps> = ({mood, accel = 0}) => {
       <mesh position={[hx - 0.01, hy - 0.012, EV.pedalZ]} material={mats.arm}>
         <boxGeometry args={[0.05, 0.024, 0.07]} />
       </mesh>
+      {sensor ? (
+        <mesh
+          geometry={roundedBox(0.06, 0.05, 0.03, 0.01)}
+          material={mats.sensor}
+          position={[hx - 0.01, hy + 0.005, EV.pedalZ + 0.05]}
+          castShadow
+        />
+      ) : null}
       {/* the brake pedal hanging from under the dash: its arm and a wide, short pad facing the driver */}
-      <mesh position={[(bx + 0.92) / 2 + 0.01, (by + 0.94) / 2, EV.brakeZ]} rotation={[0, 0, 0.18]} material={mats.arm} castShadow>
+      <mesh
+        position={[(bx + 0.92) / 2 + 0.01, (by + 0.94) / 2, EV.brakeZ]}
+        rotation={[0, 0, 0.18]}
+        material={mats.arm}
+        castShadow
+      >
         <boxGeometry args={[0.022, 0.34, 0.024]} />
       </mesh>
       <mesh

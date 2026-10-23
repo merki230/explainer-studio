@@ -23,7 +23,7 @@ export const ANCHOR_SCENES = [
  * anything that moves (a car, a walking person). `tower-slice`: 'youSpot', 'callButton:4[:up]',
  * 'carRoof:B', 'car:B', 'controllerAt', 'person:n'. `hotel-lobby`: 'keypad', 'door:C', 'wall:B',
  * 'youSpot', 'person:n', 'carRoof:C', 'car:C'. `street-slice`: 'cap', 'radio', 'register', 'meter', 'pole',
- * 'tank', 'cab', 'laptop', 'truckRoof', 'youSpot' (= 'youHead'), 'phone', 'tap', 'lid:k'. `highway-slice`: 'tire',
+ * 'tank', 'cab', 'laptop', 'truckRoof', 'youSpot' (= 'youHead'), 'phone', 'tap', 'lid:k'. `highway-slice`: 'youSpot', 'tire',
  * 'tail', 'grooveDepth', 'grooveNext', 'whiteLine', 'sign:speed' | 'sign:mile' | 'sign:guide'. `musical-road`: 'group:k', 'tire',
  * 'rearTire', 'car', 'window', 'house'. `city-slice`: 'car:k', 'lamps:k', 'youSpot', 'signal', 'stopLine',
  * 'sign:oneway' | 'sign:speed'. Undefined elsewhere
