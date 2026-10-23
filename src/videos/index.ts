@@ -19,6 +19,8 @@ import {spec as onePedal} from './one-pedal/spec';
 import onePedalTranscript from './one-pedal/transcript.json';
 import {spec as evSound} from './ev-sound/spec';
 import evSoundTranscript from './ev-sound/transcript.json';
+import {spec as driveByWire} from './drive-by-wire/spec';
+import driveByWireTranscript from './drive-by-wire/transcript.json';
 // </imports>
 
 export type VideoEntry = {spec: VideoSpec; transcript: Transcript};
@@ -38,5 +40,6 @@ export const VIDEOS: Record<string, VideoEntry> = {
   'rumble-strips': {spec: rumbleStrips, transcript: rumbleStripsTranscript as Transcript},
   'one-pedal': {spec: onePedal, transcript: onePedalTranscript as Transcript},
   'ev-sound': {spec: evSound, transcript: evSoundTranscript as Transcript},
+  'drive-by-wire': {spec: driveByWire, transcript: driveByWireTranscript as Transcript},
   // </entries>
 };
