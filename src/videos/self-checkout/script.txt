@@ -1,0 +1,11 @@
+On a lot of self-checkouts, the bagging shelf is a scale.
+So how does it decide something is unexpected?
+Scanning the barcode pulls up what the item should weigh, a number many systems learned from the shoppers who bought it before you.
+Look under the shelf, where sensors called load cells weigh the whole platform.
+When you set an item down, the scale checks how much the weight went up.
+If the change lands inside a window around the expected weight, you keep scanning.
+Outside it, you get "unexpected item" and the machine pauses, and if you can't clear it, it calls an attendant.
+Anything that changes the number counts, even a bump or a draft from the air conditioning.
+And if you lift a bag off before you pay, the weight drops, which can trip the machine too.
+To the scale, your groceries are numbers going up and down.
+Next time it complains, look at what last touched the shelf.

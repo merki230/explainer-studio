@@ -44,6 +44,21 @@ The owner has seen the shopping cart, car key and hotel key card covered too oft
 
 All unverified until researched.
 
+## Parked: self-checkout bagging scale (owner, 2026-10-24)
+
+Chosen because topics viewers argue about draw the most comments, but the video is an explanation of how it works above
+all (owner). Angle: "unexpected item in bagging area": the barcode brings up an expected weight, the bagging shelf is
+a scale, the machine compares the two within a margin. The familiar triggers (own bag, item left on the scanner,
+leaning on the shelf, very light items) are the comparison failing. Store motives get one line at most. US setting.
+Not all self-checkouts have a scale (owner has seen one at Costco), so the script says "some/many". Status: **parked** after
+script (fact-check PASS) and A/V script; owner felt it lacked surprise. Files in `src/videos/self-checkout/`.
+
+## No. 007: the EV pedestrian sound (owner asked for an EV topic, 2026-10-24)
+
+The hum EVs make at low speed comes from a speaker, and US rules require it. Angle: how it works first (speaker,
+designed sound, pitch with speed, cutoff when tyre noise takes over); debate comes from viewers (annoying vs safety).
+Status: research.
+
 ## Other ideas
 
 - Light to data (bits ↔ light): researched and scripted, parked in `src/videos/light-to-data/` for a possible long-form video.

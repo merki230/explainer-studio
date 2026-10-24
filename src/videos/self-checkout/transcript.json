@@ -1,0 +1,810 @@
+{
+  "audio": null,
+  "words": [
+    {
+      "text": "On",
+      "start": 0.15,
+      "end": 0.37
+    },
+    {
+      "text": "a",
+      "start": 0.41,
+      "end": 0.58
+    },
+    {
+      "text": "lot",
+      "start": 0.62,
+      "end": 0.89
+    },
+    {
+      "text": "of",
+      "start": 0.93,
+      "end": 1.15
+    },
+    {
+      "text": "self-checkouts,",
+      "start": 1.19,
+      "end": 1.96
+    },
+    {
+      "text": "the",
+      "start": 2.16,
+      "end": 2.43
+    },
+    {
+      "text": "bagging",
+      "start": 2.47,
+      "end": 2.94
+    },
+    {
+      "text": "shelf",
+      "start": 2.98,
+      "end": 3.35
+    },
+    {
+      "text": "is",
+      "start": 3.39,
+      "end": 3.61
+    },
+    {
+      "text": "a",
+      "start": 3.65,
+      "end": 3.82
+    },
+    {
+      "text": "scale.",
+      "start": 3.86,
+      "end": 4.23
+    },
+    {
+      "text": "So",
+      "start": 4.59,
+      "end": 4.81
+    },
+    {
+      "text": "how",
+      "start": 4.85,
+      "end": 5.12
+    },
+    {
+      "text": "does",
+      "start": 5.16,
+      "end": 5.48
+    },
+    {
+      "text": "it",
+      "start": 5.52,
+      "end": 5.74
+    },
+    {
+      "text": "decide",
+      "start": 5.78,
+      "end": 6.2
+    },
+    {
+      "text": "something",
+      "start": 6.24,
+      "end": 6.81
+    },
+    {
+      "text": "is",
+      "start": 6.85,
+      "end": 7.07
+    },
+    {
+      "text": "unexpected?",
+      "start": 7.11,
+      "end": 7.73
+    },
+    {
+      "text": "Scanning",
+      "start": 8.09,
+      "end": 8.61
+    },
+    {
+      "text": "the",
+      "start": 8.65,
+      "end": 8.92
+    },
+    {
+      "text": "barcode",
+      "start": 8.96,
+      "end": 9.43
+    },
+    {
+      "text": "pulls",
+      "start": 9.47,
+      "end": 9.84
+    },
+    {
+      "text": "up",
+      "start": 9.88,
+      "end": 10.1
+    },
+    {
+      "text": "what",
+      "start": 10.14,
+      "end": 10.46
+    },
+    {
+      "text": "the",
+      "start": 10.5,
+      "end": 10.77
+    },
+    {
+      "text": "item",
+      "start": 10.81,
+      "end": 11.13
+    },
+    {
+      "text": "should",
+      "start": 11.17,
+      "end": 11.59
+    },
+    {
+      "text": "weigh,",
+      "start": 11.63,
+      "end": 12
+    },
+    {
+      "text": "a",
+      "start": 12.2,
+      "end": 12.37
+    },
+    {
+      "text": "number",
+      "start": 12.41,
+      "end": 12.83
+    },
+    {
+      "text": "many",
+      "start": 12.87,
+      "end": 13.19
+    },
+    {
+      "text": "systems",
+      "start": 13.23,
+      "end": 13.7
+    },
+    {
+      "text": "learned",
+      "start": 13.74,
+      "end": 14.21
+    },
+    {
+      "text": "from",
+      "start": 14.25,
+      "end": 14.57
+    },
+    {
+      "text": "the",
+      "start": 14.61,
+      "end": 14.88
+    },
+    {
+      "text": "shoppers",
+      "start": 14.92,
+      "end": 15.44
+    },
+    {
+      "text": "who",
+      "start": 15.48,
+      "end": 15.75
+    },
+    {
+      "text": "bought",
+      "start": 15.79,
+      "end": 16.21
+    },
+    {
+      "text": "it",
+      "start": 16.25,
+      "end": 16.47
+    },
+    {
+      "text": "before",
+      "start": 16.51,
+      "end": 16.93
+    },
+    {
+      "text": "you.",
+      "start": 16.97,
+      "end": 17.24
+    },
+    {
+      "text": "Look",
+      "start": 17.6,
+      "end": 17.92
+    },
+    {
+      "text": "under",
+      "start": 17.96,
+      "end": 18.33
+    },
+    {
+      "text": "the",
+      "start": 18.37,
+      "end": 18.64
+    },
+    {
+      "text": "shelf,",
+      "start": 18.68,
+      "end": 19.05
+    },
+    {
+      "text": "where",
+      "start": 19.25,
+      "end": 19.62
+    },
+    {
+      "text": "sensors",
+      "start": 19.66,
+      "end": 20.13
+    },
+    {
+      "text": "called",
+      "start": 20.17,
+      "end": 20.59
+    },
+    {
+      "text": "load",
+      "start": 20.63,
+      "end": 20.95
+    },
+    {
+      "text": "cells",
+      "start": 20.99,
+      "end": 21.36
+    },
+    {
+      "text": "weigh",
+      "start": 21.4,
+      "end": 21.77
+    },
+    {
+      "text": "the",
+      "start": 21.81,
+      "end": 22.08
+    },
+    {
+      "text": "whole",
+      "start": 22.12,
+      "end": 22.49
+    },
+    {
+      "text": "platform.",
+      "start": 22.53,
+      "end": 23.05
+    },
+    {
+      "text": "When",
+      "start": 23.41,
+      "end": 23.73
+    },
+    {
+      "text": "you",
+      "start": 23.77,
+      "end": 24.04
+    },
+    {
+      "text": "set",
+      "start": 24.08,
+      "end": 24.35
+    },
+    {
+      "text": "an",
+      "start": 24.39,
+      "end": 24.61
+    },
+    {
+      "text": "item",
+      "start": 24.65,
+      "end": 24.97
+    },
+    {
+      "text": "down,",
+      "start": 25.01,
+      "end": 25.33
+    },
+    {
+      "text": "the",
+      "start": 25.53,
+      "end": 25.8
+    },
+    {
+      "text": "scale",
+      "start": 25.84,
+      "end": 26.21
+    },
+    {
+      "text": "checks",
+      "start": 26.25,
+      "end": 26.67
+    },
+    {
+      "text": "how",
+      "start": 26.71,
+      "end": 26.98
+    },
+    {
+      "text": "much",
+      "start": 27.02,
+      "end": 27.34
+    },
+    {
+      "text": "the",
+      "start": 27.38,
+      "end": 27.65
+    },
+    {
+      "text": "weight",
+      "start": 27.69,
+      "end": 28.11
+    },
+    {
+      "text": "went",
+      "start": 28.15,
+      "end": 28.47
+    },
+    {
+      "text": "up.",
+      "start": 28.51,
+      "end": 28.73
+    },
+    {
+      "text": "If",
+      "start": 29.09,
+      "end": 29.31
+    },
+    {
+      "text": "the",
+      "start": 29.35,
+      "end": 29.62
+    },
+    {
+      "text": "change",
+      "start": 29.66,
+      "end": 30.08
+    },
+    {
+      "text": "lands",
+      "start": 30.12,
+      "end": 30.49
+    },
+    {
+      "text": "inside",
+      "start": 30.53,
+      "end": 30.95
+    },
+    {
+      "text": "a",
+      "start": 30.99,
+      "end": 31.16
+    },
+    {
+      "text": "window",
+      "start": 31.2,
+      "end": 31.62
+    },
+    {
+      "text": "around",
+      "start": 31.66,
+      "end": 32.08
+    },
+    {
+      "text": "the",
+      "start": 32.12,
+      "end": 32.39
+    },
+    {
+      "text": "expected",
+      "start": 32.43,
+      "end": 32.95
+    },
+    {
+      "text": "weight,",
+      "start": 32.99,
+      "end": 33.41
+    },
+    {
+      "text": "you",
+      "start": 33.61,
+      "end": 33.88
+    },
+    {
+      "text": "keep",
+      "start": 33.92,
+      "end": 34.24
+    },
+    {
+      "text": "scanning.",
+      "start": 34.28,
+      "end": 34.8
+    },
+    {
+      "text": "Outside",
+      "start": 35.16,
+      "end": 35.63
+    },
+    {
+      "text": "it,",
+      "start": 35.67,
+      "end": 35.89
+    },
+    {
+      "text": "you",
+      "start": 36.09,
+      "end": 36.36
+    },
+    {
+      "text": "get",
+      "start": 36.4,
+      "end": 36.67
+    },
+    {
+      "text": "\"unexpected",
+      "start": 36.71,
+      "end": 37.33
+    },
+    {
+      "text": "item\"",
+      "start": 37.37,
+      "end": 37.69
+    },
+    {
+      "text": "and",
+      "start": 37.73,
+      "end": 38
+    },
+    {
+      "text": "the",
+      "start": 38.04,
+      "end": 38.31
+    },
+    {
+      "text": "machine",
+      "start": 38.35,
+      "end": 38.82
+    },
+    {
+      "text": "pauses,",
+      "start": 38.86,
+      "end": 39.28
+    },
+    {
+      "text": "and",
+      "start": 39.48,
+      "end": 39.75
+    },
+    {
+      "text": "if",
+      "start": 39.79,
+      "end": 40.01
+    },
+    {
+      "text": "you",
+      "start": 40.05,
+      "end": 40.32
+    },
+    {
+      "text": "can't",
+      "start": 40.36,
+      "end": 40.68
+    },
+    {
+      "text": "clear",
+      "start": 40.72,
+      "end": 41.09
+    },
+    {
+      "text": "it,",
+      "start": 41.13,
+      "end": 41.35
+    },
+    {
+      "text": "it",
+      "start": 41.55,
+      "end": 41.77
+    },
+    {
+      "text": "calls",
+      "start": 41.81,
+      "end": 42.18
+    },
+    {
+      "text": "an",
+      "start": 42.22,
+      "end": 42.44
+    },
+    {
+      "text": "attendant.",
+      "start": 42.48,
+      "end": 43.05
+    },
+    {
+      "text": "Anything",
+      "start": 43.41,
+      "end": 43.93
+    },
+    {
+      "text": "that",
+      "start": 43.97,
+      "end": 44.29
+    },
+    {
+      "text": "changes",
+      "start": 44.33,
+      "end": 44.8
+    },
+    {
+      "text": "the",
+      "start": 44.84,
+      "end": 45.11
+    },
+    {
+      "text": "number",
+      "start": 45.15,
+      "end": 45.57
+    },
+    {
+      "text": "counts,",
+      "start": 45.61,
+      "end": 46.03
+    },
+    {
+      "text": "even",
+      "start": 46.23,
+      "end": 46.55
+    },
+    {
+      "text": "a",
+      "start": 46.59,
+      "end": 46.76
+    },
+    {
+      "text": "bump",
+      "start": 46.8,
+      "end": 47.12
+    },
+    {
+      "text": "or",
+      "start": 47.16,
+      "end": 47.38
+    },
+    {
+      "text": "a",
+      "start": 47.42,
+      "end": 47.59
+    },
+    {
+      "text": "draft",
+      "start": 47.63,
+      "end": 48
+    },
+    {
+      "text": "from",
+      "start": 48.04,
+      "end": 48.36
+    },
+    {
+      "text": "the",
+      "start": 48.4,
+      "end": 48.67
+    },
+    {
+      "text": "air",
+      "start": 48.71,
+      "end": 48.98
+    },
+    {
+      "text": "conditioning.",
+      "start": 49.02,
+      "end": 49.74
+    },
+    {
+      "text": "And",
+      "start": 50.1,
+      "end": 50.37
+    },
+    {
+      "text": "if",
+      "start": 50.41,
+      "end": 50.63
+    },
+    {
+      "text": "you",
+      "start": 50.67,
+      "end": 50.94
+    },
+    {
+      "text": "lift",
+      "start": 50.98,
+      "end": 51.3
+    },
+    {
+      "text": "a",
+      "start": 51.34,
+      "end": 51.51
+    },
+    {
+      "text": "bag",
+      "start": 51.55,
+      "end": 51.82
+    },
+    {
+      "text": "off",
+      "start": 51.86,
+      "end": 52.13
+    },
+    {
+      "text": "before",
+      "start": 52.17,
+      "end": 52.59
+    },
+    {
+      "text": "you",
+      "start": 52.63,
+      "end": 52.9
+    },
+    {
+      "text": "pay,",
+      "start": 52.94,
+      "end": 53.21
+    },
+    {
+      "text": "the",
+      "start": 53.41,
+      "end": 53.68
+    },
+    {
+      "text": "weight",
+      "start": 53.72,
+      "end": 54.14
+    },
+    {
+      "text": "drops,",
+      "start": 54.18,
+      "end": 54.55
+    },
+    {
+      "text": "which",
+      "start": 54.75,
+      "end": 55.12
+    },
+    {
+      "text": "can",
+      "start": 55.16,
+      "end": 55.43
+    },
+    {
+      "text": "trip",
+      "start": 55.47,
+      "end": 55.79
+    },
+    {
+      "text": "the",
+      "start": 55.83,
+      "end": 56.1
+    },
+    {
+      "text": "machine",
+      "start": 56.14,
+      "end": 56.61
+    },
+    {
+      "text": "too.",
+      "start": 56.65,
+      "end": 56.92
+    },
+    {
+      "text": "To",
+      "start": 57.28,
+      "end": 57.5
+    },
+    {
+      "text": "the",
+      "start": 57.54,
+      "end": 57.81
+    },
+    {
+      "text": "scale,",
+      "start": 57.85,
+      "end": 58.22
+    },
+    {
+      "text": "your",
+      "start": 58.42,
+      "end": 58.74
+    },
+    {
+      "text": "groceries",
+      "start": 58.78,
+      "end": 59.35
+    },
+    {
+      "text": "are",
+      "start": 59.39,
+      "end": 59.66
+    },
+    {
+      "text": "numbers",
+      "start": 59.7,
+      "end": 60.17
+    },
+    {
+      "text": "going",
+      "start": 60.21,
+      "end": 60.58
+    },
+    {
+      "text": "up",
+      "start": 60.62,
+      "end": 60.84
+    },
+    {
+      "text": "and",
+      "start": 60.88,
+      "end": 61.15
+    },
+    {
+      "text": "down.",
+      "start": 61.19,
+      "end": 61.51
+    },
+    {
+      "text": "Next",
+      "start": 61.87,
+      "end": 62.19
+    },
+    {
+      "text": "time",
+      "start": 62.23,
+      "end": 62.55
+    },
+    {
+      "text": "it",
+      "start": 62.59,
+      "end": 62.81
+    },
+    {
+      "text": "complains,",
+      "start": 62.85,
+      "end": 63.42
+    },
+    {
+      "text": "look",
+      "start": 63.62,
+      "end": 63.94
+    },
+    {
+      "text": "at",
+      "start": 63.98,
+      "end": 64.2
+    },
+    {
+      "text": "what",
+      "start": 64.24,
+      "end": 64.56
+    },
+    {
+      "text": "last",
+      "start": 64.6,
+      "end": 64.92
+    },
+    {
+      "text": "touched",
+      "start": 64.96,
+      "end": 65.43
+    },
+    {
+      "text": "the",
+      "start": 65.47,
+      "end": 65.74
+    },
+    {
+      "text": "shelf.",
+      "start": 65.78,
+      "end": 66.15
+    }
+  ]
+}
