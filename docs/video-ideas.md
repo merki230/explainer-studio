@@ -33,13 +33,15 @@ The owner has seen the shopping cart, car key and hotel key card covered too oft
 | Object | The hidden surprise | Sample hook | Status |
 |---|---|---|---|
 | One-pedal driving (EVs) | Lifting your foot turns the motor into a generator: it brakes the car and recharges the battery, and the car can switch on the brake lights by itself | "Your brake lights can come on even though you never touched the brake." | **Next: No. 006** (owner idea, 2026-10-19; angle to agree before research) |
+| Trucks speed-limited | Many semis are capped by their engine computer at a set speed, which is why two trucks can take forever to pass each other | "That truck isn't slow because of its driver. Its computer won't let it go faster." | **shortlisted** (owner, 2026-10-24; car drivers vs truckers debate) |
+| Crumple zones | The front of a modern car is built to crush on purpose, so the car absorbs the crash instead of the people inside | "Your car is designed to fold up in a crash, and that's what protects you." | **shortlisted** (owner, 2026-10-24; "old cars were built like tanks" debate) |
 | Rain-sensing wipers | Invisible light bounces inside the windshield; raindrops change the reflection | "Your windshield knows it's raining before you do, because it's shining a light through the glass." | **shortlisted** |
 | Railroad crossing | The train's wheels and axles close a circuit between the rails | "The train lowers the crossing gates itself, with its own wheels." | candidate |
 | Ambulance and the green light | Emergency vehicles signal the traffic light ahead | "That fire truck just turned the light green." | candidate |
 | Pet microchip | No battery; powered for an instant by the scanner | "The chip in your dog has no battery, and it still answers when someone asks." | candidate |
 | Seatbelt lock | A swinging weight jams the reel in a hard stop, no electronics | "Your seatbelt locks in a crash using a little swinging weight, no computer needed." | candidate |
 | Self-dimming mirror | A gel layer darkens when bright headlights are behind you | "Your rear-view mirror dims itself, and there's a layer of gel inside it doing the work." | candidate |
-| Trucks weighed at speed | Sensors in the highway weigh trucks while they drive | "Some trucks get weighed at highway speed, by sensors buried in the road." | candidate |
+| Weigh station poles (merges "trucks weighed at speed") | Poles with a reader/camera before the weigh station, plus sensors in the road, weigh and identify a truck at highway speed and tell the driver bypass or pull in; a second pole after the station likely checks that trucks obeyed (to verify) | "Why is there a second pole after the weigh station?" or "That truck was weighed before it ever reached the scale." | **shortlisted** (owner, 2026-10-24: owner sees one pole before and one after the station) |
 | EV charging plug | The plug and the car agree on safe current before power flows | "When you plug in an electric car, the cable and the car talk before any power flows." | candidate |
 
 All unverified until researched.
@@ -67,6 +69,8 @@ shifts to stay near peak power; payoff: why some fast EVs use a two-speed gearbo
 No overlap with No. 006 (braking). Status: research.
 
 ## Other ideas
+
+- From the 2026-10-24 brainstorm (not shortlisted yet): truck air brakes held off by air (the parking "pssht"), engine-brake ("No engine brake") signs, wide right turns, lifted truck axles, auto start-stop, headlight glare, gas pump auto shutoff.
 
 - Light to data (bits ↔ light): researched and scripted, parked in `src/videos/light-to-data/` for a possible long-form video.
 - New York to London: how a message shares the same fibre (research saved in the same folder).
