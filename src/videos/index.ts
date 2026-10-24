@@ -21,6 +21,8 @@ import {spec as selfCheckout} from './self-checkout/spec';
 import selfCheckoutTranscript from './self-checkout/transcript.json';
 import {spec as evSound} from './ev-sound/spec';
 import evSoundTranscript from './ev-sound/transcript.json';
+import {spec as evAcceleration} from './ev-acceleration/spec';
+import evAccelerationTranscript from './ev-acceleration/transcript.json';
 // </imports>
 
 export type VideoEntry = {spec: VideoSpec; transcript: Transcript};
@@ -41,5 +43,6 @@ export const VIDEOS: Record<string, VideoEntry> = {
   'one-pedal': {spec: onePedal, transcript: onePedalTranscript as Transcript},
   'self-checkout': {spec: selfCheckout, transcript: selfCheckoutTranscript as Transcript},
   'ev-sound': {spec: evSound, transcript: evSoundTranscript as Transcript},
+  'ev-acceleration': {spec: evAcceleration, transcript: evAccelerationTranscript as Transcript},
   // </entries>
 };

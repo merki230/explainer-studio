@@ -1,0 +1,13 @@
+An electric car beat a 797-horsepower muscle car to 60 miles an hour, but the gas car hit 100 first.
+So why did its head start fade?
+[pause] An electric motor pushes hardest from a stop, and that usually holds until around 30 miles an hour.
+A gas engine makes no push until it's spinning, so it has to rev up and shift gears.
+Testers timed the electric car at 3.3 seconds to 60 and the gas car at 3.6.
+All-wheel drive helped the electric one.
+Past about 30, the spinning motor starts fighting its own battery, so the push shrinks as speed climbs.
+The gas car's push shrinks too, but each gear change brings its engine back close to where it's strongest.
+Above about 30, the motor's power stays steady even though its push shrinks.
+A gas car needs up to ten gears to get close to that.
+At high speed, horsepower per pound matters most, and the electric car had less horsepower and was about 1,400 pounds heavier.
+[pause] Porsche gave its electric Taycan's rear motor two gears, one for pulling away and one for high speed.
+Next time an electric car leaves a light, watch how the gap changes as both cars speed up.

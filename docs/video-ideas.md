@@ -53,11 +53,18 @@ leaning on the shelf, very light items) are the comparison failing. Store motive
 Not all self-checkouts have a scale (owner has seen one at Costco), so the script says "some/many". Status: **parked** after
 script (fact-check PASS) and A/V script; owner felt it lacked surprise. Files in `src/videos/self-checkout/`.
 
-## No. 007: the EV pedestrian sound (owner asked for an EV topic, 2026-10-24)
+## Parked: the EV pedestrian sound (owner asked for an EV topic, 2026-10-24)
 
 The hum EVs make at low speed comes from a speaker, and US rules require it. Angle: how it works first (speaker,
 designed sound, pitch with speed, cutoff when tyre noise takes over); debate comes from viewers (annoying vs safety).
-Status: research.
+Status: **parked** (scaffold only in `src/videos/ev-sound/`), candidate for a later number.
+
+## No. 007: EV acceleration, strongest from a standstill (owner, 2026-10-24)
+
+Owner question: is an EV quickest at the start, then fades compared with a gas car? Angle: full torque from zero
+rpm wins from a red light; above the motor's base speed the push fades and one gear can't fix it, while a gas car
+shifts to stay near peak power; payoff: why some fast EVs use a two-speed gearbox. Debate from viewers (EV vs gas).
+No overlap with No. 006 (braking). Status: research.
 
 ## Other ideas
 
