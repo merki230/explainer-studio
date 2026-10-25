@@ -10,6 +10,8 @@ import {SIGN_SIZE} from '../three/real/RoadSigns';
 import {bandMaterial} from '../three/section/GrooveCut';
 import {RadioPulse} from '../three/TirePieces';
 import {groundAt, HIGHWAY_LAYOUT, HighwaySlice, SIGN_SPOTS} from '../three/section/HighwaySlice';
+import {bendPoint, type RoadBend} from '../three/section/roadBend';
+import {TireSpray, type SprayEmitter} from '../three/real/TireSpray';
 import {
   projectToFrame,
   SECTION_ANGLE,
@@ -33,7 +35,7 @@ const TREAD = 0.2;
 /** Car-local x of the rear bumper (RealCar faces +x). */
 const REAR = -2.4;
 
-export type HighwayFraming = 'tire' | 'groove' | 'shoulder' | 'mw' | 'edge' | 'signs' | 'wide';
+export type HighwayFraming = 'tire' | 'groove' | 'shoulder' | 'mw' | 'edge' | 'signs' | 'wide' | 'curve';
 
 /**
  * Framings at the fixed angle (metres). C: 'tire' (frame 0: YOU's right-rear tire just inside the white
@@ -42,6 +44,7 @@ export type HighwayFraming = 'tire' | 'groove' | 'shoulder' | 'mw' | 'edge' | 's
  * the speed limit sign's post). MW: 'mw' (YOU's car and the right carriageway, the 65 sign; 'edge' is the
  * same framing, the A/V script's name), 'signs' (MILE 112 and the guide sign up the verge, close enough to read). W: 'wide' (the cut-open interstate from the median to the ditch, the signs
  * receding up the right verge to the guide sign; at this size the signs read as shapes, the 65 as a number).
+ * MW 'curve' (with `curve`: YOU's car ≈ 200 px wide in the subject band, at `car.rear` ≈ 6, the bend in the upper half).
  */
 export const HIGHWAY_FRAMINGS: Record<HighwayFraming, Framing> = {
   tire: {look: [0.1, 0.35, -1.0], distance: 8.5},
@@ -51,6 +54,7 @@ export const HIGHWAY_FRAMINGS: Record<HighwayFraming, Framing> = {
   edge: {look: [0.6, -0.1, -5.3], distance: 55},
   signs: {look: [6.93, 1.05, -30.0], distance: 35},
   wide: {look: [-4.44, 7.0, -19.3], distance: 138},
+  curve: {look: [-5.0, -4.2, -21], distance: 64},
 };
 
 /** A keyed value (eased cubic between keys) or a constant. */
@@ -76,12 +80,28 @@ export type HighwayCar = {
   driver?: boolean;
   /** Body colour (default 'you'). */
   body?: 'you' | 'mom' | 'extra';
+  /** Paint override, a theme token (default none: `body`'s colour, the same `CAR.*.bodies` token car-slice uses). */
+  paint?: string;
   /**
    * The shutter for this car's wheels only (fraction of a frame, default 0.02 ≈ 1/1500 s): fast, so the
    * focus tire's tread and spokes read instead of smearing into a grey ring (at the scene's 0.5 a
    * 60 mph wheel turns ≈ 70° while the shutter is open). The road keeps the scene's `shutter`.
    */
   tireShutter?: number;
+  /**
+   * The car's angle off its direction of travel, degrees, a constant or keys (eased): + turns the nose
+   * left and swings the rear out to the right (a skid in a left-hand bend), about the front axle, so the
+   * rear is what steps out. Default 0.
+   */
+  yaw?: Keyed;
+  /**
+   * Wheelspin, 0 → 1, a constant or keys (eased): the driven wheels turn faster than the road (up to
+   * 2.6× at 1) and, on a wet road, throw a dense rooster tail of spray. Key it back to 0 for stability
+   * control cutting the power: the spray thins out over half a second. Default 0.
+   */
+  spin?: Keyed;
+  /** Which axle is driven (spins and throws the heavy spray): default 'front' (a transverse-engine car). */
+  drive?: 'front' | 'rear';
 };
 
 /** Another car ahead, driving away (whole, never cut: hidden once any of it would reach the plane). */
@@ -140,6 +160,19 @@ export type HighwaySliceSceneProps = {
   /** The W-beam guardrail (default true). */
   guardrail?: boolean;
   /**
+   * After the rain (No. 008): wet asphalt, darker, with puddles and the sky's soft sheen, damp verges,
+   * and fine spray off YOU's tires while it moves (`spray`). Day or Night; no falling rain. Default false.
+   */
+  wet?: boolean;
+  /** The fine spray off YOU's rolling tires on a wet road, × (default 1; 0 for none). Wheelspin's spray comes on top. */
+  spray?: number;
+  /**
+   * The road bends in depth: `true` for the default (straight for 30 m from the plane, then a left-hand
+   * bend of 170 m radius), or `{start, radius, side}`. YOU's car, traffic, signs and the guardrail
+   * follow it; the paint, grooves and scroll stay in road space. Default false (straight, No. 005).
+   */
+  curve?: boolean | Partial<RoadBend>;
+  /**
    * Impact flashes (the system): from `at` (s), an orange ring at each right tire's contact patch while
    * its tread is on the row, `rate` a second (default 6: slowed so the eye can count; the real rate is
    * ≈ 88), the rear and front tires out of step. `blur` (constant or keys, 0 → 1) fades the rings into
@@ -197,6 +230,26 @@ const DEFAULT_SPEED: SpeedKey[] = [{at: 0, speed: 26.8}];
 const valueAt = (k: Keyed | undefined, t: number, dflt: number) =>
   k === undefined ? dflt : typeof k === 'number' ? k : keyed(k, t, dflt);
 
+const DEFAULT_BEND: RoadBend = {start: 30, radius: 170, side: 'left'};
+/** The scene's road bend, or null for a straight road. */
+export const highwayBend = (p: Partial<HighwaySliceSceneProps>): RoadBend | null =>
+  !p.curve ? null : p.curve === true ? DEFAULT_BEND : {...DEFAULT_BEND, ...p.curve};
+
+/** How much faster than the road the driven tread turns at full wheelspin (× road speed, on top of it). */
+const SPIN_GAIN = 1.6;
+/** ∫ speed · SPIN_GAIN · spin dt from 0 to t: the driven wheels' extra tread (fixed step, deterministic). */
+const spinTravel = (car: HighwayCar, t: number) => {
+  if (car.spin === undefined) return 0;
+  const speed = car.speed ?? DEFAULT_SPEED;
+  const STEP = 1 / 120;
+  let a = 0;
+  for (let x = 0; x < t; x += STEP) {
+    const m = x + Math.min(STEP, t - x) / 2;
+    a += speedAt(speed, m, 0.8) * SPIN_GAIN * Math.max(0, valueAt(car.spin, m, 0)) * Math.min(STEP, t - x);
+  }
+  return a;
+};
+
 const highwayCameraMove = (
   p: Partial<HighwaySliceSceneProps>,
   durationInFrames: number,
@@ -247,8 +300,12 @@ export const highwayCameraAt = (
   });
 };
 
-/** YOU's car at t: centre x, origin z, heading (rad about y), the road travelled, its speed. */
-export const highwayCarAt = (car: HighwayCar, t: number) => {
+/**
+ * YOU's car at t: in the world, its origin x, z and heading `yaw` (rad about y, `carToWorld`'s), with the
+ * bend and the skid; in road space, `roadX`, `roadZ`; `heading`, the road's direction there (no skid);
+ * the road travelled, its speed.
+ */
+export const highwayCarAt = (car: HighwayCar, t: number, bend: RoadBend | null = null) => {
   const speed = car.speed ?? DEFAULT_SPEED;
   const lateral = valueAt(car.lateral, t, -0.1);
   const dt = 1 / 60;
@@ -256,12 +313,29 @@ export const highwayCarAt = (car: HighwayCar, t: number) => {
   const v = speedAt(speed, t, 0.8);
   const x = lateral - C.track - TIRE_OUT;
   const z = -(car.rear ?? 0.5) + REAR;
+  // heading off straight ahead (−z) toward +x while drifting right (small at road speed)
+  const drift = Math.atan2(vLat, Math.max(1, v));
+  let at = {x, z, yaw: drift};
+  if (bend) {
+    const w = bendPoint(x, z, bend);
+    at = {x: w.x, z: w.z, yaw: w.yaw + drift};
+  }
+  const heading = at.yaw;
+  const skid = (valueAt(car.yaw, t, 0) * Math.PI) / 180;
+  if (skid !== 0) {
+    // turned about the front axle: the rear steps out
+    const F = carToWorld([C.axleX.front, 0, 0], at);
+    const f = carToWorld([C.axleX.front, 0, 0], {x: 0, z: 0, yaw: at.yaw - skid});
+    at = {x: F[0] - f[0], z: F[2] - f[2], yaw: at.yaw - skid};
+  }
   return {
     lateral,
-    x,
-    z,
-    // heading off straight ahead (−z) toward +x while drifting right (small at road speed)
-    yaw: Math.atan2(vLat, Math.max(1, v)),
+    x: at.x,
+    z: at.z,
+    yaw: at.yaw,
+    roadX: x,
+    roadZ: z,
+    heading,
     travelled: integrateSpeed(speed, t, 0.8),
     speed: v,
   };
@@ -270,8 +344,8 @@ export const highwayCarAt = (car: HighwayCar, t: number) => {
 /** How lit the grooves are at t, and over which z span. */
 export const grooveLitAt = (p: Partial<HighwaySliceSceneProps>, t: number) => {
   const car = p.car === undefined ? {} : p.car;
-  const c = car ? highwayCarAt(car, t) : null;
-  const far = c ? c.z - C.axleX.front - 0.45 : -6;
+  const c = car ? highwayCarAt(car, t, highwayBend(p)) : null;
+  const far = c ? c.roadZ - C.axleX.front - 0.45 : -6;
   const span: [number, number] = [0, far];
   const mode = p.grooveLit ?? 'auto';
   if (mode !== 'auto') return {lit: Math.max(0, Math.min(1, valueAt(mode, t, 0))), span};
@@ -281,14 +355,16 @@ export const grooveLitAt = (p: Partial<HighwaySliceSceneProps>, t: number) => {
   return {lit: Math.max(0, Math.min(1, overlap / 0.1)), span};
 };
 
-/** Where another car is at t (its origin z), and whether it is drawn (wholly behind the plane). */
-const trafficAt = (tr: HighwayTraffic, youTravelled: number, t: number) => {
+/** Where another car is at t (its origin, heading on a bend), and whether it is drawn (wholly behind the plane). */
+const trafficAt = (tr: HighwayTraffic, youTravelled: number, t: number, bend: RoadBend | null) => {
   const z = -tr.ahead + REAR - ((tr.speed ?? 28) * t - youTravelled);
-  return {x: tr.lane === 'left' ? H.lanes.left : H.lanes.right, z, drawn: z - REAR < -0.3};
+  const x = tr.lane === 'left' ? H.lanes.left : H.lanes.right;
+  const w = bend ? bendPoint(x, z, bend) : {x, z, yaw: 0};
+  return {x: w.x, z: w.z, yaw: w.yaw, drawn: z - REAR < -0.3};
 };
 
 /**
- * A named point of H in the world at t: 'tire' (YOU's right-rear tire's contact patch), 'tail' (its right
+ * A named point of H in the world at t: 'youSpot' (YOU's car roof, for the name tag), 'tire' (YOU's right-rear tire's contact patch), 'tail' (its right
  * tail lamp), 'grooveDepth' (the bottom of the groove cut on the face), 'grooveNext' (the next groove's
  * middle, 12 in up the road), 'whiteLine' (the white line on the cut), 'sign:speed' | 'sign:mile' |
  * 'sign:guide' (the panel's middle).
@@ -296,8 +372,11 @@ const trafficAt = (tr: HighwayTraffic, youTravelled: number, t: number) => {
 export const highwayAnchorPoint = (p: Partial<HighwaySliceSceneProps>, anchor: string, t: number): V3 | undefined => {
   const [name, arg] = anchor.split(':');
   const car = p.car === undefined ? {} : p.car;
-  const c = car ? highwayCarAt(car, t) : null;
+  const c = car ? highwayCarAt(car, t, highwayBend(p)) : null;
   switch (name) {
+    case 'youSpot':
+      // the roof of YOU's car, for YOU's name tag
+      return c ? carToWorld([-0.4, 1.78, 0], c) : undefined;
     case 'tire':
       return c ? carToWorld([C.axleX.rear, 0.02, C.track + TIRE_OUT - TREAD / 2], c) : undefined;
     case 'tail':
@@ -314,7 +393,8 @@ export const highwayAnchorPoint = (p: Partial<HighwaySliceSceneProps>, anchor: s
       const spot = SIGN_SPOTS[s.kind];
       const size = SIGN_SIZE[s.kind];
       const bottom = s.kind === 'mile' ? 48 * 0.0254 : 84 * 0.0254;
-      return [s.x ?? spot.x, bottom + size.h / 2, s.z ?? spot.z];
+      const w = bendPoint(s.x ?? spot.x, s.z ?? spot.z, highwayBend(p));
+      return [w.x, bottom + size.h / 2, w.z];
     }
     default:
       return undefined;
@@ -341,7 +421,9 @@ const BACKDROP = 700;
  * just behind the plane (the road streams toward the camera under it), its right tires' place across the
  * road keyed (`car.lateral`) so it can drift onto the grooves and back; the grooves wash orange under
  * the tires ('auto') or as keyed. Traffic ahead, headlight cones, retroreflective signs facing the camera
- * (SPEED LIMIT 65, MILE 112, NEXT EXIT / 2 MILES). Day or Night.
+ * (SPEED LIMIT 65, MILE 112, NEXT EXIT / 2 MILES). Day or Night. No. 008 adds the road after the rain
+ * (`wet`: puddles, the sky's sheen, tire spray), a bend in depth (`curve`), and YOU's skid and its recovery
+ * from outside (`car.yaw`, `car.spin`: the driven wheels' spray stops, the car eases straight; no orange).
  */
 export const HighwaySliceScene: React.FC<HighwaySliceSceneProps> = (props) => {
   const {durationInFrames, mood = 'day', startFrame = 0, guardrail = true} = props;
@@ -380,8 +462,10 @@ export const HighwaySliceScene: React.FC<HighwaySliceSceneProps> = (props) => {
   const bandMats = useMemo(() => [bandMaterial('z', -1), bandMaterial('z', -1)], []);
   mats.sky.color.setScalar(1 / m.exposure);
 
+  const bend = highwayBend(props);
+  const wet = props.wet ?? false;
   const carSpec = props.car === undefined ? {} : props.car;
-  const car = carSpec ? highwayCarAt(carSpec, t) : null;
+  const car = carSpec ? highwayCarAt(carSpec, t, bend) : null;
   const speed = carSpec ? (carSpec.speed ?? DEFAULT_SPEED) : DEFAULT_SPEED;
   const travelled = car ? car.travelled : 0;
   // half-frame shutter: the road moves this far while it is open; the wheels turn this much
@@ -395,7 +479,7 @@ export const HighwaySliceScene: React.FC<HighwaySliceSceneProps> = (props) => {
   const headlights = carSpec ? (carSpec.headlights ?? night) : false;
 
   // the signs, and how much the headlights brighten their retroreflective faces (nearer: brighter)
-  const front = car ? car.z - 2.37 : 0;
+  const front = car ? car.roadZ - 2.37 : 0;
   const signs = (props.signs ?? DEFAULT_SIGNS).map((s) => {
     const spot = SIGN_SPOTS[s.kind];
     const z = s.z ?? spot.z;
@@ -420,7 +504,42 @@ export const HighwaySliceScene: React.FC<HighwaySliceSceneProps> = (props) => {
     });
   } else lamps.forEach((l) => (l.intensity = 0));
 
-  const traffic = (props.traffic ?? DEFAULT_TRAFFIC).map((tr) => ({tr, ...trafficAt(tr, travelled, t)}));
+  const traffic = (props.traffic ?? DEFAULT_TRAFFIC).map((tr) => ({tr, ...trafficAt(tr, travelled, t, bend)}));
+
+  // wheelspin: the driven axle's extra tread and blur
+  const driveFront = (carSpec?.drive ?? 'front') === 'front';
+  const spinNow = carSpec ? Math.max(0, valueAt(carSpec.spin, t, 0)) : 0;
+  const axles =
+    car && carSpec && carSpec.spin !== undefined
+      ? {
+          [driveFront ? 'front' : 'rear']: {
+            travelled: travelled + spinTravel(carSpec, t),
+            blur: wheelBlur * (1 + SPIN_GAIN * spinNow),
+          },
+        }
+      : undefined;
+  // the spray off YOU's tires (wet only): fine mist from all four while rolling, the rooster tail from
+  // the driven pair while they spin; it streams back along the road (the air), not the skidding body
+  const sprayAmt = props.spray ?? 1;
+  const emitters: SprayEmitter[] =
+    wet && car && carSpec
+      ? [C.axleX.front, C.axleX.rear].flatMap((ax, ai) =>
+          [-1, 1].map((sd) => {
+            const driven = ai === 0 ? driveFront : !driveFront;
+            const h = car.heading;
+            return {
+              at: carToWorld([ax - 0.25, 0, sd * (C.track + TIRE_OUT - TREAD / 2)], car),
+              back: [-Math.sin(h), Math.cos(h)] as [number, number],
+              out: [sd * Math.cos(h), sd * Math.sin(h)] as [number, number],
+              speed: car.speed,
+              strength: (tb: number) => ({
+                mist: sprayAmt * Math.min(1, speedAt(speed, Math.max(0, tb), 0.8) / 20),
+                spin: driven ? Math.max(0, Math.min(1, valueAt(carSpec.spin, tb, 0))) : 0,
+              }),
+            };
+          }),
+        )
+      : [];
 
   // impact flashes and the band under YOU's right tires (rings sized by the camera: ≈ the same on screen)
   const ringK = Math.max(0.6, Math.min(8, camD / 8.5));
@@ -537,6 +656,8 @@ export const HighwaySliceScene: React.FC<HighwaySliceSceneProps> = (props) => {
           ink={ink}
           signs={signs}
           guardrail={guardrail}
+          wet={wet}
+          bend={bend}
         />
         {car && carSpec ? (
           <DrivingCar
@@ -545,6 +666,7 @@ export const HighwaySliceScene: React.FC<HighwaySliceSceneProps> = (props) => {
             travelled={travelled}
             blur={wheelBlur}
             body={carSpec.body ?? 'you'}
+            paint={carSpec.paint}
             tail={(carSpec.tail ?? night) ? 1 : 0}
             driver={carSpec.driver ?? true}
             plate="8KTR 214"
@@ -553,15 +675,17 @@ export const HighwaySliceScene: React.FC<HighwaySliceSceneProps> = (props) => {
             // the spokes, lip and tread readable (no light added)
             envBoost={night ? 2.6 : 1}
             jitter={bodyJ}
+            axles={axles}
           />
         ) : null}
+        {emitters.length ? <TireSpray emitters={emitters} t={t} seed="highway-spray" exposure={m.exposure} /> : null}
         {traffic
           .filter((q) => q.drawn)
           .map((q, i) => (
             <DrivingCar
               key={i}
               mood={mood}
-              at={{x: q.x, z: q.z, yaw: 0}}
+              at={{x: q.x, z: q.z, yaw: q.yaw}}
               travelled={(q.tr.speed ?? 28) * t}
               blur={((q.tr.speed ?? 28) * shutter) / C.wheelR}
               body={q.tr.body ?? 'extra'}

@@ -569,24 +569,26 @@ export const STREET = {
 };
 
 /**
- * The car slice (No. 002), per mood: the road on the ground block, its lane paint, the two car bodies
- * (never red or orange, § 1). Neutral; nothing here is the system.
+ * The car slice (No. 002), per mood: the road on the ground block, its lane paint, the car bodies
+ * (never red or orange, § 1). Neutral; nothing here is the system. `friend` (No. 008, scene-builder; value
+ * for the brand-director): FRIEND's car, a graphite (≈ 215°, 7%, 37%) far darker than YOU's pale
+ * blue-grey, so FRIEND's car never reads as YOU's.
  */
 export const CAR: Record<
   Mood,
-  {asphalt: string; lane: string; verge: string; bodies: {you: string; mom: string; extra: string}}
+  {asphalt: string; lane: string; verge: string; bodies: {you: string; mom: string; extra: string; friend: string}}
 > = {
   day: {
     asphalt: '#5a5d63',
     lane: '#e4e2da',
     verge: '#8f9a7e',
-    bodies: {you: '#9fb0c4', mom: '#5f7d6e', extra: '#b4b7bb'},
+    bodies: {you: '#9fb0c4', mom: '#5f7d6e', extra: '#b4b7bb', friend: '#575c64'},
   },
   night: {
     asphalt: '#3b3e46',
     lane: '#c9c7c0',
     verge: '#4a5246',
-    bodies: {you: '#6d7d92', mom: '#45594f', extra: '#7d8187'},
+    bodies: {you: '#6d7d92', mom: '#45594f', extra: '#7d8187', friend: '#40444b'},
   },
 };
 
@@ -621,6 +623,16 @@ export const HIGHWAY = {
   tailLight: '#e23a52',
   tailLens: '#6a1d29',
   headlight: '#eef1ff',
+  /**
+   * After the rain (No. 008, `wet`; values 🧪 for the brand-director): wet asphalt (darker, the sky's
+   * sheen comes from the shader), the wheel paths drying first (a touch lighter), standing water in the
+   * puddles (darkest, the most sheen), and the tires' spray (white-grey mist, never the system).
+   * All under 10% saturation.
+   */
+  asphaltWet: '#34363b',
+  wheelPathWet: '#3c3f44',
+  puddle: '#2a2c30',
+  spray: '#d5d9de',
 };
 
 /**

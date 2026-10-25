@@ -1,0 +1,940 @@
+{
+  "audio": "audio/voiceover.mp3",
+  "words": [
+    {
+      "text": "In",
+      "start": 0,
+      "end": 0.16
+    },
+    {
+      "text": "most",
+      "start": 0.28,
+      "end": 0.4
+    },
+    {
+      "text": "new",
+      "start": 0.48,
+      "end": 0.64
+    },
+    {
+      "text": "cars,",
+      "start": 0.72,
+      "end": 1.36
+    },
+    {
+      "text": "pressing",
+      "start": 1.48,
+      "end": 1.68
+    },
+    {
+      "text": "the",
+      "start": 1.72,
+      "end": 1.76
+    },
+    {
+      "text": "gas",
+      "start": 1.84,
+      "end": 2.24
+    },
+    {
+      "text": "won't",
+      "start": 2.32,
+      "end": 2.64
+    },
+    {
+      "text": "always",
+      "start": 2.72,
+      "end": 3.04
+    },
+    {
+      "text": "speed",
+      "start": 3.2,
+      "end": 3.36
+    },
+    {
+      "text": "you",
+      "start": 3.44,
+      "end": 3.52
+    },
+    {
+      "text": "up.",
+      "start": 3.6,
+      "end": 4.04
+    },
+    {
+      "text": "A",
+      "start": 4.24,
+      "end": 4.32
+    },
+    {
+      "text": "computer",
+      "start": 4.4,
+      "end": 4.8
+    },
+    {
+      "text": "has",
+      "start": 4.92,
+      "end": 5.04
+    },
+    {
+      "text": "to",
+      "start": 5.12,
+      "end": 5.2
+    },
+    {
+      "text": "say",
+      "start": 5.28,
+      "end": 5.36
+    },
+    {
+      "text": "yes",
+      "start": 5.52,
+      "end": 5.84
+    },
+    {
+      "text": "first,",
+      "start": 5.92,
+      "end": 6.8
+    },
+    {
+      "text": "so",
+      "start": 6.88,
+      "end": 7.12
+    },
+    {
+      "text": "what",
+      "start": 7.44,
+      "end": 7.6
+    },
+    {
+      "text": "happens",
+      "start": 7.64,
+      "end": 7.92
+    },
+    {
+      "text": "when",
+      "start": 8,
+      "end": 8.08
+    },
+    {
+      "text": "it",
+      "start": 8.12,
+      "end": 8.16
+    },
+    {
+      "text": "says",
+      "start": 8.24,
+      "end": 8.4
+    },
+    {
+      "text": "no?",
+      "start": 8.56,
+      "end": 9.2
+    },
+    {
+      "text": "Normally",
+      "start": 9.52,
+      "end": 10
+    },
+    {
+      "text": "it",
+      "start": 10.08,
+      "end": 10.16
+    },
+    {
+      "text": "says",
+      "start": 10.24,
+      "end": 10.4
+    },
+    {
+      "text": "yes,",
+      "start": 10.56,
+      "end": 11.12
+    },
+    {
+      "text": "because",
+      "start": 11.28,
+      "end": 11.44
+    },
+    {
+      "text": "the",
+      "start": 11.48,
+      "end": 11.52
+    },
+    {
+      "text": "pedal",
+      "start": 11.6,
+      "end": 11.84
+    },
+    {
+      "text": "is",
+      "start": 11.92,
+      "end": 12.08
+    },
+    {
+      "text": "only",
+      "start": 12.16,
+      "end": 12.4
+    },
+    {
+      "text": "a",
+      "start": 12.48,
+      "end": 12.56
+    },
+    {
+      "text": "sensor",
+      "start": 12.8,
+      "end": 13.04
+    },
+    {
+      "text": "that",
+      "start": 13.12,
+      "end": 13.2
+    },
+    {
+      "text": "tells",
+      "start": 13.28,
+      "end": 13.44
+    },
+    {
+      "text": "the",
+      "start": 13.52,
+      "end": 13.56
+    },
+    {
+      "text": "computer",
+      "start": 13.6,
+      "end": 14.08
+    },
+    {
+      "text": "how",
+      "start": 14.24,
+      "end": 14.4
+    },
+    {
+      "text": "far",
+      "start": 14.52,
+      "end": 14.64
+    },
+    {
+      "text": "you",
+      "start": 14.72,
+      "end": 14.8
+    },
+    {
+      "text": "pressed.",
+      "start": 14.88,
+      "end": 15.84
+    },
+    {
+      "text": "In",
+      "start": 15.92,
+      "end": 16
+    },
+    {
+      "text": "a",
+      "start": 16.04,
+      "end": 16.08
+    },
+    {
+      "text": "gas",
+      "start": 16.16,
+      "end": 16.4
+    },
+    {
+      "text": "car,",
+      "start": 16.48,
+      "end": 17.04
+    },
+    {
+      "text": "the",
+      "start": 17.08,
+      "end": 17.12
+    },
+    {
+      "text": "computer",
+      "start": 17.36,
+      "end": 17.6
+    },
+    {
+      "text": "tells",
+      "start": 17.64,
+      "end": 17.84
+    },
+    {
+      "text": "a",
+      "start": 17.92,
+      "end": 18
+    },
+    {
+      "text": "small",
+      "start": 18.08,
+      "end": 18.4
+    },
+    {
+      "text": "motor",
+      "start": 18.48,
+      "end": 18.8
+    },
+    {
+      "text": "to",
+      "start": 18.88,
+      "end": 18.96
+    },
+    {
+      "text": "open",
+      "start": 19.04,
+      "end": 19.2
+    },
+    {
+      "text": "the",
+      "start": 19.28,
+      "end": 19.36
+    },
+    {
+      "text": "throttle.",
+      "start": 19.44,
+      "end": 20.4
+    },
+    {
+      "text": "An",
+      "start": 20.44,
+      "end": 20.48
+    },
+    {
+      "text": "electric",
+      "start": 20.72,
+      "end": 20.96
+    },
+    {
+      "text": "car",
+      "start": 21.12,
+      "end": 21.28
+    },
+    {
+      "text": "has",
+      "start": 21.36,
+      "end": 21.6
+    },
+    {
+      "text": "no",
+      "start": 21.68,
+      "end": 21.76
+    },
+    {
+      "text": "throttle",
+      "start": 21.84,
+      "end": 22.16
+    },
+    {
+      "text": "valve,",
+      "start": 22.24,
+      "end": 22.827
+    },
+    {
+      "text": "and",
+      "start": 22.853,
+      "end": 22.88
+    },
+    {
+      "text": "its",
+      "start": 22.96,
+      "end": 23.04
+    },
+    {
+      "text": "computer",
+      "start": 23.12,
+      "end": 23.68
+    },
+    {
+      "text": "sets",
+      "start": 23.8,
+      "end": 23.92
+    },
+    {
+      "text": "how",
+      "start": 24,
+      "end": 24.08
+    },
+    {
+      "text": "much",
+      "start": 24.16,
+      "end": 24.32
+    },
+    {
+      "text": "power",
+      "start": 24.4,
+      "end": 24.64
+    },
+    {
+      "text": "the",
+      "start": 24.72,
+      "end": 24.8
+    },
+    {
+      "text": "motor",
+      "start": 24.96,
+      "end": 25.12
+    },
+    {
+      "text": "gets.",
+      "start": 25.28,
+      "end": 26
+    },
+    {
+      "text": "Either",
+      "start": 26.08,
+      "end": 26.32
+    },
+    {
+      "text": "way,",
+      "start": 26.44,
+      "end": 26.88
+    },
+    {
+      "text": "in",
+      "start": 26.96,
+      "end": 27.12
+    },
+    {
+      "text": "most",
+      "start": 27.24,
+      "end": 27.36
+    },
+    {
+      "text": "cars",
+      "start": 27.44,
+      "end": 27.76
+    },
+    {
+      "text": "the",
+      "start": 27.92,
+      "end": 28
+    },
+    {
+      "text": "computer",
+      "start": 28.24,
+      "end": 28.48
+    },
+    {
+      "text": "can",
+      "start": 28.6,
+      "end": 28.72
+    },
+    {
+      "text": "say",
+      "start": 28.8,
+      "end": 28.88
+    },
+    {
+      "text": "no,",
+      "start": 29.04,
+      "end": 29.627
+    },
+    {
+      "text": "and",
+      "start": 29.653,
+      "end": 29.68
+    },
+    {
+      "text": "your",
+      "start": 29.76,
+      "end": 29.84
+    },
+    {
+      "text": "power",
+      "start": 29.92,
+      "end": 30.16
+    },
+    {
+      "text": "gets",
+      "start": 30.24,
+      "end": 30.48
+    },
+    {
+      "text": "cut",
+      "start": 30.56,
+      "end": 30.88
+    },
+    {
+      "text": "while",
+      "start": 30.96,
+      "end": 31.04
+    },
+    {
+      "text": "your",
+      "start": 31.16,
+      "end": 31.28
+    },
+    {
+      "text": "foot's",
+      "start": 31.36,
+      "end": 31.52
+    },
+    {
+      "text": "still",
+      "start": 31.6,
+      "end": 31.84
+    },
+    {
+      "text": "down.",
+      "start": 32.04,
+      "end": 32.267
+    },
+    {
+      "text": "If",
+      "start": 33.76,
+      "end": 33.84
+    },
+    {
+      "text": "you",
+      "start": 33.92,
+      "end": 34
+    },
+    {
+      "text": "skid",
+      "start": 34.08,
+      "end": 34.32
+    },
+    {
+      "text": "on",
+      "start": 34.36,
+      "end": 34.4
+    },
+    {
+      "text": "a",
+      "start": 34.48,
+      "end": 34.56
+    },
+    {
+      "text": "wet",
+      "start": 34.6,
+      "end": 34.8
+    },
+    {
+      "text": "curve,",
+      "start": 34.88,
+      "end": 35.52
+    },
+    {
+      "text": "stability",
+      "start": 35.56,
+      "end": 36
+    },
+    {
+      "text": "control",
+      "start": 36.08,
+      "end": 36.48
+    },
+    {
+      "text": "can",
+      "start": 36.56,
+      "end": 36.72
+    },
+    {
+      "text": "cut",
+      "start": 36.8,
+      "end": 36.96
+    },
+    {
+      "text": "your",
+      "start": 37.04,
+      "end": 37.12
+    },
+    {
+      "text": "power",
+      "start": 37.28,
+      "end": 37.44
+    },
+    {
+      "text": "by",
+      "start": 37.52,
+      "end": 37.6
+    },
+    {
+      "text": "itself.",
+      "start": 37.72,
+      "end": 38.8
+    },
+    {
+      "text": "Your",
+      "start": 38.88,
+      "end": 38.96
+    },
+    {
+      "text": "power",
+      "start": 39.08,
+      "end": 39.2
+    },
+    {
+      "text": "can",
+      "start": 39.28,
+      "end": 39.44
+    },
+    {
+      "text": "also",
+      "start": 39.52,
+      "end": 39.84
+    },
+    {
+      "text": "drop",
+      "start": 39.92,
+      "end": 40.16
+    },
+    {
+      "text": "when",
+      "start": 40.24,
+      "end": 40.32
+    },
+    {
+      "text": "you",
+      "start": 40.4,
+      "end": 40.48
+    },
+    {
+      "text": "brake",
+      "start": 40.52,
+      "end": 40.8
+    },
+    {
+      "text": "hard",
+      "start": 40.96,
+      "end": 41.12
+    },
+    {
+      "text": "and",
+      "start": 41.2,
+      "end": 41.28
+    },
+    {
+      "text": "your",
+      "start": 41.4,
+      "end": 41.52
+    },
+    {
+      "text": "shoe",
+      "start": 41.56,
+      "end": 41.76
+    },
+    {
+      "text": "catches",
+      "start": 41.84,
+      "end": 42.16
+    },
+    {
+      "text": "the",
+      "start": 42.24,
+      "end": 42.32
+    },
+    {
+      "text": "gas",
+      "start": 42.44,
+      "end": 42.56
+    },
+    {
+      "text": "pedal",
+      "start": 42.64,
+      "end": 42.88
+    },
+    {
+      "text": "too.",
+      "start": 42.96,
+      "end": 43.76
+    },
+    {
+      "text": "That's",
+      "start": 43.84,
+      "end": 44.16
+    },
+    {
+      "text": "brake",
+      "start": 44.24,
+      "end": 44.56
+    },
+    {
+      "text": "override,",
+      "start": 44.64,
+      "end": 45.573
+    },
+    {
+      "text": "which",
+      "start": 45.627,
+      "end": 45.68
+    },
+    {
+      "text": "makes",
+      "start": 45.8,
+      "end": 45.92
+    },
+    {
+      "text": "the",
+      "start": 45.96,
+      "end": 46
+    },
+    {
+      "text": "car",
+      "start": 46.08,
+      "end": 46.32
+    },
+    {
+      "text": "ignore",
+      "start": 46.6,
+      "end": 46.88
+    },
+    {
+      "text": "or",
+      "start": 47,
+      "end": 47.12
+    },
+    {
+      "text": "cut",
+      "start": 47.2,
+      "end": 47.28
+    },
+    {
+      "text": "the",
+      "start": 47.36,
+      "end": 47.44
+    },
+    {
+      "text": "gas,",
+      "start": 47.8,
+      "end": 48.187
+    },
+    {
+      "text": "and",
+      "start": 48.213,
+      "end": 48.24
+    },
+    {
+      "text": "it's",
+      "start": 48.32,
+      "end": 48.64
+    },
+    {
+      "text": "not",
+      "start": 48.76,
+      "end": 48.88
+    },
+    {
+      "text": "something",
+      "start": 48.96,
+      "end": 49.2
+    },
+    {
+      "text": "to",
+      "start": 49.28,
+      "end": 49.36
+    },
+    {
+      "text": "test",
+      "start": 49.48,
+      "end": 49.6
+    },
+    {
+      "text": "on",
+      "start": 49.68,
+      "end": 49.76
+    },
+    {
+      "text": "the",
+      "start": 49.8,
+      "end": 49.84
+    },
+    {
+      "text": "road.",
+      "start": 49.92,
+      "end": 50.213
+    },
+    {
+      "text": "Steering",
+      "start": 51.92,
+      "end": 52.24
+    },
+    {
+      "text": "could",
+      "start": 52.32,
+      "end": 52.4
+    },
+    {
+      "text": "be",
+      "start": 52.48,
+      "end": 52.52
+    },
+    {
+      "text": "next.",
+      "start": 52.56,
+      "end": 53.36
+    },
+    {
+      "text": "At",
+      "start": 53.44,
+      "end": 53.52
+    },
+    {
+      "text": "least",
+      "start": 53.68,
+      "end": 53.84
+    },
+    {
+      "text": "one",
+      "start": 53.92,
+      "end": 54.08
+    },
+    {
+      "text": "new",
+      "start": 54.16,
+      "end": 54.32
+    },
+    {
+      "text": "pickup",
+      "start": 54.48,
+      "end": 54.64
+    },
+    {
+      "text": "in",
+      "start": 54.68,
+      "end": 54.72
+    },
+    {
+      "text": "the",
+      "start": 54.8,
+      "end": 54.88
+    },
+    {
+      "text": "US",
+      "start": 54.96,
+      "end": 55.36
+    },
+    {
+      "text": "already",
+      "start": 55.44,
+      "end": 55.84
+    },
+    {
+      "text": "steers",
+      "start": 55.92,
+      "end": 56.32
+    },
+    {
+      "text": "by",
+      "start": 56.44,
+      "end": 56.56
+    },
+    {
+      "text": "wire,",
+      "start": 56.88,
+      "end": 57.28
+    },
+    {
+      "text": "with",
+      "start": 57.36,
+      "end": 57.44
+    },
+    {
+      "text": "no",
+      "start": 57.52,
+      "end": 57.6
+    },
+    {
+      "text": "mechanical",
+      "start": 57.68,
+      "end": 58.24
+    },
+    {
+      "text": "link",
+      "start": 58.36,
+      "end": 58.48
+    },
+    {
+      "text": "to",
+      "start": 58.52,
+      "end": 58.56
+    },
+    {
+      "text": "the",
+      "start": 58.64,
+      "end": 58.72
+    },
+    {
+      "text": "wheels.",
+      "start": 58.76,
+      "end": 60.4
+    },
+    {
+      "text": "Would",
+      "start": 60.48,
+      "end": 60.64
+    },
+    {
+      "text": "you",
+      "start": 60.72,
+      "end": 60.8
+    },
+    {
+      "text": "trust",
+      "start": 60.92,
+      "end": 61.04
+    },
+    {
+      "text": "a",
+      "start": 61.12,
+      "end": 61.16
+    },
+    {
+      "text": "computer",
+      "start": 61.2,
+      "end": 61.68
+    },
+    {
+      "text": "with",
+      "start": 61.76,
+      "end": 61.84
+    },
+    {
+      "text": "your",
+      "start": 61.92,
+      "end": 62
+    },
+    {
+      "text": "steering,",
+      "start": 62.08,
+      "end": 62.853
+    },
+    {
+      "text": "like",
+      "start": 62.907,
+      "end": 62.96
+    },
+    {
+      "text": "you",
+      "start": 63,
+      "end": 63.04
+    },
+    {
+      "text": "probably",
+      "start": 63.12,
+      "end": 63.52
+    },
+    {
+      "text": "do",
+      "start": 63.6,
+      "end": 63.68
+    },
+    {
+      "text": "with",
+      "start": 63.72,
+      "end": 63.76
+    },
+    {
+      "text": "the",
+      "start": 63.84,
+      "end": 63.92
+    },
+    {
+      "text": "gas?",
+      "start": 64.16,
+      "end": 64.72
+    }
+  ]
+}

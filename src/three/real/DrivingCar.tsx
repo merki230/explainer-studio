@@ -43,11 +43,16 @@ export const DrivingCar: React.FC<{
   envBoost?: number;
   /** Offset of the body (not the wheels), m: the shake's tremble. */
   jitter?: V3;
+  /**
+   * Per-axle overrides (metres of tread turned, and blur in rad) for a driven axle spinning faster than
+   * the road (wheelspin on a wet road). Default: both axles turn with `travelled` and `blur`.
+   */
+  axles?: {front?: {travelled: number; blur: number}; rear?: {travelled: number; blur: number}};
 }> = ({
   mood,
   at,
   travelled,
-  blur,
+  blur: blurAll,
   body,
   tail,
   brake = 0,
@@ -58,9 +63,10 @@ export const DrivingCar: React.FC<{
   clockOffset,
   envBoost = 1,
   jitter = [0, 0, 0],
+  axles,
 }) => {
   const R = C.wheelR;
-  const spin = travelled / R;
+  const spinAll = travelled / R;
   const who = driver === 'extra' ? 'extra' : driver ? 'you' : null;
   return (
     <group>
@@ -85,8 +91,11 @@ export const DrivingCar: React.FC<{
           />
         ) : null}
       </group>
-      {[C.axleX.front, C.axleX.rear].map((ax) =>
-        [-1, 1].map((s) => (
+      {[C.axleX.front, C.axleX.rear].map((ax, ai) => {
+        const o = ai === 0 ? axles?.front : axles?.rear;
+        const spin = o ? o.travelled / R : spinAll;
+        const blur = o ? o.blur : blurAll;
+        return [-1, 1].map((s) => (
           <RealWheel
             key={`${ax}${s}`}
             mood={mood}
@@ -104,8 +113,8 @@ export const DrivingCar: React.FC<{
             // loaded: the tire squats a little where it meets the road
             pressure={0.95}
           />
-        )),
-      )}
+        ));
+      })}
     </group>
   );
 };

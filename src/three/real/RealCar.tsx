@@ -150,6 +150,15 @@ const BODY_EV_REAR: P2[] = [
   [-1.79, 0.24],
   ...arch(-1.35),
 ];
+/** The gas car's sill (No. 008, `gas`): the band between the arches the EV's pack filled. */
+const SILL_GAS: P2[] = [
+  [-0.91, 0.24],
+  [0.91, 0.24],
+  [0.9, 0.35],
+  [-0.9, 0.35],
+];
+/** The gas car's lower dashboard is sectioned on its own plane (a step in the cut), so the column and pedals show. */
+export const GAS_DASH_Z = 0.28;
 const WINDOWS: P2[][] = [
   [
     [1.02, 1.32],
@@ -185,7 +194,7 @@ const extrude = (shape: THREE.Shape, z0: number, z1: number) => {
 export type RealCarProps = {
   mood: Mood;
   /** Body colour: 'you', 'mom' or 'extra' (a neutral grey for traffic; theme `CAR` bodies), never red or orange. */
-  body?: 'you' | 'mom' | 'extra';
+  body?: 'you' | 'mom' | 'extra' | 'friend';
   /** The cluster's tire-pressure light lit (warning yellow, flat; the same drawing as the dashboard detail box). */
   warning?: boolean;
   /**
@@ -230,6 +239,16 @@ export type RealCarProps = {
   paint?: string;
   /** The whole car's shape (`CarShell` `profile`): 'crossover' (default) or 'sedan' (lower roof, a trunk). */
   shape?: 'crossover' | 'sedan';
+  /**
+   * The gas car (No. 008): the EV's open bay under the hood (for the engine), a sill between the
+   * arches, no receiver, and the dashboard below its top slab sectioned at `GAS_DASH_Z` so the steering
+   * column, the pedals and their wiring show. Default false.
+   */
+  gas?: boolean;
+  /** The dashboard below its top slab sectioned at `GAS_DASH_Z`, as the gas car's (No. 008: the EV's inverter board shows). Default false (implied by `gas`). */
+  splitDash?: boolean;
+  /** The steering wheel's turn (rad); when given, the wheel has three spokes so the turn reads. Default none (No. 002–006). */
+  steer?: number;
 };
 
 const TAIL_RED = raw(HIGHWAY.tailLight);
@@ -254,7 +273,13 @@ export const RealCar: React.FC<RealCarProps> = ({
   evCluster,
   paint,
   shape = 'crossover',
+  gas = false,
+  splitDash = false,
+  steer,
 }) => {
+  const split = gas || splitDash;
+  // the gas car's body is the EV's (open bay) plus a sill
+  const bay = ev || gas;
   const ready = useFontsLoaded();
   const L = driverSide === 'near' ? LAYOUT_NEAR : CAR_LAYOUT;
   const face = useMemo(() => {
@@ -264,9 +289,7 @@ export const RealCar: React.FC<RealCarProps> = ({
     const tx = new THREE.CanvasTexture(c);
     return {c, tx, key: '', mat: new THREE.MeshBasicMaterial({map: tx})};
   }, []);
-  const faceKey = evCluster
-    ? `ev|${speed}|${Math.round(evCluster.power * 100)}`
-    : `${warning}|${speed}|${tireLight}`;
+  const faceKey = evCluster ? `ev|${speed}|${Math.round(evCluster.power * 100)}` : `${warning}|${speed}|${tireLight}`;
   if (ready && face.key !== faceKey) {
     if (evCluster) drawEvCluster(face.c.getContext('2d')!, 380, 120, {speed, power: evCluster.power});
     else drawCluster(face.c.getContext('2d')!, 380, 120, {warning, speed, trip: 'TRIP 12:40', tireLight});
@@ -390,6 +413,7 @@ export const RealCar: React.FC<RealCarProps> = ({
       body: extrude(shapeOf(BODY), -0.87, CAR_LAYOUT.cutZ),
       evFront: extrude(shapeOf(BODY_EV_FRONT), -0.87, EV_FIREWALL_Z),
       evRear: extrude(shapeOf(BODY_EV_REAR), -0.87, CAR_LAYOUT.cutZ),
+      sill: extrude(shapeOf(SILL_GAS), -0.87, CAR_LAYOUT.cutZ),
       far: extrude(shapeOf(FAR, WINDOWS), CAR_LAYOUT.farZ, -0.87),
       glass: WINDOWS.map((w) => new THREE.ShapeGeometry(shapeOf(w))),
     }),
@@ -397,13 +421,14 @@ export const RealCar: React.FC<RealCarProps> = ({
   );
   const bodyInk = useMemo(
     () =>
-      ev
+      bay
         ? [
             BODY_EV_FRONT.map(([x, y]) => [x, y, EV_FIREWALL_Z + 0.003] as V3),
             BODY_EV_REAR.map(([x, y]) => [x, y, CAR_LAYOUT.cutZ + 0.003] as V3),
+            ...(gas ? [SILL_GAS.map(([x, y]) => [x, y, CAR_LAYOUT.cutZ + 0.003] as V3)] : []),
           ]
         : [BODY.map(([x, y]) => [x, y, CAR_LAYOUT.cutZ + 0.003] as V3)],
-    [ev],
+    [bay, gas],
   );
   const inkT = 0.011 * inkScale;
   const ws = new THREE.Vector3(1.12, 1.2, 0);
@@ -436,10 +461,11 @@ export const RealCar: React.FC<RealCarProps> = ({
       ) : (
         <>
           {/* the lower body: cut face (hatched) at the near cut, paint elsewhere */}
-          {ev ? (
+          {bay ? (
             <>
               <mesh geometry={geo.evFront} material={[mats.cut, mats.paint]} castShadow receiveShadow />
               <mesh geometry={geo.evRear} material={[mats.cut, mats.paint]} castShadow receiveShadow />
+              {gas ? <mesh geometry={geo.sill} material={[mats.cut, mats.paint]} castShadow receiveShadow /> : null}
             </>
           ) : (
             <mesh geometry={geo.body} material={[mats.cut, mats.paint]} castShadow receiveShadow />
@@ -484,10 +510,17 @@ export const RealCar: React.FC<RealCarProps> = ({
           {brake !== undefined ? (
             <>
               {/* the brake lamps (No. 006): the near tail lamp, cut by the section, and the centre high-mount lamp */}
-              <mesh material={[mats.tail, mats.tail, mats.tail, mats.tail, mats.cut, mats.tail]} position={[-2.39, 1.0, 0.66]}>
+              <mesh
+                material={[mats.tail, mats.tail, mats.tail, mats.tail, mats.cut, mats.tail]}
+                position={[-2.39, 1.0, 0.66]}
+              >
                 <boxGeometry args={[0.04, 0.17, 0.28]} />
               </mesh>
-              <mesh geometry={roundedBox(0.05, 0.035, 0.36, 0.01)} material={mats.tailBright} position={[-2.33, 1.315, 0]} />
+              <mesh
+                geometry={roundedBox(0.05, 0.035, 0.36, 0.01)}
+                material={mats.tailBright}
+                position={[-2.33, 1.315, 0]}
+              />
             </>
           ) : null}
         </>
@@ -502,15 +535,50 @@ export const RealCar: React.FC<RealCarProps> = ({
         >
           <planeGeometry args={[1.74, 1.66]} />
         </mesh>
-        <mesh
-          position={[0.92, 1.08, span.z]}
-          material={[mats.trim, mats.trim, mats.trim, mats.trim, whole ? mats.trim : mats.cut, mats.trim]}
-          castShadow
-          receiveShadow
-        >
-          <boxGeometry args={[0.4, 0.28, span.w]} />
-        </mesh>
-        {whole ? null : (
+        {split && !whole ? (
+          <>
+            {/* the gas car: the dash's top slab runs to the cut; below it the dash is sectioned at GAS_DASH_Z */}
+            <mesh
+              position={[0.92, 1.16, span.z]}
+              material={[mats.trim, mats.trim, mats.trim, mats.trim, mats.cut, mats.trim]}
+              castShadow
+              receiveShadow
+            >
+              <boxGeometry args={[0.4, 0.12, span.w]} />
+            </mesh>
+            <mesh
+              position={[0.92, 1.01, (GAS_DASH_Z - 0.87) / 2]}
+              material={[mats.trim, mats.trim, mats.trim, mats.trim, mats.cut, mats.trim]}
+              castShadow
+              receiveShadow
+            >
+              <boxGeometry args={[0.4, 0.18, GAS_DASH_Z + 0.87]} />
+            </mesh>
+            <CutOutline
+              rects={[
+                [
+                  [0.72, 1.1, L.cutZ],
+                  [1.12, 1.22, L.cutZ],
+                ],
+                [
+                  [0.72, 0.92, GAS_DASH_Z],
+                  [1.12, 1.1, GAS_DASH_Z],
+                ],
+              ]}
+              thickness={inkT}
+            />
+          </>
+        ) : (
+          <mesh
+            position={[0.92, 1.08, span.z]}
+            material={[mats.trim, mats.trim, mats.trim, mats.trim, whole ? mats.trim : mats.cut, mats.trim]}
+            castShadow
+            receiveShadow
+          >
+            <boxGeometry args={[0.4, 0.28, span.w]} />
+          </mesh>
+        )}
+        {whole || split ? null : (
           <CutOutline
             rects={[
               [
@@ -545,9 +613,25 @@ export const RealCar: React.FC<RealCarProps> = ({
           }
           rotation={[0, 0, -0.42]}
         >
-          <mesh rotation={[0, Math.PI / 2, 0]} material={mats.trim} castShadow>
-            <torusGeometry args={[0.17, 0.018, 12, 40]} />
-          </mesh>
+          <group rotation={[steer ?? 0, 0, 0]}>
+            <mesh rotation={[0, Math.PI / 2, 0]} material={mats.trim} castShadow>
+              <torusGeometry args={[0.17, 0.018, 12, 40]} />
+            </mesh>
+            {steer !== undefined
+              ? // three spokes (No. 008), so a turn of the wheel reads
+                [Math.PI / 2, Math.PI / 2 + (2 * Math.PI) / 3, Math.PI / 2 - (2 * Math.PI) / 3].map((a) => (
+                  <mesh
+                    key={a}
+                    position={[0, -0.085 * Math.sin(a), 0.085 * Math.cos(a)]}
+                    rotation={[a, 0, 0]}
+                    material={mats.trim}
+                    castShadow
+                  >
+                    <boxGeometry args={[0.012, 0.03, 0.16]} />
+                  </mesh>
+                ))
+              : null}
+          </group>
           <mesh position={[0.11, 0, 0]} rotation={[0, 0, Math.PI / 2]} material={mats.trim} castShadow>
             <cylinderGeometry args={[0.03, 0.04, 0.22, 16]} />
           </mesh>
@@ -556,8 +640,13 @@ export const RealCar: React.FC<RealCarProps> = ({
           </mesh>
         </group>
         {/* the receiver under the dash (its node dot is drawn by the scene); none on the electric car */}
-        {ev ? null : (
-          <mesh geometry={roundedBox(0.14, 0.05, 0.1, 0.008)} material={mats.receiver} position={L.receiver} castShadow />
+        {bay ? null : (
+          <mesh
+            geometry={roundedBox(0.14, 0.05, 0.1, 0.008)}
+            material={mats.receiver}
+            position={L.receiver}
+            castShadow
+          />
         )}
         {[L.driver, L.passenger].map((p, i) => (
           <Seat key={i} at={p} mats={mats} />

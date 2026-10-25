@@ -1,0 +1,12 @@
+In most new cars, pressing the gas won't always speed you up.
+A computer has to say yes first, so what happens when it says no?
+Normally it says yes, because the pedal is only a sensor that tells the computer how far you pressed.
+In a gas car, the computer tells a small motor to open the throttle.
+An electric car has no throttle valve, and its computer sets how much power the motor gets.
+Either way, in most cars the computer can say no, and your power gets cut while your foot's still down.
+If you skid on a wet curve, stability control can cut your power by itself.
+Your power can also drop when you brake hard and your shoe catches the gas pedal too.
+That's brake override, which makes the car ignore or cut the gas, and it's not something to test on the road.
+Steering could be next.
+At least one new pickup in the US already steers by wire, with no mechanical link to the wheels.
+Would you trust a computer with your steering, like you probably do with the gas?

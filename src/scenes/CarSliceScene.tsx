@@ -6,11 +6,13 @@ import {CAR, HIGHWAY, MOODS, section, type CastName, type Mood} from '../theme';
 import {OrangePath} from '../three/OrangePath';
 import {raw} from '../three/plaster';
 import {CAR_LAYOUT, LAYOUT_NEAR, RealCar} from '../three/real/RealCar';
-import {BatteryPack, DriveUnit, EV, footPose, moduleSpan, MODULE_Y, PedalBox} from '../three/real/EvDrive';
+import {BatteryPack, DriveUnit, EV, EV_BOARD, footPose, moduleSpan, MODULE_Y, PedalBox} from '../three/real/EvDrive';
+import {EngineBay, GAS, GAS_ROUTES, gasFootPose, GasLoom, GasPedals, Steering} from '../three/real/GasDrive';
 import type {RoadSignKind} from '../three/real/RoadSigns';
 import {CarCityRoad} from '../three/section/CarCityRoad';
 import {RealWheel, WHEEL} from '../three/real/RealWheel';
 import {TireSensor} from '../three/real/TireSensor';
+import {TireSpray, type SprayEmitter} from '../three/real/TireSpray';
 import type {Gesture} from '../three/rig';
 import {CutOutline, cutMaterial, INK} from '../three/section/cutLook';
 import {
@@ -64,7 +66,13 @@ export type CarFraming =
   | 'brake'
   | 'pads'
   | 'disc'
-  | 'cabinSignal';
+  | 'cabinSignal'
+  | 'car'
+  | 'bay'
+  | 'pedal'
+  | 'signal'
+  | 'throttle'
+  | 'evBay';
 
 const C = CAR_LAYOUT;
 const R = C.wheelR;
@@ -85,7 +93,23 @@ export const WHEELS: Record<WheelId, {x: number; z: number; near: boolean}> = {
 export const DEFAULT_IDS: Record<WheelId, string> = {RL: '4F2A', FL: '7C1E', FR: '19B3', RR: 'A06D'};
 
 export const CAR_FRAMINGS: Record<
-  Exclude<CarFraming, 'drive' | 'pedals' | 'motor' | 'battery' | 'brake' | 'pads' | 'disc' | 'cabinSignal'>,
+  Exclude<
+    CarFraming,
+    | 'drive'
+    | 'pedals'
+    | 'motor'
+    | 'battery'
+    | 'brake'
+    | 'pads'
+    | 'disc'
+    | 'cabinSignal'
+    | 'car'
+    | 'bay'
+    | 'pedal'
+    | 'signal'
+    | 'throttle'
+    | 'evBay'
+  >,
   Framing
 > = {
   wide: {look: [0.05, 0.3, 0.1], distance: 21},
@@ -118,6 +142,30 @@ export const EV_FRAMINGS: Partial<Record<CarFraming, Framing>> = {
   brake: {look: [-1.33, 0.3, 0.75], distance: 2.0},
   pads: {look: [-1.232, 0.291, 0.746], distance: 0.5},
   disc: {look: [-1.43, 0.33, 0.768], distance: 1.0},
+  /** No. 008: M, the drive unit, the inverter and its board, the pedals and foot, the driver's head. */
+  evBay: {look: [-0.8, 0.676, 0.246], distance: 9.5},
+};
+
+/**
+ * The gas car's framings (No. 008, `variant: 'gas'`, facing −x, world metres; set on test stills). `car`
+ * is frame 0 and the loop: the whole car on the road, the sneaker on the pedal, the engine bay at frame
+ * left, the rear lamps at frame right, the car below the title block. `throttle` puts the throttle body
+ * where the EV's `motor` framing puts the drive unit (the same offset from the subject, the same
+ * distance), so a slide between the two cars lands on the same spot.
+ */
+export const GAS_FRAMINGS: Partial<Record<CarFraming, Framing>> = {
+  car: {look: [-0.055, 0.177, 0.331], distance: 19},
+  bay: {look: [-1.185, 0.255, 0.49], distance: 6.5},
+  signal: {look: [-0.966, 0.518, 0.345], distance: 3.4},
+  pedal: {look: [-0.802, 0.501, 0.293], distance: 3},
+  throttle: {
+    look: [
+      -GAS.tb[0] + (EV_FRAMINGS.motor!.look[0] + EV.motor[0]),
+      GAS.tb[1] + (EV_FRAMINGS.motor!.look[1] - EV.motor[1]),
+      GAS.tbZ + (EV_FRAMINGS.motor!.look[2] - EV.motorZ),
+    ],
+    distance: EV_FRAMINGS.motor!.distance,
+  },
 };
 
 /** A corner on the city road (`road: 'city'`): a stop line and a post-mounted signal just past it. */
@@ -159,6 +207,37 @@ export type RegenKeys = {
   fadeFor?: number;
 };
 
+/**
+ * The gas car's signal path (No. 008, orange: the computer between the pedal and the throttle). Seconds
+ * into the scene. From `pedalAt` it draws from the pedal's sensor up the firewall to the computer over
+ * `drawFor` (default 1.0 s; the computer's node lights on arrival); from `motorAt` (default: never) it
+ * draws from the computer along the intake to the throttle's motor (its node lights on arrival). Once
+ * the first leg is drawn, pulses leave the sensor (`pulses`, default true), faster the further the
+ * pedal is pressed; each runs to the computer and, if the `gate` lets it, on to the motor (even before
+ * that leg is drawn: a dot on the black wire); else it dies at the computer. `fadeAt`: everything orange
+ * fades out over `fadeFor` (default 0.7 s; the loop). A negative `pedalAt` / `motorAt` opens lit.
+ */
+export type GasPathKeys = {
+  pedalAt: number;
+  motorAt?: number | null;
+  drawFor?: number;
+  pulses?: boolean;
+  fadeAt?: number;
+  fadeFor?: number;
+};
+
+/** The pedal foot's keys (`foot`): 'floor' and 'accel' on both cars; 'brake' and 'both' on 'gas' only. */
+export type FootKey = {
+  at: number;
+  pose: 'floor' | 'accel' | 'brake' | 'both';
+  /** How far the pedal under the ball is pressed (accel: the accelerator, default 0.5; brake / both: the brake, default 0.8). */
+  press?: number;
+  /** 'both' (gas): how far the shoe's edge presses the accelerator (default 0.45). */
+  edge?: number;
+  /** 'gas': the move's length (s; default 0.75 for a lift, 0.4 onto the brake, 0.5 for a press). */
+  dur?: number;
+};
+
 export type CarSliceSceneProps = {
   durationInFrames: number;
   /** Day (default) or Night. */
@@ -169,9 +248,12 @@ export type CarSliceSceneProps = {
    * 'sensors' (default: YOU's car, a sensor in each wheel, orange pulses), 'indirect' (no sensors, no
    * orange) or 'ev' (No. 006: an electric car, front drive unit and battery pack cut open, the driver by
    * the cut with the pedal box in view; facing −x and on the city road by default; orange only on the
-   * `regen` and `signal` paths).
+   * `regen` and `signal` paths), or 'gas' (No. 008: a gas car, the EV's layout with a transverse engine
+   * and its throttle body cut open in the bay, a hanging accelerator with its sensor, the computer on the
+   * firewall, the steering column; facing −x on the highway lane by default; orange only on `gasPath`,
+   * `brakeLead` and `steerByWire`).
    */
-  variant?: 'sensors' | 'indirect' | 'ev';
+  variant?: 'sensors' | 'indirect' | 'ev' | 'gas';
   /** Which way the car faces: 'right' (+x, default) or 'left' (−x, default for 'ev'; its rear toward the camera). */
   facing?: 'right' | 'left';
   /** Who drives: 'you' (default) or 'mom'; the body colour follows (theme `CAR`). */
@@ -290,8 +372,11 @@ export type CarSliceSceneProps = {
    * their signals slide in through that end, so a longer run shows a red light while it is still well ahead.
    */
   roadAhead?: number;
-  /** 'ev': the driver's pedal foot from each `at` (s): 'floor' (flat, clear of both pedals; default) or 'accel' (heel on the floor, sole on the accelerator's pad, pressed `press`, default 0.5). Between the two, a 0.75 s lift: the foot rises ≈ 12 cm clear of the pad (🎭) while the pedal springs back, then settles. */
-  foot?: {at: number; pose: 'floor' | 'accel'; press?: number}[];
+  /** 'ev': the driver's pedal foot from each `at` (s): 'floor' (flat, clear of both pedals; default) or 'accel' (heel on the floor, sole on the accelerator's pad, pressed `press`, default 0.5). Between the two, a 0.75 s lift: the foot rises ≈ 12 cm clear of the pad (🎭) while the pedal springs back, then settles.
+   * 'gas' (No. 008): default 'accel' at 0.5; also 'brake' (the ball on the brake, heel lifted, a heel pivot across) and 'both'
+   * (across both pedals: the brake by `press`, the accelerator by the shoe's edge, `edge`); brake ↔ both slide, any other
+   * change of pedal is a lift (0.4 s onto the brake, else 0.75 s; `dur` overrides). */
+  foot?: FootKey[];
   /** 'ev': the regen path (see `RegenKeys`); null for none (default). */
   regen?: RegenKeys | null;
   /**
@@ -323,6 +408,64 @@ export type CarSliceSceneProps = {
    * or keys (eased). It closes from w1 toward w0, the caliper's side. Default 1.
    */
   wedgeOpen?: Keyed;
+  /**
+   * 'highway' (No. 008): where the car rides. 'shoulder' (default; No. 005: the near wheels on the groove
+   * row) or 'lane' (default for 'gas': the right lane's centre, no grooves under the car, the dashed lane
+   * line behind it; the edge line is past the cut). 'lane' is also the default for 'ev'.
+   */
+  highwayLane?: 'shoulder' | 'lane';
+  /** 'highway': the road after the rain (S2's wet asphalt: darker, puddles, the sky's sheen) and a fine spray off every tire (S2's `TireSpray`, clipped at the cut). Default false. */
+  wet?: boolean;
+  /**
+   * 'ev' (No. 008): power to the motor, the gas path's twin (see `GasPathKeys`): from `pedalAt` it draws
+   * from a sensor at the accelerator's hinge up to the inverter's control board (the computer); from
+   * `motorAt` down the phase cables into the stator, whose windings then light with the power the
+   * computer sends (brighter with the press; at low speed a band that leads the magnets: the field
+   * pulling the rotor). Pulses run pedal → board → motor, faster with the press. `gate` and `cut` work as
+   * on the gas car: no = pulses die at the board, the windings dim; cut = the phase leg and the windings
+   * go dark. Setting `drive` also draws the sensor and the board. Null for none (default).
+   */
+  drive?: GasPathKeys | null;
+  /**
+   * The near wheels drawn whole (No. 008, owner: the story explains nothing about the wheel): tire, rim and
+   * brake corner un-cut and un-hatched, while the body, bay and cabin stay sectioned. Default false.
+   */
+  wheelsWhole?: boolean;
+  /** 'gas': the gas signal path (see `GasPathKeys`); null for none (default). */
+  gasPath?: GasPathKeys | null;
+  /**
+   * 'gas' (and 'ev' with `drive`): the computer's yes/no from each `at` (s): `pass: true` (default before the first key) lets the
+   * pulses through to the throttle; `false`: each pulse dies at the computer and the outgoing leg dims.
+   */
+  gate?: {at: number; pass: boolean}[];
+  /** 'gas' (and 'ev' with `drive`): the power cut, 0 → 1, constant or keys: the outgoing leg goes dark and the throttle plate snaps shut (the windings go dark). Default 0. */
+  cut?: Keyed;
+  /**
+   * 'gas': the throttle plate, 0 (closed, idle) → 1 (wide open), constant or keys. Default 'auto': it
+   * follows the accelerator's press (0.15 s behind, the computer's response) while the gate passes,
+   * idle while it blocks or the power is cut.
+   */
+  throttle?: 'auto' | Keyed;
+  /**
+   * 'gas': the brake switch's lead to the computer (orange: the override's input): from `at` it draws
+   * over `drawFor` (default 0.4 s); `fadeAt`: it fades (0.5 s). Null for none (default).
+   */
+  brakeLead?: {at: number; drawFor?: number; fadeAt?: number} | null;
+  /** 'gas': the nose dips under hard braking, 0 → 1 (≈ 1.3°, 🎭 a little more than real), constant or keys. Default 0. */
+  noseDip?: Keyed;
+  /** 'gas': the steering wheel's turn (rad, + counter-clockwise as the driver sees it), constant or keys; the hands, the column and the front wheels follow. Default 0. */
+  steer?: Keyed;
+  /** 'gas': how many times the front wheels turn less than the steering wheel (default 5, 🎭: the real ≈ 15 would not read). */
+  steerRatio?: number;
+  /**
+   * 'gas': the steer-by-wire what-if (🎭). From `at` the steel shaft fades out over 0.8 s, leaving its two
+   * stubs with hatched cut faces; from `wireAt` (default at + 1.0) an orange wire draws from the column's
+   * angle sensor to the rack's motor over 1.2 s (node dots at both). `backAt`: the wire fades and the shaft
+   * fades back in (the loop). Null for none (default).
+   */
+  steerByWire?: {at: number; wireAt?: number; backAt?: number} | null;
+  /** 'gas': seconds a pulse runs down the steering wire (0.5 s each), once it is drawn. */
+  steerPulses?: number[];
   location?: string;
   transition?: 'auto' | 'continue' | 'glide' | 'cut' | 'dissolve' | 'slide' | 'follow';
   follow?: {direction?: 'down' | 'up' | 'left' | 'right'; at?: number};
@@ -340,14 +483,19 @@ export type CarSliceSceneProps = {
 };
 
 const isEv = (p: Partial<CarSliceSceneProps>) => p.variant === 'ev';
-const isLeft = (p: Partial<CarSliceSceneProps>) => (p.facing ?? (isEv(p) ? 'left' : 'right')) === 'left';
+const isGas = (p: Partial<CarSliceSceneProps>) => p.variant === 'gas';
+/** The cars with the driver by the cut and the bay open (No. 006 'ev', No. 008 'gas'). */
+const isBay = (p: Partial<CarSliceSceneProps>) => isEv(p) || isGas(p);
+const isLeft = (p: Partial<CarSliceSceneProps>) => (p.facing ?? (isBay(p) ? 'left' : 'right')) === 'left';
 /** The car's own frame (x forward) → the world (mirrored in x when it faces left). */
 const toWorld = (p: Partial<CarSliceSceneProps>, v: V3): V3 => (isLeft(p) ? [-v[0], v[1], v[2]] : v);
-const layoutOf = (p: Partial<CarSliceSceneProps>) => (isEv(p) ? LAYOUT_NEAR : CAR_LAYOUT);
+const layoutOf = (p: Partial<CarSliceSceneProps>) => (isBay(p) ? LAYOUT_NEAR : CAR_LAYOUT);
 /** A framing preset for these props (EV and mirrored versions when the car faces left). */
 const framingFor = (p: Partial<CarSliceSceneProps>): Framing => {
   const name = p.framing ?? 'wide';
   if (!isLeft(p)) return CAR_FRAMINGS[name as keyof typeof CAR_FRAMINGS] ?? CAR_FRAMINGS.wide;
+  const gas = isGas(p) ? GAS_FRAMINGS[name] : undefined;
+  if (gas) return gas;
   const ev = EV_FRAMINGS[name];
   if (ev) return ev;
   const f = CAR_FRAMINGS[name as keyof typeof CAR_FRAMINGS] ?? CAR_FRAMINGS.wide;
@@ -383,8 +531,12 @@ const carCameraMove = (
  * What a car-slice scene hands on to the next one when it continues (Explainer): for 'ev', the wheel
  * revolutions turned by the end of this scene (its own `revsFrom` plus its speed keys over its length).
  */
-export const carCarry = (p: Partial<CarSliceSceneProps>, durationInFrames: number, fps: number): Record<string, unknown> =>
-  p.variant === 'ev' ? {revsFrom: simRevs(p, durationInFrames / fps, fps)} : {};
+export const carCarry = (
+  p: Partial<CarSliceSceneProps>,
+  durationInFrames: number,
+  fps: number,
+): Record<string, unknown> =>
+  p.variant === 'ev' || p.variant === 'gas' ? {revsFrom: simRevs(p, durationInFrames / fps, fps)} : {};
 
 export const carCameraStart = (p: Partial<CarSliceSceneProps>, d: number, fps: number): Framing =>
   carCameraMove({...p, cameraFrom: undefined, cameraGlide: undefined}, d, fps, 0).from;
@@ -451,8 +603,21 @@ export const clusterOnScreen = (
 export const MPH60_REVS = 26.82 / (2 * Math.PI * R);
 
 /** The speed keys in rev/s (default: 1, a slow drive; 60 mph on the highway). */
+/** 45 mph in wheel revolutions per second (the gas car's default cruise). */
+export const MPH45_REVS = (45 * 0.44704) / (2 * Math.PI * R);
+
 const drivingOf = (p: Partial<CarSliceSceneProps>): SpeedKey[] =>
-  p.driving ?? [{at: 0, speed: p.road === 'highway' ? MPH60_REVS : 1}];
+  p.driving ?? [
+    {
+      at: 0,
+      speed:
+        p.variant === 'gas' || (p.variant === 'ev' && p.road === 'highway')
+          ? MPH45_REVS
+          : p.road === 'highway'
+            ? MPH60_REVS
+            : 1,
+    },
+  ];
 
 /** The rate everything on the road plays at, t s into the scene (`timeScale`). */
 const rateAt = (p: Partial<CarSliceSceneProps>, t: number) => Math.max(0, keyedValue(p.timeScale, t, 1));
@@ -462,11 +627,12 @@ const simRevs = (p: Partial<CarSliceSceneProps>, t: number, fps = 30) => {
   const drv = drivingOf(p);
   // highway: the road before the scene began ran at its first speed and rate, so consecutive scenes
   // at a steady speed join without the dips jumping (the street keeps No. 002's reset per scene)
+  // the gas and electric cars carry their turn from the scene before (`revsFrom`), on any road
   const before =
-    p.road === 'highway'
-      ? speedAt(drv, 0, 0.8) * rateAt(p, 0) * ((p.startFrame ?? 0) / fps)
-      : p.variant === 'ev'
-        ? (p.revsFrom ?? 0)
+    p.variant === 'gas' || p.variant === 'ev'
+      ? (p.revsFrom ?? 0)
+      : p.road === 'highway'
+        ? speedAt(drv, 0, 0.8) * rateAt(p, 0) * ((p.startFrame ?? 0) / fps)
         : 0;
   if (p.timeScale === undefined || p.timeScale === 1) return before + integrateSpeed(drv, t, 0.8);
   const STEP = 1 / 120;
@@ -645,6 +811,26 @@ const SIGNAL_LEG: V3[] = [
   [-2.36, 1.0, 0.7],
 ];
 
+/**
+ * No. 008, power to the motor (car frame): the accelerator's sensor → up the toe board and the
+ * firewall's cut face → the inverter's control board; then the board → down the phase cables → the
+ * stator. The reverse of the regen's leg B, so the same wiring carries it the other way.
+ */
+const EV_ROUTES: Record<'pedal' | 'phase', V3[]> = {
+  pedal: [
+    [EV.accelHinge[0] - 0.01, EV.accelHinge[1] + 0.03, EV.pedalZ + 0.07],
+    [0.86, 0.44, 0.43],
+    [0.96, 0.78, 0.43],
+    [1.06, 0.95, 0.42],
+    [EV_BOARD[0] + 0.03, (EV_BOARD[2] + EV_BOARD[3]) / 2, EV.inverter[5] + 0.03],
+  ],
+  phase: [
+    [EV_BOARD[0] + 0.08, EV_BOARD[2] + 0.01, EV.inverter[5] + 0.03],
+    [1.265, 0.84, EV.motorZ + 0.03],
+    [EV.motor[0] + 0.05, EV.motor[1] + 0.12, EV.motorZ + 0.03],
+  ],
+};
+
 /** The regen path's state at t (see `RegenKeys`). */
 const regenState = (k: RegenKeys | null | undefined, t: number) => {
   if (!k) return null;
@@ -663,7 +849,9 @@ const regenState = (k: RegenKeys | null | undefined, t: number) => {
     windingsAt,
     coils: (i: number) => ease(t, windingsAt + (0.8 * i) / 24, windingsAt + (0.8 * i) / 24 + 0.15),
     modules: [...Array(EV.modules).keys()].map(
-      (m) => fill * ease(t, batteryAt + (span * 0.75 * m) / EV.modules, batteryAt + (span * 0.75 * m) / EV.modules + span * 0.4),
+      (m) =>
+        fill *
+        ease(t, batteryAt + (span * 0.75 * m) / EV.modules, batteryAt + (span * 0.75 * m) / EV.modules + span * 0.4),
     ),
     bright: k.brightAt == null ? 0 : ease(t, k.brightAt, k.brightAt + 0.4),
     glow,
@@ -679,7 +867,11 @@ const footAt = (keys: CarSliceSceneProps['foot'], t: number) => {
   const ks = [...(keys && keys.length ? keys : [{at: -1, pose: 'floor' as const}])].sort((a, b) => a.at - b.at);
   const state = (k: (typeof ks)[number]) => {
     const press = k.pose === 'accel' ? (k.press ?? 0.5) : 0;
-    return {...footPose(k.pose, press, C.floor, EV_FOOT), w: k.pose === 'accel' ? 1 : 0, press};
+    return {
+      ...footPose(k.pose === 'accel' ? 'accel' : 'floor', press, C.floor, EV_FOOT),
+      w: k.pose === 'accel' ? 1 : 0,
+      press,
+    };
   };
   let cur = state(ks[0]);
   for (const k of ks.slice(1)) {
@@ -714,6 +906,99 @@ const footAt = (keys: CarSliceSceneProps['foot'], t: number) => {
     }
   }
   return cur;
+};
+
+/** The gas car's pedal foot at t: ankle (car frame x, y), pitch, side offset, and both pedals' presses. */
+const gasFootAt = (keys: CarSliceSceneProps['foot'], t: number) => {
+  const ks = [...(keys && keys.length ? keys : [{at: -1, pose: 'accel' as const}])].sort((a, b) => a.at - b.at);
+  const state = (k: FootKey) => ({
+    ...gasFootPose(k.pose, k.press ?? (k.pose === 'accel' ? 0.5 : 0.8), k.edge ?? 0.45, C.floor, EV_FOOT),
+    pose: k.pose,
+  });
+  let cur = state(ks[0]);
+  for (const k of ks.slice(1)) {
+    if (t <= k.at) break;
+    const tgt = state(k);
+    const mix = (a: number, b: number, w: number) => a + (b - a) * w;
+    // brake ↔ both slide (the brake stays pressed); any other change of pedal is a lift (the EV's)
+    const slide =
+      cur.pose === tgt.pose || (cur.brake > 0 && tgt.brake > 0 && cur.pose !== 'floor' && tgt.pose !== 'floor');
+    if (!slide) {
+      const D = k.dur ?? (tgt.pose === 'brake' || tgt.pose === 'both' ? 0.4 : 0.75);
+      const u = Math.max(0, Math.min(1, (t - k.at) / D));
+      const up = 0.1 * (ease(u, 0, 0.3) - ease(u, 0.62, 1));
+      const move = ease(u, 0.22, 0.85);
+      cur = {
+        x: mix(cur.x, tgt.x, move),
+        y: mix(cur.y, tgt.y, move) + up,
+        pitch: mix(cur.pitch, tgt.pitch, move),
+        side: mix(cur.side, tgt.side, move),
+        accel: cur.accel * (1 - ease(u, 0, 0.25)) + tgt.accel * ease(u, 0.8, 1),
+        brake: cur.brake * (1 - ease(u, 0, 0.25)) + tgt.brake * ease(u, 0.75, 1),
+        pose: tgt.pose,
+      };
+    } else {
+      const w = ease(t, k.at, k.at + (k.dur ?? 0.5));
+      cur = {
+        x: mix(cur.x, tgt.x, w),
+        y: mix(cur.y, tgt.y, w),
+        pitch: mix(cur.pitch, tgt.pitch, w),
+        side: mix(cur.side, tgt.side, w),
+        accel: mix(cur.accel, tgt.accel, w),
+        brake: mix(cur.brake, tgt.brake, w),
+        pose: tgt.pose,
+      };
+    }
+  }
+  return cur;
+};
+
+/** A pulse's travel time on each leg of the gas path (s), and how long one takes to die at the computer. */
+const GAS_PULSE = {leg: 0.45, die: 0.3};
+/** Pulses a second leaving the pedal's sensor at a press (0 → 1): faster the further it is pressed. */
+const pulseRate = (press: number) => 0.7 + 2.3 * Math.max(0, Math.min(1, press));
+
+/** The gate (the computer's yes) at t, 0 (no) → 1 (yes), eased over 0.12 s. */
+const gateAt = (keys: CarSliceSceneProps['gate'], t: number) => {
+  const ks = [...(keys ?? [])].sort((a, b) => a.at - b.at);
+  let v = ks.length && ks[0].at <= 0 ? (ks[0].pass ? 1 : 0) : 1;
+  for (const k of ks) {
+    if (t < k.at) break;
+    const tgt = k.pass ? 1 : 0;
+    v = v + (tgt - v) * ease(t, k.at, k.at + 0.12);
+  }
+  return v;
+};
+
+/**
+ * The pulses on the gas path at t: when each left the sensor (the press integrated, so they come faster
+ * as the pedal goes down), as [emitted at, age]. `before`: the scene's start in the video (pulses keep
+ * their rhythm across a cut at the same press). Only those emitted after `from` (the first leg drawn).
+ */
+const gasPulses = (
+  keys: CarSliceSceneProps['foot'],
+  t: number,
+  from: number,
+  before: number,
+  pressAt: (keys: CarSliceSceneProps['foot'], t: number) => number = (k, x) => gasFootAt(k, x).accel,
+) => {
+  const H = 1 / 60;
+  const window = GAS_PULSE.leg * 2 + GAS_PULSE.die + 0.1;
+  const t0 = Math.max(from, t - window, 0);
+  // Φ(t0): the pulses already sent (from the scene's start at its first press, plus the time before it)
+  let phi = pulseRate(pressAt(keys, 0)) * before;
+  for (let x = 0; x < t0; x += H) phi += pulseRate(pressAt(keys, x + Math.min(H, t0 - x) / 2)) * Math.min(H, t0 - x);
+  const out: number[] = [];
+  if (t < t0) return out;
+  // a pulse leaves each time Φ crosses a whole number
+  for (let x = t0; x < t; x += H) {
+    const h = Math.min(H, t - x);
+    const r = pulseRate(pressAt(keys, x + h / 2));
+    const next = phi + r * h;
+    for (let n = Math.floor(phi) + 1; n <= next; n++) out.push(x + ((n - phi) / (next - phi)) * h);
+    phi = next;
+  }
+  return out;
 };
 
 /** A traffic signal's lit lens at t from its keys (default red). */
@@ -757,6 +1042,21 @@ const roadTexture = (mood: Mood) => {
   return t;
 };
 
+/** The gas car's nose dip: the body pitched about a pivot (the rear axle); a plain pass-through when off. */
+const Dip: React.FC<{on: boolean; angle: number; pivot: V3; children: React.ReactNode}> = ({
+  on,
+  angle,
+  pivot,
+  children,
+}) =>
+  on ? (
+    <group position={pivot} rotation={[0, 0, angle]}>
+      <group position={[-pivot[0], -pivot[1], -pivot[2]]}>{children}</group>
+    </group>
+  ) : (
+    <>{children}</>
+  );
+
 /**
  * C, the car slice (No. 002): a generic car cut open (near side along the near wheels' mid-plane, the
  * roof above the windows), the driver at the wheel, four turning wheels on a scrolling road on a cut
@@ -783,14 +1083,21 @@ export const CarSliceScene: React.FC<CarSliceSceneProps> = (props) => {
   const {fps} = useVideoConfig();
   const t = frame / fps;
   const m = MOODS[mood];
-  const hw = props.road === 'highway';
+  // No. 008: the gas car, on the highway by default
+  const gas = variant === 'gas';
+  const roadKind = props.road ?? (variant === 'ev' ? 'city' : gas ? 'highway' : 'street');
+  const hw = roadKind === 'highway';
+  // the highway: on the shoulder's groove row (No. 005) or in the lane (no grooves under the car)
+  const lane = hw && (props.highwayLane ?? (gas || variant === 'ev' ? 'lane' : 'shoulder')) === 'lane';
+  const wet = hw && (props.wet ?? false);
   // the highway's car has no tire sensors (no orange but the grooves, the drops and the path)
   const sensors = variant === 'sensors' && !hw;
   // No. 006: the electric car, facing left by default, on the city road
   const ev = variant === 'ev';
   const left = isLeft(props);
   const dir = left ? -1 : 1;
-  const city = (props.road ?? (ev ? 'city' : 'street')) === 'city';
+  const city = roadKind === 'city';
+  const bay = ev || gas;
   const lay = layoutOf(props);
   const {from, to, pre} = carCameraMove(props, durationInFrames, fps, frame);
 
@@ -805,9 +1112,21 @@ export const CarSliceScene: React.FC<CarSliceSceneProps> = (props) => {
       node: new THREE.MeshBasicMaterial({color: raw(section.orange)}),
       nodeOff: new THREE.MeshStandardMaterial({color: raw(section.ledOff), roughness: 0.4}),
       // the highway: interstate asphalt with the white edge line and the milled row, along x
-      asphalt: asphaltMaterial({across: '(vRoadPos.z - uAcross)', along: '(-vRoadPos.x)', key: 'car-slice-asphalt'}),
+      asphalt: wet
+        ? asphaltMaterial(
+            {across: '(vRoadPos.z - uAcross)', along: '(-vRoadPos.x)', key: 'car-slice-asphalt'},
+            {wet, mood},
+          )
+        : asphaltMaterial({across: '(vRoadPos.z - uAcross)', along: '(-vRoadPos.x)', key: 'car-slice-asphalt'}),
       hidden: new THREE.MeshBasicMaterial({visible: false}),
       air: new THREE.MeshBasicMaterial({color: raw(section.orange), transparent: true, depthWrite: false, opacity: 0}),
+      pulseHalo: new THREE.MeshBasicMaterial({
+        color: raw(section.orange),
+        transparent: true,
+        depthWrite: false,
+        opacity: 0.5,
+      }),
+      pulseCore: new THREE.MeshBasicMaterial({color: raw(section.orangeDot)}),
       rubberCut: new THREE.MeshBasicMaterial({color: raw(section.cut)}),
       ink: new THREE.MeshBasicMaterial({color: raw(section.cutLine)}),
       band: [bandMaterial(), bandMaterial()],
@@ -821,7 +1140,7 @@ export const CarSliceScene: React.FC<CarSliceSceneProps> = (props) => {
           void main() { if (fract(vX / uPeriod) > 0.45 || uAlpha < 0.003) discard; gl_FragColor = vec4(cInk, uAlpha); }`,
       }),
     };
-  }, [mood, m.earth]);
+  }, [mood, m.earth, wet]);
   const headlamps = useMemo(
     () => [-0.55, 0.55].map(() => new THREE.SpotLight(raw(HIGHWAY.headlight), 0, 30, 0.42, 0.6, 1)),
     [],
@@ -845,7 +1164,7 @@ export const CarSliceScene: React.FC<CarSliceSceneProps> = (props) => {
   const camNow = cameraAtFrame(props, {frame, fps, durationInFrames});
   const camD = camNow.position.distanceTo(camNow.look);
   // close-ups thin the ink (≈ 3 px held); the electric car's close-ups go far closer than the highway's
-  const inkK = hw ? Math.max(0.2, Math.min(1, camD / 12.75)) : ev ? Math.max(0.03, Math.min(1, camD / 12.75)) : 1;
+  const inkK = bay ? Math.max(0.03, Math.min(1, camD / 12.75)) : hw ? Math.max(0.2, Math.min(1, camD / 12.75)) : 1;
   const ringK = hw ? Math.max(0.35, Math.min(1, camD / 7.5)) : 1;
   const vRoad = speedAt(drivingOf(props), t, 0.8) * rateAt(props, t) * 2 * Math.PI * R; // m/s on screen
   const blurM = vRoad * (0.5 / fps); // metres the road moves while the shutter is open
@@ -855,13 +1174,15 @@ export const CarSliceScene: React.FC<CarSliceSceneProps> = (props) => {
   const lateral = 0.45 * leaveK;
   // where the cut is across the row (its centre at 0), and how much of a dip it cuts
   const rowAt = -lateral;
-  const onRow = hw ? Math.max(0, Math.min(1, (GROOVE.half - Math.abs(rowAt)) / 0.03)) : 0;
+  const onRow = hw && !lane ? Math.max(0, Math.min(1, (GROOVE.half - Math.abs(rowAt)) / 0.03)) : 0;
   const dipScale = Math.max(0, Math.min(MAX_AMP, props.dipScale ?? 2.5));
   const ampShow = onRow * (1 - smear) * dipScale;
   const asphaltU = mats.asphalt.userData.uniforms as Record<string, {value: number}>;
   asphaltU.uScroll.value = distance;
   asphaltU.uBlur.value = blurM;
-  asphaltU.uAcross.value = C.cutZ - (HIGHWAY_LAYOUT.groove.x0 + HIGHWAY_LAYOUT.groove.x1) / 2 + lateral;
+  asphaltU.uAcross.value = lane
+    ? -HIGHWAY_LAYOUT.lanes.right
+    : C.cutZ - (HIGHWAY_LAYOUT.groove.x0 + HIGHWAY_LAYOUT.groove.x1) / 2 + lateral;
   const nearWheels = (['FR', 'RR'] as WheelId[]).map((id) => {
     const xw = WHEELS[id].x;
     // the rigid tire resting on the dips; at speed (smeared) a fine deterministic hum instead
@@ -887,7 +1208,8 @@ export const CarSliceScene: React.FC<CarSliceSceneProps> = (props) => {
         (1 - leaveK) *
         (impactsAt === null || t < impactsAt ? 0 : 1)
       : Math.max(0, Math.min(1, keyedValue(props.band, t, 0))) * (1 - leaveK);
-  const squeezeK = hw && props.squeezeAt !== null ? ease(t, props.squeezeAt ?? 0, (props.squeezeAt ?? 0) + 0.4) : 0;
+  const squeezeK =
+    hw && !lane && props.squeezeAt !== null ? ease(t, props.squeezeAt ?? 0, (props.squeezeAt ?? 0) + 0.4) : 0;
   const airK = hw && props.airAt != null ? ease(t, props.airAt, props.airAt + 0.3) : 0;
   mats.air.opacity = 0.85 * airK;
   // the band ≈ 25 px tall at any framing (visual review: +30%)
@@ -949,7 +1271,7 @@ export const CarSliceScene: React.FC<CarSliceSceneProps> = (props) => {
   const bodyJ: V3 = [sj('bx', 0.0025), sj('by', 0.003), sj('bz', 0.0025)];
   const jig = (k: string) =>
     (random(`car-buzz-${k}-${frame}`) - 0.5) * 2 * 0.006 * Math.max(buzz, Math.min(1.5, shakeAmt));
-  const hands: [V3, V3] = [
+  const hands0: [V3, V3] = [
     [-0.16 + jig('rx'), 1.02 + jig('ry'), 0.4 + jig('rz')],
     [0.16 + jig('lx'), 1.04 + jig('ly'), 0.41 + jig('lz')],
   ];
@@ -975,12 +1297,40 @@ export const CarSliceScene: React.FC<CarSliceSceneProps> = (props) => {
   const gearSpin = -wheelSpin;
   const rotorSpin = gearSpin * ratio;
   const rotorBlur = -wheelBlur * ratio;
-  const slots = regen
+  // No. 008, power to the motor: how bright the windings are (the press, through the gate and the cut, once the
+  // phase leg has arrived), and a lit band leading the magnets by a quarter pole (the field pulling the rotor)
+  const dv = ev && props.drive ? props.drive : null;
+  const dvFor = dv?.drawFor ?? 1.0;
+  const dvAmp = dv
+    ? (dv.motorAt == null ? 0 : ease(t, dv.motorAt + dvFor - 0.15, dv.motorAt + dvFor + 0.35)) *
+      (0.35 + 0.65 * footAt(props.foot, t - 0.1).press) *
+      (0.15 + 0.85 * gateAt(props.gate, t)) *
+      (1 - Math.max(0, Math.min(1, keyedValue(props.cut, t, 0)))) *
+      (dv.fadeAt == null ? 1 : 1 - ease(t, dv.fadeAt, dv.fadeAt + (dv.fadeFor ?? 0.7)))
+    : 0;
+  const driveSlots =
+    dv && dvAmp > 0.003
+      ? [...Array(24).keys()].map((i) => {
+          const a = ((i + 0.5) / 24) * Math.PI * 2;
+          const lead = Math.sign(rotorBlur || 1) * (Math.PI / 16);
+          let b = 0;
+          for (let k = 0; k < 8; k++) {
+            const x = a - rotorSpin - lead - (k / 8) * Math.PI * 2;
+            b = Math.max(b, Math.max(0, 1 - Math.abs(Math.atan2(Math.sin(x), Math.cos(x))) / 0.32) ** 1.4);
+          }
+          const fast = Math.max(0, Math.min(1, (Math.abs(rotorBlur) - 0.3) / 0.4));
+          return dvAmp * (b * (1 - fast) + 0.6 * fast);
+        })
+      : undefined;
+  const regenSlots = regen
     ? [...Array(24).keys()].map((i) => {
         const a = ((i + 0.5) / 24) * Math.PI * 2;
         let b = 0;
         for (let k = 0; k < 8; k++) {
-          const d = Math.atan2(Math.sin(a - rotorSpin - (k / 8) * Math.PI * 2), Math.cos(a - rotorSpin - (k / 8) * Math.PI * 2));
+          const d = Math.atan2(
+            Math.sin(a - rotorSpin - (k / 8) * Math.PI * 2),
+            Math.cos(a - rotorSpin - (k / 8) * Math.PI * 2),
+          );
           b = Math.max(b, Math.max(0, 1 - Math.abs(d) / 0.32) ** 1.4);
         }
         // fast: the shutter averages the sweep into a steady glow
@@ -989,21 +1339,32 @@ export const CarSliceScene: React.FC<CarSliceSceneProps> = (props) => {
         return amp * (b * (1 - fast) + 0.5 * fast);
       })
     : undefined;
+  const slots =
+    regenSlots && driveSlots ? regenSlots.map((v, i) => Math.max(v, driveSlots[i])) : (regenSlots ?? driveSlots);
   const foot = ev ? footAt(props.foot, t) : null;
   const toFig = (x: number, y: number): V3 => [0, y - lay.driver[1], x - lay.driver[0]];
-  const legs: [{ankle: V3; pitch?: number}, {ankle: V3; pitch?: number}] | undefined = foot
-    ? [
-        // the near foot (the driver's left, mirrored) tucked back under the knee, resting on its toes, so the
-        // near shin stays clear of the right foot and both pedals from the fixed camera (owner review)
+  const legs: [{ankle: V3; pitch?: number; side?: number}, {ankle: V3; pitch?: number; side?: number}] | undefined = gas
+    ? ([
         {ankle: toFig(0.35, C.floor + 0.18), pitch: -0.5},
-        {ankle: toFig(foot.x, foot.y), pitch: foot.pitch},
-      ]
-    : undefined;
+        // the pedal foot (figure-local +x is the car's −z: across toward the cut is −side)
+        ...(() => {
+          const f = gasFootAt(props.foot, t);
+          return [{ankle: toFig(f.x, f.y), pitch: f.pitch, side: -f.side}];
+        })(),
+      ] as [{ankle: V3; pitch?: number}, {ankle: V3; pitch?: number; side?: number}])
+    : foot
+      ? [
+          // the near foot (the driver's left, mirrored) tucked back under the knee, resting on its toes, so the
+          // near shin stays clear of the right foot and both pedals from the fixed camera (owner review)
+          {ankle: toFig(0.35, C.floor + 0.18), pitch: -0.5},
+          {ankle: toFig(foot.x, foot.y), pitch: foot.pitch},
+        ]
+      : undefined;
   const sig = ev && props.signal ? props.signal : null;
   const sigLampsAt = sig ? (sig.lampsAt ?? sig.at + 1.2) : 0;
   const sigK = sig ? ease(t, sig.at, sigLampsAt) : 0;
   const sigGlow = sig ? (sig.fadeAt == null ? 1 : 1 - ease(t, sig.fadeAt, sig.fadeAt + 0.6)) : 0;
-  const brakeK = ev
+  const brakeK = bay
     ? props.brakeLights !== undefined
       ? Math.max(0, Math.min(1, keyedValue(props.brakeLights, t, 0)))
       : sig
@@ -1046,7 +1407,117 @@ export const CarSliceScene: React.FC<CarSliceSceneProps> = (props) => {
   const wedgeNow: [number, number] | undefined =
     wedgeFull && wedgeK > 0 ? [wedgeFull[0], wedgeFull[0] + wedgeK * (wedgeFull[1] - wedgeFull[0])] : undefined;
   // the paths keep ≈ their wide-shot thickness on screen in close-ups (quantized: the tube rebuilds on change)
-  const pathR = ev ? VIB_R * Math.max(0.3, Math.min(1, Math.round((camD / 9) * 20) / 20)) : VIB_R;
+  const pathR = bay ? VIB_R * Math.max(0.3, Math.min(1, Math.round((camD / 9) * 20) / 20)) : VIB_R;
+  // ---- No. 008: the gas car's state
+  const gasFoot = gas ? gasFootAt(props.foot, t) : null;
+  // the signal path: the gas car's `gasPath`, or the electric car's `drive` (No. 008), on the same machinery
+  const evDrive = ev && props.drive ? props.drive : null;
+  const gp = gas && props.gasPath ? props.gasPath : evDrive;
+  const sigPath = gas || evDrive !== null;
+  const pathRoutes = gas
+    ? {pedal: GAS_ROUTES.pedal, motor: GAS_ROUTES.motor}
+    : {pedal: EV_ROUTES.pedal, motor: EV_ROUTES.phase};
+  const gpFor = gp?.drawFor ?? 1.0;
+  const gpGlow = gp ? (gp.fadeAt == null ? 1 : 1 - ease(t, gp.fadeAt, gp.fadeAt + (gp.fadeFor ?? 0.7))) : 0;
+  const leg1 = gp ? ease(t, gp.pedalAt, gp.pedalAt + gpFor) : 0;
+  const leg2 = gp && gp.motorAt != null ? ease(t, gp.motorAt, gp.motorAt + gpFor) : 0;
+  const passK = sigPath ? gateAt(props.gate, t) : 1;
+  const cutK = sigPath ? Math.max(0, Math.min(1, keyedValue(props.cut, t, 0))) : 0;
+  // the outgoing leg dims while the computer says no, and goes dark when the power is cut
+  const leg2Glow = gpGlow * (1 - 0.6 * (1 - passK)) * (1 - cutK);
+  const plate = gas
+    ? props.throttle === undefined || props.throttle === 'auto'
+      ? 0.0 + 0.9 * gasFootAt(props.foot, t - 0.15).accel * gateAt(props.gate, t - 0.05) * (1 - cutK)
+      : Math.max(0, Math.min(1, keyedValue(props.throttle, t, 0)))
+    : 0;
+  const pulseList =
+    gp && (gp.pulses ?? true) && gpGlow > 0.01
+      ? gasPulses(props.foot, t, gp.pedalAt + gpFor, startFrame / fps, gas ? undefined : (k, x) => footAt(k, x).press)
+      : [];
+  const curves = useMemo(
+    () =>
+      Object.fromEntries(
+        (Object.keys(GAS_ROUTES) as (keyof typeof GAS_ROUTES)[]).map((k) => [
+          k,
+          new THREE.CatmullRomCurve3(GAS_ROUTES[k].map((q) => new THREE.Vector3(...q))),
+        ]),
+      ) as Record<keyof typeof GAS_ROUTES, THREE.CatmullRomCurve3>,
+    [],
+  );
+  const evCurves = useMemo(
+    () => ({
+      pedal: new THREE.CatmullRomCurve3(EV_ROUTES.pedal.map((q) => new THREE.Vector3(...q))),
+      motor: new THREE.CatmullRomCurve3(EV_ROUTES.phase.map((q) => new THREE.Vector3(...q))),
+    }),
+    [],
+  );
+  const pathCurves = gas ? {pedal: curves.pedal, motor: curves.motor} : evCurves;
+  // each pulse: where it is (leg 1, then leg 2 if the gate passed it on arrival, else dying at the computer)
+  const pulseDots = pulseList.flatMap((t0) => {
+    const age = t - t0;
+    if (age < 0) return [];
+    if (age < GAS_PULSE.leg) {
+      const v = pathCurves.pedal.getPointAt(Math.min(0.999, age / GAS_PULSE.leg));
+      return [{p: [v.x, v.y, v.z] as V3, k: 1}];
+    }
+    const arrive = t0 + GAS_PULSE.leg;
+    const after = age - GAS_PULSE.leg;
+    if (gateAt(props.gate, arrive) >= 0.5 && keyedValue(props.cut, arrive, 0) < 0.5) {
+      if (after >= GAS_PULSE.leg) return [];
+      const v = pathCurves.motor.getPointAt(Math.min(0.999, after / GAS_PULSE.leg));
+      // it fades into the motor over the last fifth
+      return [{p: [v.x, v.y, v.z] as V3, k: 1 - ease(after / GAS_PULSE.leg, 0.8, 1)}];
+    }
+    if (after >= GAS_PULSE.die) return [];
+    // it dies at the computer: it swells a touch and fades
+    const e = pathRoutes.pedal[pathRoutes.pedal.length - 1];
+    return [{p: e, k: (1 - after / GAS_PULSE.die) * (1 + 0.4 * (after / GAS_PULSE.die))}];
+  });
+  const bl = gas && props.brakeLead ? props.brakeLead : null;
+  const blK = bl ? ease(t, bl.at, bl.at + (bl.drawFor ?? 0.4)) : 0;
+  const blGlow = bl ? (bl.fadeAt == null ? 1 : 1 - ease(t, bl.fadeAt, bl.fadeAt + 0.5)) : 0;
+  const dip = gas ? Math.max(0, keyedValue(props.noseDip, t, 0)) : 0;
+  const steerNow = gas ? keyedValue(props.steer, t, 0) : 0;
+  const steerRatio = props.steerRatio ?? 5;
+  const sbw = gas && props.steerByWire ? props.steerByWire : null;
+  const sbwWireAt = sbw ? (sbw.wireAt ?? sbw.at + 1.0) : 0;
+  const shaftK = sbw
+    ? 1 - ease(t, sbw.at, sbw.at + 0.8) + (sbw.backAt == null ? 0 : ease(t, sbw.backAt, sbw.backAt + 0.8))
+    : 1;
+  const sbwK = sbw ? ease(t, sbwWireAt, sbwWireAt + 1.2) : 0;
+  const sbwGlow = sbw ? (sbw.backAt == null ? 1 : 1 - ease(t, sbw.backAt, sbw.backAt + 0.6)) : 0;
+  const steerDots = sbw
+    ? (props.steerPulses ?? []).flatMap((p0) => {
+        const age = t - p0;
+        if (age < 0 || age > 0.5 || p0 < sbwWireAt + 1.2) return [];
+        const v = curves.steer.getPointAt(Math.min(0.999, age / 0.5));
+        return [{p: [v.x, v.y, v.z] as V3, k: 1 - ease(age / 0.5, 0.8, 1)}];
+      })
+    : [];
+  // the hands turn with the wheel (about its axis through the hub, figure-local)
+  const steerHands = (h: V3): V3 => {
+    if (!gas || steerNow === 0) return h;
+    const c = new THREE.Vector3(0, lay.steering[1] - lay.driver[1], lay.steering[0] - lay.driver[0]);
+    const axis = new THREE.Vector3(0, Math.sin(-0.42), Math.cos(-0.42)).normalize();
+    const v = new THREE.Vector3(...h).sub(c).applyAxisAngle(axis, steerNow).add(c);
+    return [v.x, v.y, v.z];
+  };
+
+  const hands: [V3, V3] = gas ? [steerHands(hands0[0]), steerHands(hands0[1])] : hands0;
+  // the spray: one emitter per tire (world), the water streaming back from the car's travel
+  const spray: SprayEmitter[] = wet
+    ? (Object.keys(WHEELS) as WheelId[]).map((id) => {
+        const w = WHEELS[id];
+        return {
+          at: [dir * w.x, 0, w.near ? C.cutZ - 0.03 : w.z] as V3,
+          back: [-dir, 0] as [number, number],
+          out: [0, w.near ? 1 : -1] as [number, number],
+          speed: vRoad,
+          strength: () => ({mist: Math.max(0, Math.min(1, vRoad / 8)), spin: 0}),
+        };
+      })
+    : [];
+
   const regenNodes: [V3, boolean][] = regen
     ? [
         [REGEN_A[0], regen.started],
@@ -1059,7 +1530,11 @@ export const CarSliceScene: React.FC<CarSliceSceneProps> = (props) => {
   return (
     <AbsoluteFill>
       {/* close framings of the electric car shrink the AO radius with the camera (at 0.35 m it filled a 1 m frame) */}
-      <SectionStage mood={mood} post={ev ? {focusY: 0.5, aoRadius: 0.35 * Math.max(0.06, Math.min(1, camD / 10))} : {focusY: 0.5}} ao>
+      <SectionStage
+        mood={mood}
+        post={bay ? {focusY: 0.5, aoRadius: 0.35 * Math.max(0.06, Math.min(1, camD / 10))} : {focusY: 0.5}}
+        ao
+      >
         <SectionCamera
           from={from}
           to={to}
@@ -1147,6 +1622,10 @@ export const CarSliceScene: React.FC<CarSliceSceneProps> = (props) => {
           </>
         )}
         {/* headlights on the road ahead (highway at Night; always mounted, 0 otherwise) */}
+        {/* the wet road (No. 008): a fine spray off every tire, streaming back, clipped at the cut */}
+        {spray.length ? (
+          <TireSpray emitters={spray} t={t} seed="car-slice-spray" clipZ={C.cutZ} exposure={m.exposure} />
+        ) : null}
         {headlamps.map((l, i) => (
           <React.Fragment key={i}>
             <primitive object={l} />
@@ -1156,91 +1635,231 @@ export const CarSliceScene: React.FC<CarSliceSceneProps> = (props) => {
 
         {/* the car and its driver, in the car's own frame (mirrored in x when it faces left) */}
         <group scale={left ? [-1, 1, 1] : undefined}>
-          <group position={[bodyJ[0], bodyY + bodyJ[1], bodyJ[2]]}>
-            <RealCar
-              steeringJitter={shakeAmt > 0 ? [sj('sx', 0.004), sj('sy', 0.005), sj('sz', 0.004)] : undefined}
+          <Dip on={gas} angle={-0.022 * dip} pivot={[C.axleX.rear, R, 0]}>
+            <group position={[bodyJ[0], bodyY + bodyJ[1], bodyJ[2]]}>
+              <RealCar
+                steeringJitter={shakeAmt > 0 ? [sj('sx', 0.004), sj('sy', 0.005), sj('sz', 0.004)] : undefined}
+                mood={mood}
+                body={driver === 'mom' ? 'mom' : driver === 'friend' ? 'friend' : 'you'}
+                warning={warn}
+                tail={hw && night ? 1 : 0}
+                speed={props.clusterSpeed ?? (gas ? 45 : 38)}
+                tireLight={bay ? false : (props.tireLight ?? true)}
+                {...(ev
+                  ? {ev: true, driverSide: 'near' as const, brake: brakeK, inkScale: inkK, evCluster: {power}}
+                  : {})}
+                {...(ev && props.drive !== undefined ? {splitDash: true} : {})}
+                {...(gas
+                  ? {gas: true, driverSide: 'near' as const, brake: brakeK, inkScale: inkK, steer: steerNow}
+                  : {})}
+                mirrored={left ? true : undefined}
+              />
+            </group>
+            <Figure
+              who={driver}
               mood={mood}
-              body={driver === 'mom' ? 'mom' : 'you'}
-              warning={warn}
-              tail={hw && night ? 1 : 0}
-              speed={props.clusterSpeed ?? 38}
-              tireLight={ev ? false : (props.tireLight ?? true)}
-              {...(ev ? {ev: true, driverSide: 'near' as const, brake: brakeK, inkScale: inkK, evCluster: {power}} : {})}
-              mirrored={left ? true : undefined}
+              position={[lay.driver[0] + bodyJ[0], lay.driver[1] + bodyY + bodyJ[1], lay.driver[2] + bodyJ[2]]}
+              rotationY={Math.PI / 2}
+              gestures={gestures}
+              phone={false}
+              hands={hands}
+              clockOffset={startFrame / fps}
+              legs={legs}
+              footScale={bay ? [1, EV_FOOT] : undefined}
+              shoe={bay ? section.sneaker : undefined}
             />
-          </group>
-          <Figure
-            who={driver}
-            mood={mood}
-            position={[lay.driver[0] + bodyJ[0], lay.driver[1] + bodyY + bodyJ[1], lay.driver[2] + bodyJ[2]]}
-            rotationY={Math.PI / 2}
-            gestures={gestures}
-            phone={false}
-            hands={hands}
-            clockOffset={startFrame / fps}
-            legs={legs}
-            footScale={ev ? [1, EV_FOOT] : undefined}
-            shoe={ev ? section.sneaker : undefined}
-          />
-          {ev ? (
-            <>
-              <DriveUnit mood={mood} wheelSpin={gearSpin} rotorSpin={rotorSpin} rotorBlur={rotorBlur} slots={slots} inkScale={inkK} />
-              <BatteryPack mood={mood} fill={regen?.modules} glow={rg} inkScale={inkK} />
-              <PedalBox mood={mood} accel={foot ? foot.press : 0} />
-              {regen && regen.started ? (
-                <>
-                  {(
-                    [
-                      [REGEN_A, regen.a, true],
-                      [REGEN_B, regen.b, false],
-                      [REGEN_C, regen.c, false],
-                    ] as [V3[], number, boolean][]
-                  ).map(([leg, k, runner], i) =>
-                    k > 0 ? (
-                      <OrangePath
-                        key={i}
-                        legs={[leg]}
-                        progress={k}
-                        glow={rg}
-                        stain={false}
-                        runner={runner}
-                        radius={pathR}
-                        coreColor={section.orange}
-                        halo={{scale: 0.055 / 0.018, opacity: 0.25}}
-                        flow={regen.bright > 0.5 ? t * 0.6 : undefined}
-                        dots={3}
-                      />
-                    ) : null,
-                  )}
-                  {regenNodes.map(([pt, on], i) =>
-                    on && rg > 0.01 ? (
-                      <mesh key={i} position={pt} material={mats.node} userData={{glow: true}} scale={rg}>
-                        <sphereGeometry args={[0.03 * (pathR / VIB_R), 16, 12]} />
-                      </mesh>
-                    ) : null,
-                  )}
-                </>
-              ) : null}
-              {sig && sigK > 0 && sigGlow > 0.01 ? (
-                <>
-                  <OrangePath
-                    legs={[SIGNAL_LEG]}
-                    progress={sigK}
-                    glow={sigGlow}
-                    stain={false}
-                    radius={pathR}
-                    coreColor={section.orange}
-                    halo={{scale: 0.055 / 0.018, opacity: 0.25}}
-                  />
-                  {sigK >= 0.999 ? (
-                    <mesh position={SIGNAL_LEG[SIGNAL_LEG.length - 1]} material={mats.node} userData={{glow: true}} scale={sigGlow}>
+            {gas ? (
+              <>
+                <EngineBay mood={mood} open={plate} inkScale={inkK} />
+                <GasPedals mood={mood} accel={gasFoot ? gasFoot.accel : 0} brake={gasFoot ? gasFoot.brake : 0} />
+                <Steering mood={mood} steer={steerNow} shaft={shaftK} rack={0.012 * steerNow} inkScale={inkK} />
+                <GasLoom
+                  mood={mood}
+                  routes={sbw ? [GAS_ROUTES.pedal, GAS_ROUTES.motor, GAS_ROUTES.brake, GAS_ROUTES.steer] : undefined}
+                />
+                {(
+                  [
+                    [GAS_ROUTES.pedal, leg1, gpGlow, true],
+                    [GAS_ROUTES.motor, leg2, leg2Glow, true],
+                    [GAS_ROUTES.brake, blK, blGlow, false],
+                    [GAS_ROUTES.steer, sbwK, sbwGlow, true],
+                  ] as [V3[], number, number, boolean][]
+                ).map(([leg, k, g, runner], i) =>
+                  k > 0 && g > 0.01 ? (
+                    <OrangePath
+                      key={i}
+                      legs={[leg]}
+                      progress={k}
+                      glow={g}
+                      stain={false}
+                      runner={runner}
+                      radius={pathR}
+                      coreColor={section.orange}
+                      halo={{scale: 0.055 / 0.018, opacity: 0.25}}
+                    />
+                  ) : null,
+                )}
+                {/* node dots: the sensor and the computer (leg 1), the throttle's motor (leg 2), the brake switch, the steering's ends */}
+                {(
+                  [
+                    [GAS_ROUTES.pedal[0], leg1 > 0, gpGlow],
+                    [GAS_ROUTES.pedal[GAS_ROUTES.pedal.length - 1], leg1 >= 0.999, gpGlow],
+                    [GAS_ROUTES.motor[GAS_ROUTES.motor.length - 1], leg2 >= 0.999, leg2Glow],
+                    [GAS_ROUTES.brake[0], blK > 0, blGlow],
+                    [GAS_ROUTES.steer[0], sbwK > 0, sbwGlow],
+                    [GAS_ROUTES.steer[GAS_ROUTES.steer.length - 1], sbwK >= 0.999, sbwGlow],
+                  ] as [V3, boolean, number][]
+                ).map(([pt, on, g], i) =>
+                  on && g > 0.01 ? (
+                    <mesh key={i} position={pt} material={mats.node} userData={{glow: true}} scale={Math.max(0.35, g)}>
                       <sphereGeometry args={[0.03 * (pathR / VIB_R), 16, 12]} />
                     </mesh>
-                  ) : null}
-                </>
-              ) : null}
-            </>
-          ) : null}
+                  ) : null,
+                )}
+                {/* the pulses: an orange dot with a pale core, riding the wire */}
+                {[...pulseDots.map((d) => ({...d, g: gpGlow})), ...steerDots.map((d) => ({...d, g: sbwGlow}))].map(
+                  (d, i) =>
+                    d.k * d.g > 0.01 ? (
+                      <group key={i} position={d.p} scale={Math.max(0.001, Math.min(1.4, d.k)) * (pathR / VIB_R)}>
+                        <mesh material={mats.pulseHalo} userData={{glow: true}}>
+                          <sphereGeometry args={[0.085, 16, 12]} />
+                        </mesh>
+                        <mesh material={mats.pulseCore} userData={{glow: true}}>
+                          <sphereGeometry args={[0.045, 16, 12]} />
+                        </mesh>
+                      </group>
+                    ) : null,
+                )}
+              </>
+            ) : null}
+            {ev ? (
+              <>
+                <DriveUnit
+                  mood={mood}
+                  wheelSpin={gearSpin}
+                  rotorSpin={rotorSpin}
+                  rotorBlur={rotorBlur}
+                  slots={slots}
+                  inkScale={inkK}
+                  board={props.drive !== undefined}
+                />
+                <BatteryPack mood={mood} fill={regen?.modules} glow={rg} inkScale={inkK} />
+                <PedalBox mood={mood} accel={foot ? foot.press : 0} sensor={props.drive !== undefined} />
+                {evDrive ? (
+                  <>
+                    {/* power to the motor (No. 008): pedal sensor → the inverter's board → the phase cables */}
+                    {(
+                      [
+                        [EV_ROUTES.pedal, leg1, gpGlow],
+                        [EV_ROUTES.phase, leg2, leg2Glow],
+                      ] as [V3[], number, number][]
+                    ).map(([leg, k, g], i) =>
+                      k > 0 && g > 0.01 ? (
+                        <OrangePath
+                          key={i}
+                          legs={[leg]}
+                          progress={k}
+                          glow={g}
+                          stain={false}
+                          runner={false}
+                          radius={pathR}
+                          coreColor={section.orange}
+                          halo={{scale: 0.055 / 0.018, opacity: 0.25}}
+                        />
+                      ) : null,
+                    )}
+                    {(
+                      [
+                        [EV_ROUTES.pedal[0], leg1 > 0, gpGlow],
+                        [EV_ROUTES.pedal[EV_ROUTES.pedal.length - 1], leg1 >= 0.999, gpGlow],
+                      ] as [V3, boolean, number][]
+                    ).map(([pt, on, g], i) =>
+                      on && g > 0.01 ? (
+                        <mesh
+                          key={i}
+                          position={pt}
+                          material={mats.node}
+                          userData={{glow: true}}
+                          scale={Math.max(0.35, g)}
+                        >
+                          <sphereGeometry args={[0.03 * (pathR / VIB_R), 16, 12]} />
+                        </mesh>
+                      ) : null,
+                    )}
+                    {pulseDots.map((d, i) =>
+                      d.k * gpGlow > 0.01 ? (
+                        <group key={i} position={d.p} scale={Math.max(0.001, Math.min(1.4, d.k)) * (pathR / VIB_R)}>
+                          <mesh material={mats.pulseHalo} userData={{glow: true}}>
+                            <sphereGeometry args={[0.085, 16, 12]} />
+                          </mesh>
+                          <mesh material={mats.pulseCore} userData={{glow: true}}>
+                            <sphereGeometry args={[0.045, 16, 12]} />
+                          </mesh>
+                        </group>
+                      ) : null,
+                    )}
+                  </>
+                ) : null}
+                {regen && regen.started ? (
+                  <>
+                    {(
+                      [
+                        [REGEN_A, regen.a, true],
+                        [REGEN_B, regen.b, false],
+                        [REGEN_C, regen.c, false],
+                      ] as [V3[], number, boolean][]
+                    ).map(([leg, k, runner], i) =>
+                      k > 0 ? (
+                        <OrangePath
+                          key={i}
+                          legs={[leg]}
+                          progress={k}
+                          glow={rg}
+                          stain={false}
+                          runner={runner}
+                          radius={pathR}
+                          coreColor={section.orange}
+                          halo={{scale: 0.055 / 0.018, opacity: 0.25}}
+                          flow={regen.bright > 0.5 ? t * 0.6 : undefined}
+                          dots={3}
+                        />
+                      ) : null,
+                    )}
+                    {regenNodes.map(([pt, on], i) =>
+                      on && rg > 0.01 ? (
+                        <mesh key={i} position={pt} material={mats.node} userData={{glow: true}} scale={rg}>
+                          <sphereGeometry args={[0.03 * (pathR / VIB_R), 16, 12]} />
+                        </mesh>
+                      ) : null,
+                    )}
+                  </>
+                ) : null}
+                {sig && sigK > 0 && sigGlow > 0.01 ? (
+                  <>
+                    <OrangePath
+                      legs={[SIGNAL_LEG]}
+                      progress={sigK}
+                      glow={sigGlow}
+                      stain={false}
+                      radius={pathR}
+                      coreColor={section.orange}
+                      halo={{scale: 0.055 / 0.018, opacity: 0.25}}
+                    />
+                    {sigK >= 0.999 ? (
+                      <mesh
+                        position={SIGNAL_LEG[SIGNAL_LEG.length - 1]}
+                        material={mats.node}
+                        userData={{glow: true}}
+                        scale={sigGlow}
+                      >
+                        <sphereGeometry args={[0.03 * (pathR / VIB_R), 16, 12]} />
+                      </mesh>
+                    ) : null}
+                  </>
+                ) : null}
+              </>
+            ) : null}
+          </Dip>
         </group>
 
         {(Object.keys(WHEELS) as WheelId[]).map((id) => {
@@ -1248,15 +1867,17 @@ export const CarSliceScene: React.FC<CarSliceSceneProps> = (props) => {
           const spin = wheelRevs(props, id, t) * Math.PI * 2;
           // the turn while the shutter is open (half a frame): the wheel's motion blur
           const blur = (wheelRevs(props, id, t + 0.25 / fps) - wheelRevs(props, id, t - 0.25 / fps)) * Math.PI * 2;
-          const cutNear = w.near && (sensors || hw || ev);
+          const cutNear = w.near && !props.wheelsWhole && (sensors || hw || bay);
           // facing left the wheels sit mirrored and turn the other way
           const turn = w.near ? -dir : dir;
+          // the gas car's front wheels steer (🎭 `steerRatio`)
+          const steerYaw = gas && w.x > 0 ? (dir * steerNow) / steerRatio : 0;
           return (
             <RealWheel
               key={id}
               mood={mood}
               position={[dir * w.x, R - (w.near ? dropOf(id) : 0), w.z]}
-              yaw={w.near ? -Math.PI / 2 : Math.PI / 2}
+              yaw={(w.near ? -Math.PI / 2 : Math.PI / 2) + steerYaw}
               radius={R}
               cut={cutNear ? 'mid' : 'none'}
               spin={turn * spin}
@@ -1282,7 +1903,7 @@ export const CarSliceScene: React.FC<CarSliceSceneProps> = (props) => {
           );
         })}
 
-        {hw
+        {hw && !lane
           ? contact.map((c) => (
               <group key={c.id}>
                 {/* the trapped air under the tread in the dip (orange once `airAt` is reached) */}
@@ -1353,7 +1974,7 @@ export const CarSliceScene: React.FC<CarSliceSceneProps> = (props) => {
               </group>
             ))
           : null}
-        {hw ? (
+        {hw && !lane ? (
           <mesh
             position={[0, 0, HWY.front + 0.006]}
             scale={[2 * HWY.x, refH, 1]}
