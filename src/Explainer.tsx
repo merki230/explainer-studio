@@ -3,6 +3,7 @@ import {AbsoluteFill, Audio, Easing, interpolate, Sequence, useCurrentFrame} fro
 import {AdCard} from './components/AdCard';
 import {Attribution, ATTRIBUTION_FADE} from './components/Attribution';
 import {Callout} from './components/Callout';
+import {CHART_FADE, ChartCard} from './components/ChartCard';
 import {Captions} from './components/Captions';
 import {Chip} from './components/Chip';
 import {Counter} from './components/Counter';
@@ -26,6 +27,8 @@ import {streetCameraEnd, streetCameraStart} from './scenes/StreetSliceScene';
 import {highwayCameraEnd, highwayCameraStart} from './scenes/HighwaySliceScene';
 import {musicalCameraEnd, musicalCameraStart} from './scenes/MusicalRoadScene';
 import {cityCameraEnd, cityCameraStart} from './scenes/CitySliceScene';
+import {driveUnitCameraEnd, driveUnitCameraStart} from './scenes/DriveUnitScene';
+import {raceCameraEnd, raceCameraStart, raceCarry} from './scenes/RaceSliceScene';
 import type {Framing} from './three/section/SectionCamera';
 
 type CameraFn = (p: Record<string, unknown>, durationInFrames: number, fps: number) => Framing;
@@ -41,6 +44,8 @@ const CAMERAS: Record<string, {start: CameraFn; end: CameraFn}> = {
   'highway-slice': {start: highwayCameraStart as CameraFn, end: highwayCameraEnd as CameraFn},
   'musical-road': {start: musicalCameraStart as CameraFn, end: musicalCameraEnd as CameraFn},
   'city-slice': {start: cityCameraStart as CameraFn, end: cityCameraEnd as CameraFn},
+  'drive-unit': {start: driveUnitCameraStart as CameraFn, end: driveUnitCameraEnd as CameraFn},
+  'race-slice': {start: raceCameraStart as CameraFn, end: raceCameraEnd as CameraFn},
 };
 import {transitionInto, type Transition} from './scenes/transitions';
 import {clickOffFrame, type ClickOff} from './scenes/clickOff';
@@ -107,8 +112,8 @@ const exitFrames = (o: ResolvedOverlay) =>
     ? STATEMENT_FADE
     : o.type === 'attribution'
       ? ATTRIBUTION_FADE
-      : o.type === 'tag' || o.type === 'detail' || o.type === 'screen'
-        ? Math.max(TAG_FADE, DETAIL_FADE, FULLSCREEN_FADE)
+      : o.type === 'tag' || o.type === 'detail' || o.type === 'screen' || o.type === 'chart'
+        ? Math.max(TAG_FADE, DETAIL_FADE, FULLSCREEN_FADE, CHART_FADE)
         : o.type === 'title'
           ? TITLE_FADE
           : OVERLAY_EXIT;
@@ -207,6 +212,8 @@ const Overlay: React.FC<{o: ResolvedOverlay; scene: SceneContext}> = ({o, scene}
       return <FullScreen {...o} mood={mood} scene={scene} />;
     case 'staff':
       return <NoteStaff {...o} mood={mood} scene={scene} />;
+    case 'chart':
+      return <ChartCard {...o} mood={mood} />;
     case 'sfx':
       // sounds play outside the scene's layers (see SceneSounds), so a click can outlast the cut
       return null;
@@ -381,6 +388,8 @@ const ExplainerBody: React.FC<{
         own.cameraFrom = end;
         // state a continuing scene carries on from the last one (car-slice 'ev': the wheels' turn and the road)
         if (s.scene === 'car-slice') Object.assign(own, carCarry({...props[i - 1], startFrame: prev.startFrame}, prev.endFrame - prev.startFrame, FPS));
+        // race-slice: each car's place on the strip, its wheels' turn, the V8's crank and the race clock
+        if (s.scene === 'race-slice') Object.assign(own, raceCarry({...props[i - 1], startFrame: prev.startFrame}, prev.endFrame - prev.startFrame, FPS));
         // 'auto' turns a continue into a glide when this scene's framing is too far from where the
         // last one ended to continue smoothly (a preset with the same look-at keeps pushing instead)
         const start = cam.start(own, s.endFrame - s.startFrame, FPS);

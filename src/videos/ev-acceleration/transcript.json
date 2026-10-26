@@ -1,1030 +1,1030 @@
 {
-  "audio": null,
+  "audio": "audio/voiceover.mp3",
   "words": [
     {
       "text": "An",
-      "start": 0.15,
-      "end": 0.37
+      "start": 0,
+      "end": 0.16
     },
     {
       "text": "electric",
-      "start": 0.41,
-      "end": 0.93
+      "start": 0.4,
+      "end": 0.64
     },
     {
       "text": "car",
-      "start": 0.97,
-      "end": 1.24
+      "start": 0.8,
+      "end": 0.96
     },
     {
       "text": "beat",
-      "start": 1.28,
-      "end": 1.6
+      "start": 1.12,
+      "end": 1.28
     },
     {
       "text": "a",
-      "start": 1.64,
-      "end": 1.81
+      "start": 1.4,
+      "end": 1.52
     },
     {
       "text": "797-horsepower",
-      "start": 1.85,
-      "end": 2.62
+      "start": 1.64,
+      "end": 3.44
     },
     {
       "text": "muscle",
-      "start": 2.66,
-      "end": 3.08
+      "start": 3.6,
+      "end": 3.84
     },
     {
       "text": "car",
-      "start": 3.12,
-      "end": 3.39
+      "start": 4,
+      "end": 4.24
     },
     {
       "text": "to",
-      "start": 3.43,
-      "end": 3.65
+      "start": 4.32,
+      "end": 4.48
     },
     {
       "text": "60",
-      "start": 3.69,
-      "end": 3.91
+      "start": 4.56,
+      "end": 4.88
     },
     {
       "text": "miles",
-      "start": 3.95,
-      "end": 4.32
+      "start": 4.96,
+      "end": 5.2
     },
     {
       "text": "an",
-      "start": 4.36,
-      "end": 4.58
+      "start": 5.28,
+      "end": 5.36
     },
     {
       "text": "hour,",
-      "start": 4.62,
-      "end": 4.94
+      "start": 5.52,
+      "end": 6.24
     },
     {
       "text": "but",
-      "start": 5.14,
-      "end": 5.41
+      "start": 6.32,
+      "end": 6.4
     },
     {
       "text": "the",
-      "start": 5.45,
-      "end": 5.72
+      "start": 6.44,
+      "end": 6.48
     },
     {
       "text": "gas",
-      "start": 5.76,
-      "end": 6.03
+      "start": 6.64,
+      "end": 6.8
     },
     {
       "text": "car",
-      "start": 6.07,
-      "end": 6.34
+      "start": 6.88,
+      "end": 7.12
     },
     {
       "text": "hit",
-      "start": 6.38,
-      "end": 6.65
+      "start": 7.2,
+      "end": 7.36
     },
     {
       "text": "100",
-      "start": 6.69,
-      "end": 6.96
+      "start": 7.44,
+      "end": 7.52
     },
     {
       "text": "first.",
-      "start": 7,
-      "end": 7.37
+      "start": 7.68,
+      "end": 9.04
     },
     {
       "text": "So",
-      "start": 7.73,
-      "end": 7.95
+      "start": 9.12,
+      "end": 9.28
     },
     {
       "text": "why",
-      "start": 7.99,
-      "end": 8.26
+      "start": 9.6,
+      "end": 9.76
     },
     {
       "text": "did",
-      "start": 8.3,
-      "end": 8.57
+      "start": 9.84,
+      "end": 9.92
     },
     {
       "text": "its",
-      "start": 8.61,
-      "end": 8.88
+      "start": 10,
+      "end": 10.08
     },
     {
       "text": "head",
-      "start": 8.92,
-      "end": 9.24
+      "start": 10.16,
+      "end": 10.32
     },
     {
       "text": "start",
-      "start": 9.28,
-      "end": 9.65
+      "start": 10.4,
+      "end": 10.64
     },
     {
       "text": "fade?",
-      "start": 9.69,
-      "end": 10.01
+      "start": 10.72,
+      "end": 11.067
     },
     {
       "text": "An",
-      "start": 10.37,
-      "end": 10.59
+      "start": 12.56,
+      "end": 12.64
     },
     {
       "text": "electric",
-      "start": 10.63,
-      "end": 11.15
+      "start": 12.88,
+      "end": 13.12
     },
     {
       "text": "motor",
-      "start": 11.19,
-      "end": 11.56
+      "start": 13.2,
+      "end": 13.52
     },
     {
       "text": "pushes",
-      "start": 11.6,
-      "end": 12.02
+      "start": 13.6,
+      "end": 14
     },
     {
       "text": "hardest",
-      "start": 12.06,
-      "end": 12.53
+      "start": 14.08,
+      "end": 14.4
     },
     {
       "text": "from",
-      "start": 12.57,
-      "end": 12.89
+      "start": 14.48,
+      "end": 14.56
     },
     {
       "text": "a",
-      "start": 12.93,
-      "end": 13.1
+      "start": 14.64,
+      "end": 14.72
     },
     {
       "text": "stop,",
-      "start": 13.14,
-      "end": 13.46
+      "start": 14.92,
+      "end": 15.44
     },
     {
       "text": "and",
-      "start": 13.66,
-      "end": 13.93
+      "start": 15.56,
+      "end": 15.68
     },
     {
       "text": "that",
-      "start": 13.97,
-      "end": 14.29
+      "start": 15.76,
+      "end": 15.92
     },
     {
       "text": "usually",
-      "start": 14.33,
-      "end": 14.8
+      "start": 16,
+      "end": 16.32
     },
     {
       "text": "holds",
-      "start": 14.84,
-      "end": 15.21
+      "start": 16.4,
+      "end": 16.72
     },
     {
       "text": "until",
-      "start": 15.25,
-      "end": 15.62
+      "start": 16.84,
+      "end": 16.96
     },
     {
       "text": "around",
-      "start": 15.66,
-      "end": 16.08
+      "start": 17.04,
+      "end": 17.36
     },
     {
       "text": "30",
-      "start": 16.12,
-      "end": 16.34
+      "start": 17.44,
+      "end": 17.6
     },
     {
       "text": "miles",
-      "start": 16.38,
-      "end": 16.75
+      "start": 17.76,
+      "end": 18
     },
     {
       "text": "an",
-      "start": 16.79,
-      "end": 17.01
+      "start": 18.04,
+      "end": 18.08
     },
     {
       "text": "hour.",
-      "start": 17.05,
-      "end": 17.37
+      "start": 18.16,
+      "end": 19.12
     },
     {
       "text": "A",
-      "start": 17.73,
-      "end": 17.9
+      "start": 19.2,
+      "end": 19.28
     },
     {
       "text": "gas",
-      "start": 17.94,
-      "end": 18.21
+      "start": 19.4,
+      "end": 19.52
     },
     {
       "text": "engine",
-      "start": 18.25,
-      "end": 18.67
+      "start": 19.6,
+      "end": 19.92
     },
     {
       "text": "makes",
-      "start": 18.71,
-      "end": 19.08
+      "start": 20,
+      "end": 20.24
     },
     {
       "text": "no",
-      "start": 19.12,
-      "end": 19.34
+      "start": 20.32,
+      "end": 20.48
     },
     {
       "text": "push",
-      "start": 19.38,
-      "end": 19.7
+      "start": 20.56,
+      "end": 20.8
     },
     {
       "text": "until",
-      "start": 19.74,
-      "end": 20.11
+      "start": 20.92,
+      "end": 21.04
     },
     {
       "text": "it's",
-      "start": 20.15,
-      "end": 20.42
+      "start": 21.12,
+      "end": 21.28
     },
     {
       "text": "spinning,",
-      "start": 20.46,
-      "end": 20.98
+      "start": 21.36,
+      "end": 21.92
     },
     {
       "text": "so",
-      "start": 21.18,
-      "end": 21.4
+      "start": 22,
+      "end": 22.24
     },
     {
       "text": "it",
-      "start": 21.44,
-      "end": 21.66
+      "start": 22.28,
+      "end": 22.32
     },
     {
       "text": "has",
-      "start": 21.7,
-      "end": 21.97
+      "start": 22.4,
+      "end": 22.56
     },
     {
       "text": "to",
-      "start": 22.01,
-      "end": 22.23
+      "start": 22.64,
+      "end": 22.72
     },
     {
       "text": "rev",
-      "start": 22.27,
-      "end": 22.54
+      "start": 22.8,
+      "end": 22.96
     },
     {
       "text": "up",
-      "start": 22.58,
-      "end": 22.8
+      "start": 23.04,
+      "end": 23.28
     },
     {
       "text": "and",
-      "start": 22.84,
-      "end": 23.11
+      "start": 23.36,
+      "end": 23.44
     },
     {
       "text": "shift",
-      "start": 23.15,
-      "end": 23.52
+      "start": 23.56,
+      "end": 23.68
     },
     {
       "text": "gears.",
-      "start": 23.56,
-      "end": 23.93
+      "start": 23.76,
+      "end": 24.96
     },
     {
       "text": "Testers",
-      "start": 24.29,
-      "end": 24.76
+      "start": 25.08,
+      "end": 25.44
     },
     {
       "text": "timed",
-      "start": 24.8,
-      "end": 25.17
+      "start": 25.52,
+      "end": 25.76
     },
     {
       "text": "the",
-      "start": 25.21,
-      "end": 25.48
+      "start": 25.8,
+      "end": 25.84
     },
     {
       "text": "electric",
-      "start": 25.52,
-      "end": 26.04
+      "start": 26.08,
+      "end": 26.32
     },
     {
       "text": "car",
-      "start": 26.08,
-      "end": 26.35
+      "start": 26.48,
+      "end": 26.64
     },
     {
       "text": "at",
-      "start": 26.39,
-      "end": 26.61
+      "start": 26.76,
+      "end": 26.88
     },
     {
       "text": "3.3",
-      "start": 26.65,
-      "end": 26.87
+      "start": 26.96,
+      "end": 27.12
     },
     {
       "text": "seconds",
-      "start": 26.91,
-      "end": 27.38
+      "start": 27.28,
+      "end": 28.24
     },
     {
       "text": "to",
-      "start": 27.42,
-      "end": 27.64
+      "start": 28.32,
+      "end": 28.4
     },
     {
       "text": "60",
-      "start": 27.68,
-      "end": 27.9
+      "start": 28.48,
+      "end": 28.8
     },
     {
       "text": "and",
-      "start": 27.94,
-      "end": 28.21
+      "start": 29.2,
+      "end": 29.28
     },
     {
       "text": "the",
-      "start": 28.25,
-      "end": 28.52
+      "start": 29.36,
+      "end": 29.44
     },
     {
       "text": "gas",
-      "start": 28.56,
-      "end": 28.83
+      "start": 29.6,
+      "end": 29.76
     },
     {
       "text": "car",
-      "start": 28.87,
-      "end": 29.14
+      "start": 29.84,
+      "end": 30.08
     },
     {
       "text": "at",
-      "start": 29.18,
-      "end": 29.4
+      "start": 30.16,
+      "end": 30.32
     },
     {
       "text": "3.6.",
-      "start": 29.44,
-      "end": 29.66
+      "start": 30.4,
+      "end": 31.84
     },
     {
       "text": "All-wheel",
-      "start": 30.02,
-      "end": 30.54
+      "start": 31.92,
+      "end": 32.24
     },
     {
       "text": "drive",
-      "start": 30.58,
-      "end": 30.95
+      "start": 32.32,
+      "end": 32.72
     },
     {
       "text": "helped",
-      "start": 30.99,
-      "end": 31.41
+      "start": 32.8,
+      "end": 32.96
     },
     {
       "text": "the",
-      "start": 31.45,
-      "end": 31.72
+      "start": 33,
+      "end": 33.04
     },
     {
       "text": "electric",
-      "start": 31.76,
-      "end": 32.28
+      "start": 33.24,
+      "end": 33.44
     },
     {
       "text": "one.",
-      "start": 32.32,
-      "end": 32.59
+      "start": 33.52,
+      "end": 34.56
     },
     {
       "text": "Past",
-      "start": 32.95,
-      "end": 33.27
+      "start": 34.68,
+      "end": 34.8
     },
     {
       "text": "about",
-      "start": 33.31,
-      "end": 33.68
+      "start": 34.88,
+      "end": 35.2
     },
     {
       "text": "30,",
-      "start": 33.72,
-      "end": 33.94
+      "start": 35.24,
+      "end": 35.76
     },
     {
       "text": "the",
-      "start": 34.14,
-      "end": 34.41
+      "start": 35.84,
+      "end": 35.92
     },
     {
       "text": "spinning",
-      "start": 34.45,
-      "end": 34.97
+      "start": 36,
+      "end": 36.24
     },
     {
       "text": "motor",
-      "start": 35.01,
-      "end": 35.38
+      "start": 36.32,
+      "end": 36.64
     },
     {
       "text": "starts",
-      "start": 35.42,
-      "end": 35.84
+      "start": 36.8,
+      "end": 36.96
     },
     {
       "text": "fighting",
-      "start": 35.88,
-      "end": 36.4
+      "start": 37.04,
+      "end": 37.28
     },
     {
       "text": "its",
-      "start": 36.44,
-      "end": 36.71
+      "start": 37.36,
+      "end": 37.52
     },
     {
       "text": "own",
-      "start": 36.75,
-      "end": 37.02
+      "start": 37.64,
+      "end": 37.76
     },
     {
       "text": "battery,",
-      "start": 37.06,
-      "end": 37.53
+      "start": 38,
+      "end": 38.48
     },
     {
       "text": "so",
-      "start": 37.73,
-      "end": 37.95
+      "start": 38.6,
+      "end": 38.72
     },
     {
       "text": "the",
-      "start": 37.99,
-      "end": 38.26
+      "start": 38.8,
+      "end": 38.88
     },
     {
       "text": "push",
-      "start": 38.3,
-      "end": 38.62
+      "start": 39.04,
+      "end": 39.2
     },
     {
       "text": "shrinks",
-      "start": 38.66,
-      "end": 39.13
+      "start": 39.28,
+      "end": 39.68
     },
     {
       "text": "as",
-      "start": 39.17,
-      "end": 39.39
+      "start": 39.76,
+      "end": 39.84
     },
     {
       "text": "speed",
-      "start": 39.43,
-      "end": 39.8
+      "start": 40.04,
+      "end": 40.24
     },
     {
       "text": "climbs.",
-      "start": 39.84,
-      "end": 40.26
+      "start": 40.32,
+      "end": 41.36
     },
     {
       "text": "The",
-      "start": 40.62,
-      "end": 40.89
+      "start": 41.44,
+      "end": 41.52
     },
     {
       "text": "gas",
-      "start": 40.93,
-      "end": 41.2
+      "start": 41.64,
+      "end": 41.76
     },
     {
       "text": "car's",
-      "start": 41.24,
-      "end": 41.56
+      "start": 41.84,
+      "end": 42.16
     },
     {
       "text": "push",
-      "start": 41.6,
-      "end": 41.92
+      "start": 42.28,
+      "end": 42.4
     },
     {
       "text": "shrinks",
-      "start": 41.96,
-      "end": 42.43
+      "start": 42.48,
+      "end": 42.8
     },
     {
       "text": "too,",
-      "start": 42.47,
-      "end": 42.74
+      "start": 42.88,
+      "end": 43.52
     },
     {
       "text": "but",
-      "start": 42.94,
-      "end": 43.21
+      "start": 43.6,
+      "end": 43.68
     },
     {
       "text": "each",
-      "start": 43.25,
-      "end": 43.57
+      "start": 43.76,
+      "end": 44
     },
     {
       "text": "gear",
-      "start": 43.61,
-      "end": 43.93
+      "start": 44.12,
+      "end": 44.24
     },
     {
       "text": "change",
-      "start": 43.97,
-      "end": 44.39
+      "start": 44.32,
+      "end": 44.72
     },
     {
       "text": "brings",
-      "start": 44.43,
-      "end": 44.85
+      "start": 44.76,
+      "end": 44.96
     },
     {
       "text": "its",
-      "start": 44.89,
-      "end": 45.16
+      "start": 45.04,
+      "end": 45.12
     },
     {
       "text": "engine",
       "start": 45.2,
-      "end": 45.62
+      "end": 45.52
     },
     {
       "text": "back",
-      "start": 45.66,
-      "end": 45.98
+      "start": 45.6,
+      "end": 45.84
     },
     {
       "text": "close",
-      "start": 46.02,
-      "end": 46.39
+      "start": 46,
+      "end": 46.16
     },
     {
       "text": "to",
-      "start": 46.43,
-      "end": 46.65
+      "start": 46.24,
+      "end": 46.32
     },
     {
       "text": "where",
-      "start": 46.69,
-      "end": 47.06
+      "start": 46.4,
+      "end": 46.48
     },
     {
       "text": "it's",
-      "start": 47.1,
-      "end": 47.37
+      "start": 46.52,
+      "end": 46.64
     },
     {
       "text": "strongest.",
-      "start": 47.41,
-      "end": 47.98
+      "start": 46.72,
+      "end": 47.84
     },
     {
       "text": "Above",
-      "start": 48.34,
-      "end": 48.71
+      "start": 48,
+      "end": 48.16
     },
     {
       "text": "about",
-      "start": 48.75,
-      "end": 49.12
+      "start": 48.32,
+      "end": 48.48
     },
     {
       "text": "30,",
-      "start": 49.16,
-      "end": 49.38
+      "start": 48.56,
+      "end": 49.12
     },
     {
       "text": "the",
-      "start": 49.58,
-      "end": 49.85
+      "start": 49.16,
+      "end": 49.2
     },
     {
       "text": "motor's",
-      "start": 49.89,
-      "end": 50.31
+      "start": 49.28,
+      "end": 49.6
     },
     {
       "text": "power",
-      "start": 50.35,
-      "end": 50.72
+      "start": 49.68,
+      "end": 50
     },
     {
       "text": "stays",
-      "start": 50.76,
-      "end": 51.13
+      "start": 50.04,
+      "end": 50.32
     },
     {
       "text": "steady",
-      "start": 51.17,
-      "end": 51.59
+      "start": 50.4,
+      "end": 50.88
     },
     {
       "text": "even",
-      "start": 51.63,
-      "end": 51.95
+      "start": 50.96,
+      "end": 51.2
     },
     {
       "text": "though",
-      "start": 51.99,
-      "end": 52.41
+      "start": 51.28,
+      "end": 51.36
     },
     {
       "text": "its",
-      "start": 52.45,
-      "end": 52.72
+      "start": 51.48,
+      "end": 51.6
     },
     {
       "text": "push",
-      "start": 52.76,
-      "end": 53.08
+      "start": 51.72,
+      "end": 51.84
     },
     {
       "text": "shrinks.",
-      "start": 53.12,
-      "end": 53.59
+      "start": 51.92,
+      "end": 52.92
     },
     {
       "text": "A",
-      "start": 53.95,
-      "end": 54.12
+      "start": 52.96,
+      "end": 53.04
     },
     {
       "text": "gas",
-      "start": 54.16,
-      "end": 54.43
+      "start": 53.16,
+      "end": 53.28
     },
     {
       "text": "car",
-      "start": 54.47,
-      "end": 54.74
+      "start": 53.36,
+      "end": 53.6
     },
     {
       "text": "needs",
-      "start": 54.78,
-      "end": 55.15
+      "start": 53.68,
+      "end": 53.84
     },
     {
       "text": "up",
-      "start": 55.19,
-      "end": 55.41
+      "start": 53.92,
+      "end": 54
     },
     {
       "text": "to",
-      "start": 55.45,
-      "end": 55.67
+      "start": 54.08,
+      "end": 54.16
     },
     {
       "text": "ten",
-      "start": 55.71,
-      "end": 55.98
+      "start": 54.24,
+      "end": 54.56
     },
     {
       "text": "gears",
-      "start": 56.02,
-      "end": 56.39
+      "start": 54.6,
+      "end": 54.88
     },
     {
       "text": "to",
-      "start": 56.43,
-      "end": 56.65
+      "start": 54.96,
+      "end": 55.04
     },
     {
       "text": "get",
-      "start": 56.69,
-      "end": 56.96
+      "start": 55.12,
+      "end": 55.2
     },
     {
       "text": "close",
-      "start": 57,
-      "end": 57.37
+      "start": 55.32,
+      "end": 55.44
     },
     {
       "text": "to",
-      "start": 57.41,
-      "end": 57.63
+      "start": 55.52,
+      "end": 55.6
     },
     {
       "text": "that.",
-      "start": 57.67,
-      "end": 57.99
+      "start": 55.68,
+      "end": 56.693
     },
     {
       "text": "At",
-      "start": 58.35,
-      "end": 58.57
+      "start": 56.747,
+      "end": 56.8
     },
     {
       "text": "high",
-      "start": 58.61,
-      "end": 58.93
+      "start": 56.92,
+      "end": 57.04
     },
     {
       "text": "speed,",
-      "start": 58.97,
-      "end": 59.34
+      "start": 57.12,
+      "end": 57.72
     },
     {
       "text": "horsepower",
-      "start": 59.54,
-      "end": 60.16
+      "start": 57.76,
+      "end": 58.4
     },
     {
       "text": "per",
-      "start": 60.2,
-      "end": 60.47
+      "start": 58.52,
+      "end": 58.64
     },
     {
       "text": "pound",
-      "start": 60.51,
-      "end": 60.88
+      "start": 58.72,
+      "end": 59.04
     },
     {
       "text": "matters",
-      "start": 60.92,
-      "end": 61.39
+      "start": 59.12,
+      "end": 59.44
     },
     {
       "text": "most,",
-      "start": 61.43,
-      "end": 61.75
+      "start": 59.52,
+      "end": 60.213
     },
     {
       "text": "and",
-      "start": 61.95,
-      "end": 62.22
+      "start": 60.267,
+      "end": 60.32
     },
     {
       "text": "the",
-      "start": 62.26,
-      "end": 62.53
+      "start": 60.4,
+      "end": 60.44
     },
     {
       "text": "electric",
-      "start": 62.57,
-      "end": 63.09
+      "start": 60.48,
+      "end": 60.88
     },
     {
       "text": "car",
-      "start": 63.13,
-      "end": 63.4
+      "start": 61.04,
+      "end": 61.2
     },
     {
       "text": "had",
-      "start": 63.44,
-      "end": 63.71
+      "start": 61.32,
+      "end": 61.44
     },
     {
       "text": "less",
-      "start": 63.75,
-      "end": 64.07
+      "start": 61.56,
+      "end": 61.68
     },
     {
       "text": "horsepower",
-      "start": 64.11,
-      "end": 64.73
+      "start": 61.84,
+      "end": 62.64
     },
     {
       "text": "and",
-      "start": 64.77,
-      "end": 65.04
+      "start": 62.68,
+      "end": 62.72
     },
     {
       "text": "was",
-      "start": 65.08,
-      "end": 65.35
+      "start": 62.8,
+      "end": 62.88
     },
     {
       "text": "about",
-      "start": 65.39,
-      "end": 65.76
+      "start": 62.96,
+      "end": 63.2
     },
     {
       "text": "1,400",
-      "start": 65.8,
-      "end": 66.12
+      "start": 63.28,
+      "end": 64.56
     },
     {
       "text": "pounds",
-      "start": 66.16,
-      "end": 66.58
+      "start": 64.6,
+      "end": 64.88
     },
     {
       "text": "heavier.",
-      "start": 66.62,
-      "end": 67.09
+      "start": 64.96,
+      "end": 66.56
     },
     {
       "text": "Porsche",
-      "start": 67.45,
-      "end": 67.92
+      "start": 66.627,
+      "end": 66.96
     },
     {
       "text": "gave",
-      "start": 67.96,
-      "end": 68.28
+      "start": 67.04,
+      "end": 67.12
     },
     {
       "text": "its",
-      "start": 68.32,
-      "end": 68.59
+      "start": 67.2,
+      "end": 67.28
     },
     {
       "text": "electric",
-      "start": 68.63,
-      "end": 69.15
+      "start": 67.36,
+      "end": 67.76
     },
     {
       "text": "Taycan's",
-      "start": 69.19,
-      "end": 69.66
+      "start": 67.84,
+      "end": 68.4
     },
     {
       "text": "rear",
-      "start": 69.7,
-      "end": 70.02
+      "start": 68.52,
+      "end": 68.64
     },
     {
       "text": "motor",
-      "start": 70.06,
-      "end": 70.43
+      "start": 68.72,
+      "end": 69.12
     },
     {
       "text": "two",
-      "start": 70.47,
-      "end": 70.74
+      "start": 69.2,
+      "end": 69.44
     },
     {
       "text": "gears,",
-      "start": 70.78,
-      "end": 71.15
+      "start": 69.48,
+      "end": 70.2
     },
     {
       "text": "one",
-      "start": 71.35,
-      "end": 71.62
+      "start": 70.24,
+      "end": 70.4
     },
     {
       "text": "for",
-      "start": 71.66,
-      "end": 71.93
+      "start": 70.48,
+      "end": 70.56
     },
     {
       "text": "pulling",
-      "start": 71.97,
-      "end": 72.44
+      "start": 70.64,
+      "end": 70.8
     },
     {
       "text": "away",
-      "start": 72.48,
-      "end": 72.8
+      "start": 70.88,
+      "end": 71.44
     },
     {
       "text": "and",
-      "start": 72.84,
-      "end": 73.11
+      "start": 71.52,
+      "end": 71.6
     },
     {
       "text": "one",
-      "start": 73.15,
-      "end": 73.42
+      "start": 71.68,
+      "end": 71.76
     },
     {
       "text": "for",
-      "start": 73.46,
-      "end": 73.73
+      "start": 71.84,
+      "end": 72
     },
     {
       "text": "high",
-      "start": 73.77,
-      "end": 74.09
+      "start": 72.12,
+      "end": 72.24
     },
     {
       "text": "speed.",
-      "start": 74.13,
-      "end": 74.5
+      "start": 72.32,
+      "end": 73.32
     },
     {
       "text": "Next",
-      "start": 74.86,
-      "end": 75.18
+      "start": 73.36,
+      "end": 73.52
     },
     {
       "text": "time",
-      "start": 75.22,
-      "end": 75.54
+      "start": 73.6,
+      "end": 73.68
     },
     {
       "text": "an",
-      "start": 75.58,
-      "end": 75.8
+      "start": 73.76,
+      "end": 73.84
     },
     {
       "text": "electric",
-      "start": 75.84,
-      "end": 76.36
+      "start": 74.04,
+      "end": 74.24
     },
     {
       "text": "car",
-      "start": 76.4,
-      "end": 76.67
+      "start": 74.36,
+      "end": 74.48
     },
     {
       "text": "leaves",
-      "start": 76.71,
-      "end": 77.13
+      "start": 74.52,
+      "end": 74.72
     },
     {
       "text": "a",
-      "start": 77.17,
-      "end": 77.34
+      "start": 74.8,
+      "end": 74.88
     },
     {
       "text": "light,",
-      "start": 77.38,
-      "end": 77.75
+      "start": 75.16,
+      "end": 75.48
     },
     {
       "text": "watch",
-      "start": 77.95,
-      "end": 78.32
+      "start": 75.52,
+      "end": 75.68
     },
     {
       "text": "how",
-      "start": 78.36,
-      "end": 78.63
+      "start": 75.76,
+      "end": 75.84
     },
     {
       "text": "the",
-      "start": 78.67,
-      "end": 78.94
+      "start": 75.92,
+      "end": 76
     },
     {
       "text": "gap",
-      "start": 78.98,
-      "end": 79.25
+      "start": 76.16,
+      "end": 76.32
     },
     {
       "text": "changes",
-      "start": 79.29,
-      "end": 79.76
+      "start": 76.4,
+      "end": 76.88
     },
     {
       "text": "as",
-      "start": 79.8,
-      "end": 80.02
+      "start": 77,
+      "end": 77.12
     },
     {
       "text": "both",
-      "start": 80.06,
-      "end": 80.38
+      "start": 77.24,
+      "end": 77.36
     },
     {
       "text": "cars",
-      "start": 80.42,
-      "end": 80.74
+      "start": 77.52,
+      "end": 77.68
     },
     {
       "text": "speed",
-      "start": 80.78,
-      "end": 81.15
+      "start": 77.76,
+      "end": 78
     },
     {
       "text": "up.",
-      "start": 81.19,
-      "end": 81.41
+      "start": 78.08,
+      "end": 78.48
     }
   ]
 }

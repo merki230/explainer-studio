@@ -1,7 +1,8 @@
 // Self-made car sounds for the drive-by-wire video: deterministic synths (no API, no cost).
 //
 // usage: yarn sfx:<kind> <slug> [--name <kind>] [--out <file>] [--seconds N] [--lufs L] [--from A] [--to B]
-//        [--peak P] [--pitch X] [--clunk C]        (or: node scripts/sfx-drive.mjs <kind> <slug> ...)
+//        [--peak P] [--pitch X] [--clunk C] [--cyl 4|8] [--shifts N] [--idle S] [--dry]
+//        (or: node scripts/sfx-drive.mjs <kind> <slug> ...)
 //   kinds: engine | hiss | throttle | skid | thump | steer
 //
 // Every sound is modelled on the physical thing, with integer-ratio partials and filtered noise only:
@@ -10,8 +11,16 @@
 //            intake noise. --from/--to = rpm (smoothstep between them), --peak = rpm the middle swells to
 //            (sin^2 bump) for a rise-and-fall. Defaults: 6 s steady cruise at 1800 rpm, -20 LUFS.
 //            idle: --from 800 --to 800; drop: --from 2200 --to 900; flare: --from 1200 --to 1200 --peak 4000 --seconds 2
+//            V8: --cyl 8 (default 4; firing Hz = rpm*cyl/120). Cross-plane V8s fire unevenly, so it adds the
+//            crank-revolution orders (rpm/60 x1..3) and more per-cycle jitter: the low burble, deeper.
+//            Drag run: --shifts N (e.g. 7) builds idle (--idle s, default 1.5) -> rev to ~3000 -> launch ->
+//            N upshifts at --peak rpm (default 6000, from-rpm = idle). Each shift lifts the throttle: rpm
+//            falls to 70-82% of the shift rpm over 0.28 s with a level dip. Gears get longer. Length
+//            --seconds (default 11 with --shifts). e.g. yarn sfx:engine <slug> --name v8-run --cyl 8 --shifts 7 --from 750
 //  hiss      wet-road tire hiss: noise band-passed ~0.9-5 kHz plus faint road rumble, slow level wobble.
 //            Loops seamlessly (end cross-faded into start). --pitch = speed (1 = 45 mph; filters scale).
+//            --dry = dry asphalt roar: 0.4-2.2 kHz, more road rumble, no wet fizz. --from/--to (0.2-3) = speed
+//            multiplier at start/end: a non-looping rise in pitch and level (--dry --from 0.6 --to 1.4 --seconds 10).
 //            Defaults: 6 s, -24 LUFS. Louder in the skid scene: set the level in spec.ts.
 //  throttle  throttle-body DC motor and gears, 0.25 s: tone sweeping --from..--to Hz (220 -> 480 = opens),
 //            gear-mesh noise, and a soft plate-on-stop clunk (--clunk, 0 = off, default 0.35).
@@ -40,7 +49,7 @@ const KINDS = {
   thump: {seconds: 0.6, lufs: -18, from: 0, to: 0, fade: 0.1},
   steer: {seconds: 0.9, lufs: -22, from: 150, to: 330, fade: 0.08},
 };
-const usage = `yarn sfx:<${Object.keys(KINDS).join('|')}> <slug> [--name <kind>] [--out <file>] [--seconds N] [--lufs L]\n  [--from A] [--to B] [--peak P] [--pitch X] [--clunk C]`;
+const usage = `yarn sfx:<${Object.keys(KINDS).join('|')}> <slug> [--name <kind>] [--out <file>] [--seconds N] [--lufs L]\n  [--from A] [--to B] [--peak P] [--pitch X] [--clunk C] [--cyl 4|8] [--shifts N] [--idle S] [--dry]`;
 const fail = (msg) => {
   console.error(`${msg}\nusage: ${usage}`);
   process.exit(1);
@@ -50,10 +59,12 @@ if (argv.includes('--help') || argv.includes('-h')) {
   console.log(`${usage}\n\n  Default output: out/<slug>/raw/sfx/<name>.mp3 (audition; never writes into src/).`);
   process.exit(0);
 }
-const opt = {name: '', out: '', seconds: '', lufs: '', from: '', to: '', peak: '0', pitch: '1', clunk: '0.35'};
+const opt = {name: '', out: '', seconds: '', lufs: '', from: '', to: '', peak: '0', pitch: '1', clunk: '0.35', cyl: '4', shifts: '0', idle: '1.5', dry: ''};
+const flags = new Set(['dry']);
 const pos = [];
 for (let i = 0; i < argv.length; i++) {
-  if (argv[i].startsWith('--') && argv[i].slice(2) in opt) opt[argv[i].slice(2)] = argv[++i] ?? '';
+  if (argv[i].startsWith('--') && flags.has(argv[i].slice(2))) opt[argv[i].slice(2)] = '1';
+  else if (argv[i].startsWith('--') && argv[i].slice(2) in opt) opt[argv[i].slice(2)] = argv[++i] ?? '';
   else pos.push(argv[i]);
 }
 const [kind, slug] = pos;
@@ -63,9 +74,12 @@ const D = KINDS[kind];
 const name = opt.name || kind;
 if (!slug || pos.length > 2 || !re.test(slug) || !re.test(name)) fail('expected exactly one valid <slug> and a valid --name');
 const num = (k, d) => (opt[k] === '' ? d : Number(opt[k]));
-const seconds = num('seconds', D.seconds), lufs = num('lufs', D.lufs), f0 = num('from', D.from), f1 = num('to', D.to);
+const shifts = Number(opt.shifts), cyl = Number(opt.cyl), idle = Number(opt.idle), dry = opt.dry === '1';
+const seconds = num('seconds', kind === 'engine' && shifts > 0 ? 11 : D.seconds), lufs = num('lufs', D.lufs), f0 = num('from', D.from), f1 = num('to', D.to);
 const peakRpm = Number(opt.peak), pitch = Number(opt.pitch), clunk = Number(opt.clunk);
-if (![seconds, lufs, f0, f1, peakRpm, pitch, clunk].every(Number.isFinite) || !(seconds >= 0.1 && seconds <= 60) || !(lufs < 0 && lufs > -40) || pitch <= 0 || peakRpm < 0 || clunk < 0 || f0 < 0 || f1 < 0) fail('invalid option value');
+if (![seconds, lufs, f0, f1, peakRpm, pitch, clunk, shifts, cyl, idle].every(Number.isFinite) || !(seconds >= 0.1 && seconds <= 60) || !(lufs < 0 && lufs > -40) || pitch <= 0 || peakRpm < 0 || clunk < 0 || f0 < 0 || f1 < 0 || !Number.isInteger(shifts) || shifts < 0 || ![4, 8].includes(cyl) || idle < 0) fail('invalid option value (--cyl 4 or 8, --shifts integer)');
+if (shifts > 0 && (kind !== 'engine' || seconds < idle + 0.9 + 0.58 * shifts + 0.3)) fail('--shifts is for engine and needs --seconds >= --idle + 1.2 + 0.58 x shifts');
+if (kind === 'hiss' && (f0 || f1) && !(f0 >= 0.2 && f0 <= 3 && f1 >= 0.2 && f1 <= 3)) fail('hiss --from/--to are speed multipliers, 0.2-3 (both or neither)');
 if (kind === 'engine' && (f0 < 300 || f1 < 300 || f0 > 8000 || f1 > 8000 || (peakRpm && peakRpm < 300))) fail('engine --from/--to/--peak are rpm, 300-8000');
 if ((kind === 'throttle' || kind === 'steer') && (f0 < 50 || f1 < 50 || f0 > 3000 || f1 > 3000)) fail('--from/--to are Hz, 50-3000');
 const outFile = opt.out || join('out', slug, 'raw', 'sfx', `${name}.mp3`);
@@ -86,30 +100,71 @@ const smooth = (u) => u * u * (3 - 2 * u);
 
 let z = new Float64Array(n);
 if (kind === 'engine') {
-  const jit = norm(lp(noise(n), 6, 2)), nz = norm(lp(noise(n), 500, 2)), tone = new Float64Array(n);
+  const jit = norm(lp(noise(n), cyl === 8 ? 9 : 6, 2)), nz = norm(lp(noise(n), 500, 2)), tone = new Float64Array(n);
+  const rpmAt = new Float64Array(n).fill(0), gain = new Float64Array(n).fill(1);
+  if (shifts > 0) { // idle, rev, launch, then N climbs separated by shift dips
+    const peak = peakRpm || 6000, gap = 0.28, revT = 0.6, holdT = 0.3, ratio = (k) => 0.7 + 0.12 * (k / Math.max(1, shifts - 1));
+    const gearT = seconds - idle - revT - holdT, wts = Array.from({length: shifts + 1}, (_, k) => 1 + 0.4 * k), wsum = wts.reduce((a, b) => a + b, 0);
+    const segs = [], push = (t, r, g) => segs.push([t, r, g]);
+    let t = 0;
+    push(0, f0, 1); t += idle; push(t, f0, 1); t += revT; push(t, 3000, 1); t += holdT; push(t, 3000, 1);
+    for (let k = 0; k <= shifts; k++) {
+      t += Math.max(0.3, ((gearT - shifts * gap) * wts[k]) / wsum);
+      push(t, k < shifts ? peak : peak * 0.97, 1);
+      if (k < shifts) { const next = peak * ratio(k); push(t + gap * 0.5, (peak + next) / 2, 0.4); t += gap; push(t, next, 1); }
+    }
+    let j = 0;
+    for (let i = 0; i < n; i++) {
+      const ti = i / sr;
+      while (j < segs.length - 2 && ti > segs[j + 1][0]) j++;
+      const [t0, r0, g0] = segs[j], [t1, r1, g1] = segs[j + 1], u = Math.min(1, Math.max(0, (ti - t0) / Math.max(1e-6, t1 - t0)));
+      const shiftSeg = g0 !== 1 || g1 !== 1, e = shiftSeg ? smooth(u) : u;
+      rpmAt[i] = r0 + (r1 - r0) * e;
+      gain[i] = g0 + (g1 - g0) * e;
+      if (ti < idle + revT && ti >= idle) rpmAt[i] = r0 + (r1 - r0) * smooth(u);
+    }
+    const g2 = lp(gain, 25, 1);
+    for (let i = 0; i < n; i++) gain[i] = g2[i];
+  } else {
+    for (let i = 0; i < n; i++) {
+      const u = i / (n - 1);
+      let rpm = f0 + (f1 - f0) * smooth(u);
+      if (peakRpm) rpm += (peakRpm - rpm) * Math.sin(Math.PI * u) ** 2;
+      rpmAt[i] = rpm;
+    }
+  }
   let ph = 0;
+  const orders = cyl === 8 ? [[0.25, 0.5], [0.5, 0.4], [0.75, 0.3]] : [[0.5, 0.3]];
   for (let i = 0; i < n; i++) {
-    const u = i / (n - 1);
-    let rpm = f0 + (f1 - f0) * smooth(u);
-    if (peakRpm) rpm += (peakRpm - rpm) * Math.sin(Math.PI * u) ** 2;
-    ph += TAU * (rpm / 30) / sr;
-    const ff = rpm / 30;
-    let s = 0.3 * Math.sin(0.5 * ph + 0.7);
-    for (let h = 1; h * ff < 1400; h++) s += Math.sin(h * ph + h * 0.4) / h ** 1.3;
-    const load = 0.55 + 0.45 * Math.min(1, rpm / 3500);
-    tone[i] = s * load * (1 + 0.12 * jit[i]) + 0.35 * nz[i] * load;
+    const rpm = rpmAt[i], ff = (rpm * cyl) / 120;
+    ph += TAU * ff / sr;
+    let s = 0;
+    for (const [o, a] of orders) s += a * Math.sin(o * ph + 0.7);
+    for (let h = 1; h * ff < (cyl === 8 ? 900 : 1400); h++) s += Math.sin(h * ph + h * 0.4) / h ** 1.3;
+    const load = (0.55 + 0.45 * Math.min(1, rpm / 3500)) * gain[i];
+    tone[i] = s * load * (1 + (cyl === 8 ? 0.25 : 0.12) * jit[i]) + 0.35 * nz[i] * load;
   }
-  z = lp(tone, 700, 2);
+  z = lp(tone, cyl === 8 ? 550 : 700, 2);
 } else if (kind === 'hiss') {
-  const xf = Math.round(0.5 * sr), warm = 4410, raw = noise(n + xf + warm);
-  const hiss = band(raw, 900 * pitch, 5000 * pitch), rum = lp(noise(n + xf + warm), 200 * pitch, 2);
-  const wob = norm(lp(noise(n + xf + warm), 2, 2)), hs = norm(hiss), rs = norm(rum);
+  const ramp = f0 > 0 && f1 > 0, xf = ramp ? 0 : Math.round(0.5 * sr), warm = 4410, len = n + xf + warm;
+  const [lo, hi, rw] = dry ? [400, 2200, 0.8] : [900, 5000, 0.3];
+  const layer = (sp) => {
+    const h = norm(band(noise(len), lo * sp, hi * sp)), r = norm(lp(noise(len), (dry ? 250 : 200) * sp, 2));
+    return h.map((v, i) => v + rw * r[i]);
+  };
+  const wob = norm(lp(noise(len), 2, 2));
   const x = new Float64Array(n + xf);
-  for (let i = 0; i < n + xf; i++) x[i] = (hs[i + warm] + 0.3 * rs[i + warm]) * (1 + 0.1 * wob[i + warm]);
-  for (let i = 0; i < n; i++) {
-    const w = i < xf ? Math.sin(0.5 * Math.PI * i / xf) : 1;
-    z[i] = i < xf ? x[i] * w + x[n + i] * Math.cos(0.5 * Math.PI * i / xf) : x[i];
+  if (ramp) {
+    const A = layer(pitch * f0), B = layer(pitch * f1);
+    for (let i = 0; i < n; i++) {
+      const u = i / (n - 1), e = smooth(u);
+      x[i] = (A[i + warm] * (1 - e) + B[i + warm] * e) * (0.45 + 0.55 * e) * (1 + 0.1 * wob[i + warm]);
+    }
+  } else {
+    const A = layer(pitch);
+    for (let i = 0; i < n + xf; i++) x[i] = A[i + warm] * (1 + 0.1 * wob[i + warm]);
   }
+  for (let i = 0; i < n; i++) z[i] = i < xf ? x[i] * Math.sin(0.5 * Math.PI * i / xf) + x[n + i] * Math.cos(0.5 * Math.PI * i / xf) : x[i];
 } else if (kind === 'throttle') {
   const gear = band(noise(n), 1000, 3000);
   let ph = 0;
@@ -154,7 +209,7 @@ if (kind === 'engine') {
   let pk = 0;
   for (let i = 0; i < n; i++) pk = Math.max(pk, Math.abs(z[i]));
   for (let i = 0; i < n; i++) z[i] *= 0.3 / pk;
-  const fade = Math.min(Math.round(D.fade * sr), n >> 1);
+  const fade = Math.min(Math.round((kind === 'hiss' && f0 > 0 && f1 > 0 ? 0.15 : D.fade) * sr), n >> 1);
   for (let i = 0; i < fade; i++) { const g = Math.sin(0.5 * Math.PI * i / fade); z[i] *= g; z[n - 1 - i] *= g; }
 }
 

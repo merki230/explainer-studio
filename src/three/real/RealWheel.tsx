@@ -412,7 +412,50 @@ export type RealWheelProps = {
    * (radius-1 units, default 0.03). Default undefined (as before).
    */
   brake?: {wedge?: [number, number]; rust?: number; padThickness?: number; caliperAt?: number};
+  /**
+   * A performance wheel (No. 007 realism pass): the same outer radius on a rim ≈ 15% larger in a
+   * low-profile tire (the sidewall's shoulder showing), everything inside the rim (spokes, hub, brake,
+   * caliper) scaled up with it, the caliper painted `caliper`, and the face: 'split' (the five twin
+   * spokes) or 'turbine' (ten thin curved blades, the brake showing between them). `face` / `side`: the
+   * spokes' machined face and painted sides (theme tokens; default the alloy's). Cuts 'none' and 'mid'
+   * (no wedge) only; otherwise ignored. Default none (as before).
+   */
+  sport?: {spokes: 'split' | 'turbine'; caliper: string; face?: string; side?: string};
+  /**
+   * The wheel ghosted (No. 007 `race-slice`): every material's opacity × this (0 → 1), so what stands behind
+   * it (a drive unit) reads through in a close framing. Default none (as before); 1 restores it.
+   */
+  ghost?: number;
 };
+
+/** Ghost a material set (`ghost`): × opacity, transparent, no depth writes; restores each once back at 1. */
+const ghostMaterials = (list: THREE.Material[], k: number) => {
+  for (const m of list) {
+    const u = m.userData as {ghostBase?: {opacity: number; transparent: boolean; depthWrite: boolean}};
+    if (k < 0.999) {
+      u.ghostBase ??= {opacity: m.opacity, transparent: m.transparent, depthWrite: m.depthWrite};
+      if (!m.transparent) {
+        m.transparent = true;
+        m.needsUpdate = true;
+      }
+      m.opacity = u.ghostBase.opacity * k;
+      m.depthWrite = false;
+    } else if (u.ghostBase) {
+      m.opacity = u.ghostBase.opacity;
+      m.depthWrite = u.ghostBase.depthWrite;
+      if (m.transparent !== u.ghostBase.transparent) {
+        m.transparent = u.ghostBase.transparent;
+        m.needsUpdate = true;
+      }
+      delete u.ghostBase;
+    }
+  }
+};
+
+/** The performance wheel's rim scale (`sport`): the bead seat from r 0.66 to 0.76. */
+const SPORT_K = 0.76 / 0.66;
+/** The low-profile tire (`sport`): the sidewall squeezed between the bigger bead (0.76) and the tread. */
+const lowProfile: Deform = (a, r) => (r >= 0.655 ? [a, 0.76 + (r - 0.66) * (0.24 / 0.34)] : [a, r]);
 
 const UNIT_CYL = new THREE.CylinderGeometry(1, 1, 1, 40);
 const UNIT_CYL_LOW = new THREE.CylinderGeometry(1, 1, 1, 16);
@@ -513,6 +556,90 @@ const SpokeSet: React.FC<{
   );
 };
 
+/**
+ * One turbine blade (`sport.spokes: 'turbine'`), in the turning frame at angle 0: a lofted strip from the hub
+ * (r 0.21) out to the rim (r 0.64), sweeping 0.62 rad round as it goes, its face dishing back toward the rim,
+ * narrower and thinner outward. Groups: 0 the face (+x), 1 the sides.
+ */
+const BLADE_GEO = (() => {
+  const n = 14;
+  const pos: number[] = [];
+  const idx: number[] = [];
+  const groups: [number, number, number][] = [];
+  const ring = (i: number) => {
+    const t = i / n;
+    const r = 0.21 + 0.43 * t;
+    const a = 0.62 * t ** 1.3;
+    const w = 0.05 - 0.022 * t;
+    const face = 0.235 - 0.075 * t;
+    const d = 0.06 - 0.02 * t;
+    // tangent direction round the wheel at angle a (in the y–z plane), its width across it
+    const ty = -Math.sin(a);
+    const tz = Math.cos(a);
+    const cy = r * Math.cos(a);
+    const cz = r * Math.sin(a);
+    return [
+      [face, cy - ty * w, cz - tz * w],
+      [face, cy + ty * w, cz + tz * w],
+      [face - d, cy + ty * w, cz + tz * w],
+      [face - d, cy - ty * w, cz - tz * w],
+    ];
+  };
+  const rings = [...Array(n + 1).keys()].map(ring);
+  // each quad of the loft as its own 4 vertices (flat normals per side)
+  const quad = (a: number[], b: number[], c: number[], d: number[]) => {
+    const o = pos.length / 3;
+    pos.push(...a, ...b, ...c, ...d);
+    idx.push(o, o + 1, o + 2, o, o + 2, o + 3);
+  };
+  const start0 = idx.length;
+  for (let i = 0; i < n; i++) quad(rings[i][0], rings[i + 1][0], rings[i + 1][1], rings[i][1]);
+  groups.push([start0, idx.length - start0, 0]);
+  const start1 = idx.length;
+  for (let i = 0; i < n; i++) {
+    quad(rings[i][1], rings[i + 1][1], rings[i + 1][2], rings[i][2]);
+    quad(rings[i][3], rings[i + 1][3], rings[i + 1][0], rings[i][0]);
+    quad(rings[i][2], rings[i + 1][2], rings[i + 1][3], rings[i][3]);
+  }
+  quad(rings[n][0], rings[n][3], rings[n][2], rings[n][1]);
+  groups.push([start1, idx.length - start1, 1]);
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setIndex(idx);
+  for (const [st, c, m] of groups) g.addGroup(st, c, m);
+  g.computeVertexNormals();
+  return g;
+})();
+const BLADE_RING = new THREE.TorusGeometry(0.632, 0.022, 8, 96);
+
+/** Ten curved blades from the hub to an outer ring (a turbine face) and the lug nuts, in the turning frame. */
+const TurbineSet: React.FC<{
+  face: THREE.Material;
+  side: THREE.Material;
+  nut: THREE.Material;
+  fill?: THREE.Material;
+  shadows?: boolean;
+  nuts?: boolean;
+}> = ({face, side, nut, fill, shadows = false, nuts = true}) => (
+  <>
+    {[...Array(10).keys()].map((k) => (
+      <group key={k} rotation={[(k / 10) * Math.PI * 2, 0, 0]}>
+        <mesh geometry={BLADE_GEO} material={[face, side]} castShadow={shadows} receiveShadow={shadows} />
+        {fill ? <mesh geometry={BLADE_GEO} material={fill} /> : null}
+      </group>
+    ))}
+    {/* the outer ring the blade tips meet, just inside the rim's lip */}
+    <mesh geometry={BLADE_RING} material={side} position={[0.16, 0, 0]} rotation={[0, Math.PI / 2, 0]} />
+    {[0, 1, 2, 3, 4].map((k) => (
+      <group key={k} rotation={[(k / 5) * Math.PI * 2 + Math.PI / 5, 0, 0]} visible={nuts}>
+        <Axial a0={0.235} a1={0.25} r={0.036} mats={fill ? [nut, fill] : [nut]} low geometry={CONE} y={0.15} />
+        <Axial a0={0.25} a1={0.282} r={0.031} mats={fill ? [nut, fill] : [nut]} geometry={HEX} y={0.15} />
+        <Axial a0={0.282} a1={0.292} r={0.022} mats={fill ? [nut, fill] : [nut]} low y={0.15} />
+      </group>
+    ))}
+  </>
+);
+
 /** Blur copies of the spokes: offsets across the shutter arc (fractions of `motionBlur`) and their opacity. */
 const GHOSTS = [-0.5, -0.25, 0.25, 0.5].map((f) => ({f, k: 1 - Math.abs(f)}));
 
@@ -541,6 +668,8 @@ export const RealWheel: React.FC<RealWheelProps> = ({
   envBoost = 1,
   inkScale = 1,
   brake,
+  sport: sportIn,
+  ghost,
 }) => {
   const gl = useThree((s) => s.gl);
   gl.localClippingEnabled = true;
@@ -690,9 +819,78 @@ export const RealWheel: React.FC<RealWheelProps> = ({
   const rim = useMemo(() => ccw(rimProfile()), []);
   const wedge = brake && axle && cut === 'mid' ? brake.wedge : undefined;
   const wedgeKey = wedge ? `${wedge[0].toFixed(4)},${wedge[1].toFixed(4)}` : '';
+  // the performance wheel (cuts 'none' and 'mid' without a wedge)
+  const sport = sportIn && (cut === 'none' || cut === 'mid') && !wedgeKey ? sportIn : undefined;
+  const sk = sport ? SPORT_K : 1;
+  const sportOn = !!sport;
+  const sportKey = sport ? `${sport.caliper}|${sport.face ?? ''}|${sport.side ?? ''}` : '';
+  const sportMats = useMemo(() => {
+    if (!sport) return null;
+    const phys = (c: string, o: THREE.MeshPhysicalMaterialParameters = {}) =>
+      new THREE.MeshPhysicalMaterial({color: raw(c), ...o});
+    const clipped = <T extends THREE.Material>(mat: T): T => {
+      mat.clippingPlanes = [plane];
+      return mat;
+    };
+    return {
+      caliper: clipped(phys(sport.caliper, {metalness: 0.15, roughness: 0.35, clearcoat: 0.8, clearcoatRoughness: 0.2})),
+      // two-sided: the turbine's lofted blades are open strips
+      face: clipped(phys(sport.face ?? REAL.rimMachined, {metalness: 0.6, roughness: 0.3, clearcoat: 0.5, side: THREE.DoubleSide})),
+      side: clipped(
+        phys(sport.side ?? REAL.rimPaint, {metalness: 0.4, roughness: 0.38, clearcoat: 0.7, clearcoatRoughness: 0.25, side: THREE.DoubleSide}),
+      ),
+      ghostFace: GHOSTS.map(() =>
+        clipped(phys(sport.face ?? REAL.rimMachined, {metalness: 0.6, roughness: 0.32, transparent: true, depthWrite: false, opacity: 0})),
+      ),
+      ghostSide: GHOSTS.map(() =>
+        clipped(phys(sport.side ?? REAL.rimPaint, {metalness: 0.4, roughness: 0.42, transparent: true, depthWrite: false, opacity: 0})),
+      ),
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [plane, sportKey]);
+  if (sportMats) {
+    applyEnv(
+      env,
+      [
+        [sportMats.caliper, 0.6],
+        [sportMats.face, 1],
+        [sportMats.side, 0.7],
+        ...sportMats.ghostFace.map((g) => [g, 1] as [THREE.MeshStandardMaterial, number]),
+        ...sportMats.ghostSide.map((g) => [g, 0.7] as [THREE.MeshStandardMaterial, number]),
+      ],
+      envScale * envBoost,
+    );
+    applyAlbedo([sportMats.caliper, sportMats.face, sportMats.side, ...sportMats.ghostFace, ...sportMats.ghostSide], albedo);
+    GHOSTS.forEach((g, i) => {
+      sportMats.ghostFace[i].opacity = 0.42 * g.k * ghostK;
+      sportMats.ghostSide[i].opacity = 0.42 * g.k * ghostK;
+    });
+  }
+  if (ghost !== undefined) {
+    const gk = Math.max(0, Math.min(1, ghost));
+    // the spokes' blur copies are already transparent and re-set every frame: scale them in place
+    const blurCopies = new Set<THREE.Material>([
+      ...mats.ghostFace,
+      ...mats.ghostPaint,
+      ...mats.ghostNut,
+      ...(sportMats ? [...sportMats.ghostFace, ...sportMats.ghostSide] : []),
+    ]);
+    const all: THREE.Material[] = [];
+    for (const v of [...Object.values(mats), ...(sportMats ? Object.values(sportMats) : [])])
+      for (const m of Array.isArray(v) ? v : [v]) if (!blurCopies.has(m)) all.push(m);
+    ghostMaterials(all, gk);
+    for (const m of blurCopies) m.opacity *= gk;
+  }
   const geo = useMemo(() => {
-    const deform = sagDeform(pq);
-    const key = `${cut}:${pq}:${segs}:${wedgeKey}`;
+    const sag = sagDeform(pq);
+    const deform: Deform = sport
+      ? (a, r, phi) => {
+          const [a1, r1] = sag(a, r, phi);
+          return lowProfile(a1, r1, phi);
+        }
+      : sag;
+    const rimDeform: Deform | undefined = sport ? (a, r) => [a, r * SPORT_K] : undefined;
+    const key = `${cut}:${pq}:${segs}:${wedgeKey}${sport ? ':sport' : ''}`;
     return memo(key, () => {
       if (cut === 'mid' && wedgeKey) {
         // the inner half, opened over the wedge: both wedge faces are cut faces, inked
@@ -732,10 +930,15 @@ export const RealWheel: React.FC<RealWheelProps> = ({
       if (cut === 'mid') {
         const t = clipInboard(tire);
         const r = clipInboard(rim);
-        const rings = [...t.pts, ...r.pts].filter(([a]) => Math.abs(a) < 1e-9).map(([, rr]) => rr);
+        const rings = sport
+          ? [
+              ...t.pts.filter(([a]) => Math.abs(a) < 1e-9).map(([, rr]) => lowProfile(0, rr, 0)[1]),
+              ...r.pts.filter(([a]) => Math.abs(a) < 1e-9).map(([, rr]) => rr * SPORT_K),
+            ]
+          : [...t.pts, ...r.pts].filter(([a]) => Math.abs(a) < 1e-9).map(([, rr]) => rr);
         return {
           tire: revolve(t, 0, Math.PI * 2, segs, deform),
-          rim: revolve(r, 0, Math.PI * 2, segs),
+          rim: revolve(r, 0, Math.PI * 2, segs, rimDeform),
           caps: [] as THREE.BufferGeometry[],
           ink: rings.map((rr) => circle(0.003, rr)),
           arcs: [] as V3[][],
@@ -743,13 +946,14 @@ export const RealWheel: React.FC<RealWheelProps> = ({
       }
       return {
         tire: revolve(tire, 0, Math.PI * 2, segs, deform),
-        rim: revolve(rim, 0, Math.PI * 2, segs),
+        rim: revolve(rim, 0, Math.PI * 2, segs, rimDeform),
         caps: [] as THREE.BufferGeometry[],
         ink: [] as V3[][],
         arcs: [] as V3[][],
       };
     });
-  }, [cut, pq, segs, tire, rim, wedgeKey]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cut, pq, segs, tire, rim, wedgeKey, sportOn]);
 
   // group materials by tag: SIDE_OUT, SIDE_IN, TREAD, LINER, BARREL, LIP, CUT
   const tireMats = [mats.sideOut, mats.sideIn, mats.tread, mats.liner, mats.barrel, mats.lip, mats.cut];
@@ -775,6 +979,7 @@ export const RealWheel: React.FC<RealWheelProps> = ({
             <InkLine key={`a${i}`} points={pts} closed={false} thickness={((low ? 0.02 : 0.011) * inkScale) / radius} />
           ))
         : null}
+      <group scale={sport ? [1, sk, sk] : undefined}>
       {axle && brake ? (
         <BrakeCorner
           wedge={wedge ?? [brake.caliperAt ?? -2.1, -0.45]}
@@ -783,7 +988,7 @@ export const RealWheel: React.FC<RealWheelProps> = ({
           rust={brake.rust}
           padThickness={brake.padThickness}
           ink={((low ? 0.02 : 0.011) * inkScale) / radius}
-          mats={{disc: mats.brakeDisc, caliper: mats.brakeCaliper, dark: mats.dark}}
+          mats={{disc: mats.brakeDisc, caliper: sportMats ? sportMats.caliper : mats.brakeCaliper, dark: mats.dark}}
           low={low}
         />
       ) : null}
@@ -791,7 +996,7 @@ export const RealWheel: React.FC<RealWheelProps> = ({
       {axle && !brake ? (
         // the caliper: fixed, straddling the rotor at the back of the wheel (local +z), upper half
         <group rotation={[0.95, 0, 0]}>
-          <mesh position={[-0.075, 0.42, 0]} material={mats.caliper} castShadow>
+          <mesh position={[-0.075, 0.42, 0]} material={sportMats ? sportMats.caliper : mats.caliper} castShadow>
             <boxGeometry args={[0.15, 0.13, 0.3]} />
           </mesh>
           <mesh position={[-0.075, 0.42, 0]} material={mats.fill}>
@@ -823,7 +1028,13 @@ export const RealWheel: React.FC<RealWheelProps> = ({
             <Axial a0={-0.11} a1={-0.03} r={ROTOR.r1} mats={[mats.rotorEdge]} low={low} />
           </>
         ) : null}
-        <SpokeSet face={mats.face} side={mats.paint} nut={mats.nut} fill={mats.fill} shadows />
+        {sportMats && sport?.spokes === 'turbine' ? (
+          <TurbineSet face={sportMats.face} side={sportMats.side} nut={mats.nut} fill={mats.fill} shadows />
+        ) : sportMats ? (
+          <SpokeSet face={sportMats.face} side={sportMats.side} nut={mats.nut} fill={mats.fill} shadows />
+        ) : (
+          <SpokeSet face={mats.face} side={mats.paint} nut={mats.nut} fill={mats.fill} shadows />
+        )}
         {valve ? (
           <group rotation={[vb, 0, 0]}>
             <ValveStem mats={{valve: mats.valve, alu: mats.stemAlu, grommet: mats.grommet, fill: mats.fill}} />
@@ -856,7 +1067,13 @@ export const RealWheel: React.FC<RealWheelProps> = ({
       {showGhosts
         ? GHOSTS.map((g, i) => (
             <group key={i} rotation={[spin + g.f * blur, 0, 0]}>
-              <SpokeSet face={mats.ghostFace[i]} side={mats.ghostPaint[i]} nut={mats.ghostNut[i]} nuts={false} />
+              {sportMats && sport?.spokes === 'turbine' ? (
+                <TurbineSet face={sportMats.ghostFace[i]} side={sportMats.ghostSide[i]} nut={mats.ghostNut[i]} nuts={false} />
+              ) : sportMats ? (
+                <SpokeSet face={sportMats.ghostFace[i]} side={sportMats.ghostSide[i]} nut={mats.ghostNut[i]} nuts={false} />
+              ) : (
+                <SpokeSet face={mats.ghostFace[i]} side={mats.ghostPaint[i]} nut={mats.ghostNut[i]} nuts={false} />
+              )}
             </group>
           ))
         : null}
@@ -866,6 +1083,7 @@ export const RealWheel: React.FC<RealWheelProps> = ({
           <boxGeometry args={[0.06, 0.05, 0.05]} />
         </mesh>
       ) : null}
+      </group>
     </group>
   );
 };

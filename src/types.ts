@@ -1,6 +1,7 @@
 import type {AdCardProps} from './components/AdCard';
 import type {AttributionProps} from './components/Attribution';
 import type {CalloutProps} from './components/Callout';
+import type {ChartCardProps} from './components/ChartCard';
 import type {CounterProps} from './components/Counter';
 import type {DetailBoxProps} from './components/DetailBox';
 import type {FullScreenProps} from './components/FullScreen';
@@ -106,6 +107,7 @@ export type OverlaySpec = Timing & {
     | ({type: 'detail'} & DetailBoxProps)
     | ({type: 'screen'} & FullScreenProps)
     | ({type: 'staff'} & NoteStaffProps)
+    | ({type: 'chart'} & ChartCardProps)
     | SfxOverlay
   );
 

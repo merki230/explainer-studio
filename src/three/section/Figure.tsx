@@ -31,6 +31,21 @@ const CAP = new THREE.SphereGeometry(0.172, 28, 18, 0, Math.PI * 2, 0, Math.PI *
 /** MOM's bob: a deeper cap, tipped further back, so it reaches the jaw at the sides and back. */
 const BOB = new THREE.SphereGeometry(0.18, 28, 18, 0, Math.PI * 2, 0, Math.PI * 0.7);
 const BUN = new THREE.SphereGeometry(0.075, 16, 12);
+/**
+ * An open-face helmet (No. 007, `helmet`): the crown all round, the sides and back down past the ears
+ * with the face left open (a gap round +z), and a raised smoked visor band over the brow.
+ */
+const HELMET_CROWN = new THREE.SphereGeometry(0.198, 28, 12, 0, Math.PI * 2, 0, Math.PI * 0.36);
+const HELMET_SIDES = new THREE.SphereGeometry(
+  0.198,
+  28,
+  10,
+  Math.PI / 2 + 0.78,
+  Math.PI * 2 - 1.56,
+  Math.PI * 0.36,
+  Math.PI * 0.3,
+);
+const HELMET_VISOR = new THREE.SphereGeometry(0.205, 24, 4, Math.PI / 2 - 0.85, 1.7, Math.PI * 0.28, Math.PI * 0.11);
 /** YOU's hood: half a torus lying behind the neck. */
 const HOOD = new THREE.TorusGeometry(0.135, 0.055, 12, 24, Math.PI);
 const LENS = new THREE.TorusGeometry(0.034, 0.0055, 8, 24);
@@ -199,6 +214,8 @@ export type FigureProps = {
   footScale?: [number, number];
   /** The shoes' colour (a theme neutral; default `section.shoe`, dark). */
   shoe?: string;
+  /** An open-face helmet instead of the hair (No. 007's testers): the shell's and the raised visor's colours (theme tokens). Default none. */
+  helmet?: {shell: string; visor: string};
 };
 
 /**
@@ -271,6 +288,7 @@ export const Figure: React.FC<FigureProps> = ({
   legs,
   footScale,
   shoe: shoeColor,
+  helmet,
 }) => {
   const frame = useCurrentFrame();
   const stand = stance === 'stand';
@@ -298,8 +316,12 @@ export const Figure: React.FC<FigureProps> = ({
       eye: matte(section.eye, 0.4),
       glasses: matte(section.glasses, 0.5),
       device: matte(MOODS[mood].device, 0.4),
+      // satin, not gloss: a glossy light shell clipped as a ≈ 30 px highlight (style guide § 2)
+      helmet: helmet ? matte(helmet.shell, 0.62) : null,
+      visor: helmet ? matte(helmet.visor, 0.2) : null,
     }),
-    [look, mood, shoeColor],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [look, mood, shoeColor, helmet?.shell, helmet?.visor],
   );
   const screenMat = useMemo(() => new THREE.MeshBasicMaterial({color: raw(MOODS[mood].ui)}), [mood]);
   // the screen texture: a small canvas, redrawn only when what it shows changes
@@ -480,7 +502,13 @@ export const Figure: React.FC<FigureProps> = ({
                       scale={[1, 1 - 0.9 * Math.max(blink, pose.lids), 1]}
                     />
                   ))}
-                  {look.detail === 'bob-glasses' ? (
+                  {mats.helmet && mats.visor ? (
+                    <group rotation={[-0.22, 0, 0]} position={[0, 0.008, -0.006]}>
+                      <mesh geometry={HELMET_CROWN} material={mats.helmet} castShadow receiveShadow />
+                      <mesh geometry={HELMET_SIDES} material={mats.helmet} castShadow receiveShadow />
+                      <mesh geometry={HELMET_VISOR} material={mats.visor} />
+                    </group>
+                  ) : look.detail === 'bob-glasses' ? (
                     <>
                       <mesh
                         geometry={BOB}
@@ -507,7 +535,7 @@ export const Figure: React.FC<FigureProps> = ({
                       receiveShadow
                     />
                   )}
-                  {look.detail === 'bun' ? (
+                  {look.detail === 'bun' && !helmet ? (
                     <mesh geometry={BUN} material={mats.hair} position={[0, 0.12, -0.13]} castShadow receiveShadow />
                   ) : null}
                 </group>

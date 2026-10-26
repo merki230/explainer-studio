@@ -1,8 +1,8 @@
 import React from 'react';
-import {CAST_NEUTRAL, type Mood} from '../../theme';
+import {CAST_NEUTRAL, RACE, type Mood} from '../../theme';
 import {Figure} from '../section/Figure';
-import {CAR_LAYOUT, RealCar} from './RealCar';
-import {shellSink} from './CarShell';
+import {CAR_LAYOUT, RealCar, type CoupeStyle} from './RealCar';
+import {shellSink, type ShellProfile} from './CarShell';
 import {RealWheel} from './RealWheel';
 
 type V3 = [number, number, number];
@@ -32,9 +32,14 @@ export const DrivingCar: React.FC<{
   tail: number;
   /** Brake lamps lit, 0 → 1 (brighter than the running lights; flat, never bloomed). Default 0. */
   brake?: number;
-  /** Paint override (a theme token) and shape ('crossover' default, 'sedan'). */
+  /** Paint override (a theme token) and shape ('crossover' default, 'sedan', 'coupe'). */
   paint?: string;
-  shape?: 'crossover' | 'sedan';
+  shape?: ShellProfile;
+  /**
+   * The coupe's style (No. 007 realism pass; `RealCar` `coupeStyle`): 'muscle' or 'electric' body cues;
+   * with it the wheels are performance wheels (`RealWheel` `sport`, as on the race's cut cars). Default none.
+   */
+  coupeStyle?: CoupeStyle;
   /** Who drives: true or 'you' = YOU; 'extra' = an unnamed extra in `CAST_NEUTRAL` grey (tinted glass); false = empty. */
   driver: boolean | 'you' | 'extra';
   plate: string;
@@ -58,6 +63,7 @@ export const DrivingCar: React.FC<{
   brake = 0,
   paint,
   shape = 'crossover',
+  coupeStyle,
   driver,
   plate,
   clockOffset,
@@ -67,11 +73,28 @@ export const DrivingCar: React.FC<{
 }) => {
   const R = C.wheelR;
   const spinAll = travelled / R;
+  // the styled coupe's performance wheels (as on the race's cut cars, `SlicedCar`)
+  const cs = shape === 'coupe' ? coupeStyle : undefined;
+  const sport = cs
+    ? cs === 'muscle'
+      ? {spokes: 'split' as const, caliper: RACE.caliperGas, face: RACE.wheelGasFace, side: RACE.wheelGasSide}
+      : {spokes: 'turbine' as const, caliper: RACE.caliperEv, face: RACE.wheelEvFace, side: RACE.wheelEvSide}
+    : undefined;
   const who = driver === 'extra' ? 'extra' : driver ? 'you' : null;
   return (
     <group>
       <group position={[at.x + jitter[0], jitter[1], at.z + jitter[2]]} rotation={[0, Math.PI / 2 - at.yaw, 0]}>
-        <RealCar mood={mood} body={body} whole tail={tail} brake={brake} plate={plate} paint={paint} shape={shape} />
+        <RealCar
+          mood={mood}
+          body={body}
+          whole
+          tail={tail}
+          brake={brake}
+          plate={plate}
+          paint={paint}
+          shape={shape}
+          coupeStyle={shape === 'coupe' ? coupeStyle : undefined}
+        />
         {who ? (
           <Figure
             who={who}
@@ -112,6 +135,7 @@ export const DrivingCar: React.FC<{
             envBoost={s > 0 ? envBoost : 1}
             // loaded: the tire squats a little where it meets the road
             pressure={0.95}
+            sport={sport}
           />
         ));
       })}

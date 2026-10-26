@@ -31,11 +31,11 @@ export const SHELL = {
 
 /** Tumblehome: the glasshouse leans in, its half-width shrinking by this share from the beltline to the roof. */
 const TUMBLE = {from: 1.12, to: 1.76, share: 0.13};
-const tumble = (g: THREE.BufferGeometry) => {
+const tumble = (g: THREE.BufferGeometry, T: {from: number; to: number; share: number} = TUMBLE) => {
   const p = g.getAttribute('position');
   for (let i = 0; i < p.count; i++) {
-    const k = Math.max(0, Math.min(1, (p.getY(i) - TUMBLE.from) / (TUMBLE.to - TUMBLE.from)));
-    p.setZ(i, p.getZ(i) * (1 - TUMBLE.share * k));
+    const k = Math.max(0, Math.min(1, (p.getY(i) - T.from) / (T.to - T.from)));
+    p.setZ(i, p.getZ(i) * (1 - T.share * k));
   }
   p.needsUpdate = true;
   g.computeBoundingSphere();
@@ -130,8 +130,126 @@ const GLASS_SEDAN: P2[] = roundPoly(
 );
 /** The sedan's roof foot, and how much lower its interior (seats, dash, the driver) sits than the crossover's. */
 const SEDAN = {roofFoot: 1.5, sink: 0.14};
+
+/** The whole car's shapes: 'crossover' (No. 005), 'sedan' (No. 006), 'coupe' (No. 007). */
+export type ShellProfile = 'crossover' | 'sedan' | 'coupe';
+
+/**
+ * The coupe's lower body (No. 007, `profile: 'coupe'`): a generic two-door, the same wheelbase, arches
+ * and wheels as the crossover (so every drive part and `wheelsWhole` fit), but a low nose, a long hood
+ * falling to it, a shoulder line ≈ 0.1 under the crossover's beltline and a short deck ending in a small
+ * ducktail lip. No maker's silhouette: no hood scoop, no side vents, no signature lamp shapes.
+ */
+const LOWER_COUPE: P2[] = roundPoly([
+  [2.32, 0.25, 0.04],
+  [2.45, 0.4, 0.1],
+  [2.42, 0.66, 0.12],
+  [2.2, 0.83, 0.25],
+  [1.4, 1.0, 0.1],
+  [-1.6, 1.05, 0.25],
+  [-2.28, 1.06, 0.04],
+  [-2.34, 1.0, 0.05],
+  [-2.41, 0.62, 0.06],
+  [-2.36, 0.27, 0.05],
+  [-1.79, 0.27, 0],
+  [-1.78, 0.36, 0],
+  ...archCorners(-1.35),
+  [-0.92, 0.36, 0],
+  [-0.91, 0.25, 0],
+  [0.91, 0.25, 0],
+  [0.92, 0.36, 0],
+  ...archCorners(1.35),
+  [1.78, 0.36, 0],
+  [1.79, 0.26, 0],
+]);
+/**
+ * The styled coupes' lower bodies (No. 007 realism pass, `style`): the same wheelbase and arches.
+ * 'muscle': a taller, blunter nose, haunches rising over the rear wheels and a ducktail lip on the deck;
+ * 'electric': a lower, rounder closed nose and a smooth deck falling to a soft tail. Generic shapes.
+ */
+const LOWER_MUSCLE: P2[] = roundPoly([
+  [2.33, 0.25, 0.04],
+  [2.46, 0.4, 0.08],
+  [2.46, 0.7, 0.1],
+  [2.3, 0.86, 0.2],
+  [1.4, 1.0, 0.1],
+  [-1.0, 1.06, 0.3],
+  [-1.5, 1.09, 0.25],
+  [-2.15, 1.05, 0.06],
+  [-2.3, 1.1, 0.02],
+  [-2.36, 1.05, 0.03],
+  [-2.42, 0.62, 0.06],
+  [-2.37, 0.27, 0.05],
+  [-1.79, 0.27, 0],
+  [-1.78, 0.36, 0],
+  ...archCorners(-1.35),
+  [-0.92, 0.36, 0],
+  [-0.91, 0.25, 0],
+  [0.91, 0.25, 0],
+  [0.92, 0.36, 0],
+  ...archCorners(1.35),
+  [1.78, 0.36, 0],
+  [1.79, 0.26, 0],
+]);
+const LOWER_ELECTRIC: P2[] = roundPoly([
+  [2.3, 0.25, 0.04],
+  [2.46, 0.36, 0.1],
+  [2.47, 0.56, 0.12],
+  [2.3, 0.8, 0.25],
+  [1.4, 0.99, 0.12],
+  [-1.6, 1.05, 0.3],
+  [-2.25, 1.03, 0.1],
+  [-2.38, 0.95, 0.08],
+  [-2.42, 0.62, 0.06],
+  [-2.36, 0.27, 0.05],
+  [-1.79, 0.27, 0],
+  [-1.78, 0.36, 0],
+  ...archCorners(-1.35),
+  [-0.92, 0.36, 0],
+  [-0.91, 0.25, 0],
+  [0.91, 0.25, 0],
+  [0.92, 0.36, 0],
+  ...archCorners(1.35),
+  [1.78, 0.36, 0],
+  [1.79, 0.26, 0],
+]);
+/** The coupe's style (No. 007 realism pass; see `RealCar` `coupeStyle`). */
+export type ShellStyle = 'muscle' | 'electric';
+
+/**
+ * The coupe's glasshouse: a raked windshield (≈ 22° off the hood), the roof's peak ≈ 1.46 (the sedan's
+ * 1.62, the crossover's 1.77) over the driver's head, and a long fastback down to the deck.
+ */
+const GLASS_COUPE: P2[] = roundPoly(
+  [
+    [1.42, 0.95, 0],
+    [0.3, 1.4, 0.22],
+    [-0.5, 1.45, 0.6],
+    [-1.95, 1.09, 0.22],
+    [-2.16, 1.0, 0],
+    [-2.16, 0.95, 0],
+  ],
+  8,
+);
+/**
+ * The coupe's numbers: the roof's foot, the glass's flat side's foot, its tumblehome, one long door
+ * window and a quarter window under the fastback (two doors), the paint behind them; the tail lamps
+ * sit `lampDrop` lower (under the deck's lip); the interior and driver sink `sink` more than the
+ * crossover's (with `RealCar`'s `wholeSink`: the head ≈ 0.12 under the roof).
+ */
+const COUPE = {
+  roofFoot: 1.3,
+  flatFoot: 1.05,
+  tumble: {from: 1.05, to: 1.45, share: 0.13},
+  door: [-0.55, 3] as P2,
+  quarter: [-1.5, -0.68] as P2,
+  cPillar: -1.55,
+  lampDrop: 0.05,
+  sink: 0.34,
+};
 /** How much lower a whole car's interior and driver sit for a shape (0 for the crossover). */
-export const shellSink = (profile: 'crossover' | 'sedan' = 'crossover') => (profile === 'sedan' ? SEDAN.sink : 0);
+export const shellSink = (profile: ShellProfile = 'crossover') =>
+  profile === 'sedan' ? SEDAN.sink : profile === 'coupe' ? COUPE.sink : 0;
 
 const signedArea = (p: P2[]) =>
   p.reduce((s, [x, y], i) => s + x * p[(i + 1) % p.length][1] - p[(i + 1) % p.length][0] * y, 0) / 2;
@@ -275,17 +393,36 @@ export type ShellMats = {
 /** The whole car's shell (see the file comment). The interior, wheels and figure are drawn by others. */
 export const CarShell: React.FC<{
   mats: ShellMats;
-  /** 'crossover' (default, as No. 005) or 'sedan' (lower roof, a short trunk deck; no spoiler or rear wiper). */
-  profile?: 'crossover' | 'sedan';
-}> = ({mats, profile = 'crossover'}) => {
+  /**
+   * 'crossover' (default, as No. 005), 'sedan' (lower roof, a short trunk deck; no spoiler or rear
+   * wiper) or 'coupe' (No. 007: two doors, a low roof, a long hood and a fastback; see `LOWER_COUPE`).
+   */
+  profile?: ShellProfile;
+  /**
+   * The coupe's style (No. 007 realism pass; `profile: 'coupe'` only): 'muscle' (a power bulge, haunches,
+   * a ducktail, round lamps, a mesh grille, twin exhaust tips a side) or 'electric' (a closed nose with a
+   * full-width light bar, a full-width tail bar, flush handles, gloss-black pillars round frameless glass).
+   * Default none (the plain coupe).
+   */
+  style?: ShellStyle;
+}> = ({mats, profile = 'crossover', style: styleIn}) => {
   const sedan = profile === 'sedan';
+  const coupe = profile === 'coupe';
+  const style = coupe ? styleIn : undefined;
+  const muscle = style === 'muscle';
+  const electric = style === 'electric';
+  // the lower body: the coupe's own (or its style's); the crossover's and the sedan's are the same
+  const LB = coupe ? (muscle ? LOWER_MUSCLE : electric ? LOWER_ELECTRIC : LOWER_COUPE) : LOWER;
+  // the tail lamps' heights (the coupe's under its deck's lip)
+  const lampY = coupe ? -COUPE.lampDrop : 0;
   const geo = useMemo(() => {
     const H = SHELL.half;
     const G = SHELL.glassHalf;
-    const GLASS = sedan ? GLASS_SEDAN : GLASS_CROSSOVER;
-    const lower = bevelExtrude(toShape(LOWER), -H, H, SHELL.bevel);
-    const RF = sedan ? SEDAN.roofFoot : SHELL.roofFoot;
-    const glass = tumble(bevelExtrude(toShape(GLASS), -G, G, SHELL.glassBevel, 6));
+    const GLASS = coupe ? GLASS_COUPE : sedan ? GLASS_SEDAN : GLASS_CROSSOVER;
+    const T = coupe ? COUPE.tumble : TUMBLE;
+    const lower = bevelExtrude(toShape(LB), -H, H, SHELL.bevel);
+    const RF = coupe ? COUPE.roofFoot : sedan ? SEDAN.roofFoot : SHELL.roofFoot;
+    const glass = tumble(bevelExtrude(toShape(GLASS), -G, G, SHELL.glassBevel, 6), T);
     // the roof: the glasshouse's top above its foot, a little proud all round
     const top = GLASS.filter(([, y]) => y >= RF + 0.01);
     const roofPts = offsetPoly(top, 0.012);
@@ -297,16 +434,23 @@ export const CarShell: React.FC<{
         SHELL.glassBevel + 0.012,
         6,
       ),
+      T,
     );
     // the glasshouse's flat side (inside its bevel), above the beltline and under the roof: the pillars
     // (baked at the side's z so the tumblehome leans them with the glass; the left side is mirrored)
-    const flat = box(offsetPoly(GLASS, -SHELL.glassBevel), -3, 3, 1.15, RF + 0.01);
+    const flat = box(offsetPoly(GLASS, -SHELL.glassBevel), -3, 3, coupe ? COUPE.flatFoot : 1.15, RF + 0.01);
     const win = offsetPoly(flat, -0.035);
-    const windows = [box(win, -0.02, 3, 0, 3), box(win, -1.1, -0.14, 0, 3), box(win, -1.62, -1.22, 0, 3)].filter(
-      (w) => w.length > 2,
+    // four doors' windows and a rear quarter light; the coupe: one long door window and a quarter light
+    const windows = (
+      coupe
+        ? [box(win, COUPE.door[0], COUPE.door[1], 0, 3), box(win, COUPE.quarter[0], COUPE.quarter[1], 0, 3)]
+        : [box(win, -0.02, 3, 0, 3), box(win, -1.1, -0.14, 0, 3), box(win, -1.62, -1.22, 0, 3)]
+    ).filter((w) => w.length > 2);
+    const frame = tumble(flatExtrude(toShape(flat, windows), G + 0.001, G + 0.005), T);
+    const dPillar = tumble(
+      flatExtrude(toShape(box(flat, -3, coupe ? COUPE.cPillar : -1.66, 0, 3)), G + 0.003, G + 0.007),
+      T,
     );
-    const frame = tumble(flatExtrude(toShape(flat, windows), G + 0.001, G + 0.005));
-    const dPillar = tumble(flatExtrude(toShape(box(flat, -3, -1.66, 0, 3)), G + 0.003, G + 0.007));
     // black cladding: the arch lips (a thick ring, so it fills the bevel under it) and the sill
     const lip = (() => {
       const s = new THREE.Shape();
@@ -320,11 +464,14 @@ export const CarShell: React.FC<{
     })();
     // the tailgate's top edge under the rear window: a dark garnish (bare paint there caught the Night
     // key as a broad white band from the fixed camera)
-    const edge = LOWER.filter(([x, y]) => x < -2.2 && y > 1.03);
-    const garnish = flatExtrude(toShape(bandAlong(edge, 0.005, 0.02)), -(H - SHELL.bevel), H - SHELL.bevel);
-    const xr = rearXAt(LOWER, 0.94);
-    const xrPlate = rearXAt(LOWER, 0.735);
-    const slope = Math.atan2(rearXAt(LOWER, 0.9) - rearXAt(LOWER, 0.6), 0.3);
+    // (the coupe has no tailgate edge: its deck's lip is painted)
+    const edge = LB.filter(([x, y]) => x < -2.2 && y > 1.03);
+    const garnish = coupe
+      ? null
+      : flatExtrude(toShape(bandAlong(edge, 0.005, 0.02)), -(H - SHELL.bevel), H - SHELL.bevel);
+    const xr = rearXAt(LB, 0.94 + lampY);
+    const xrPlate = rearXAt(LB, 0.735);
+    const slope = Math.atan2(rearXAt(LB, 0.9) - rearXAt(LB, 0.6), 0.3);
     return {
       lower,
       glass,
@@ -338,6 +485,9 @@ export const CarShell: React.FC<{
       guide2: wrapBand(xr, 0.5, 0.2, 0.01, 0.01, 0.02),
       xr,
       xrPlate,
+      xrReflector: rearXAt(LB, 0.48),
+      xrShut: rearXAt(LB, 0.62),
+      xrDiffuser: rearXAt(LB, 0.34),
       slope,
       liner: new THREE.CylinderGeometry(
         SHELL.archR - 0.006,
@@ -350,7 +500,7 @@ export const CarShell: React.FC<{
         Math.PI,
       ),
     };
-  }, [sedan]);
+  }, [sedan, coupe, LB, lampY]);
   const {xr} = geo;
 
   return (
@@ -362,20 +512,25 @@ export const CarShell: React.FC<{
       {[1, -1].map((s) => (
         <group key={s} scale={[1, 1, s]}>
           <mesh geometry={geo.frame} material={mats.trim} />
-          <mesh geometry={geo.dPillar} material={mats.paint} />
+          {/* the electric coupe's pillars gloss black too (frameless glass, a floating roof) */}
+          <mesh geometry={geo.dPillar} material={electric ? mats.trim : mats.paint} />
         </group>
       ))}
       {/* the inside seen through the tint: a dark trim deck at the sills (the solid body under it) */}
-      <mesh position={[sedan ? -0.44 : -0.62, 1.178, 0]} rotation={[-Math.PI / 2, 0, 0]} material={mats.trim}>
-        <planeGeometry args={[sedan ? 2.88 : 3.24, 2 * SHELL.glassHalf]} />
+      <mesh
+        position={[coupe ? -0.5 : sedan ? -0.44 : -0.62, coupe ? 1.035 : 1.178, 0]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        material={mats.trim}
+      >
+        <planeGeometry args={[coupe ? 2.8 : sedan ? 2.88 : 3.24, 2 * SHELL.glassHalf]} />
       </mesh>
-      <mesh geometry={geo.garnish} material={mats.trim} castShadow />
-      {sedan ? (
-        // the sedan's high brake lamp at the foot of the rear window
+      {geo.garnish ? <mesh geometry={geo.garnish} material={mats.trim} castShadow /> : null}
+      {sedan || coupe ? (
+        // the sedan's high brake lamp at the foot of the rear window (the coupe's on its deck, behind the fastback)
         <mesh
           geometry={roundedBox(0.03, 0.022, 0.36, 0.008, 2)}
           material={mats.tailBright}
-          position={[-1.88, 1.185, 0]}
+          position={coupe ? [-2.1, 1.075, 0] : [-1.88, 1.185, 0]}
         />
       ) : (
         <>
@@ -408,19 +563,55 @@ export const CarShell: React.FC<{
       {/* tail lamps wrapping the rear corners (lens, light guide, reversing lamp), the light bar */}
       {[1, -1].map((s) => (
         <group key={s} scale={[1, 1, s]}>
-          <mesh geometry={geo.lens} material={mats.tail} position={[0, 0.89, 0]} />
-          <mesh geometry={geo.guide} material={mats.tailBright} position={[0, 0.964, 0]} />
-          <mesh geometry={geo.guide2} material={mats.tailBright} position={[0, 0.912, 0]} />
-          <mesh
-            geometry={roundedBox(0.012, 0.05, 0.07, 0.006, 2)}
-            material={mats.reverse}
-            position={[xr - 0.006, 0.925, 0.475]}
-          />
+          {muscle ? (
+            // the muscle coupe: two round lamps a side in a black tail panel, chrome bezels
+            <>
+              {[0.52, 0.72].map((z) => (
+                <group key={z} position={[xr - 0.008, 0.9 + lampY, z]} rotation={[0, 0, Math.PI / 2]}>
+                  <mesh material={mats.tail}>
+                    <cylinderGeometry args={[0.062, 0.062, 0.02, 28]} />
+                  </mesh>
+                  <mesh material={mats.reverse} position={[0, 0.011, 0]} rotation={[Math.PI / 2, 0, 0]}>
+                    <torusGeometry args={[0.066, 0.007, 8, 28]} />
+                  </mesh>
+                </group>
+              ))}
+              <mesh
+                geometry={roundedBox(0.03, 0.05, 0.07, 0.01, 2)}
+                material={mats.reverse}
+                position={[xr - 0.004, 0.9 + lampY, 0.34]}
+              />
+            </>
+          ) : (
+            <>
+              <mesh geometry={geo.lens} material={mats.tail} position={[0, 0.89 + lampY, 0]} />
+              <mesh geometry={geo.guide} material={mats.tailBright} position={[0, 0.964 + lampY, 0]} />
+              <mesh geometry={geo.guide2} material={mats.tailBright} position={[0, 0.912 + lampY, 0]} />
+              <mesh
+                geometry={roundedBox(0.012, 0.05, 0.07, 0.006, 2)}
+                material={mats.reverse}
+                position={[xr - 0.006, 0.925 + lampY, 0.475]}
+              />
+            </>
+          )}
+          {muscle
+            ? // twin chrome exhaust tips a side under the bumper, dark inside
+              [0.5, 0.64].map((z) => (
+                <group key={z} position={[geo.xrDiffuser - 0.03, 0.3, z]} rotation={[0, 0, Math.PI / 2]}>
+                  <mesh material={mats.reverse}>
+                    <cylinderGeometry args={[0.042, 0.042, 0.16, 24]} />
+                  </mesh>
+                  <mesh material={mats.trim} position={[0, 0.081, 0]}>
+                    <cylinderGeometry args={[0.031, 0.031, 0.004, 20]} />
+                  </mesh>
+                </group>
+              ))
+            : null}
           {/* the bumper's reflector, low on the corner */}
           <mesh
             geometry={roundedBox(0.012, 0.035, 0.13, 0.008, 2)}
             material={mats.reflector}
-            position={[rearXAt(LOWER, 0.48) - 0.003, 0.48, 0.76]}
+            position={[geo.xrReflector - 0.003, 0.48, 0.76]}
           />
           {/* black cladding: arch lips and the sill */}
           {[-1.35, 1.35].map((x) => (
@@ -432,29 +623,40 @@ export const CarShell: React.FC<{
             position={[0, 0.315, SHELL.half - 0.035]}
             castShadow
           />
-          {/* door seams (front door's leading edge, the shut line between the doors, the rear door's back) */}
-          {(
-            [
-              [0.98, 0.62, 1.06],
-              [-0.08, 0.3, 1.08],
-              [-1.12, 0.81, 1.1],
-            ] as const
+          {/* door seams (front door's leading edge, the shut line between the doors, the rear door's back; the coupe's one long door) */}
+          {(coupe
+            ? ([
+                [1.04, 0.6, 0.99],
+                [-0.62, 0.3, 1.04],
+              ] as const)
+            : ([
+                [0.98, 0.62, 1.06],
+                [-0.08, 0.3, 1.08],
+                [-1.12, 0.81, 1.1],
+              ] as const)
           ).map(([x, y0, y1]) => (
             <mesh key={x} material={mats.trim} position={[x, (y0 + y1) / 2, SHELL.half + 0.001]}>
               <boxGeometry args={[0.006, y1 - y0, 0.002]} />
             </mesh>
           ))}
           {/* door handles */}
-          {[0.32, -0.72].map((x) => (
-            <mesh
-              key={x}
-              geometry={roundedBox(0.2, 0.035, 0.03, 0.012, 3)}
-              material={mats.paint}
-              position={[x, 1.0, SHELL.half + 0.008]}
-            />
-          ))}
+          {(coupe ? [-0.38] : [0.32, -0.72]).map((x) =>
+            electric ? (
+              // flush handles: a dark slot in the skin
+              <mesh key={x} material={mats.trim} position={[x, 0.9, SHELL.half + 0.001]}>
+                <boxGeometry args={[0.18, 0.016, 0.003]} />
+              </mesh>
+            ) : (
+              <mesh
+                key={x}
+                geometry={roundedBox(0.2, 0.035, 0.03, 0.012, 3)}
+                material={mats.paint}
+                position={[x, coupe ? 0.9 : 1.0, SHELL.half + 0.008]}
+              />
+            ),
+          )}
           {/* the mirror on its stalk */}
-          <group position={[0.92, 1.17, SHELL.half]}>
+          <group position={coupe ? [1.12, 1.02, SHELL.half] : [0.92, 1.17, SHELL.half]}>
             <mesh geometry={roundedBox(0.09, 0.04, 0.08, 0.015, 2)} material={mats.trim} position={[0, -0.02, 0.03]} />
             <mesh
               geometry={roundedBox(0.13, 0.12, 0.22, 0.045, 4)}
@@ -468,8 +670,25 @@ export const CarShell: React.FC<{
               position={[-0.088, 0.04, 0.14]}
             />
           </group>
-          {/* front: a slim headlamp and the grille's end */}
-          <mesh geometry={roundedBox(0.04, 0.06, 0.42, 0.02, 2)} material={mats.light} position={[2.37, 0.76, 0.58]} />
+          {/* front: a slim headlamp and the grille's end (the muscle coupe: two round lamps a side) */}
+          {muscle ? (
+            [0.5, 0.7].map((z) => (
+              <group key={z} position={[2.455, 0.7, z]} rotation={[0, 0, Math.PI / 2]}>
+                <mesh material={mats.light}>
+                  <cylinderGeometry args={[0.066, 0.066, 0.03, 28]} />
+                </mesh>
+                <mesh material={mats.reverse} position={[0, -0.016, 0]} rotation={[Math.PI / 2, 0, 0]}>
+                  <torusGeometry args={[0.07, 0.008, 8, 28]} />
+                </mesh>
+              </group>
+            ))
+          ) : (
+            <mesh
+              geometry={roundedBox(0.04, electric ? 0.04 : 0.06, 0.42, 0.02, 2)}
+              material={mats.light}
+              position={coupe ? (electric ? [2.42, 0.66, 0.58] : [2.42, 0.6, 0.56]) : [2.37, 0.76, 0.58]}
+            />
+          )}
         </group>
       ))}
       {/* the arch liners (black, inside each arch) */}
@@ -483,18 +702,42 @@ export const CarShell: React.FC<{
         />
       ))}
       {/* the tailgate's light bar, the bumper/tailgate shut line, the diffuser */}
-      <mesh
-        geometry={roundedBox(0.012, 0.018, 0.86, 0.006, 2)}
-        material={mats.tailBright}
-        position={[xr - 0.005, 0.97, 0]}
-      />
-      <mesh material={mats.trim} position={[rearXAt(LOWER, 0.62) - 0.002, 0.62, 0]} rotation={[0, 0, -geo.slope]}>
+      {muscle ? (
+        // the muscle coupe's black tail panel between the round lamps
+        <mesh
+          geometry={roundedBox(0.012, 0.16, 1.66, 0.006, 2)}
+          material={mats.trim}
+          position={[xr - 0.002, 0.9 + lampY, 0]}
+        />
+      ) : (
+        // the light bar between the tail lamps (the electric coupe's full width, the lamps' own height)
+        <mesh
+          geometry={roundedBox(0.012, electric ? 0.024 : 0.018, electric ? 1.66 : 0.86, 0.006, 2)}
+          material={mats.tailBright}
+          position={[xr - 0.005, electric ? 0.94 + lampY : 0.97 + lampY, 0]}
+        />
+      )}
+      {electric ? (
+        // the closed nose's full-width light bar
+        <mesh geometry={roundedBox(0.02, 0.018, 1.5, 0.008, 2)} material={mats.light} position={[2.43, 0.7, 0]} />
+      ) : null}
+      {muscle ? (
+        // the power bulge along the hood's middle
+        <mesh
+          geometry={roundedBox(0.8, 0.07, 0.6, 0.03, 4)}
+          material={mats.paint}
+          position={[1.82, 0.955, 0]}
+          rotation={[0, 0, -0.2]}
+          castShadow
+        />
+      ) : null}
+      <mesh material={mats.trim} position={[geo.xrShut - 0.002, 0.62, 0]} rotation={[0, 0, -geo.slope]}>
         <boxGeometry args={[0.004, 0.008, 1.62]} />
       </mesh>
       <mesh
         geometry={roundedBox(0.1, 0.13, 1.5, 0.03, 3)}
         material={mats.trim}
-        position={[rearXAt(LOWER, 0.34) + 0.02, 0.34, 0]}
+        position={[geo.xrDiffuser + 0.02, 0.34, 0]}
         castShadow
       />
       {/* the plate in its dark recess */}
@@ -504,8 +747,21 @@ export const CarShell: React.FC<{
           <planeGeometry args={[0.305, 0.152]} />
         </mesh>
       </group>
-      {/* the grille */}
-      <mesh geometry={roundedBox(0.06, 0.2, 1.1, 0.04, 3)} material={mats.trim} position={[2.37, 0.55, 0]} />
+      {/* the grille (none on the electric coupe's closed nose; the muscle coupe's a tall mesh with bars) */}
+      {electric ? null : (
+        <mesh
+          geometry={roundedBox(0.06, muscle ? 0.26 : coupe ? 0.14 : 0.2, muscle ? 0.82 : 1.1, 0.04, 3)}
+          material={mats.trim}
+          position={muscle ? [2.44, 0.6, 0] : coupe ? [2.43, 0.44, 0] : [2.37, 0.55, 0]}
+        />
+      )}
+      {muscle
+        ? [0.52, 0.58, 0.64, 0.7].map((y) => (
+            <mesh key={y} material={mats.gloss} position={[2.468, y, 0]}>
+              <boxGeometry args={[0.008, 0.008, 0.8]} />
+            </mesh>
+          ))
+        : null}
     </group>
   );
 };

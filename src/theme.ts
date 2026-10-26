@@ -690,6 +690,55 @@ export const CITY = {
   charcoal: '#25272b',
 };
 
+/**
+ * The drag strip (No. 007, R; scene-builder N10, values 🧪 for the brand-director). Real materials, the
+ * same in both moods (the lights change). Nothing here is the system. The tree's lamps reuse
+ * `section.warning` (ambers) and `section.signalGreen` (green); the drivers are grey extras
+ * (`CAST_NEUTRAL`) in `section.sneaker`.
+ *  - `evPaint` #3b8ea0 (HSL ≈ 191°, 46%, 43%): a petrol teal, 34° from YOU's cobalt (225°), 27° from
+ *    `signalGreen` (164°), far outside the reserved band (8–40°).
+ *  - `gasPaint` #4e3046 (≈ 316°, 24%, 25%): an aubergine, 91° from YOU's cobalt, 35° from the tail
+ *    lamps' red (351°), 33° from MOM's plum (283°); not red-orange (52° short of the band's lower edge,
+ *    8°). Darker than the teal, so the two cars differ in value as well as hue (colour-blind viewers).
+ *  - The strip: the launch pad's concrete and the track's asphalt (darker than the interstate's: rubbered),
+ *    the laid rubber in the launch's wheel tracks; the distance boards' black face and white numerals
+ *    (a step under white, § 1). All under 15% saturation.
+ *  - The realism pass (owner, values 🧪): the cars' wheels (the gas car's split spokes in gunmetal, the
+ *    electric car's turbine blades machined with dark sides) and brake calipers (a light silver behind
+ *    the gas car's dark spokes; a grey-teal behind the electric car's blades, echoing its paint); the
+ *    testers' helmets (a light grey, a graphite) with a smoked visor. Calipers never red or orange.
+ *  - The strip's realism pass ("the road too", owner; values 🧪): the grandstand's bench seats (a cool
+ *    grey), the crowd's clothes (muted greys and dusty blues, greens and browns, all under 25% saturation,
+ *    none in the reserved band, none a cast colour) and skins, the field beyond (a dry grass) and its tree
+ *    line in two depths (the far one bluer: the haze), the wall's tire scuffs (`rubber`).
+ */
+export const RACE = {
+  evPaint: '#3b8ea0',
+  gasPaint: '#4e3046',
+  concrete: '#b1aea6',
+  asphalt: '#3e4045',
+  rubber: '#2b2c2f',
+  boardBlack: '#1e1f22',
+  boardWhite: '#e9e8e2',
+  wheelGasFace: '#5a5e65',
+  wheelGasSide: '#34373c',
+  caliperGas: '#b8bcc2',
+  wheelEvFace: '#c8ccd2',
+  wheelEvSide: '#2e3136',
+  caliperEv: '#7d9aa1',
+  helmetEv: '#c3c6ca',
+  helmetGas: '#45484e',
+  visor: '#25282d',
+  standSeat: '#7c828b',
+  crowd: ['#8a8e95', '#6b7079', '#a49f97', '#5f6a74', '#7c8a7e', '#8c7f73', '#9aa3ab', '#565a61'],
+  crowdSkin: ['#d9a77f', '#b07d58', '#8a5d3f', '#e6bf9b'],
+  field: '#9ea283',
+  treeNear: '#5f6f58',
+  treeFar: '#7d8d86',
+  /** The launch's tire haze (a neutral light grey, never orange). */
+  haze: '#c3c4c6',
+};
+
 export type CastName = 'you' | 'friend' | 'mom' | 'extra';
 export type CastLook = {
   top: string;

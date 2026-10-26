@@ -12,7 +12,7 @@ import type {CastName, Mood} from '../theme';
 import {ease} from './card';
 import {drawScreen, focusRect, screenKey, SCREEN_H, SCREEN_W} from './screenKit';
 import {LEFT, overlayInk, RIGHT} from './sectionStyle';
-import {drawCluster, drawEvCluster} from './dashboardKit';
+import {drawCluster, drawEvCluster, drawGasCluster} from './dashboardKit';
 import {carHeadBoxOnScreen, clusterOnScreen, type CarSliceSceneProps} from '../scenes/CarSliceScene';
 import {anchorOnScreen} from './anchors';
 import {MOODS} from '../theme';
@@ -24,9 +24,10 @@ export type DetailBoxProps = {
   /**
    * What it shows: 'phone' (default: the holder's screen, `section-room` only) or 'dashboard' (the
    * instrument cluster of a `car-slice`: speed, a trip timer counting on, the tire-pressure light, off or
-   * lit in warning yellow from the scene's `warningAt`).
+   * lit in warning yellow from the scene's `warningAt`), 'ev-dashboard' (speed and power meter) or
+   * 'gas-dashboard' (tach with the power-peak band, gear digit, speed), the last three in a `car-slice`.
    */
-  content?: 'phone' | 'dashboard' | 'ev-dashboard' | 'keypad' | 'laptop' | 'usage' | 'register';
+  content?: 'phone' | 'dashboard' | 'ev-dashboard' | 'gas-dashboard' | 'keypad' | 'laptop' | 'usage' | 'register';
   /** 'usage' (street-slice): seconds after the box enters when the "Possible leak" banner gives way to the hourly page (default 1.2; 0 = the page at once). */
   pageAt?: number;
   /** 'usage': seconds after the box enters when the hourly bars start drawing (default `pageAt` + 0.3), and how long (default 1.2). */
@@ -55,6 +56,28 @@ export type DetailBoxProps = {
    * `orange` (the system's mark on a screen). Default −0.6.
    */
   power?: number | {at: number; value: number}[];
+  /** 'ev-dashboard': draw the power meter (default true; false: the speed alone, centred). */
+  meter?: boolean;
+  /** 'ev-dashboard': the meter's POWER fill, 'ink' (default) or 'orange' (the motor's power as the system's mark). */
+  powerColor?: 'ink' | 'orange';
+  /**
+   * 'gas-dashboard' (No. 007, a gas car's cluster: a tach with the power-peak band, the gear digit,
+   * the speed): engine rpm, a number or keys like `speed` (eased between keys; a drop at a gear change
+   * wants two keys 0.15–0.2 s apart). Default 2500.
+   */
+  rpm?: number | {at: number; value: number}[];
+  /** 'gas-dashboard': the gear digit, a value or keys `{at, value}` that step (no easing). Default 3. */
+  gear?: number | string | {at: number; value: number | string}[];
+  /** 'gas-dashboard': the orange power-peak band on the tach, rpm [from, to] (default [4500, 6500]; null: none). */
+  band?: [number, number] | null;
+  /** 'gas-dashboard': the tach's full scale, rpm (default 8000). */
+  rpmMax?: number;
+  /**
+   * Dashboards: a named scene anchor (`anchors.ts`) for the leader's end and the box's height, for
+   * scenes other than `car-slice` (e.g. a race scene's 'cluster:ev'). Default none: the `car-slice`
+   * cluster. An unknown anchor falls back to the frame's centre.
+   */
+  anchor?: string;
   /** 'dashboard': draw the tire-pressure symbol (default true; false: not drawn at all). */
   tireLight?: boolean;
   /** 'auto' (default): the part of the screen that matters (the field, the ad); 'full': the whole screen. */
@@ -90,7 +113,7 @@ type SceneCtx = {props: Partial<SectionRoomSceneProps>; durationInFrames: number
 export const DetailBox: React.FC<DetailBoxProps & {mood?: Mood; scene: SceneCtx}> = (p) =>
   p.content === 'laptop' || p.content === 'usage' || p.content === 'register' ? (
     <StreetBox {...p} content={p.content} scene={{...p.scene, props: p.scene.props as Record<string, unknown>}} />
-  ) : p.content === 'dashboard' || p.content === 'ev-dashboard' ? (
+  ) : p.content === 'dashboard' || p.content === 'ev-dashboard' || p.content === 'gas-dashboard' ? (
     <DashboardBox {...p} />
   ) : p.content === 'keypad' ? (
     <KeypadBox {...p} />
@@ -293,11 +316,19 @@ const DashboardBox: React.FC<DetailBoxProps & {mood?: Mood; scene: SceneCtx}> = 
   scene,
   content,
   power,
+  meter = true,
+  powerColor = 'ink',
+  rpm,
+  gear = 3,
+  band,
+  rpmMax = 8000,
+  anchor,
 }) => {
   const frame = useCurrentFrame();
   const {fps, width, height} = useVideoConfig();
   const ref = useRef<HTMLCanvasElement>(null);
   const ev = content === 'ev-dashboard';
+  const gas = content === 'gas-dashboard';
   // a number or keys (seconds after the box enters), eased between keys
   const at = (v: number | {at: number; value: number}[] | undefined, d: number) => {
     if (v === undefined) return d;
@@ -312,6 +343,12 @@ const DashboardBox: React.FC<DetailBoxProps & {mood?: Mood; scene: SceneCtx}> = 
   };
   const shownSpeed = Math.round(at(speed, ev ? 28 : 38));
   const shownPower = Math.round(at(power, -0.6) * 100) / 100;
+  // gas: the needle to 10 rpm, the gear the last key at or before now
+  const shownRpm = Math.round(at(rpm, 2500) / 10) * 10;
+  const shownGear =
+    typeof gear === 'object'
+      ? ([...gear].sort((a, b) => a.at - b.at).filter((g, i) => i === 0 || g.at <= frame / fps).pop()?.value ?? '')
+      : gear;
   const sceneFrame = frame + scene.offset;
   const t = sceneFrame / fps;
   const carProps = scene.props as Partial<CarSliceSceneProps>;
@@ -321,14 +358,18 @@ const DashboardBox: React.FC<DetailBoxProps & {mood?: Mood; scene: SceneCtx}> = 
   const tripText = `TRIP ${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`;
   const innerW = size;
   const innerH = Math.round(size * 0.58);
-  const key = ev
-    ? `ev|${shownSpeed}|${shownPower}|${innerW}`
-    : `${on}|${tripText}|${shownSpeed}|${innerW}|${tireLight}`;
+  const key = gas
+    ? `gas|${shownSpeed}|${shownRpm}|${shownGear}|${JSON.stringify(band)}|${rpmMax}|${innerW}`
+    : ev
+      ? `ev|${shownSpeed}|${shownPower}|${innerW}|${meter}|${powerColor}`
+      : `${on}|${tripText}|${shownSpeed}|${innerW}|${tireLight}`;
   useLayoutEffect(() => {
     const handle = delayRender('Drawing the dashboard box');
     fontsReady().then(() => {
       const cx = ref.current?.getContext('2d');
-      if (cx && ev) drawEvCluster(cx, innerW, innerH, {speed: shownSpeed, power: shownPower});
+      if (cx && gas)
+        drawGasCluster(cx, innerW, innerH, {speed: shownSpeed, rpm: shownRpm, gear: shownGear, band: band, rpmMax});
+      else if (cx && ev) drawEvCluster(cx, innerW, innerH, {speed: shownSpeed, power: shownPower, meter, powerColor});
       else if (cx) drawCluster(cx, innerW, innerH, {warning: on, speed: shownSpeed, trip: tripText, tireLight});
       continueRender(handle);
     });
@@ -336,8 +377,14 @@ const DashboardBox: React.FC<DetailBoxProps & {mood?: Mood; scene: SceneCtx}> = 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
   const o = {frame: sceneFrame, fps, durationInFrames: scene.durationInFrames};
-  const target = clusterOnScreen(carProps, o);
-  const headBox = carHeadBoxOnScreen(carProps, who, o);
+  const target =
+    anchor === undefined
+      ? clusterOnScreen(carProps, o)
+      : (anchorOnScreen({...scene, props: scene.props as Record<string, unknown>}, anchor, frame, fps) ?? [
+          width / 2,
+          height / 2,
+        ]);
+  const headBox = anchor === undefined ? carHeadBoxOnScreen(carProps, who, o) : undefined;
   const {ink, paper} = overlayInk(mood);
   const outerW = innerW + 2 * BORDER;
   const outerH = innerH + 2 * BORDER;

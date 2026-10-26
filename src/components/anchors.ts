@@ -1,7 +1,9 @@
 import {cityAnchorOnScreen, type CitySliceSceneProps} from '../scenes/CitySliceScene';
+import {driveUnitAnchorOnScreen, type DriveUnitSceneProps} from '../scenes/DriveUnitScene';
 import {highwayAnchorOnScreen, type HighwaySliceSceneProps} from '../scenes/HighwaySliceScene';
 import {hotelAnchorOnScreen, type HotelLobbySceneProps} from '../scenes/HotelLobbyScene';
 import {musicalAnchorOnScreen, type MusicalRoadSceneProps} from '../scenes/MusicalRoadScene';
+import {raceAnchorOnScreen, type RaceSliceSceneProps} from '../scenes/RaceSliceScene';
 import {streetAnchorOnScreen, type StreetSliceSceneProps} from '../scenes/StreetSliceScene';
 import {towerAnchorOnScreen, type TowerSliceSceneProps} from '../scenes/TowerSliceScene';
 
@@ -16,6 +18,8 @@ export const ANCHOR_SCENES = [
   'highway-slice',
   'musical-road',
   'city-slice',
+  'race-slice',
+  'drive-unit',
 ];
 
 /**
@@ -26,7 +30,9 @@ export const ANCHOR_SCENES = [
  * 'tank', 'cab', 'laptop', 'truckRoof', 'youSpot' (= 'youHead'), 'phone', 'tap', 'lid:k'. `highway-slice`: 'youSpot', 'tire',
  * 'tail', 'grooveDepth', 'grooveNext', 'whiteLine', 'sign:speed' | 'sign:mile' | 'sign:guide'. `musical-road`: 'group:k', 'tire',
  * 'rearTire', 'car', 'window', 'house'. `city-slice`: 'car:k', 'lamps:k', 'youSpot', 'signal', 'stopLine',
- * 'sign:oneway' | 'sign:speed'. Undefined elsewhere
+ * 'sign:oneway' | 'sign:speed'. `race-slice`: 'cluster:ev' | 'cluster:gas', 'top:ev' | 'top:gas' (just above
+ * the car's roof), 'nose:*', 'tree:*', 'lane:*'. `drive-unit`: 'rotor', 'stage:1', 'stage:2', 'output', 'shift', 'hub',
+ * 'patch', 'inverter'. Undefined elsewhere
  * or for an unknown name.
  */
 export const anchorOnScreen = (
@@ -45,5 +51,8 @@ export const anchorOnScreen = (
   if (scene.name === 'musical-road')
     return musicalAnchorOnScreen(scene.props as Partial<MusicalRoadSceneProps>, anchor, o);
   if (scene.name === 'city-slice') return cityAnchorOnScreen(scene.props as Partial<CitySliceSceneProps>, anchor, o);
+  if (scene.name === 'race-slice') return raceAnchorOnScreen(scene.props as Partial<RaceSliceSceneProps>, anchor, o);
+  if (scene.name === 'drive-unit')
+    return driveUnitAnchorOnScreen(scene.props as Partial<DriveUnitSceneProps>, anchor, o);
   return undefined;
 };

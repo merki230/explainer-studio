@@ -140,6 +140,245 @@ const phys = (c: string, o: THREE.MeshPhysicalMaterialParameters = {}) =>
 const glowMat = () =>
   new THREE.MeshBasicMaterial({color: raw(section.orange), transparent: true, depthWrite: false, opacity: 0});
 
+/*
+ * The two-speed unit (`DriveUnit` `stages: 2`, No. 007), in the drive unit's frame. Generic, no maker's
+ * part shapes: the No. 006 motor and inverter; behind them a gear case cut at `EV.gearZ` holding the
+ * first stage (the big wheel, upper) and the second stage (the smaller wheel, lower), both on the motor's
+ * side and both meshing the output gear on the axle. A pinion on the rotor shaft drives each stage wheel
+ * (hidden behind the motor, as the No. 006 intermediate's mesh is); a dog on that shaft picks which
+ * pinion drives, moved by the shift element: a selector rail across the two stage wheels' hubs, its fork
+ * sliding toward the engaged stage.
+ * The output gear's axle runs out (+z) as the half-shaft to the wheel's inboard face (the scene brings
+ * the wheel: `DriveUnitScene` stands a `RealWheel` cut through its axle plane on a piece of road). Real overall ratios 15 (first) and 8 (second) by default; the visible wheels carry a fixed
+ * tooth pitch so their meshes roll true.
+ */
+const TS_PITCH = 0.0165;
+const gearR = (teeth: number) => (teeth * TS_PITCH) / (2 * Math.PI);
+const TS_DEPTH = 0.012;
+/** Centre of a gear of radius r meshing two others (a, ra) and (b, rb), on the side with the larger x. */
+const meshCentre = (a: P2, ra: number, b: P2, rb: number, r: number): P2 => {
+  const d1 = ra + r - TS_DEPTH * 0.92;
+  const d2 = rb + r - TS_DEPTH * 0.92;
+  const dx = b[0] - a[0];
+  const dy = b[1] - a[1];
+  const d = Math.hypot(dx, dy);
+  const t = (d1 * d1 - d2 * d2 + d * d) / (2 * d);
+  const h = Math.sqrt(Math.max(0, d1 * d1 - t * t));
+  const px = a[0] + (dx * t) / d;
+  const py = a[1] + (dy * t) / d;
+  const c1: P2 = [px - (dy * h) / d, py + (dx * h) / d];
+  const c2: P2 = [px + (dy * h) / d, py - (dx * h) / d];
+  return c1[0] > c2[0] ? c1 : c2;
+};
+const TS_FIRST = {c: [1.462, 0.755] as P2, teeth: 53, r: gearR(53)};
+const TS_SECOND = {c: [1.33, 0.4] as P2, teeth: 38, r: gearR(38)};
+const TS_OUT_TEETH = 42;
+const TS_OUT = {
+  c: meshCentre(TS_FIRST.c, TS_FIRST.r, TS_SECOND.c, TS_SECOND.r, gearR(TS_OUT_TEETH)),
+  teeth: TS_OUT_TEETH,
+  r: gearR(TS_OUT_TEETH),
+};
+/**
+ * The shift element: a selector rail from the first stage's hub to the second's, the fork sliding along
+ * it toward the engaged stage. `a`/`b`: the fork's place in first and in second; `u`: first → second.
+ */
+const TS_SHIFT = (() => {
+  const dx = TS_SECOND.c[0] - TS_FIRST.c[0];
+  const dy = TS_SECOND.c[1] - TS_FIRST.c[1];
+  const len = Math.hypot(dx, dy);
+  const u: P2 = [dx / len, dy / len];
+  const at = (f: number): P2 => [TS_FIRST.c[0] + dx * f, TS_FIRST.c[1] + dy * f];
+  return {c: at(0.5), u, len, a: at(0.24), b: at(0.78)};
+})();
+
+export const EV2 = {
+  /** Overall ratios (rotor turns per output turn): first, second (the real two-speed's ≈ 15 and ≈ 8). */
+  ratios: [15, 8] as [number, number],
+  first: TS_FIRST,
+  second: TS_SECOND,
+  out: TS_OUT,
+  /** The shift element (see `TS_SHIFT`): the rail's middle and length, the fork's place in first (`a`) and second (`b`). */
+  shift: TS_SHIFT,
+  /**
+   * Where the wheel goes (the scene draws it, e.g. a `RealWheel` cut through its axle plane): the
+   * half-shaft's outer end (the wheel's inboard face), the wheel's mid-plane, its tire radius. The
+   * wheel is coaxial with the output gear.
+   */
+  hubZ: 0.4,
+  wheelZ: 0.5,
+  tireR: 0.33,
+};
+
+/** A named point of the two-speed unit in its own frame (front faces, for leaders; the patch on the road). */
+export type TwoSpeedPoint = 'rotor' | 'stage:1' | 'stage:2' | 'output' | 'shift' | 'hub' | 'patch' | 'inverter';
+export const twoSpeedPoint = (what: TwoSpeedPoint): V3 => {
+  const fz = EV.gearZ - 0.004;
+  switch (what) {
+    case 'rotor':
+      return [EV.motor[0], EV.motor[1], EV.motorZ];
+    case 'stage:1':
+      return [EV2.first.c[0], EV2.first.c[1], fz];
+    case 'stage:2':
+      return [EV2.second.c[0], EV2.second.c[1], fz];
+    case 'output':
+      return [EV2.out.c[0], EV2.out.c[1], fz];
+    case 'shift':
+      return [EV2.shift.c[0], EV2.shift.c[1], EV.gearZ + 0.004];
+    case 'hub':
+      return [EV2.out.c[0], EV2.out.c[1], EV2.wheelZ];
+    case 'patch':
+      return [EV2.out.c[0], EV2.out.c[1] - EV2.tireR, EV2.wheelZ];
+    case 'inverter':
+      return [(EV.inverter[0] + EV.inverter[1]) / 2, EV.inverter[3], EV.inverter[5]];
+  }
+};
+
+/** The angle offset that sets gear b's teeth into gear a's gaps along the line a → b (a at phase 0). */
+const meshPhase = (a: {c: P2; teeth: number}, b: {c: P2; teeth: number}) => {
+  const theta = Math.atan2(b.c[1] - a.c[1], b.c[0] - a.c[0]);
+  const pa = (Math.PI * 2) / a.teeth;
+  const pb = (Math.PI * 2) / b.teeth;
+  // a's nearest tooth centre lies δ before the contact line; b shows the mirror: a gap δ' past its own line
+  const delta = (((theta - 0.5 * pa) % pa) + pa) % pa;
+  const dB = (delta * a.teeth) / b.teeth;
+  return theta + Math.PI + dB - pb;
+};
+
+/** The two-speed gear train and the half-shaft (see above). Internal: `DriveUnit` `stages: 2`. */
+const TwoSpeedTrain: React.FC<{
+  wheelSpin: number;
+  shift: number;
+  stageGlow?: [number, number];
+  stageOutline?: [number, number];
+  outputGlow: number;
+  inkScale: number;
+}> = ({wheelSpin, shift, stageGlow, stageOutline, outputGlow, inkScale}) => {
+  const {env, envScale, albedo} = usePhys();
+  const mats = useMemo(
+    () => ({
+      cut: cutMaterial(),
+      housing: phys(REAL.housing, {metalness: 0.55, roughness: 0.5}),
+      gear: phys(REAL.steel, {metalness: 0.85, roughness: 0.35}),
+      steel: phys(REAL.steel, {metalness: 0.9, roughness: 0.3}),
+      fork: phys(REAL.caliper, {metalness: 0.4, roughness: 0.5}),
+      boot: phys(REAL.rubber, {roughness: 0.7}),
+      glow: [0, 1, 2].map(() => glowMat()),
+      ring: [0, 1].map(() => glowMat()),
+    }),
+    [],
+  );
+  applyEnv(
+    env,
+    [
+      [mats.housing, 0.6],
+      [mats.gear, 0.9],
+      [mats.steel, 1],
+    ],
+    envScale,
+  );
+  applyAlbedo([mats.housing, mats.gear, mats.steel, mats.fork], albedo);
+
+  const z = EV.gearZ;
+  const geo = useMemo(() => {
+    const gears = [EV2.first, EV2.second, EV2.out];
+    const caseOut = hull(gears.flatMap((g) => circlePts(g.c, g.r + 0.045, 32)));
+    const caseIn = hull(gears.flatMap((g) => circlePts(g.c, g.r + 0.018, 32)));
+    const gearGeo = (g: {r: number; teeth: number}) =>
+      extrude(shapeOf(gearPts(g.r, g.teeth, TS_DEPTH), [circlePts([0, 0], 0.026, 24)]), z - 0.05, z - 0.006, 4);
+    // the glow: a toothed rim (the teeth stay readable; the web and hub stay steel)
+    const glowGeo = (g: {r: number; teeth: number}) =>
+      new THREE.ShapeGeometry(shapeOf(gearPts(g.r, g.teeth, TS_DEPTH), [circlePts([0, 0], g.r * 0.62, 48)]), 4);
+    return {
+      gearCase: extrude(shapeOf(caseOut, [caseIn.slice().reverse()]), -0.15, z),
+      caseInk: [caseOut, caseIn].map((c) => c.map(([x, y]) => [x, y, z + 0.002] as V3)),
+      gears: gears.map(gearGeo),
+      glows: gears.map(glowGeo),
+      rings: [EV2.first, EV2.second].map((g) => new THREE.RingGeometry(g.r + 0.006, g.r + 0.022, 96)),
+      hub: extrude(shapeOf(circlePts([0, 0], 0.034, 24)), z - 0.06, z - 0.004),
+      rail: new THREE.CylinderGeometry(0.007, 0.007, EV2.shift.len, 12),
+      fork: roundedBox(0.05, 0.04, 0.03, 0.008),
+      pin: new THREE.CylinderGeometry(0.018, 0.018, 0.012, 20),
+      shaft: new THREE.CylinderGeometry(0.02, 0.02, 1, 16),
+      bootIn: new THREE.CylinderGeometry(0.042, 0.03, 0.09, 20),
+      bootOut: new THREE.CylinderGeometry(0.028, 0.044, 0.09, 20),
+    };
+  }, [z]);
+
+  const ink = INK * inkScale;
+  const k = Math.max(0, Math.min(1, shift));
+  // every visible gear rolls with the output: the stage wheels mesh it, each set into its gaps
+  const phases = [meshPhase(EV2.out, EV2.first), meshPhase(EV2.out, EV2.second), 0];
+  const spins = [
+    phases[0] - (wheelSpin * EV2.out.teeth) / EV2.first.teeth,
+    phases[1] - (wheelSpin * EV2.out.teeth) / EV2.second.teeth,
+    wheelSpin,
+  ];
+  const glows = [stageGlow?.[0] ?? 0, stageGlow?.[1] ?? 0, outputGlow];
+  glows.forEach((g, i) => {
+    mats.glow[i].opacity = 0.9 * Math.max(0, Math.min(1, g));
+  });
+  [0, 1].forEach((i) => {
+    mats.ring[i].opacity = Math.max(0, Math.min(1, stageOutline?.[i] ?? 0));
+  });
+  const gears = [EV2.first, EV2.second, EV2.out];
+  // the fork slides along the rail toward the engaged stage
+  const [sx, sy] = [EV2.shift.a[0] + (EV2.shift.b[0] - EV2.shift.a[0]) * k, EV2.shift.a[1] + (EV2.shift.b[1] - EV2.shift.a[1]) * k];
+  const railAng = Math.atan2(EV2.shift.u[1], EV2.shift.u[0]) - Math.PI / 2;
+  const o = EV2.out.c;
+  // the shaft runs on into the wheel's hub (its mid-plane); the outer boot sits at the wheel's inboard face
+  const shaftLen = EV2.wheelZ - (z - 0.006);
+
+  return (
+    <group>
+      {/* the gear case, cut at its own plane behind the motor */}
+      <mesh geometry={geo.gearCase} material={[mats.cut, mats.housing]} castShadow receiveShadow />
+      {geo.caseInk.map((c, i) => (
+        <InkLine key={i} points={c} thickness={ink} />
+      ))}
+      {/* the two stage wheels and the output gear, each with its glow; the stages with a one-shot ring */}
+      {gears.map((g, i) => (
+        <group key={i} position={[g.c[0], g.c[1], 0]}>
+          <group rotation={[0, 0, spins[i]]}>
+            <mesh geometry={geo.gears[i]} material={mats.gear} castShadow receiveShadow />
+            <mesh geometry={geo.hub} material={mats.steel} />
+            <mesh
+              geometry={geo.glows[i]}
+              material={mats.glow[i]}
+              position={[0, 0, z - 0.0045]}
+              visible={glows[i] > 0.01}
+              userData={{glow: true}}
+              renderOrder={3}
+            />
+          </group>
+          {i < 2 ? (
+            <mesh
+              geometry={geo.rings[i]}
+              material={mats.ring[i]}
+              position={[0, 0, z - 0.004]}
+              visible={(stageOutline?.[i] ?? 0) > 0.01}
+              userData={{glow: true}}
+              renderOrder={3}
+            />
+          ) : null}
+        </group>
+      ))}
+      {/* the shift element: a selector rail across the stage wheels' hubs, the fork sliding toward the engaged stage */}
+      <mesh geometry={geo.rail} material={mats.steel} position={[EV2.shift.c[0], EV2.shift.c[1], z + 0.004]} rotation={[0, 0, railAng]} castShadow />
+      {[EV2.first.c, EV2.second.c].map((c, i) => (
+        <mesh key={i} geometry={geo.pin} material={mats.steel} position={[c[0], c[1], z + 0.002]} rotation={[Math.PI / 2, 0, 0]} />
+      ))}
+      <mesh geometry={geo.fork} material={mats.fork} position={[sx, sy, z + 0.008]} rotation={[0, 0, railAng]} castShadow />
+
+      {/* the half-shaft and its CV boots, out to the wheel's inboard face */}
+      <group position={[o[0], o[1], z - 0.006 + shaftLen / 2]} rotation={[Math.PI / 2, wheelSpin, 0]}>
+        <mesh geometry={geo.shaft} material={mats.steel} scale={[1, shaftLen, 1]} castShadow />
+      </group>
+      <mesh geometry={geo.bootIn} material={mats.boot} position={[o[0], o[1], z + 0.05]} rotation={[Math.PI / 2, 0, 0]} castShadow />
+      <mesh geometry={geo.bootOut} material={mats.boot} position={[o[0], o[1], EV2.hubZ - 0.05]} rotation={[Math.PI / 2, 0, 0]} castShadow />
+    </group>
+  );
+};
+
 export type DriveUnitProps = {
   mood: Mood;
   /** The near front wheel's turn (radians, in this frame): the final gear turns with it. */
@@ -153,6 +392,22 @@ export type DriveUnitProps = {
   inkScale?: number;
   /** The inverter's control board on its near end (No. 008: the computer the pedal talks to). Default false. */
   board?: boolean;
+  /**
+   * 1 (default): the No. 006 single-speed unit. 2 (No. 007): a generic two-speed unit, the same motor
+   * and inverter, but its gear case holds two stages (a big first-stage wheel, a smaller second-stage
+   * wheel), the shift element between them and an output gear, the half-shaft out to where the
+   * wheel goes (`EV2.hubZ`; the scene brings the wheel). `wheelSpin` turns the output (and the wheel); give
+   * `rotorSpin` = the output's turn × the engaged stage's ratio (`EV2.ratios`). The HV cable is left off.
+   */
+  stages?: 1 | 2;
+  /** `stages: 2`: the shift, 0 = first engaged → 1 = second engaged (the shift element slides between). */
+  shift?: number;
+  /** `stages: 2`: orange glow 0–1 on each stage's wheel [first, second] (the push through the engaged stage). */
+  stageGlow?: [number, number];
+  /** `stages: 2`: an orange ring 0–1 round each stage's wheel [first, second] (a one-shot "the two gears"). */
+  stageOutline?: [number, number];
+  /** `stages: 2`: orange glow 0–1 on the output gear. */
+  outputGlow?: number;
 };
 
 /** The inverter's control board (No. 008) on the inverter's near end face (x0, x1, y0, y1). */
@@ -167,6 +422,11 @@ export const DriveUnit: React.FC<DriveUnitProps> = ({
   slots,
   inkScale = 1,
   board = false,
+  stages = 1,
+  shift = 0,
+  stageGlow,
+  stageOutline,
+  outputGlow = 0,
 }) => {
   const {env, envScale, albedo} = usePhys();
   const mats = useMemo(
@@ -315,8 +575,8 @@ export const DriveUnit: React.FC<DriveUnitProps> = ({
   });
   const fz = (EV.gearZ + 0.69) / 2;
 
-  return (
-    <group>
+  const motorParts = (
+    <>
       {/* the motor casing, cut (hatched cap) */}
       <mesh geometry={geo.caseG} material={[mats.cut, mats.housing]} castShadow receiveShadow />
       {geo.caseInk.map((c, i) => (
@@ -379,6 +639,77 @@ export const DriveUnit: React.FC<DriveUnitProps> = ({
           ))
         : null}
 
+    </>
+  );
+  const inverterParts = (
+    <>
+      {/* the inverter on top (cast aluminium, a lid seam, cooling fins), the phase cables, the HV cable */}
+      <mesh
+        geometry={roundedBox(ix1 - ix0, iy1 - iy0, iz1 - iz0, 0.012)}
+        material={mats.housing}
+        position={[(ix0 + ix1) / 2, (iy0 + iy1) / 2, (iz0 + iz1) / 2]}
+        castShadow
+        receiveShadow
+      />
+      <mesh position={[(ix0 + ix1) / 2, iy1 - 0.025, iz1 + 0.0015]} material={mats.dark}>
+        <boxGeometry args={[ix1 - ix0 - 0.02, 0.004, 0.002]} />
+      </mesh>
+      {[...Array(7).keys()].map((k) => (
+        <mesh key={k} position={[ix0 + 0.04 + k * 0.042, iy0 - 0.008, (iz0 + iz1) / 2]} material={mats.housing}>
+          <boxGeometry args={[0.008, 0.016, iz1 - iz0 - 0.06]} />
+        </mesh>
+      ))}
+      {geo.phase.map((g, i) => (
+        <mesh key={i} geometry={g} material={mats.cable} castShadow />
+      ))}
+    </>
+  );
+  const boardParts = (
+    <>
+      {board ? (
+        // the control board on the inverter's near end: a green board, its processor and a connector
+        <group>
+          <mesh
+            position={[(EV_BOARD[0] + EV_BOARD[1]) / 2, (EV_BOARD[2] + EV_BOARD[3]) / 2, iz1 + 0.004]}
+            material={mats.pcb}
+            castShadow
+          >
+            <boxGeometry args={[EV_BOARD[1] - EV_BOARD[0], EV_BOARD[3] - EV_BOARD[2], 0.006]} />
+          </mesh>
+          <mesh position={[EV_BOARD[0] + 0.07, (EV_BOARD[2] + EV_BOARD[3]) / 2, iz1 + 0.01]} material={mats.chip}>
+            <boxGeometry args={[0.04, 0.04, 0.006]} />
+          </mesh>
+          <mesh
+            position={[EV_BOARD[1] - 0.035, (EV_BOARD[2] + EV_BOARD[3]) / 2, iz1 + 0.014]}
+            material={mats.connector}
+          >
+            <boxGeometry args={[0.04, 0.05, 0.02]} />
+          </mesh>
+        </group>
+      ) : null}
+    </>
+  );
+
+  if (stages === 2)
+    return (
+      <group>
+        {motorParts}
+        <TwoSpeedTrain
+          wheelSpin={wheelSpin}
+          shift={shift}
+          stageGlow={stageGlow}
+          stageOutline={stageOutline}
+          outputGlow={outputGlow}
+          inkScale={inkScale}
+        />
+        {inverterParts}
+        {boardParts}
+      </group>
+    );
+
+  return (
+    <group>
+      {motorParts}
       {/* the gear case behind, cut at its own plane; the final gear on the axle, the intermediate */}
       <mesh geometry={geo.gearCase} material={[mats.cut, mats.housing]} castShadow receiveShadow />
       {geo.gearInk.map((c, i) => (
@@ -413,47 +744,9 @@ export const DriveUnit: React.FC<DriveUnitProps> = ({
         castShadow
       />
 
-      {/* the inverter on top (cast aluminium, a lid seam, cooling fins), the phase cables, the HV cable */}
-      <mesh
-        geometry={roundedBox(ix1 - ix0, iy1 - iy0, iz1 - iz0, 0.012)}
-        material={mats.housing}
-        position={[(ix0 + ix1) / 2, (iy0 + iy1) / 2, (iz0 + iz1) / 2]}
-        castShadow
-        receiveShadow
-      />
-      <mesh position={[(ix0 + ix1) / 2, iy1 - 0.025, iz1 + 0.0015]} material={mats.dark}>
-        <boxGeometry args={[ix1 - ix0 - 0.02, 0.004, 0.002]} />
-      </mesh>
-      {[...Array(7).keys()].map((k) => (
-        <mesh key={k} position={[ix0 + 0.04 + k * 0.042, iy0 - 0.008, (iz0 + iz1) / 2]} material={mats.housing}>
-          <boxGeometry args={[0.008, 0.016, iz1 - iz0 - 0.06]} />
-        </mesh>
-      ))}
-      {geo.phase.map((g, i) => (
-        <mesh key={i} geometry={g} material={mats.cable} castShadow />
-      ))}
+      {inverterParts}
       <mesh geometry={geo.hv} material={mats.cable} castShadow />
-      {board ? (
-        // the control board on the inverter's near end: a green board, its processor and a connector
-        <group>
-          <mesh
-            position={[(EV_BOARD[0] + EV_BOARD[1]) / 2, (EV_BOARD[2] + EV_BOARD[3]) / 2, iz1 + 0.004]}
-            material={mats.pcb}
-            castShadow
-          >
-            <boxGeometry args={[EV_BOARD[1] - EV_BOARD[0], EV_BOARD[3] - EV_BOARD[2], 0.006]} />
-          </mesh>
-          <mesh position={[EV_BOARD[0] + 0.07, (EV_BOARD[2] + EV_BOARD[3]) / 2, iz1 + 0.01]} material={mats.chip}>
-            <boxGeometry args={[0.04, 0.04, 0.006]} />
-          </mesh>
-          <mesh
-            position={[EV_BOARD[1] - 0.035, (EV_BOARD[2] + EV_BOARD[3]) / 2, iz1 + 0.014]}
-            material={mats.connector}
-          >
-            <boxGeometry args={[0.04, 0.05, 0.02]} />
-          </mesh>
-        </group>
-      ) : null}
+      {boardParts}
     </group>
   );
 };
@@ -731,4 +1024,38 @@ export const footPose = (
   const hy0 = k * (-0.1 * Math.cos(a) - 0.05 * Math.sin(a));
   const hz0 = k * (0.1 * Math.sin(a) - 0.05 * Math.cos(a));
   return {x: heel[0] - hz0, y: heel[1] - hy0, pitch: a};
+};
+
+/**
+ * No. 007 (N4): the forward drive path through one drive unit (car frame, the front unit; move a point to
+ * the rear unit with `rearUnitPoint` from `RealCar`). No. 006's regen route run forward, as three legs:
+ * `battery` (the pack's end module → up the HV cable → the inverter), `phase` (the inverter → down the
+ * phase cables → the stator's windings), `gears` (the rotor's centre → the intermediate gear → the final
+ * gear → along the top of the half-shaft → the hub at `hubZ`, e.g. the near wheel's cut face, or its outer
+ * face when the wheel is drawn whole). The scene draws them in orange (`OrangePath`); nothing here glows.
+ */
+export const evDriveRoute = (hubZ = 0.795): Record<'battery' | 'phase' | 'gears', V3[]> => {
+  const invY = (EV.inverter[2] + EV.inverter[3]) / 2;
+  const [ax, ay] = EV.final.c;
+  return {
+    battery: [
+      [moduleSpan(0)[1] - 0.04, MODULE_Y[1] + 0.012, EV.packZ + 0.025],
+      ...[...EV.hv].reverse().map(([x, y, z]) => [x, y, z + 0.035] as V3),
+      [1.16, invY, EV.inverter[5] + 0.025],
+    ],
+    phase: [
+      [1.2, invY, EV.inverter[5] + 0.025],
+      [1.265, 0.84, EV.motorZ + 0.01],
+      [EV.motor[0] + 0.05, EV.motor[1] + 0.12, EV.motorZ + 0.03],
+    ],
+    gears: [
+      [EV.motor[0], EV.motor[1], EV.motorZ + 0.03],
+      [EV.inter.c[0], EV.inter.c[1], EV.gearZ + 0.035],
+      [EV.final.c[0], EV.final.c[1] + 0.02, EV.gearZ + 0.035],
+      // along the top of the half-shaft (on its axis the shaft would hide it in close-ups)
+      [ax, ay + 0.032, EV.gearZ + 0.1],
+      [ax, ay + 0.032, Math.min(0.66, hubZ - 0.05)],
+      [ax, ay, hubZ],
+    ],
+  };
 };
