@@ -10,8 +10,10 @@ import {
   isLeft,
   layoutOf,
   simRevs,
+  wheelTurnRevs,
   SlicedCar,
   slicedCarCrank,
+  slicedCarPhone,
   slicedCarShake,
   toWorld,
   type SlicedCarOptions,
@@ -20,6 +22,7 @@ import {
 import {projectToFrame, SectionCamera, sectionCameraAt, type Framing} from '../three/section/SectionCamera';
 import {SectionLights, SectionStage} from '../three/section/SectionStage';
 import {skyTexture} from '../three/section/textures';
+import {wheelMode} from '../three/real/wheelMotion';
 import {framingAtKeys, type CameraKey} from './keyframes';
 
 // the car rig lives in `three/real/SlicedCar` (N0, No. 007); its types and speeds stay importable from here
@@ -56,7 +59,8 @@ export type CarFraming =
   | 'pedal'
   | 'signal'
   | 'throttle'
-  | 'evBay';
+  | 'evBay'
+  | 'call';
 
 export const CAR_FRAMINGS: Record<
   Exclude<
@@ -75,6 +79,7 @@ export const CAR_FRAMINGS: Record<
     | 'signal'
     | 'throttle'
     | 'evBay'
+    | 'call'
   >,
   Framing
 > = {
@@ -124,6 +129,11 @@ export const GAS_FRAMINGS: Partial<Record<CarFraming, Framing>> = {
   bay: {look: [-1.185, 0.255, 0.49], distance: 6.5},
   signal: {look: [-0.966, 0.518, 0.345], distance: 3.4},
   pedal: {look: [-0.802, 0.501, 0.293], distance: 3},
+  /**
+   * No. 009: M, the driver on a phone call (`call`): head and phone at x ≈ 430, y ≈ 780, room on the right
+   * for a detail box (x 520–888) and above the head for the call's rings; the cluster and wheel at left.
+   */
+  call: {look: [-0.1, 1.15, -0.05], distance: 9.5},
   throttle: {
     look: [
       -GAS.tb[0] + (EV_FRAMINGS.motor!.look[0] + EV.motor[0]),
@@ -213,6 +223,8 @@ export const carCarry = (
   p.variant === 'ev' || p.variant === 'gas'
     ? {
         revsFrom: simRevs(p, durationInFrames / fps, fps),
+        // 'forward': the drawn turn runs on across the cut too (it falls behind `revsFrom` above the cap)
+        ...(wheelMode(p.wheels) === 'forward' ? {wheelFrom: wheelTurnRevs(p, durationInFrames / fps, fps)} : {}),
         // the V8's crank runs on across the cut too (No. 007)
         ...(p.variant === 'gas' && p.engine === 'v8' ? {crankFrom: slicedCarCrank(p, durationInFrames / fps)} : {}),
       }
@@ -276,6 +288,22 @@ export const clusterOnScreen = (
 ) => {
   const k = layoutOf(p).cluster;
   return projectToFrame(cameraAtFrame(p, o), toWorld(p, [k[0] + 0.07, k[1] + 0.06, k[2]]));
+};
+
+/**
+ * A named point of the car slice on screen (px), following the camera (No. 009): 'phone' (the driver's call
+ * phone, `call`), 'cluster' (the instrument cluster), 'head' or 'youSpot' (the top of the driver's head).
+ * Undefined for an unknown name.
+ */
+export const carAnchorOnScreen = (
+  p: Partial<CarSliceSceneProps>,
+  anchor: string,
+  o: {frame: number; fps: number; durationInFrames: number},
+): [number, number] | undefined => {
+  if (anchor === 'phone') return projectToFrame(cameraAtFrame(p, o), slicedCarPhone(p, o.frame / o.fps));
+  if (anchor === 'cluster') return clusterOnScreen(p, o);
+  if (anchor === 'head' || anchor === 'youSpot') return carHeadTopOnScreen(p, p.driver ?? 'you', o);
+  return undefined;
 };
 
 /**

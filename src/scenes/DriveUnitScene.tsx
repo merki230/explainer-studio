@@ -7,6 +7,7 @@ import {raw} from '../three/plaster';
 import {PushArrow, pushArrowState, type PushArrowKeys} from '../three/PushArrow';
 import {DriveUnit, EV, EV2, evDriveRoute, twoSpeedPoint, type TwoSpeedPoint} from '../three/real/EvDrive';
 import {RealWheel} from '../three/real/RealWheel';
+import {capRevs, wheelMode, wheelSmear, type WheelMode} from '../three/real/wheelMotion';
 import {cutMaterial, CutOutline, type Rect} from '../three/section/cutLook';
 import {projectToFrame, SECTION_ANGLE, SectionCamera, sectionCameraAt, type Framing} from '../three/section/SectionCamera';
 import {SectionLights, SectionStage} from '../three/section/SectionStage';
@@ -48,6 +49,12 @@ export const driveUnitFramings = (): Record<DriveUnitFraming, Framing> => {
 
 export type DriveUnitSceneProps = {
   durationInFrames: number;
+  /**
+   * How the road wheel (and the output gear on its axle) turns (`three/real/wheelMotion.ts`): 'forward' (default:
+   * the drawn turn capped at 26° a frame, ≈ 2.1 rev/s, the spokes smeared above it) or 'legacy' (posted videos
+   * only: No. 007 as rendered, the real rate). The rotor keeps the real rate either way (see `spin`).
+   */
+  wheels?: WheelMode;
   /** Day (default) or Night. */
   mood?: Mood;
   /** 'unit' (default; M, the whole cut-away) or 'gears' (C, the two stages and the output). */
@@ -162,8 +169,11 @@ const STEP = 1 / 120;
  * The unit's state at t: the output's and the rotor's turns (revolutions; the rotor integrates the
  * output speed × the ratio of the moment, so it never jumps at a shift), the shift, the ratio, the speeds.
  */
-export const driveUnitStateAt = (p: Partial<DriveUnitSceneProps>, t: number) => {
+export const driveUnitStateAt = (p: Partial<DriveUnitSceneProps>, t: number, fps = 30) => {
   const keys = p.spin ?? [{at: 0, speed: 0.1}];
+  // 'forward': the wheel's drawn turn, capped under the 5-spoke alias limit (equal to `outRevs` below the cap)
+  const cap = wheelMode(p.wheels) === 'forward' ? capRevs(fps) : Infinity;
+  let outDrawn = 0;
   const ramp = p.spinRamp ?? 0.8;
   const [r1, r2] = p.ratios ?? EV2.ratios;
   const ratio = (x: number) => r1 + (r2 - r1) * shiftAt(p, x);
@@ -173,10 +183,20 @@ export const driveUnitStateAt = (p: Partial<DriveUnitSceneProps>, t: number) => 
     const dt = Math.min(STEP, t - x);
     const w = speedAt(keys, x + dt / 2, ramp);
     out += w * dt;
+    outDrawn += Math.sign(w) * Math.min(Math.abs(w), cap) * dt;
     rotor += w * ratio(x + dt / 2) * dt;
   }
   const speed = speedAt(keys, t, ramp);
-  return {outRevs: out, rotorRevs: rotor, shift: shiftAt(p, t), ratio: ratio(t), speed, rotorSpeed: speed * ratio(t)};
+  return {
+    outRevs: out,
+    /** The wheel's drawn turn (rev): `outRevs` in 'legacy' or below the cap. */
+    wheelRevs: cap === Infinity ? out : outDrawn,
+    rotorRevs: rotor,
+    shift: shiftAt(p, t),
+    ratio: ratio(t),
+    speed,
+    rotorSpeed: speed * ratio(t),
+  };
 };
 
 /** How lit the push is at t (0 → 1), from `litAt` and `fadeAt`. */
@@ -231,9 +251,9 @@ export const DriveUnitScene: React.FC<DriveUnitSceneProps> = (props) => {
     return [cut, cut, top, cut, cut, cut];
   }, [mood]);
 
-  const st = driveUnitStateAt(props, t);
+  const st = driveUnitStateAt(props, t, fps);
   // forward rolling turns the wheel clockwise seen from the cut side (x forward); the rotor turns with the output
-  const wheelSpin = -st.outRevs * Math.PI * 2;
+  const wheelSpin = -st.wheelRevs * Math.PI * 2;
   const rotorSpin = -st.rotorRevs * Math.PI * 2;
   // the turn while a 180° shutter is open (the rotor's magnet ghosts)
   const rotorBlur = (-st.rotorSpeed * Math.PI * 2 * 0.5) / fps;
@@ -245,8 +265,10 @@ export const DriveUnitScene: React.FC<DriveUnitSceneProps> = (props) => {
   // the wheel: coaxial with the output gear, cut through its axle plane with the half toward the gearbox
   // removed (its cut face, the tire's two profiles and the contact patch, toward the camera)
   const wheelAt = driveUnitPoint('hub');
-  const wheelSpinW = st.outRevs * Math.PI * 2;
-  const wheelBlur = (st.speed * Math.PI * 2 * 0.5) / fps;
+  const wheelSpinW = st.wheelRevs * Math.PI * 2;
+  const realWheelBlur = (st.speed * Math.PI * 2 * 0.5) / fps;
+  const wheelBlur =
+    wheelMode(props.wheels) === 'legacy' ? realWheelBlur : (st.speed < 0 ? -1 : 1) * wheelSmear(realWheelBlur, st.speed, capRevs(fps));
   // the road piece under it: asphalt on top, cut on the near side and both ends
   const gy = wheelAt[1] - EV2.tireR;
   const road = {x0: wheelAt[0] - 0.42, x1: wheelAt[0] + 0.42, y0: gy - 0.07, y1: gy, z0: wheelAt[2] - 0.2, z1: wheelAt[2] + 0.2};

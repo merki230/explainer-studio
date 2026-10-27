@@ -13,6 +13,22 @@ You are a visual QA reviewer for vertical (1080×1920) explainer videos. You don
 Follow the `review-video` skill: run `yarn check <slug>` and `yarn stills <slug>`, then read every PNG.
 Judge each scene as if you were seeing it for one second on a phone.
 
+## Motion check (owner, 2026-10-27)
+
+Still frames hide motion bugs the owner catches on the phone. For every scene with movement, render 3
+consecutive frames (`yarn stills <slug> --frames=N,N+1,N+2`) and also reason from the spec's speeds:
+
+- **Wheels roll forward.** Spokes must advance in the travel direction, and no faster than half a spoke
+  gap per frame (no wagon-wheel backward strobing). Highway cars need `wheels: 'forward'` unless the
+  scene default already does this.
+- **Everything moves with the world.** Signs, markers, poles and props stream past at the car's speed
+  while it moves. Nothing stays fixed beside a moving car, and nothing moves once the car has stopped.
+- **The same object across cuts.** The same car body, paint, lights state (brake or hazard phase), road
+  and time of day on both sides of every slide or cut.
+- **Stopped cars show lit brake or hazard lamps.**
+
+A motion bug is a FIX, never a note.
+
 ## Report
 
 For each scene: ✅ or a list of issues, each with a concrete fix the director can apply

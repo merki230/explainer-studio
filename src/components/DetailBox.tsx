@@ -12,7 +12,7 @@ import type {CastName, Mood} from '../theme';
 import {ease} from './card';
 import {drawScreen, focusRect, screenKey, SCREEN_H, SCREEN_W} from './screenKit';
 import {LEFT, overlayInk, RIGHT} from './sectionStyle';
-import {drawCluster, drawEvCluster, drawGasCluster} from './dashboardKit';
+import {drawCluster, drawDispatchMap, drawEvCluster, drawGasCluster} from './dashboardKit';
 import {carHeadBoxOnScreen, clusterOnScreen, type CarSliceSceneProps} from '../scenes/CarSliceScene';
 import {anchorOnScreen} from './anchors';
 import {MOODS} from '../theme';
@@ -27,7 +27,26 @@ export type DetailBoxProps = {
    * lit in warning yellow from the scene's `warningAt`), 'ev-dashboard' (speed and power meter) or
    * 'gas-dashboard' (tach with the power-peak band, gear digit, speed), the last three in a `car-slice`.
    */
-  content?: 'phone' | 'dashboard' | 'ev-dashboard' | 'gas-dashboard' | 'keypad' | 'laptop' | 'usage' | 'register';
+  content?:
+    | 'phone'
+    | 'dashboard'
+    | 'ev-dashboard'
+    | 'gas-dashboard'
+    | 'keypad'
+    | 'laptop'
+    | 'usage'
+    | 'register'
+    | 'dispatch-map';
+  /**
+   * 'dispatch-map' (No. 009, any scene with anchors): a generic dispatcher's map, read like a screen. A rough
+   * orange circle over the highway (approximate: soft rim, breathing ±4%) collapses over 0.6 s to an orange
+   * pin with an ink label at `collapseAt` (seconds after the box enters; default null: it stays rough).
+   * `collapsed`: the pin from the start (default false). The leader goes to `anchor` (default 'phone').
+   */
+  collapseAt?: number | null;
+  collapsed?: boolean;
+  /** 'dispatch-map': the pin's label (default 'MILE 137', 🎭). */
+  pinLabel?: string;
   /** 'usage' (street-slice): seconds after the box enters when the "Possible leak" banner gives way to the hourly page (default 1.2; 0 = the page at once). */
   pageAt?: number;
   /** 'usage': seconds after the box enters when the hourly bars start drawing (default `pageAt` + 0.3), and how long (default 1.2). */
@@ -111,7 +130,9 @@ const BORDER = 4;
 type SceneCtx = {props: Partial<SectionRoomSceneProps>; durationInFrames: number; offset: number; name?: string};
 
 export const DetailBox: React.FC<DetailBoxProps & {mood?: Mood; scene: SceneCtx}> = (p) =>
-  p.content === 'laptop' || p.content === 'usage' || p.content === 'register' ? (
+  p.content === 'dispatch-map' ? (
+    <DispatchBox {...p} />
+  ) : p.content === 'laptop' || p.content === 'usage' || p.content === 'register' ? (
     <StreetBox {...p} content={p.content} scene={{...p.scene, props: p.scene.props as Record<string, unknown>}} />
   ) : p.content === 'dashboard' || p.content === 'ev-dashboard' || p.content === 'gas-dashboard' ? (
     <DashboardBox {...p} />
@@ -546,6 +567,104 @@ const KeypadBox: React.FC<DetailBoxProps & {mood?: Mood; scene: SceneCtx}> = ({
   return (
     <div style={{position: 'absolute', inset: 0, opacity: enter}}>
       {leader ? (
+        <svg width={width} height={height} style={{position: 'absolute', inset: 0}}>
+          <polyline points={points} fill="none" stroke={ink} strokeWidth={2} strokeLinejoin="miter" />
+        </svg>
+      ) : null}
+      <Frame left={left} top={boxTop} w={outerW} h={outerH} ink={ink} paper={paper} rise={rise}>
+        <canvas ref={ref} width={innerW} height={innerH} style={{display: 'block', width: innerW, height: innerH}} />
+      </Frame>
+    </div>
+  );
+};
+
+/**
+ * The dispatcher's map box (No. 009, `content: 'dispatch-map'`): the map from `drawDispatchMap` (a dark,
+ * generic map, one highway line, no labels or brand), its rough orange circle breathing until `collapseAt`,
+ * then collapsing to the pin labelled `pinLabel`. A screen the viewer never sees in a hand (the dispatcher's),
+ * so the 2 px `ink` elbow leader goes to what sent the location: the scene's `anchor` (default 'phone', the
+ * caller's phone in a `car-slice`; e.g. a highway-slice window anchor). Without the anchor the box stands
+ * alone (no leader).
+ */
+const DispatchBox: React.FC<DetailBoxProps & {mood?: Mood; scene: SceneCtx}> = ({
+  size = 360,
+  side,
+  top,
+  left: leftAt,
+  leader = true,
+  collapseAt = null,
+  collapsed = false,
+  pinLabel = 'MILE 137',
+  anchor = 'phone',
+  mood = 'day',
+  scene,
+}) => {
+  const frame = useCurrentFrame();
+  const {fps, width, height} = useVideoConfig();
+  const ref = useRef<HTMLCanvasElement>(null);
+  const t = frame / fps;
+  const COLLAPSE = 0.6;
+  const shrink = collapsed ? 1 : collapseAt === null ? 0 : ease(t, collapseAt, collapseAt + COLLAPSE);
+  const circle = Math.round((1 - shrink) * 1000) / 1000;
+  // the pin drops in over the last part of the collapse
+  const pin = collapsed
+    ? 1
+    : collapseAt === null
+      ? 0
+      : ease(t, collapseAt + COLLAPSE * 0.55, collapseAt + COLLAPSE + 0.15);
+  // the slow breathing (±4%, 2.4 s), on the video clock so a box that leaves and comes back keeps its phase
+  const breathe = Math.round(0.04 * Math.sin(((frame + scene.offset) / fps / 2.4) * Math.PI * 2) * 1000) / 1000;
+  const innerW = size;
+  const innerH = Math.round(size * 0.86);
+  const key = `${circle}|${breathe}|${Math.round(pin * 1000)}|${pinLabel}|${innerW}`;
+  useLayoutEffect(() => {
+    const handle = delayRender('Drawing the dispatch map');
+    fontsReady().then(() => {
+      const cx = ref.current?.getContext('2d');
+      if (cx) drawDispatchMap(cx, innerW, innerH, {circle, breathe, pin, label: pinLabel});
+      continueRender(handle);
+    });
+    // `key` captures everything the drawing depends on
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
+  const target = anchorOnScreen({...scene, props: scene.props as Record<string, unknown>}, anchor, frame, fps);
+  const {ink, paper} = overlayInk(mood);
+  const outerW = innerW + 2 * BORDER;
+  const outerH = innerH + 2 * BORDER;
+  const onLeft = (side ?? (target && target[0] > width / 2 ? 'left' : 'right')) === 'left';
+  const left = leftAt ?? (onLeft ? LEFT : RIGHT - outerW);
+  const boxTop = top ?? Math.max(328, Math.min(1248 - outerH, (target ? target[1] : height / 2) - 70 - outerH));
+  const enter = ease(frame, 0, DETAIL_FADE);
+  const rise = interpolate(enter, [0, 1], [8, 0]);
+  const by = boxTop + outerH;
+  const lx = onLeft ? left + outerW - 28 : left + 28;
+  // the leader drops from the box's bottom edge to the target's height, then runs across to it (12 px short);
+  // a target under the box gets a straight drop. In a car-slice, when that run would cross the driver's head
+  // (a phone at the ear, the box beside the head), it leaves the box's side above the head instead, runs
+  // across and drops onto the phone
+  const under = target ? target[0] >= left + 12 && target[0] <= left + outerW - 12 : false;
+  const o = {frame: frame + scene.offset, fps, durationInFrames: scene.durationInFrames};
+  const carProps = scene.props as Partial<CarSliceSceneProps>;
+  const head = scene.name === 'car-slice' ? carHeadBoxOnScreen(carProps, carProps.driver ?? 'you', o) : undefined;
+  const crosses =
+    !!target &&
+    !!head &&
+    target[1] > head[2] - 12 &&
+    target[1] < head[3] + 12 &&
+    Math.min(lx, target[0]) < head[1] &&
+    Math.max(lx, target[0]) > head[0];
+  const sideX = target && target[0] < left ? left : left + outerW;
+  const overY = head ? Math.max(boxTop + 24, Math.min(by - 12, head[2] - 28)) : by;
+  const points = !target
+    ? ''
+    : under
+      ? `${target[0]},${by} ${target[0]},${Math.max(by, target[1] - 12)}`
+      : crosses
+        ? `${sideX},${overY} ${target[0]},${overY} ${target[0]},${Math.max(overY, target[1] - 12)}`
+        : `${lx},${by} ${lx},${target[1]} ${target[0] + (lx < target[0] ? -12 : 12)},${target[1]}`;
+  return (
+    <div style={{position: 'absolute', inset: 0, opacity: enter}}>
+      {leader && target ? (
         <svg width={width} height={height} style={{position: 'absolute', inset: 0}}>
           <polyline points={points} fill="none" stroke={ink} strokeWidth={2} strokeLinejoin="miter" />
         </svg>

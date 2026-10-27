@@ -44,6 +44,8 @@ The owner has seen the shopping cart, car key and hotel key card covered too oft
 | Trucks speed-limited | Many semis are capped by their engine computer at a set speed, which is why two trucks can take forever to pass each other | "That truck isn't slow because of its driver. Its computer won't let it go faster." | **shortlisted** (owner, 2026-10-24; car drivers vs truckers debate) |
 | Crumple zones | The front of a modern car is built to crush on purpose, so the car absorbs the crash instead of the people inside | "Your car is designed to fold up in a crash, and that's what protects you." | **shortlisted** (owner, 2026-10-24; "old cars were built like tanks" debate) |
 | Rain-sensing wipers | Invisible light bounces inside the windshield; raindrops change the reflection | "Your windshield knows it's raining before you do, because it's shining a light through the glass." | **shortlisted** |
+| How 911 finds you | When you call 911, many phones send their own GPS/Wi-Fi location to the dispatcher automatically, often far more precise than the cell tower's guess | "When you call 911, your phone tells the dispatcher where you are before you say a word." | **shortlisted** (owner, 2026-10-26; emergency topic) |
+| Crash detection calls 911 | Some phones and cars sense a crash (sudden deceleration, sound) and call for help if you don't respond | "If you crash and can't move, your phone might call 911 for you." | **shortlisted** (owner, 2026-10-26; emergency topic) |
 | Railroad crossing | The train's wheels and axles close a circuit between the rails | "The train lowers the crossing gates itself, with its own wheels." | candidate |
 | Ambulance and the green light | Emergency vehicles signal the traffic light ahead | "That fire truck just turned the light green." | candidate |
 | Pet microchip | No battery; powered for an instant by the scanner | "The chip in your dog has no battery, and it still answers when someone asks." | candidate |
@@ -51,6 +53,33 @@ The owner has seen the shopping cart, car key and hotel key card covered too oft
 | Self-dimming mirror | A gel layer darkens when bright headlights are behind you | "Your rear-view mirror dims itself, and there's a layer of gel inside it doing the work." | candidate |
 | Weigh station poles (merges "trucks weighed at speed") | Poles with a reader/camera before the weigh station, plus sensors in the road, weigh and identify a truck at highway speed and tell the driver bypass or pull in; a second pole after the station likely checks that trucks obeyed (to verify) | "Why is there a second pole after the weigh station?" or "That truck was weighed before it ever reached the scale." | **shortlisted** (owner, 2026-10-24: owner sees one pole before and one after the station) |
 | EV charging plug | The plug and the car agree on safe current before power flows | "When you plug in an electric car, the cable and the car talk before any power flows." | candidate |
+
+All unverified until researched.
+
+## Test: "big simple" topics (owner, 2026-10-27)
+
+**Why.** A similar account (@selfmade.engineer) reached 54.7K followers in about 15 days with 16 videos. Its hits explain big,
+famous things simply: "how a car works" got 6.8M views, a Tesla Roadster video 11.5M (riding news buzz). The videos run
+67–78 s, so length isn't the difference; the topic size is. Their top comments: "the most understandable way I've ever
+heard", "school should be this simple".
+
+**The test.** Make 2–3 videos on broad "how does X work" topics in our own style: the cut-open slice, verified facts, a calm
+voice, one story. Keep our look and wording rather than copying theirs. Compare views, average watch time and follows
+against our hidden-tech videos (No. 002, 004, 006 baseline in `brand/feedback.md`). Try big word-by-word captions on one
+of them as a second variable only if the first result is clear.
+
+**Rule of thumb.** The viewer already wonders about it ("I use this every day and have no idea how it works"). Pick from
+things we already have 3D parts for when possible. Jump on a topic when it's in the news.
+
+| Topic | Why it's big | Our existing parts | Status |
+|---|---|---|---|
+| How a car engine turns gas into motion | Everyone drives; few know | V8Bay, Gearbox, car slice | candidate (closest to their hit; make it ours: one story, cut-open bay) |
+| How your AC cools the house | Every US summer; costly bill | house/section parts | candidate |
+| How a fridge makes cold | Everyone has one | kitchen/section parts (freezer idea above) | candidate |
+| How a plane stays in the air | Universal fear and wonder | none (new build) | candidate |
+| How a toilet flushes without power | Everyday, funny, comment-friendly | house section | candidate |
+| How an elevator knows where to stop | Universal | none | candidate |
+| How a microwave heats food | Everyday | kitchen parts | candidate |
 
 All unverified until researched.
 

@@ -2,7 +2,7 @@ import React, {useMemo} from 'react';
 import * as THREE from 'three';
 import {HIGHWAY, MOODS, section, type Mood} from '../../theme';
 import {raw} from '../plaster';
-import {RoadSign, type RoadSignKind} from '../real/RoadSigns';
+import {RoadSign, type RoadSignFont, type RoadSignKind} from '../real/RoadSigns';
 import {cutMaterial, INK} from './cutLook';
 import {bendDepthMaterial, bendMaterial, bendPoint, bendUniforms, BEND_GLSL, type BendUniforms, type RoadBend} from './roadBend';
 import {mottle} from './StreetSlice';
@@ -95,6 +95,8 @@ export const SIGN_SPOTS: Record<RoadSignKind, {x: number; z: number}> = {
   speed: {x: 5.2, z: -8},
   mile: {x: 4.7, z: -28},
   guide: {x: 6.6, z: -34},
+  // No. 009: the exit direction sign with its EXIT plaque (its left edge just outside the guardrail)
+  exit: {x: 5.6, z: -36},
   // not used on the highway (the city slice's sign)
   oneway: {x: 5.2, z: -14},
 };
@@ -401,7 +403,7 @@ export type HighwaySliceProps = {
   /** Ink width scale for the cut face's outline (× the § 3 ink, 0.011): the scene keeps it ≈ 3 px from the groove close-up to the wide shot. */
   ink?: number;
   /** The signs (null for none): which, their legends, where (x, z), retroreflective brightening. */
-  signs?: {kind: RoadSignKind; text: string[]; x: number; z: number; retro?: number}[];
+  signs?: {kind: RoadSignKind; text: string[]; x: number; z: number; retro?: number; font?: RoadSignFont; id?: string}[];
   /** The W-beam guardrail on the right verge (default true). */
   guardrail?: boolean;
   /** After the rain: wet asphalt, puddles and the sky's sheen (`asphaltMaterial` `wet`), damp verges. Default false. */
@@ -693,13 +695,21 @@ export const HighwaySlice: React.FC<HighwaySliceProps> = ({
       {signs.map((s, i) => {
         if (!bend)
           return (
-            <RoadSign key={i} mood={mood} kind={s.kind} text={s.text} position={[s.x, groundAt(s.x), s.z]} retro={s.retro ?? 0} />
+            <RoadSign
+              key={s.id ?? i}
+              mood={mood}
+              kind={s.kind}
+              text={s.text}
+              position={[s.x, groundAt(s.x), s.z]}
+              retro={s.retro ?? 0}
+              font={s.font}
+            />
           );
         // on a bent road: placed on the bend and turned with it, still facing oncoming traffic
         const w = bendPoint(s.x, s.z, bend);
         return (
-          <group key={i} position={[w.x, 0, w.z]} rotation={[0, -w.yaw, 0]}>
-            <RoadSign mood={mood} kind={s.kind} text={s.text} position={[0, groundAt(s.x), 0]} retro={s.retro ?? 0} />
+          <group key={s.id ?? i} position={[w.x, 0, w.z]} rotation={[0, -w.yaw, 0]}>
+            <RoadSign mood={mood} kind={s.kind} text={s.text} position={[0, groundAt(s.x), 0]} retro={s.retro ?? 0} font={s.font} />
           </group>
         );
       })}

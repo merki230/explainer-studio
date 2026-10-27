@@ -131,8 +131,28 @@ const GLASS_SEDAN: P2[] = roundPoly(
 /** The sedan's roof foot, and how much lower its interior (seats, dash, the driver) sits than the crossover's. */
 const SEDAN = {roofFoot: 1.5, sink: 0.14};
 
-/** The whole car's shapes: 'crossover' (No. 005), 'sedan' (No. 006), 'coupe' (No. 007). */
-export type ShellProfile = 'crossover' | 'sedan' | 'coupe';
+/**
+ * The hatch's glasshouse (No. 009, `profile: 'hatch'`): the cut car's own outline seen whole (`RealCar`'s far
+ * side, `FAR`, lowered by `wholeSink` like every whole car), so YOU's car keeps its shape across a slide between
+ * highway-slice and car-slice: the windshield a little steeper than the crossover's, the roof ending at x ≈ −1.5
+ * and a long raked hatch falling to the tailgate's lip (the crossover's is near vertical). Lower body, roof
+ * height and interior as the crossover's (sink 0).
+ */
+const GLASS_HATCH: P2[] = roundPoly(
+  [
+    [1.24, 1.03, 0],
+    [0.42, 1.73, 0.24],
+    [-0.5, 1.77, 0.5],
+    [-1.45, 1.74, 0.3],
+    [-2.2, 1.21, 0.06],
+    [-2.27, 1.13, 0.05],
+    [-2.27, 1.03, 0],
+  ],
+  8,
+);
+
+/** The whole car's shapes: 'crossover' (No. 005), 'sedan' (No. 006), 'coupe' (No. 007), 'hatch' (No. 009). */
+export type ShellProfile = 'crossover' | 'sedan' | 'coupe' | 'hatch';
 
 /**
  * The coupe's lower body (No. 007, `profile: 'coupe'`): a generic two-door, the same wheelbase, arches
@@ -395,7 +415,8 @@ export const CarShell: React.FC<{
   mats: ShellMats;
   /**
    * 'crossover' (default, as No. 005), 'sedan' (lower roof, a short trunk deck; no spoiler or rear
-   * wiper) or 'coupe' (No. 007: two doors, a low roof, a long hood and a fastback; see `LOWER_COUPE`).
+   * wiper), 'coupe' (No. 007: two doors, a low roof, a long hood and a fastback; see `LOWER_COUPE`) or
+   * 'hatch' (No. 009: the cut car's silhouette, a raked hatch; see `GLASS_HATCH`).
    */
   profile?: ShellProfile;
   /**
@@ -408,6 +429,7 @@ export const CarShell: React.FC<{
 }> = ({mats, profile = 'crossover', style: styleIn}) => {
   const sedan = profile === 'sedan';
   const coupe = profile === 'coupe';
+  const hatch = profile === 'hatch';
   const style = coupe ? styleIn : undefined;
   const muscle = style === 'muscle';
   const electric = style === 'electric';
@@ -418,7 +440,7 @@ export const CarShell: React.FC<{
   const geo = useMemo(() => {
     const H = SHELL.half;
     const G = SHELL.glassHalf;
-    const GLASS = coupe ? GLASS_COUPE : sedan ? GLASS_SEDAN : GLASS_CROSSOVER;
+    const GLASS = coupe ? GLASS_COUPE : sedan ? GLASS_SEDAN : hatch ? GLASS_HATCH : GLASS_CROSSOVER;
     const T = coupe ? COUPE.tumble : TUMBLE;
     const lower = bevelExtrude(toShape(LB), -H, H, SHELL.bevel);
     const RF = coupe ? COUPE.roofFoot : sedan ? SEDAN.roofFoot : SHELL.roofFoot;
@@ -500,7 +522,7 @@ export const CarShell: React.FC<{
         Math.PI,
       ),
     };
-  }, [sedan, coupe, LB, lampY]);
+  }, [sedan, coupe, hatch, LB, lampY]);
   const {xr} = geo;
 
   return (
@@ -525,7 +547,15 @@ export const CarShell: React.FC<{
         <planeGeometry args={[coupe ? 2.8 : sedan ? 2.88 : 3.24, 2 * SHELL.glassHalf]} />
       </mesh>
       {geo.garnish ? <mesh geometry={geo.garnish} material={mats.trim} castShadow /> : null}
-      {sedan || coupe ? (
+      {hatch ? (
+        // the hatch: the high brake lamp under the roof's back edge, laid on the raked glass (no spoiler or wiper)
+        <mesh
+          geometry={roundedBox(0.02, 0.018, 0.34, 0.008, 2)}
+          material={mats.tailBright}
+          position={[-1.6, 1.655, 0]}
+          rotation={[0, 0, 0.95]}
+        />
+      ) : sedan || coupe ? (
         // the sedan's high brake lamp at the foot of the rear window (the coupe's on its deck, behind the fastback)
         <mesh
           geometry={roundedBox(0.03, 0.022, 0.36, 0.008, 2)}

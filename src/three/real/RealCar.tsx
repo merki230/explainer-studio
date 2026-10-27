@@ -552,7 +552,8 @@ export type RealCarProps = {
   /** The paint colour, overriding `body`'s (a theme token, e.g. `CITY.carBodies`; never red or orange). Default none. */
   paint?: string;
   /**
-   * The car's shape: 'crossover' (default), 'sedan' (whole car only: lower roof, a trunk; cut, it is
+   * The car's shape: 'crossover' (default), 'hatch' (whole car only, No. 009: the cut car's own outline,
+   * a raked hatch, so a car seen whole and then cut keeps its shape; cut, it is the crossover), 'sedan' (whole car only: lower roof, a trunk; cut, it is
    * the crossover) or 'coupe' (No. 007: two doors, low, a long hood and a fastback, whole and cut; cut,
    * its seats sit lower (`carLayout`) and it has no rear seats; no maker's silhouette).
    */

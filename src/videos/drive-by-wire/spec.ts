@@ -161,6 +161,8 @@ const R_CURVE_IN: Framing = {look: [-6.5, -3.4, -17.8], distance: 38};
 const MUSIC_LEVEL = -18.4;
 
 const picture: VideoSpec = {
+  // posted video: wheels exactly as published (`three/real/wheelMotion.ts`); new videos leave this out
+  wheels: 'legacy',
   watermark: null,
   tail: TAIL,
   music: {level: MUSIC_LEVEL, duckDb: 0, startAt: 0, fadeIn: 1.5},

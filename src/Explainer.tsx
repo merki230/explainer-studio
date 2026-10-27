@@ -51,6 +51,7 @@ import {transitionInto, type Transition} from './scenes/transitions';
 import {clickOffFrame, type ClickOff} from './scenes/clickOff';
 import {fonts} from './fonts';
 import {FADE, FPS, theme, type Mood} from './theme';
+import {WHEEL_SCENES} from './three/real/wheelMotion';
 import {findCue, resolveTimeline, type ResolvedOverlay, type ResolvedScene} from './timeline';
 import type {Word} from './types';
 import {VIDEOS} from './videos';
@@ -380,6 +381,8 @@ const ExplainerBody: React.FC<{
     const props: Record<string, unknown>[] = [];
     timeline.scenes.forEach((s, i) => {
       const own = {...(s.props ?? {})};
+      // a posted video's wheel pin (`VideoSpec.wheels`) reaches every wheel scene that doesn't set its own
+      if (video.wheels && own.wheels === undefined && WHEEL_SCENES.includes(s.scene)) own.wheels = video.wheels;
       const t = into[i];
       const cam = CAMERAS[s.scene];
       if ((t?.kind === 'continue' || t?.kind === 'glide') && cam && timeline.scenes[i - 1].scene === s.scene) {
@@ -406,7 +409,7 @@ const ExplainerBody: React.FC<{
       props.push(own);
     });
     return {into, props};
-  }, [timeline]);
+  }, [timeline, video.wheels]);
   return (
     <AbsoluteFill style={{backgroundColor: theme.museum}}>
       {timeline.scenes.map((s, i) => {

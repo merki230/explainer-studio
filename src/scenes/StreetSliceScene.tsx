@@ -6,6 +6,7 @@ import {MOODS, section, type Mood} from '../theme';
 import {OrangePath} from '../three/OrangePath';
 import {raw} from '../three/plaster';
 import {TRUCK, truckToWorld, UtilityTruck, type TruckDirection} from '../three/real/UtilityTruck';
+import {capSpeed, cappedTravel, wheelMode, wheelSmear, type WheelMode} from '../three/real/wheelMotion';
 import {METER, RADIO} from '../three/real/WaterMeter';
 import type {Gesture} from '../three/rig';
 import {
@@ -19,7 +20,7 @@ import {SectionLights, SectionStage} from '../three/section/SectionStage';
 import {STREET_LAYOUT, StreetSlice, YOU_REST_HANDS} from '../three/section/StreetSlice';
 import {skyTexture} from '../three/section/textures';
 import {RadioPulse} from '../three/TirePieces';
-import {ease, framingAtKeys, integrateSpeed, type CameraKey, type SpeedKey} from './keyframes';
+import {ease, framingAtKeys, integrateSpeed, speedAt, type CameraKey, type SpeedKey} from './keyframes';
 
 type V3 = [number, number, number];
 const L = STREET_LAYOUT;
@@ -98,6 +99,12 @@ export type StreetSliceSceneProps = {
   drift?: number;
   /** The truck, or null for none (default none). */
   truck?: StreetTruck | null;
+  /**
+   * How the truck's wheels turn (`three/real/wheelMotion.ts`): 'forward' (default: rolling forward in either
+   * direction, the visual turn capped at 26° a frame above ≈ 5.4 m/s, the spokes smeared above it) or 'legacy'
+   * (posted videos only: No. 004 as rendered, the wheels turning backward).
+   */
+  wheels?: WheelMode;
   /**
    * Camera tracking for a truck at road speed: from `at` (s) the look-at point eases (over `blend` s,
    * default 0.6) from the keyed framing onto the truck's cab (+ `offset`, default [0, −0.6, 0]), and the
@@ -370,6 +377,16 @@ export const StreetSliceScene: React.FC<StreetSliceSceneProps> = (props) => {
     [],
   );
   const truck = props.truck ? truckAt(props.truck, t) : null;
+  // the truck's wheels: a negative turn rolls it forward (`UtilityTruck`); 'legacy' keeps No. 004's backward turn
+  const truckWheels = (() => {
+    const keys = props.truck?.speed ?? [{at: 0, speed: 9}];
+    const R = TRUCK.wheelR;
+    const realBlur = ((integrateSpeed(keys, t + 0.5 / fps, 0.8) - integrateSpeed(keys, t - 0.5 / fps, 0.8)) / R) * 0.5;
+    if (wheelMode(props.wheels) === 'legacy') return {spin: (truck?.travelled ?? 0) / R, blur: realBlur};
+    const cap = capSpeed(R, fps);
+    const rolled = cappedTravel((x) => speedAt(keys, x, 0.8), t, cap);
+    return {spin: -rolled / R, blur: -wheelSmear(realBlur, speedAt(keys, t, 0.8), cap)};
+  })();
   const {sweep, leak} = streetDialAt(props, t);
   const radioOpen = props.radioCut
     ? ease(t, props.radioCut.at, props.radioCut.at + 0.8) *
@@ -492,13 +509,8 @@ export const StreetSliceScene: React.FC<StreetSliceSceneProps> = (props) => {
             mood={mood}
             at={truck.at}
             direction={truck.direction}
-            spin={truck.travelled / TRUCK.wheelR}
-            blur={
-              ((integrateSpeed(props.truck?.speed ?? [{at: 0, speed: 9}], t + 0.5 / fps, 0.8) -
-                integrateSpeed(props.truck?.speed ?? [{at: 0, speed: 9}], t - 0.5 / fps, 0.8)) /
-                TRUCK.wheelR) *
-              0.5
-            }
+            spin={truckWheels.spin}
+            blur={truckWheels.blur}
             dot={truckDot}
             clockOffset={startFrame / fps}
           />

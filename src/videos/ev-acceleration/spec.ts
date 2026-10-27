@@ -713,6 +713,8 @@ const scenes: SceneSpec[] = [
 ];
 
 export const spec: VideoSpec = {
+  // posted video: wheels exactly as published (`three/real/wheelMotion.ts`); new videos leave this out
+  wheels: 'legacy',
   watermark: null,
   tail: TAIL,
   // Cover still (`yarn cover ev-acceleration`): both coupes mid-run near 100 mph, text in the sky band.

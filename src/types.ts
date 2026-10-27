@@ -183,5 +183,11 @@ export type VideoSpec = {
    * with a console warning.
    */
   voice?: {src?: string};
+  /**
+   * How every wheel in the video turns, for scenes that don't set their own `wheels` (`three/real/wheelMotion.ts`).
+   * Omit it: new videos get 'forward' (rolling the right way, never strobing backward). 'legacy' exists only to
+   * keep posted videos (No. 001–008) rendering exactly as published; never use it in a new video.
+   */
+  wheels?: 'legacy' | 'forward';
   scenes: SceneSpec[];
 };

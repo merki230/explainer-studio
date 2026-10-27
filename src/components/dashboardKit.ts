@@ -1,5 +1,5 @@
 import {fonts} from '../fonts';
-import {section} from '../theme';
+import {MOODS, section} from '../theme';
 
 /** The cluster's own colours: a dark instrument face (a device screen, the same in both moods). */
 const FACE = '#15171a';
@@ -271,4 +271,133 @@ export const drawGasCluster = (cx: CanvasRenderingContext2D, w: number, h: numbe
   cx.font = `700 ${Math.round(28 * u)}px ${fonts.sans}, Arial`;
   cx.fillText('MPH', w - 20 * u, 150 * u);
   cx.restore();
+};
+
+export type DispatchMapState = {
+  /** The rough-location circle's size, 0 (gone: collapsed to the pin) → 1 (its full radius, a third of the width). */
+  circle: number;
+  /** The circle's breathing (± share of the radius, e.g. 0.04 · sin), added to `circle` while it is up. */
+  breathe?: number;
+  /** The pin, 0 (not there) → 1 (dropped in place). */
+  pin: number;
+  /** The ink label beside the pin (e.g. "MILE 137"); shown with the pin. */
+  label: string;
+};
+
+/**
+ * A generic dispatcher's map (No. 009), drawn into a w × h canvas: a dark Night-UI map (the screen kit's
+ * `#121318`), faint terrain patches and minor roads, one grey highway line across it, **no labels, no real
+ * map data, no brand**. The caller's location is the system's mark (§ 1): a **rough circle** (translucent
+ * `orange`, a soft brighter rim, so it reads as approximate) whose centre sits a little off the highway, and,
+ * once collapsed, an **orange pin** on the highway with an ink label beside it (Inter 700, ≥ 28 px at the
+ * detail box's size). The circle shrinks toward the pin as `circle` falls.
+ */
+export const drawDispatchMap = (cx: CanvasRenderingContext2D, w: number, h: number, s: DispatchMapState) => {
+  cx.save();
+  cx.setTransform(1, 0, 0, 1, 0, 0);
+  const u = w / 360;
+  cx.fillStyle = MAP_BG;
+  cx.fillRect(0, 0, w, h);
+  // faint terrain: soft patches of the ink at a few percent
+  const patches: [number, number, number, number][] = [
+    [0.18, 0.22, 0.2, 0.05],
+    [0.82, 0.3, 0.24, 0.04],
+    [0.3, 0.82, 0.26, 0.045],
+    [0.78, 0.86, 0.18, 0.035],
+  ];
+  for (const [px, py, pr, a] of patches) {
+    const g = cx.createRadialGradient(px * w, py * h, 0, px * w, py * h, pr * w);
+    g.addColorStop(0, rgba(INK, a));
+    g.addColorStop(1, rgba(INK, 0));
+    cx.fillStyle = g;
+    cx.fillRect(0, 0, w, h);
+  }
+  // minor roads: thin, faint
+  cx.strokeStyle = rgba(INK, 0.1);
+  cx.lineWidth = 2 * u;
+  cx.lineCap = 'round';
+  for (const [a, b, c, d] of [
+    [0.05, 0.62, 0.42, 0.46],
+    [0.6, 0.05, 0.7, 0.4],
+    [0.55, 0.7, 0.95, 0.62],
+    [0.2, 0.95, 0.28, 0.66],
+  ]) {
+    cx.beginPath();
+    cx.moveTo(a * w, b * h);
+    cx.lineTo(c * w, d * h);
+    cx.stroke();
+  }
+  // the highway: one grey line from lower left to upper right, a gentle bend
+  const hw = (k: number): [number, number] => [
+    w * (-0.05 + 1.1 * k),
+    h * (0.92 - 0.84 * k + 0.12 * Math.sin(Math.PI * k)),
+  ];
+  cx.strokeStyle = DIM;
+  cx.lineWidth = 10 * u;
+  cx.beginPath();
+  for (let i = 0; i <= 40; i++) {
+    const [x, y] = hw(i / 40);
+    if (i === 0) cx.moveTo(x, y);
+    else cx.lineTo(x, y);
+  }
+  cx.stroke();
+  // where the caller is (on the highway) and the rough circle's centre (a little off it)
+  const [pinX, pinY] = hw(0.46);
+  const k = Math.max(0, Math.min(1, s.circle));
+  if (k > 0.001) {
+    const r = w * 0.33 * k * (1 + (s.breathe ?? 0));
+    const ccx = pinX + w * 0.09 * k;
+    const ccy = pinY - h * 0.06 * k;
+    const g = cx.createRadialGradient(ccx, ccy, 0, ccx, ccy, r);
+    const fade = Math.min(1, k * 4);
+    g.addColorStop(0, rgba(section.orange, 0.18 * fade));
+    g.addColorStop(0.7, rgba(section.orange, 0.2 * fade));
+    g.addColorStop(0.88, rgba(section.orange, 0.34 * fade));
+    g.addColorStop(1, rgba(section.orange, 0));
+    cx.fillStyle = g;
+    cx.beginPath();
+    cx.arc(ccx, ccy, r, 0, Math.PI * 2);
+    cx.fill();
+  }
+  // the pin: an orange drop on the highway, its point on the caller, a dark eye; the label beside it
+  const p = Math.max(0, Math.min(1, s.pin));
+  if (p > 0.001) {
+    const ph = 46 * u * p;
+    const pr = ph * 0.36;
+    const top = pinY - ph;
+    cx.fillStyle = section.orange;
+    cx.beginPath();
+    cx.moveTo(pinX, pinY);
+    cx.bezierCurveTo(pinX - pr * 0.4, pinY - ph * 0.35, pinX - pr * 1.05, top + pr * 1.3, pinX - pr, top + pr);
+    cx.arc(pinX, top + pr, pr, Math.PI, 0);
+    cx.bezierCurveTo(pinX + pr * 1.05, top + pr * 1.3, pinX + pr * 0.4, pinY - ph * 0.35, pinX, pinY);
+    cx.fill();
+    cx.fillStyle = MAP_BG;
+    cx.beginPath();
+    cx.arc(pinX, top + pr, pr * 0.42, 0, Math.PI * 2);
+    cx.fill();
+    // the label: Inter 700, on a dark halo so it reads over the line
+    cx.globalAlpha = Math.max(0, Math.min(1, (p - 0.5) * 2));
+    cx.font = `700 ${Math.round(30 * u)}px ${fonts.sans}, Arial`;
+    cx.textAlign = 'left';
+    cx.textBaseline = 'middle';
+    const lx = pinX + pr + 14 * u;
+    const ly = top + pr;
+    const tw = cx.measureText(s.label).width;
+    cx.fillStyle = rgba(MAP_BG, 0.85);
+    cx.fillRect(lx - 8 * u, ly - 22 * u, tw + 16 * u, 44 * u);
+    cx.fillStyle = INK;
+    cx.fillText(s.label, lx, ly + 1 * u);
+    cx.globalAlpha = 1;
+  }
+  cx.restore();
+};
+
+/** The map's ground: the Night phone UI (style guide § 8 phone-screen kit), a lit screen in both moods. */
+const MAP_BG = MOODS.night.ui;
+
+/** `#rrggbb` → `rgba(r, g, b, a)`. */
+const rgba = (hex: string, a: number) => {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${a})`;
 };

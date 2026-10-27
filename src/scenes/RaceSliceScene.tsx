@@ -5,9 +5,11 @@ import {HIGHWAY, MOODS, RACE, type Mood} from '../theme';
 import {raw} from '../three/plaster';
 import {gearShiftAt, type GearKey} from '../three/real/GasDrive';
 import {CAR_LAYOUT} from '../three/real/RealCar';
+import {wheelMode, type WheelMode} from '../three/real/wheelMotion';
 import {
   layoutOf,
   simRevs,
+  wheelTurnRevs,
   SlicedCar,
   slicedCarCrank,
   toWorld,
@@ -132,12 +134,19 @@ export type RaceCar = Partial<SlicedCarOptions> & {
 /** Race state handed on by Explainer on a `continue` / glide (set by Explainer, not by specs). */
 export type RaceCarry = {
   raceFrom?: number;
-  ev?: {from: number; revsFrom: number};
-  gas?: {from: number; revsFrom: number; crankFrom: number};
+  ev?: {from: number; revsFrom: number; wheelFrom?: number};
+  gas?: {from: number; revsFrom: number; crankFrom: number; wheelFrom?: number};
 };
 
 export type RaceSliceSceneProps = {
   durationInFrames: number;
+  /**
+   * How both cars' wheels turn (`three/real/wheelMotion.ts`; a car's own `wheels` wins): 'forward' (default: the
+   * drawn turn capped under the rim's alias limit, 26° a frame for the muscle car's 5 twin spokes, 13° for the
+   * electric car's 10-blade turbine, the spokes smeared above it) or 'legacy' (posted videos only: No. 007 as
+   * rendered, the real rate, which strobes through the launch).
+   */
+  wheels?: WheelMode;
   /** Day (default) or Night. */
   mood?: Mood;
   /**
@@ -380,7 +389,12 @@ const specOf = (p: Partial<RaceSliceSceneProps>, w: Which): RaceCar => {
   return {
     ...base,
     ...(carry
-      ? {from: carry.from, revsFrom: carry.revsFrom, ...('crankFrom' in carry ? {crankFrom: carry.crankFrom} : {})}
+      ? {
+          from: carry.from,
+          revsFrom: carry.revsFrom,
+          ...('crankFrom' in carry ? {crankFrom: carry.crankFrom} : {}),
+          ...(carry.wheelFrom !== undefined ? {wheelFrom: carry.wheelFrom} : {}),
+        }
       : {}),
     ...own,
   };
@@ -483,6 +497,7 @@ export const raceCarOptions = (p: Partial<RaceSliceSceneProps>, w: Which, fps = 
   const auto = w === 'gas' ? gasAuto(p, c, fps) : {};
   return {
     ...car,
+    ...(car.wheels ?? p.wheels ? {wheels: car.wheels ?? p.wheels} : {}),
     mood: p.mood ?? 'day',
     road: 'street',
     timeScale: p.timeScale,
@@ -574,11 +589,16 @@ export const raceCarry = (
   return {
     carry: {
       ...(clock !== undefined ? {raceFrom: clock} : {}),
-      ev: {from: stripPos(p, 'ev', t, fps) - STAGED, revsFrom: simRevs(ev, t, fps)},
+      ev: {
+        from: stripPos(p, 'ev', t, fps) - STAGED,
+        revsFrom: simRevs(ev, t, fps),
+        ...(wheelMode(ev.wheels) === 'forward' ? {wheelFrom: wheelTurnRevs(ev, t, fps)} : {}),
+      },
       gas: {
         from: stripPos(p, 'gas', t, fps) - STAGED,
         revsFrom: simRevs(gas, t, fps),
         crankFrom: slicedCarCrank(gas, t),
+        ...(wheelMode(gas.wheels) === 'forward' ? {wheelFrom: wheelTurnRevs(gas, t, fps)} : {}),
       },
     },
   };

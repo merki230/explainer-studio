@@ -180,6 +180,8 @@ const FOLLOWER_BRAKE = T.lights2 - 0.8;
 const MUSIC_LEVEL = -18.6;
 
 const picture: VideoSpec = {
+  // posted video: wheels exactly as published (`three/real/wheelMotion.ts`); new videos leave this out
+  wheels: 'legacy',
   watermark: null,
   tail: TAIL,
   // our own bed (`audio/music.mp3`, 71 s, No. 005's prompt) from frame 0 with a 1.5 s fade-in, no duck, no dips

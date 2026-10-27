@@ -5,6 +5,7 @@ import {CAST_NEUTRAL, HIGHWAY, MOODS, type Mood} from '../theme';
 import {raw} from '../three/plaster';
 import {CAR_LAYOUT, RealCar} from '../three/real/RealCar';
 import {RealWheel} from '../three/real/RealWheel';
+import {capSpeed, cappedTravel, wheelMode, wheelSmear, type WheelMode} from '../three/real/wheelMotion';
 import {Figure} from '../three/section/Figure';
 import {
   DEFAULT_GROUPS,
@@ -66,6 +67,12 @@ export type MusicalCar = {
 
 export type MusicalRoadSceneProps = {
   durationInFrames: number;
+  /**
+   * How the car's wheels turn (`three/real/wheelMotion.ts`): 'forward' (default: the visual turn capped at 26° a
+   * frame above ≈ 4.9 m/s, the spokes smeared above it, so a fast car never strobes backward) or 'legacy' (posted
+   * videos only: No. 005 as rendered, the real rate, which strobes above ≈ 6.8 m/s, e.g. the 7 m/s default).
+   */
+  wheels?: WheelMode;
   /** Day (default) or Night. */
   mood?: Mood;
   /** Framing preset (default 'road'). */
@@ -363,6 +370,16 @@ export const MusicalRoadScene: React.FC<MusicalRoadSceneProps> = (props) => {
           integrateSpeed(carSpec.speed ?? DEFAULT_SPEED, t - shutter / 2, 0.8)) /
         R
       : 0;
+  // wheels that never strobe backward (`wheels`, default 'forward'; 'legacy' for posted videos)
+  const fwd = wheelMode(props.wheels) === 'forward';
+  const wheelCap = capSpeed(R, fps);
+  const wheelTurn =
+    carSpec && car
+      ? fwd
+        ? cappedTravel((x) => speedAt(carSpec.speed ?? DEFAULT_SPEED, x, 0.8), t, wheelCap) / R
+        : car.travelled / R
+      : 0;
+  const wheelSmeared = carSpec && car && fwd ? (car.speed < 0 ? -1 : 1) * wheelSmear(wheelBlur, car.speed, wheelCap) : wheelBlur;
   const headlights = carSpec ? (carSpec.headlights ?? night) : false;
   const tail = carSpec ? (carSpec.tail ?? night) : false;
 
@@ -443,7 +460,7 @@ export const MusicalRoadScene: React.FC<MusicalRoadSceneProps> = (props) => {
             {[C.axleX.front, C.axleX.rear].map((ax) =>
               [-1, 1].map((s) => {
                 const near = s > 0;
-                const spin = car.travelled / R;
+                const spin = wheelTurn;
                 return (
                   <RealWheel
                     key={`${ax}${s}`}
@@ -453,7 +470,7 @@ export const MusicalRoadScene: React.FC<MusicalRoadSceneProps> = (props) => {
                     radius={R}
                     cut="none"
                     spin={near ? -spin : spin}
-                    motionBlur={near ? -wheelBlur : wheelBlur}
+                    motionBlur={near ? -wheelSmeared : wheelSmeared}
                     low={!near}
                     ink={false}
                     valve={false}

@@ -216,6 +216,16 @@ export type FigureProps = {
   shoe?: string;
   /** An open-face helmet instead of the hair (No. 007's testers): the shell's and the raised visor's colours (theme tokens). Default none. */
   helmet?: {shell: string; visor: string};
+  /**
+   * A one-handed phone call (No. 009): 0 = the phone low in one hand in front of the chest, screen to the
+   * eyes (dialling), 1 = at the ear, screen toward the head (style guide § 3: never to the camera); in
+   * between it swings out and up (pass an eased value). The phone follows the head (glances carry it). The
+   * holding hand leaves its `hands` target, the other keeps it. Default undefined: no call phone (the
+   * two-handed `phone` is drawn as before). Use with `phone: false`.
+   */
+  callPhone?: number;
+  /** Which hand and ear hold the call phone: 'right' (default) or 'left' (the figure's own sides). */
+  callSide?: 'right' | 'left';
 };
 
 /**
@@ -257,6 +267,67 @@ const legIK = (leg: LegTarget, side: number) => {
   return {hip: h, knee: k, ankle: -(leg.pitch ?? 0) - h - k, yaw: lat ? Math.atan2(lat, dz0) : 0};
 };
 
+/** The call phone held low in one hand (chest frame): in front of the chest, its screen tipped up to the eyes. */
+const CALL_LOW = {
+  pos: (sd: number) => V(sd * 0.13, 0.2, 0.34),
+  q: new THREE.Quaternion().setFromEuler(new THREE.Euler(0.8, 0, 0)),
+};
+
+/**
+ * The call phone's pose in the chest's frame (see `FigureProps.callPhone`): `k` 0 (low) → 1 (at the ear),
+ * the head's current turn included, and the holding wrist's target behind its lower half.
+ */
+const callPose = (
+  k: number,
+  side: 'right' | 'left',
+  pose: ReturnType<typeof poseAt>,
+  neckE: THREE.Euler,
+  headE: THREE.Euler,
+) => {
+  // figure +x is the figure's left
+  const sd = side === 'left' ? 1 : -1;
+  const one = V(1, 1, 1);
+  const c = REST.headCentre;
+  const face = new THREE.Matrix4()
+    .compose(REST.neck.clone().sub(REST.chest), new THREE.Quaternion().setFromEuler(neckE), one)
+    .multiply(
+      new THREE.Matrix4().compose(
+        V(
+          REST.head.x - REST.neck.x + pose.headShift[0],
+          REST.head.y - REST.neck.y + pose.headShift[1],
+          REST.head.z - REST.neck.z + pose.headShift[2],
+        ),
+        new THREE.Quaternion().setFromEuler(headE),
+        one,
+      ),
+    )
+    .multiply(
+      new THREE.Matrix4().compose(
+        V(c.x, c.y, c.z),
+        new THREE.Quaternion().setFromEuler(new THREE.Euler(FACE_PITCH, 0, 0)),
+        one,
+      ),
+    );
+  // at the ear (face frame): the top by the ear, the bottom toward the mouth, the screen (−z) toward the head
+  const up = V(0, 0.75, -0.66).normalize();
+  const zl = V(sd, 0, 0);
+  const xl = up.clone().cross(zl).normalize();
+  const earQ = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(xl, up, zl));
+  const fp = new THREE.Vector3();
+  const fq = new THREE.Quaternion();
+  face.decompose(fp, fq, new THREE.Vector3());
+  const earPos = V(sd * 0.19, -0.05, 0.035).applyMatrix4(face);
+  const earQc = fq.clone().multiply(earQ);
+  const pos = CALL_LOW.pos(sd)
+    .lerp(earPos, k)
+    // it swings out past the cheek on the way up
+    .add(V(sd * 0.07 * Math.sin(Math.PI * k), 0, 0));
+  const q = CALL_LOW.q.clone().slerp(earQc, k);
+  // the wrist behind the phone's lower half (+z: the back, away from the screen)
+  const grip = V(0, -0.055, 0.05).applyQuaternion(q).add(pos);
+  return {pos, q, grip};
+};
+
 /** How far the body rises standing up (the thigh's length): the seated hip at 0.6 → 1.07. */
 export const STAND_LIFT = 0.47;
 
@@ -289,6 +360,8 @@ export const Figure: React.FC<FigureProps> = ({
   footScale,
   shoe: shoeColor,
   helmet,
+  callPhone,
+  callSide = 'right',
 }) => {
   const frame = useCurrentFrame();
   const stand = stance === 'stand';
@@ -393,6 +466,18 @@ export const Figure: React.FC<FigureProps> = ({
   const grips = hands
     ? [toChest([hands[0][0], hands[0][1] - lift, hands[0][2]]), toChest([hands[1][0], hands[1][1] - lift, hands[1][2]])]
     : ph.grips;
+  // the call phone (No. 009): its pose in the chest's frame, blended from low in the hand to the ear
+  const call =
+    callPhone === undefined ? null : callPose(Math.max(0, Math.min(1, callPhone)), callSide, pose, neckE, headE);
+  if (call) {
+    const hi = callSide === 'left' ? 1 : 0;
+    grips[hi] = call.grip;
+    // without `hands`, the free hand rests in the lap instead of on the two-handed phone
+    if (!hands)
+      grips[1 - hi] = REST.wrist(hi ? -1 : 1)
+        .sub(REST.chest)
+        .add(V(0, -0.12, -0.02));
+  }
   const arms = [0, 1].map((i) => {
     const s = i === 0 ? -1 : 1;
     const shoulder = REST.shoulder(s)
@@ -566,7 +651,23 @@ export const Figure: React.FC<FigureProps> = ({
                 </group>
               );
             })}
-            {holdsPhone ? (
+            {call ? (
+              <group position={call.pos} quaternion={call.q}>
+                <mesh geometry={PHONE_BODY} material={mats.device} castShadow receiveShadow />
+                {/* the screen on the back (−z) face: toward the holder's eyes, then the head */}
+                <mesh position={[0, 0, -PHONE.d / 2 - 0.0006]} rotation={[0, Math.PI, 0]} material={screenMat}>
+                  <planeGeometry args={[PHONE.w - 0.015, PHONE.h - 0.02]} />
+                </mesh>
+                <pointLight
+                  position={[0, 0.04, -0.04]}
+                  color={raw(section.screenLight)}
+                  intensity={(0.15 + 0.45 * on) * 0.15}
+                  distance={0.9}
+                  decay={2}
+                />
+              </group>
+            ) : null}
+            {holdsPhone && !call ? (
               <group position={ph.pos} rotation={ph.euler}>
                 {real ? (
                   // the realistic phone, its screen on the −z face (toward the holder's eyes)

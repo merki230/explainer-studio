@@ -8,7 +8,8 @@ const hex = (h: string) => {
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
 };
 const toHex = (c: number[]) => `#${c.map((v) => Math.round(v).toString(16).padStart(2, '0')).join('')}`;
-const mixHex = (a: string, b: string, k: number) => {
+/** Two hex colours mixed (k 0 → a, 1 → b); non-hex values switch at the midpoint. */
+export const mixHex = (a: string, b: string, k: number) => {
   if (!a.startsWith('#') || !b.startsWith('#')) return k < 0.5 ? a : b;
   const x = hex(a);
   const y = hex(b);

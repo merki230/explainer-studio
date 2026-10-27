@@ -49,6 +49,11 @@ out/<slug>/raw/         scratch only: raw mix, music/sfx/voice takes, stills, re
 - `yarn sfx:click <slug> [--name click] [--force]`: self-made phone-lock click (free, deterministic)
 - `yarn sfx:rumble <slug> [--name] [--seconds] [--lufs] [--pitch] [--reso] [--cutoff] [--drive] [--attack]`: self-made
   rumble-strip growl, 88 thumps/s plus road noise, into `out/<slug>/raw/sfx/` (free, deterministic; recipes in `docs/playbook.md`)
+- `yarn sfx:gravel|hazard|phone|night|diesel <slug> [--name] [--out] [--seconds] [--lufs] [kind options]`: self-made roadside sounds
+  (gravel stop, 1.4 Hz hazard relay, DTMF 9-1-1 + US ringback, night bed, diesel pickup stop; No. 009) into
+  `out/<slug>/raw/sfx/` (free, deterministic; `yarn sfx:engine <slug> --die` = gas-engine stall; recipes in `docs/playbook.md`)
+- `yarn sfx:cruise <slug> day|night [--name] [--seconds] [--lufs] [--ramp dB] ...`: highway cruise heard from outside (dry tire roar +
+  distant four-cylinder, mixed from `sfx:hiss`/`sfx:engine` stems; No. 009) into `out/<slug>/raw/sfx/` (free, deterministic; header lists options)
 - `yarn voice:room <slug> [--wet <dB>] [--size <0..1>] [--width <0..1>] [--out <name>]`: optional light room on the
   voiceover (free, local). Not the default: the owner prefers the dry voice
 - `yarn transcribe <slug> [audio]`: Scribe v2 timings from a human recording (costs money, ask first)

@@ -189,6 +189,8 @@ const SOUND: Record<number, OverlaySpec[]> = {
 };
 
 const picture: VideoSpec = {
+  // posted video: wheels exactly as published (`three/real/wheelMotion.ts`); new videos leave this out
+  wheels: 'legacy',
   watermark: null,
   // starts at frame 0 (startAt: 0), fades in over 1.5 s, out to silence at the end (owner, 2026-10-18)
   music: {src: `audio/music-${MUSIC_TAKE}.mp3`, level: MUSIC_LEVEL[MUSIC_TAKE], duckDb: 0, startAt: 0, fadeIn: 1.5},

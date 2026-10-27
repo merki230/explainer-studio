@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import {CITY, MOODS, type Mood} from '../theme';
 import {CAR_LAYOUT} from '../three/real/RealCar';
 import {carToWorld, DrivingCar} from '../three/real/DrivingCar';
+import {capSpeed, cappedTravel, wheelMode, wheelSmear, type WheelMode} from '../three/real/wheelMotion';
 import type {RoadSignKind} from '../three/real/RoadSigns';
 import {SIGN_SIZE} from '../three/real/RoadSigns';
 import {CITY_LAYOUT, CITY_SIGN_SPOTS, CitySlice, cityIntersection, type SignalState} from '../three/section/CitySlice';
@@ -148,6 +149,12 @@ export type CitySliceSceneProps = {
   trees?: boolean;
   /** The shutter (fraction of a frame, default 0.5): the wheels' motion blur. */
   shutter?: number;
+  /**
+   * How the wheels turn (`three/real/wheelMotion.ts`): 'forward' (default: rolling forward, the visual turn capped
+   * at 26° a frame above ≈ 4.9 m/s, the spokes smeared above it) or 'legacy' (posted videos only: No. 006 as
+   * rendered, the wheels turning backward).
+   */
+  wheels?: WheelMode;
   location?: string;
   transition?: 'auto' | 'continue' | 'glide' | 'cut' | 'dissolve' | 'slide' | 'follow';
   follow?: {direction?: 'down' | 'up' | 'left' | 'right'; at?: number};
@@ -436,6 +443,9 @@ export const CitySliceScene: React.FC<CitySliceSceneProps> = (props) => {
   // the cut face's ink keeps ≈ 3 px from the medium shot to the wide one
   const ink = Math.max(0.25, Math.min(16, camD / 12.75));
   const shutter = (props.shutter ?? 0.5) / fps;
+  // wheels that read as rolling forward (`wheels`, default 'forward'; 'legacy' for posted videos)
+  const fwd = wheelMode(props.wheels) === 'forward';
+  const wheelCap = capSpeed(C.wheelR, fps);
   const cars = (props.cars ?? []).map((c, i) => ({c, i, at: cityCarAt(props, i, t, fps)}));
 
   return (
@@ -467,8 +477,9 @@ export const CitySliceScene: React.FC<CitySliceSceneProps> = (props) => {
               key={i}
               mood={mood}
               at={{x: at.x, z: at.z, yaw: 0}}
-              travelled={at.travelled}
-              blur={(at.speed * shutter) / C.wheelR}
+              travelled={fwd ? cappedTravel((x) => cityCarAt(props, i, x, fps)?.speed ?? 0, t, wheelCap) : at.travelled}
+              blur={fwd ? wheelSmear((at.speed * shutter) / C.wheelR, at.speed, wheelCap) : (at.speed * shutter) / C.wheelR}
+              spinSign={fwd ? -1 : 1}
               body={c.body ?? 'extra'}
               // running lights at Night; the brake lamps brighter on top (both flat, never bloomed)
               tail={night ? 1 : 0}

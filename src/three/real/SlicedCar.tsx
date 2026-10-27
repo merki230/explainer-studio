@@ -5,8 +5,16 @@ import {fonts} from '../../fonts';
 import {CAR, HIGHWAY, MOODS, RACE, section, type CastName, type Mood} from '../../theme';
 import {OrangePath} from '../OrangePath';
 import {CurveArrow, PushArrow, pushArrowState, type PushArrowKeys} from '../PushArrow';
-import {raw} from '../plaster';
-import {CAR_LAYOUT, carLayout, COUPE_SEAT_DROP, RealCar, RearDriveUnit, rearUnitPoint, type CoupeStyle} from './RealCar';
+import {raw, roundedBox} from '../plaster';
+import {
+  CAR_LAYOUT,
+  carLayout,
+  COUPE_SEAT_DROP,
+  RealCar,
+  RearDriveUnit,
+  rearUnitPoint,
+  type CoupeStyle,
+} from './RealCar';
 import type {ShellProfile} from './CarShell';
 import {BatteryPack, DriveUnit, EV, EV_BOARD, evDriveRoute, footPose, moduleSpan, MODULE_Y, PedalBox} from './EvDrive';
 import {
@@ -35,7 +43,9 @@ import {asphaltMaterial, HIGHWAY_LAYOUT} from '../section/HighwaySlice';
 import {Figure} from '../section/Figure';
 import {SECTION_ANGLE} from '../section/SectionCamera';
 import {useFontsLoaded} from '../section/useFontsLoaded';
-import {RadioPulse, WireWind} from '../TirePieces';
+import {PULSE_LIFE, RadioPulse, WireWind} from '../TirePieces';
+import {hazardLevel} from './hazard';
+import {capRevs, cappedTravel, spokesOf, wheelMode, wheelSmear, type WheelMode} from './wheelMotion';
 import {ease, integrateSpeed, keyedValue, speedAt, type Keyed, type SpeedKey} from '../../scenes/keyframes';
 
 export type V3 = [number, number, number];
@@ -436,6 +446,15 @@ export type SlicedCarOptions = {
    */
   revsFrom?: number;
   /**
+   * How the wheels turn (`wheelMotion.ts`): 'forward' (default: the drawn turn capped under the spokes' alias
+   * limit, 26° a frame for 5 spokes, 13° for the 10-blade turbine, the spokes smeared above it, so a fast or
+   * slowing car never strobes backward; the road, the gears' route and `revsFrom` keep the real turn) or 'legacy'
+   * (posted videos only: No. 002–008 as rendered, the real rate, which strobes at highway speeds and in ramps).
+   */
+  wheels?: WheelMode;
+  /** Set by Explainer ('forward', gas and ev): the drawn wheel turn (rev) carried from the previous scene, as `revsFrom`. */
+  wheelFrom?: number;
+  /**
    * The body (No. 007): 'crossover' (default) or 'coupe' (`RealCar` `shape`: two doors, low, a fastback; its
    * seats sit `COUPE_SEAT_DROP` lower, and the driver's hands and feet follow).
    */
@@ -492,6 +511,64 @@ export type SlicedCarOptions = {
   backVoltage?: BackVoltageKeys | null;
   /** 'ev' / 'gas' (No. 007): the push arrows at the driven wheels' contact patches (see `SlicedCarPushArrows`). Null for none (default). */
   pushArrows?: SlicedCarPushArrows | null;
+  /** No. 009: a phone call (see `SlicedCarCall`). Null for none (default). */
+  call?: SlicedCarCall | null;
+  /**
+   * No. 009: the driver's glances. From each `at` (s) the head turns to `to`: 'window' (the driver's door
+   * window, on the cut side: the face turns toward the camera), 'far' (across the car to the far window) or
+   * 'down' (the cluster); it holds `hold` s (default 0.8) and comes back to the road ahead. Default none.
+   */
+  glances?: {at: number; to?: 'window' | 'far' | 'down'; hold?: number}[];
+  /**
+   * No. 009: the hazard lights, on from this time (s into the scene; negative: already on). They flash on the
+   * video clock (`hazardLevel`, 1.4 Hz), so the phase matches every other scene's: the rear lamps flat red
+   * (`section.brakeLit`, never bloomed), the front corners flat `warning` yellow, the cluster's two arrows
+   * `signalGreen`. Null: off (default).
+   */
+  hazardAt?: number | null;
+};
+
+/**
+ * No. 009: the driver's phone call (`SlicedCarOptions.call`). The phone is in the hand nearest the cut
+ * (`side: 'near'`, default; 'far': the other hand) from the scene's start, low and screen to the face (dialling);
+ * from `at` it rises to the ear over `rise` s (default 0.6), screen toward the head; `downAt` lowers it again.
+ * That hand leaves the wheel. Orange rings (the location going out, the system) leave the phone from `ringsAt`
+ * (default null: none) every `ringEvery` s (default 0.9) until `ringsUntil` (default: the scene's end), rising up
+ * through the cut roof; a node dot marks the phone from the first ring (and stays: the trace).
+ */
+export type SlicedCarCall = {
+  at: number;
+  rise?: number;
+  downAt?: number;
+  side?: 'near' | 'far';
+  ringsAt?: number | null;
+  ringEvery?: number;
+  ringsUntil?: number;
+  /** The phone's screen, 0 (dark: at the ear the screen sleeps) → 1 (lit). Default 0.6 low, 0.25 at the ear. */
+  screen?: number;
+};
+
+/** The call phone's lift (0 low → 1 at the ear) at t. */
+export const callLift = (c: SlicedCarCall | null | undefined, t: number) => {
+  if (!c) return 0;
+  const rise = c.rise ?? 0.6;
+  return ease(t, c.at, c.at + rise) * (c.downAt == null ? 1 : 1 - ease(t, c.downAt, c.downAt + rise));
+};
+
+/**
+ * Where the call phone is (world metres) at t, s into the scene: from the hand low in front of the chest to
+ * the ear (figure-local, turned into the car's frame by the seated driver's turn), for the rings, the node dot
+ * and the detail box's leader. Close enough at the shot sizes used (a few cm; glances not followed).
+ */
+export const slicedCarPhone = (p: Partial<SlicedCarOptions>, t: number): V3 => {
+  const lay = layoutOf(p);
+  const sd = (p.call?.side ?? 'near') === 'near' ? -1 : 1;
+  const k = callLift(p.call, t);
+  const seatUp = p.shape === 'coupe' ? COUPE_SEAT_DROP : 0;
+  // figure-local (+x the figure's left, +z ahead): low in the hand → the ear
+  const f: V3 = [sd * (0.07 + 0.13 * k), 0.98 + 0.3 * k, 0.27 - 0.24 * k];
+  // the seated figure is turned π/2: local (x, y, z) → car (z, y, −x)
+  return toWorld(p, [lay.driver[0] + f[2], lay.driver[1] + seatUp + f[1], lay.driver[2] - f[0]]);
 };
 
 export const isEv = (p: Partial<SlicedCarOptions>) => p.variant === 'ev';
@@ -566,10 +643,53 @@ export const slicedCarCrank = (p: Partial<SlicedCarOptions>, t: number) => {
   return (p.crankFrom ?? 0) + turns * Math.PI * 2 * CRANK_SCALE;
 };
 
-const wheelRevs = (p: Partial<SlicedCarOptions>, id: WheelId, t: number) => {
-  const revs = simRevs(p, t);
-  const faster = p.variant === 'indirect' && p.speedRings && p.lowWheel === id ? (p.fasterBy ?? 1.1) : 1;
-  return revs * faster;
+/** The styled coupe's performance wheels (No. 007 realism pass; `RealWheel` `sport`), or undefined. */
+export const sportWheelOf = (p: Partial<SlicedCarOptions>) => {
+  const cstyle = p.shape === 'coupe' ? p.coupeStyle : undefined;
+  return cstyle
+    ? cstyle === 'muscle'
+      ? {spokes: 'split' as const, caliper: RACE.caliperGas, face: RACE.wheelGasFace, side: RACE.wheelGasSide}
+      : {spokes: 'turbine' as const, caliper: RACE.caliperEv, face: RACE.wheelEvFace, side: RACE.wheelEvSide}
+    : undefined;
+};
+
+/** The drawn wheels' cap (rev/s) in 'forward': under the alias limit of this car's rim. */
+const wheelCapRevs = (p: Partial<SlicedCarOptions>, fps = 30) => capRevs(fps, spokesOf(sportWheelOf(p)));
+
+/**
+ * The wheels' drawn turn (rev) at t. 'legacy': `simRevs`. 'forward': the speed × playback rate capped at
+ * `wheelCapRevs` (signed), from the carried `wheelFrom` (gas, ev) or the highway's steady lead-in, so the
+ * wheel never turns more than the alias limit a frame. The road keeps `simRevs`: above the cap the tread slips.
+ */
+export const wheelTurnRevs = (p: Partial<SlicedCarOptions>, t: number, fps = 30) => {
+  if (wheelMode(p.wheels) === 'legacy') return simRevs(p, t, fps);
+  const drv = drivingOf(p);
+  const cap = wheelCapRevs(p, fps);
+  const v0 = speedAt(drv, 0, 0.8) * rateAt(p, 0);
+  const before =
+    p.variant === 'gas' || p.variant === 'ev'
+      ? (p.wheelFrom ?? p.revsFrom ?? 0)
+      : p.road === 'highway'
+        ? Math.sign(v0) * Math.min(Math.abs(v0), cap) * ((p.startFrame ?? 0) / fps)
+        : 0;
+  return before + cappedTravel((x) => speedAt(drv, x, 0.8) * rateAt(p, x), t, cap);
+};
+
+const fasterOf = (p: Partial<SlicedCarOptions>, id: WheelId) =>
+  p.variant === 'indirect' && p.speedRings && p.lowWheel === id ? (p.fasterBy ?? 1.1) : 1;
+
+const wheelRevs = (p: Partial<SlicedCarOptions>, id: WheelId, t: number) => wheelTurnRevs(p, t) * fasterOf(p, id);
+
+/**
+ * The turn (rad) while the shutter is open (half a frame): the wheel's motion blur. 'forward': the real blur,
+ * growing to a full smear of the spokes by 4× the cap (`wheelSmear`), signed by the turn.
+ */
+const wheelBlurOf = (p: Partial<SlicedCarOptions>, id: WheelId, t: number, fps: number) => {
+  if (wheelMode(p.wheels) === 'legacy') return (wheelRevs(p, id, t + 0.25 / fps) - wheelRevs(p, id, t - 0.25 / fps)) * Math.PI * 2;
+  const k = fasterOf(p, id);
+  const real = (simRevs(p, t + 0.25 / fps, fps) - simRevs(p, t - 0.25 / fps, fps)) * k * Math.PI * 2;
+  const v = speedAt(drivingOf(p), t, 0.8) * rateAt(p, t) * k;
+  return (v < 0 ? -1 : 1) * wheelSmear(real, v, wheelCapRevs(p, fps) * k);
 };
 
 /** Where a wheel's sensor node is (world) at t (the valve's angle as it turns). */
@@ -596,6 +716,36 @@ const routeFor = (id: WheelId, from: V3): V3[][] => {
     ];
   return [[from, [-0.8, 0.55, w.z * 0.8], [0.0, 0.48, (w.z * 0.8 + rz) / 2], [rx, ry + 0.035, rz]]];
 };
+
+/** How long one call ring lives (s): `RadioPulse`'s life. */
+const RING_LIFE = PULSE_LIFE;
+/** How fast a call ring's centre rises (m/s): up through the cut roof, the location going out. */
+const RING_RISE = 0.9;
+
+/** The cluster's hazard arrows (No. 009): two green triangles on a clear canvas, drawn once. */
+const hazardArrows = (() => {
+  let tex: THREE.CanvasTexture | null = null;
+  return () => {
+    if (tex) return tex;
+    const c = document.createElement('canvas');
+    c.width = 128;
+    c.height = 32;
+    const cx = c.getContext('2d')!;
+    cx.fillStyle = section.signalGreen;
+    for (const s of [-1, 1]) {
+      const x0 = 64 + s * 14;
+      cx.beginPath();
+      cx.moveTo(x0 + s * 26, 16);
+      cx.lineTo(x0, 3);
+      cx.lineTo(x0, 29);
+      cx.closePath();
+      cx.fill();
+    }
+    tex = new THREE.CanvasTexture(c);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    return tex;
+  };
+})();
 
 /** A pulse's state at t: route progress, glow, and whether it's live. */
 const PULSE = {draw: 0.55, hold: 0.35, fade: 0.4};
@@ -1118,12 +1268,7 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
   const rearBay = props.rearBay ?? (v8 ? true : undefined);
   const passengerSeat = props.passengerSeat ?? !(v8 && side === 'far');
   // the styled coupe's performance wheels (No. 007 realism pass)
-  const cstyle = props.shape === 'coupe' ? props.coupeStyle : undefined;
-  const sportWheel = cstyle
-    ? cstyle === 'muscle'
-      ? {spokes: 'split' as const, caliper: RACE.caliperGas, face: RACE.wheelGasFace, side: RACE.wheelGasSide}
-      : {spokes: 'turbine' as const, caliper: RACE.caliperEv, face: RACE.wheelEvFace, side: RACE.wheelEvSide}
-    : undefined;
+  const sportWheel = sportWheelOf(props);
 
   const mats = useMemo(() => {
     const road = new THREE.MeshStandardMaterial({color: raw('#ffffff'), roughness: 0.92, map: roadTexture(mood)});
@@ -1268,11 +1413,40 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
 
   // the driver: hands on the wheel, eyes on the road; a glance down at the cluster
   const glanceAt = props.glanceAt === undefined ? (warningAt === null ? null : warningAt + 0.2) : props.glanceAt;
+  // No. 009: glances to the door window (the cut side), across to the far window, or down at the cluster
+  const glanceTo = (to: 'window' | 'far' | 'down' | undefined): V3 =>
+    to === 'far'
+      ? [lay.driver[0] + 0.4, lay.driver[1] + 1.3, lay.driver[2] - 1.6]
+      : [lay.driver[0] + 0.4, lay.driver[1] + 1.3, lay.driver[2] + 1.6];
   const gestures: Gesture[] = [
     {pose: 'drive', at: -1},
     ...(glanceAt === null ? [] : [{pose: 'glance-down' as const, at: glanceAt, hold: 1.4}]),
     ...(props.gestures ?? []),
+    ...(props.glances ?? []).map((g) =>
+      g.to === 'down'
+        ? {pose: 'glance-down' as const, at: g.at, hold: g.hold ?? 0.8}
+        : {pose: 'turn-to' as const, at: g.at, hold: g.hold ?? 0.8, target: glanceTo(g.to)},
+    ),
   ];
+  // No. 009: the call phone and its rings; the hazards on the video clock
+  const callK = props.call ? callLift(props.call, t) : null;
+  const callScreen = props.call ? (props.call.screen ?? 0.6 - 0.35 * (callK ?? 0)) : 0;
+  const ringsAt = props.call?.ringsAt ?? null;
+  const ringEvery = Math.max(0.2, props.call?.ringEvery ?? 0.9);
+  const ringAges =
+    ringsAt === null
+      ? []
+      : [...Array(6).keys()]
+          .map((j) => {
+            const n = Math.floor((t - ringsAt) / ringEvery) - j;
+            const at = ringsAt + n * ringEvery;
+            return n >= 0 && at <= (props.call?.ringsUntil ?? Infinity) ? {at, age: t - at} : null;
+          })
+          .filter((r): r is {at: number; age: number} => r !== null && r.age >= 0 && r.age < RING_LIFE);
+  const phoneDot = ringsAt !== null && t >= ringsAt;
+  const hazardAtOn = props.hazardAt != null && !(props.shape === 'coupe' && props.coupeStyle);
+  const hazard =
+    props.hazardAt == null ? 0 : hazardLevel((startFrame + frame) / fps, (startFrame + props.hazardAt * fps) / fps);
   // the vibration path (highway): draw progress, glow, and the hands' buzz once it reaches the wheel
   const vib = hw && props.vibration ? props.vibration : null;
   const vibWheelAt = vib ? (vib.wheelAt ?? vib.at + 1.7) : 0;
@@ -1308,7 +1482,7 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
   const regen = ev ? regenState(props.regen, t) : null;
   const rg = regen ? regen.glow : 0;
   const wheelSpin = wheelRevs(props, 'FR', t) * Math.PI * 2;
-  const wheelBlur = (wheelRevs(props, 'FR', t + 0.25 / fps) - wheelRevs(props, 'FR', t - 0.25 / fps)) * Math.PI * 2;
+  const wheelBlur = wheelBlurOf(props, 'FR', t, fps);
   const ratio = props.rotorRatio ?? 3;
   // in the car's own frame the near front wheel (and the final gear) turn by −dir × its world turn
   const gearSpin = -wheelSpin;
@@ -1761,7 +1935,19 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
             footScale={bay ? [1, EV_FOOT] : undefined}
             shoe={bay ? section.sneaker : undefined}
             helmet={props.helmet}
+            callPhone={callK ?? undefined}
+            callSide={(props.call?.side ?? 'near') === 'near' ? 'right' : 'left'}
+            screenOn={props.call ? callScreen : undefined}
           />
+          {hazardAtOn ? (
+            <HazardLamps
+              on={hazard > 0}
+              mood={mood}
+              near={bay}
+              coupe={props.shape === 'coupe'}
+              cluster={[lay.cluster[0], lay.cluster[1], lay.cluster[2]]}
+            />
+          ) : null}
           {gas ? (
             <>
               {v8 && gearNow ? (
@@ -2125,7 +2311,7 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
         const w = WHEELS[id];
         const spin = wheelRevs(props, id, t) * Math.PI * 2;
         // the turn while the shutter is open (half a frame): the wheel's motion blur
-        const blur = (wheelRevs(props, id, t + 0.25 / fps) - wheelRevs(props, id, t - 0.25 / fps)) * Math.PI * 2;
+        const blur = wheelBlurOf(props, id, t, fps);
         const cutNear = w.near && !props.wheelsWhole && (sensors || hw || bay);
         // facing left the wheels sit mirrored and turn the other way
         const turn = w.near ? -dir : dir;
@@ -2299,6 +2485,25 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
         </>
       ) : null}
 
+      {/* No. 009: the call's rings rising from the phone (the location going out), its node dot (trace) */}
+      {ringAges.map((r) => {
+        const ph = slicedCarPhone(props, r.at);
+        return (
+          <RadioPulse
+            key={r.at.toFixed(3)}
+            position={[ph[0], ph[1] + 0.12 + RING_RISE * r.age, ph[2]]}
+            age={r.age}
+            reach={0.42}
+            weight={1.25}
+            arc={Math.PI * 0.75}
+          />
+        );
+      })}
+      {phoneDot ? (
+        <mesh position={slicedCarPhone(props, t)} material={mats.node} userData={{glow: true}}>
+          <sphereGeometry args={[0.03, 16, 12]} />
+        </mesh>
+      ) : null}
       {/* the receiver's node dot: lit once a pulse has arrived, and it stays (trace) */}
       {sensors ? (
         <mesh
@@ -2358,5 +2563,77 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
         />
       ) : null}
     </>
+  );
+};
+
+/**
+ * No. 009: the hazard lamps of the cut car (`hazardAt`), drawn over `RealCar`'s own lamps so the car itself is
+ * unchanged: the rear lamps (the far one; the near one, cut by the section, on the bay cars) flash flat red
+ * (`section.brakeLit`), the front corners flat `warning` yellow, the cluster's two arrows `signalGreen`. Never
+ * bloomed, no spill. Car frame (x forward), inside the car's (mirrored) group.
+ */
+const HazardLamps: React.FC<{on: boolean; mood: Mood; near: boolean; coupe: boolean; cluster: V3}> = ({
+  on,
+  mood,
+  near,
+  coupe,
+  cluster,
+}) => {
+  const m = MOODS[mood];
+  const mats = useMemo(
+    () => ({
+      red: new THREE.MeshStandardMaterial({
+        color: raw(HIGHWAY.tailLens),
+        emissive: raw(section.brakeLit),
+        roughness: 0.25,
+      }),
+      amber: new THREE.MeshStandardMaterial({
+        color: raw(section.warning),
+        emissive: raw(section.warning),
+        roughness: 0.3,
+      }),
+      cut: cutMaterial(),
+      arrows: new THREE.MeshBasicMaterial({map: hazardArrows(), transparent: true, depthWrite: false}),
+      far: roundedBox(0.046, 0.176, 0.306, 0.013),
+    }),
+    [],
+  );
+  mats.red.emissiveIntensity = 1.7 / m.exposure;
+  mats.amber.emissiveIntensity = 0.9 / m.exposure;
+  mats.arrows.color.setScalar(0.95 / m.exposure);
+  if (!on) return null;
+  // RealCar's cut-car lamps: the tail (x, y), the headlight strips' outer ends
+  const tail: [number, number] = coupe ? [-2.4, 0.88] : [-2.39, 1.0];
+  const head: [number, number] = coupe ? [2.43, 0.6] : [2.33, 0.86];
+  return (
+    <group>
+      <mesh geometry={mats.far} material={mats.red} position={[...tail, -0.68]} />
+      {near ? (
+        <mesh
+          material={[mats.red, mats.red, mats.red, mats.red, mats.cut, mats.red]}
+          position={[tail[0], tail[1], 0.661]}
+        >
+          <boxGeometry args={[0.046, 0.176, 0.282]} />
+        </mesh>
+      ) : null}
+      {[0.765, -0.79].map((z) => (
+        <mesh
+          key={z}
+          position={[head[0] + 0.004, head[1] - 0.005, z]}
+          rotation={[0, Math.PI / 2, 0]}
+          material={mats.amber}
+        >
+          <planeGeometry args={[0.05, 0.07]} />
+        </mesh>
+      ))}
+      <mesh
+        position={[cluster[0] + 0.0035, cluster[1] + 0.036, cluster[2]]}
+        rotation={[0, -Math.PI / 2, 0]}
+        material={mats.arrows}
+        renderOrder={2}
+      >
+        <planeGeometry args={[0.12, 0.03]} />
+      </mesh>
+    </group>
   );
 };

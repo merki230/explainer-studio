@@ -79,6 +79,15 @@ updates them in the same step. Before closing a rule change, grep the repo for t
 - `yarn sfx:charge <slug> [--name charge] [--out <file>] [--from 300] [--to 700] [--seconds 2.5] [--lufs -20]`: free, local. Deterministic rising "battery filling" tone: a clean sine gliding up (exponential, eased at both ends) with two slowly shimmering partials (x2, x3), no noise, low-passed at 3 kHz, mono. Audition in `out/<slug>/raw/sfx/<name>.mp3`; never writes into `src/`; no `audio-log.md` entry.
 - `yarn sfx:engine|hiss|throttle|skid|thump|steer <slug> [--name <kind>] [--out <file>] [--seconds N] [--lufs L] [--from A] [--to B] [--peak P] [--pitch X] [--clunk C]` (all one script, `scripts/sfx-drive.mjs`; header lists the model per kind): free, local, deterministic, physical car sounds (No. 008). `engine`: four-cylinder, `--from/--to` rpm, `--peak` rpm swell (cruise: defaults; idle `--from 800 --to 800`; drop `--from 2200 --to 900`; flare `--from 1200 --to 1200 --peak 4000 --seconds 2`). `hiss`: seamless-loop wet tire hiss, `--pitch` = speed. `throttle`: 0.25 s motor whirr (opens 220 to 480 Hz; shut `--from 480 --to 160`). `skid`: wet scrub, no squeal. `thump`: brake thump. `steer`: power-steering motor. Rising EV whine: `yarn sfx:whine <slug> --name whine-rise --from 200 --to 900` (the whine script already glides up when `--from` < `--to`). Clips under 4 s are measured repeated, so the LUFS is the level while the sound plays. Output `out/<slug>/raw/sfx/<name>.mp3`; copy into `src/videos/<slug>/audio/sfx/` by hand; no `audio-log.md` entry.
   - No. 007 additions (same script): `--cyl 8` = cross-plane V8 (firing Hz = rpm*cyl/120, plus crank-revolution orders for the burble, deeper). `--shifts N [--idle S] [--peak shiftRpm] [--from idleRpm]` = drag run: idle, rev to ~3000, launch, N upshifts each with a throttle-lift dip (rpm falls to 70-82% of the shift rpm in 0.28 s, level dips). Run: `yarn sfx:engine <slug> --name v8-run --cyl 8 --shifts 7 --from 750` (11 s); idle `--cyl 8 --from 750 --to 750 --seconds 4`; revs `--cyl 8 --from 900 --to 900 --peak 4500 --seconds 2.5`. Shift clunks reuse thump: `sfx:thump <slug> --name shift-clunk --pitch 1.8 --seconds 0.3 --lufs -22` (gas) and `--name shift-clunk-ev --pitch 2.4 --lufs -28`. Dry tire and road roar: `sfx:hiss <slug> --dry` (loop) and `--dry --from 0.6 --to 1.4 --seconds 10` (rises with speed, no loop; `--from/--to` are speed multipliers). No whine.
+  - No. 009 additions: `--die` = gas-engine stall (4-cyl, default 2.2 s): 0.3 s cruise, rpm sags, firings drop out (seeded, growing share, each with a muffled intake cough), rpm and level fall to nothing by about 2 s. Run: `yarn sfx:engine <slug> --name engine-die --die` (-20 LUFS).
+- `yarn sfx:cruise <slug> day|night` (`scripts/sfx-cruise.mjs`, No. 009): dry tire roar (`hiss --dry`, pitch 1.5 day / 1.25 night, night low-passed 1.6 kHz) plus a distant 1800 rpm four-cylinder (same as `engine --die`), mixed in Node (local ffmpeg has no filters). `day` 25.4 s, plays straight through scenes 1-6 (one copy, no loop; fades out over the last 1 s). `night` 3.6 s, engine swells +9 dB over 1.8 s to near `engine-die`'s level, then fades out over 0.3 s as `engine-die` starts; roar fades over the last 1.2 s. Level is measured on the lead-in before the swell. Volumes in spec: day -18 (20 under), night -17 (21 under).
+- `yarn sfx:gravel|hazard|phone|night|diesel <slug> [--name] [--out] [--seconds] [--lufs]` (one script, `scripts/sfx-road.mjs`, header lists the models; No. 009 roadside sounds, free, deterministic, physical only; same output rules as `sfx:engine`). Recipes used for `mile-markers` (levels are the measured LUFS in the files):
+  - `gravel --name gravel-stop` (3.2 s, -24): stone-crunch grains at 220/s x speed, speed falls to 0 at 2.7 s. `--speed` scales the start speed.
+  - `hazard --name hazard-cabin` (7.14 s = 10 flashes, -32, seamless loop) and `hazard --outside --lufs -35 --name hazard-outside` (low-passed through the body). Tick at the contacts closing (lamp on, t = k/1.4 s), softer clack half a cycle later. The ticks are sparse and peaky, so the LUFS is low; set the spec `volume` against it. 1.4 Hz = `HAZARD_HZ`; start the file on a video time that is a multiple of 0.7143 s so ticks land on the lamp edges.
+  - `phone --part dial|ring|connect|all [--cycles N]`: `phone-dial` (0.52 s, three DTMF digits 9-1-1), `phone-ring --part ring --cycles 2` (8 s, 440+480 Hz, 2 s on / 4 s off / 2 s on), `phone-connect --part connect` (0.2 s click), all -24 LUFS through a 350-3300 Hz speaker band. `--part all` joins dial, 0.6 s, ringback.
+  - `night --name night-bed` (16 s, -28, seamless loop, 1.2 s cross-fade): low wind with slow gusts and three distant crickets (`--crickets 0..1`, default 0.6).
+  - `diesel --name diesel-stop` (5 s, -22): inline-six pickup arriving and stopping at 3.2 s, air-brake hiss at the stop, optional light squeal (`--squeal 0..1`, default 0.2) in the last 0.5 s before the stop, idle after.
+  - Copy the chosen takes by hand into `src/videos/<slug>/audio/sfx/`.
 - Both cost credits: ask the owner first. `--dry-run` prints the request (no key) and writes nothing; `--help`
   lists the options.
 - Every generated file is appended to `src/videos/<slug>/audio-log.md` (date, plan, endpoint, model, prompt,
@@ -104,7 +113,20 @@ updates them in the same step. Before closing a rule change, grep the repo for t
 - One video with a broken cue must not stop every other video from rendering (fixed in `Root`: broken
   videos render an error card).
 
-## Studio playback vs the rendered file
+## Wheels: forward by default, legacy only for posted videos (owner, 2026-10-27)
+
+- Wheels that look like they spin backward must never appear in a new video, and posted videos must never change.
+- Every scene that turns a road wheel takes `wheels` (`highway-slice`, `city-slice`, `street-slice`,
+  `musical-road`, `car-slice`, `race-slice`, `drive-unit`, `wheel-slice`). The default, 'forward', means the wheel
+  turns the right way, and its drawn turn is capped under the rim's 30 fps alias limit: 26° a frame for 5 spokes,
+  13° for the 10-blade turbine. Above the cap the spokes smear and the tread slips; the road keeps the real distance.
+- 'legacy' reproduces No. 001–008 exactly (backward on cars driving away, strobing at speed). It exists only so
+  posted videos render byte-identical. They pin it once at the top of `spec.ts` (`wheels: 'legacy'`), and Explainer
+  and Cover pass it on to their wheel scenes. Never set it in a new video, and never change the legacy code path.
+- A new part or scene with a rolling wheel uses the helpers in `src/three/real/wheelMotion.ts` (`capSpeed` /
+  `capRevs`, `cappedTravel`, `wheelSmear`, `spokesOf`). Check its direction on a frame pair (f, f+1), not on one still.
+- When you change wheel code, prove it with `cmp` on stills of every posted wheel video, before vs after.
+
 
 Heavy 3D can stutter in Remotion Studio's live playback (brief freezes at scene changes) while the
 rendered file is perfectly smooth. When the owner reports a hitch, render a half-size test file first

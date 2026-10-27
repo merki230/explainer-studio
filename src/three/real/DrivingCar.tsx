@@ -1,5 +1,7 @@
-import React from 'react';
-import {CAST_NEUTRAL, RACE, type Mood} from '../../theme';
+import React, {useMemo} from 'react';
+import * as THREE from 'three';
+import {CAST_NEUTRAL, MOODS, RACE, REAL, section, type Mood} from '../../theme';
+import {raw} from '../plaster';
 import {Figure} from '../section/Figure';
 import {CAR_LAYOUT, RealCar, type CoupeStyle} from './RealCar';
 import {shellSink, type ShellProfile} from './CarShell';
@@ -32,7 +34,7 @@ export const DrivingCar: React.FC<{
   tail: number;
   /** Brake lamps lit, 0 → 1 (brighter than the running lights; flat, never bloomed). Default 0. */
   brake?: number;
-  /** Paint override (a theme token) and shape ('crossover' default, 'sedan', 'coupe'). */
+  /** Paint override (a theme token) and shape ('crossover' default, 'sedan', 'coupe', 'hatch': the cut car's silhouette). */
   paint?: string;
   shape?: ShellProfile;
   /**
@@ -53,6 +55,18 @@ export const DrivingCar: React.FC<{
    * the road (wheelspin on a wet road). Default: both axles turn with `travelled` and `blur`.
    */
   axles?: {front?: {travelled: number; blur: number}; rear?: {travelled: number; blur: number}};
+  /**
+   * The front corner lamps (No. 009, the hazards' front half), lit 0 → 1 in `warning` yellow (style guide § 1:
+   * amber would read as the system), flat emissive, never bloomed; a clear lens when 0. Default undefined:
+   * no corner lamps drawn (No. 005–008 unchanged).
+   */
+  frontLamps?: number;
+  /**
+   * The wheels' turning direction: −1 (default: rolling forward) or 1 (`wheels: 'legacy'` only: No. 005–008 as
+   * rendered, backward for a car driving forward, see `wheelMotion.ts`). `travelled`, `blur` and `axles` are used
+   * as given: cap them with `cappedTravel` / `wheelSmear` for a car above `capSpeed`.
+   */
+  spinSign?: 1 | -1;
 }> = ({
   mood,
   at,
@@ -70,7 +84,21 @@ export const DrivingCar: React.FC<{
   envBoost = 1,
   jitter = [0, 0, 0],
   axles,
+  frontLamps,
+  spinSign = -1,
 }) => {
+  const lampMat = useMemo(
+    () =>
+      new THREE.MeshPhysicalMaterial({
+        color: raw(REAL.chrome),
+        roughness: 0.15,
+        clearcoat: 1,
+        emissive: raw(section.warning),
+        emissiveIntensity: 0,
+      }),
+    [],
+  );
+  lampMat.emissiveIntensity = (1.3 * Math.max(0, Math.min(1, frontLamps ?? 0))) / MOODS[mood].exposure;
   const R = C.wheelR;
   const spinAll = travelled / R;
   // the styled coupe's performance wheels (as on the race's cut cars, `SlicedCar`)
@@ -95,6 +123,19 @@ export const DrivingCar: React.FC<{
           shape={shape}
           coupeStyle={shape === 'coupe' ? coupeStyle : undefined}
         />
+        {frontLamps !== undefined
+          ? [-1, 1].map((sd) => (
+              <group key={sd}>
+                {/* the side repeater on the front fender and the corner of the lamp cluster */}
+                <mesh material={lampMat} position={[2.1, 0.75, sd * 0.928]}>
+                  <boxGeometry args={[0.2, 0.055, 0.02]} />
+                </mesh>
+                <mesh material={lampMat} position={[2.3, 0.7, sd * 0.84]}>
+                  <boxGeometry args={[0.06, 0.05, 0.16]} />
+                </mesh>
+              </group>
+            ))
+          : null}
         {who ? (
           <Figure
             who={who}
@@ -116,8 +157,8 @@ export const DrivingCar: React.FC<{
       </group>
       {[C.axleX.front, C.axleX.rear].map((ax, ai) => {
         const o = ai === 0 ? axles?.front : axles?.rear;
-        const spin = o ? o.travelled / R : spinAll;
-        const blur = o ? o.blur : blurAll;
+        const spin = spinSign * (o ? o.travelled / R : spinAll);
+        const blur = spinSign * (o ? o.blur : blurAll);
         return [-1, 1].map((s) => (
           <RealWheel
             key={`${ax}${s}`}

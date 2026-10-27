@@ -1,7 +1,7 @@
 // Self-made car sounds for the drive-by-wire video: deterministic synths (no API, no cost).
 //
 // usage: yarn sfx:<kind> <slug> [--name <kind>] [--out <file>] [--seconds N] [--lufs L] [--from A] [--to B]
-//        [--peak P] [--pitch X] [--clunk C] [--cyl 4|8] [--shifts N] [--idle S] [--dry]
+//        [--peak P] [--pitch X] [--clunk C] [--cyl 4|8] [--shifts N] [--idle S] [--dry] [--die]
 //        (or: node scripts/sfx-drive.mjs <kind> <slug> ...)
 //   kinds: engine | hiss | throttle | skid | thump | steer
 //
@@ -31,6 +31,10 @@
 //            0.6 s, -18 LUFS. --pitch scales the pitch.
 //  steer     electric power-steering motor: speeds up and down over --seconds (0.9), tone --from..--to Hz
 //            (150..330 at peak speed), partials x2 x3, faint gear whine, soft noise. -22 LUFS.
+//  engine --die  (No. 009) gas engine at cruise that coughs and stalls, default 2.2 s: 0.3 s of cruise (1800 rpm, sagging),
+//            then individual firings drop out (a seeded, growing misfire share, each with a muffled intake cough),
+//            rpm and level fall away to nothing by ~2 s. --from sets the cruise rpm; --seconds >= 1.5.
+//            e.g. yarn sfx:engine <slug> --name engine-die --die
 // Mono 44.1 kHz, scaled to the target integrated loudness and checked to stay under -1.5 dBTP (the
 // bundled ffmpeg has no limiter, so it fails rather than clips), encoded with Remotion's bundled ffmpeg
 // (libmp3lame, 128k). Clips under 4 s are measured repeated back to back, i.e. the level while the sound
@@ -49,7 +53,7 @@ const KINDS = {
   thump: {seconds: 0.6, lufs: -18, from: 0, to: 0, fade: 0.1},
   steer: {seconds: 0.9, lufs: -22, from: 150, to: 330, fade: 0.08},
 };
-const usage = `yarn sfx:<${Object.keys(KINDS).join('|')}> <slug> [--name <kind>] [--out <file>] [--seconds N] [--lufs L]\n  [--from A] [--to B] [--peak P] [--pitch X] [--clunk C] [--cyl 4|8] [--shifts N] [--idle S] [--dry]`;
+const usage = `yarn sfx:<${Object.keys(KINDS).join('|')}> <slug> [--name <kind>] [--out <file>] [--seconds N] [--lufs L]\n  [--from A] [--to B] [--peak P] [--pitch X] [--clunk C] [--cyl 4|8] [--shifts N] [--idle S] [--dry] [--die]`;
 const fail = (msg) => {
   console.error(`${msg}\nusage: ${usage}`);
   process.exit(1);
@@ -59,8 +63,8 @@ if (argv.includes('--help') || argv.includes('-h')) {
   console.log(`${usage}\n\n  Default output: out/<slug>/raw/sfx/<name>.mp3 (audition; never writes into src/).`);
   process.exit(0);
 }
-const opt = {name: '', out: '', seconds: '', lufs: '', from: '', to: '', peak: '0', pitch: '1', clunk: '0.35', cyl: '4', shifts: '0', idle: '1.5', dry: ''};
-const flags = new Set(['dry']);
+const opt = {name: '', out: '', seconds: '', lufs: '', from: '', to: '', peak: '0', pitch: '1', clunk: '0.35', cyl: '4', shifts: '0', idle: '1.5', dry: '', die: ''};
+const flags = new Set(['dry', 'die']);
 const pos = [];
 for (let i = 0; i < argv.length; i++) {
   if (argv[i].startsWith('--') && flags.has(argv[i].slice(2))) opt[argv[i].slice(2)] = '1';
@@ -74,11 +78,12 @@ const D = KINDS[kind];
 const name = opt.name || kind;
 if (!slug || pos.length > 2 || !re.test(slug) || !re.test(name)) fail('expected exactly one valid <slug> and a valid --name');
 const num = (k, d) => (opt[k] === '' ? d : Number(opt[k]));
-const shifts = Number(opt.shifts), cyl = Number(opt.cyl), idle = Number(opt.idle), dry = opt.dry === '1';
-const seconds = num('seconds', kind === 'engine' && shifts > 0 ? 11 : D.seconds), lufs = num('lufs', D.lufs), f0 = num('from', D.from), f1 = num('to', D.to);
+const shifts = Number(opt.shifts), cyl = Number(opt.cyl), idle = Number(opt.idle), dry = opt.dry === '1', die = opt.die === '1';
+const seconds = num('seconds', kind === 'engine' && shifts > 0 ? 11 : die ? 2.2 : D.seconds), lufs = num('lufs', D.lufs), f0 = num('from', D.from), f1 = num('to', D.to);
 const peakRpm = Number(opt.peak), pitch = Number(opt.pitch), clunk = Number(opt.clunk);
 if (![seconds, lufs, f0, f1, peakRpm, pitch, clunk, shifts, cyl, idle].every(Number.isFinite) || !(seconds >= 0.1 && seconds <= 60) || !(lufs < 0 && lufs > -40) || pitch <= 0 || peakRpm < 0 || clunk < 0 || f0 < 0 || f1 < 0 || !Number.isInteger(shifts) || shifts < 0 || ![4, 8].includes(cyl) || idle < 0) fail('invalid option value (--cyl 4 or 8, --shifts integer)');
 if (shifts > 0 && (kind !== 'engine' || seconds < idle + 0.9 + 0.58 * shifts + 0.3)) fail('--shifts is for engine and needs --seconds >= --idle + 1.2 + 0.58 x shifts');
+if (die && (kind !== 'engine' || shifts > 0 || seconds < 1.5 || cyl !== 4)) fail('--die is for a four-cylinder engine without --shifts, --seconds >= 1.5');
 if (kind === 'hiss' && (f0 || f1) && !(f0 >= 0.2 && f0 <= 3 && f1 >= 0.2 && f1 <= 3)) fail('hiss --from/--to are speed multipliers, 0.2-3 (both or neither)');
 if (kind === 'engine' && (f0 < 300 || f1 < 300 || f0 > 8000 || f1 > 8000 || (peakRpm && peakRpm < 300))) fail('engine --from/--to/--peak are rpm, 300-8000');
 if ((kind === 'throttle' || kind === 'steer') && (f0 < 50 || f1 < 50 || f0 > 3000 || f1 > 3000)) fail('--from/--to are Hz, 50-3000');
@@ -125,6 +130,12 @@ if (kind === 'engine') {
     }
     const g2 = lp(gain, 25, 1);
     for (let i = 0; i < n; i++) gain[i] = g2[i];
+  } else if (die) { // cruise, sag, misfires, then the rpm and level fall away
+    for (let i = 0; i < n; i++) {
+      const t = i / sr, c = Math.min(1, Math.max(0, (t - 0.3) / 0.6));
+      rpmAt[i] = t < 0.9 ? f0 * (1 - 0.16 * smooth(c)) : f0 * 0.84 * Math.exp(-(t - 0.9) / 0.5);
+      gain[i] = t < 1.1 ? 1 : Math.exp(-(t - 1.1) / 0.3);
+    }
   } else {
     for (let i = 0; i < n; i++) {
       const u = i / (n - 1);
@@ -133,16 +144,29 @@ if (kind === 'engine') {
       rpmAt[i] = rpm;
     }
   }
-  let ph = 0;
+  let ph = 0, lastCyc = -1, burstT = 9, gate = 1, gateS = 1;
   const orders = cyl === 8 ? [[0.25, 0.5], [0.5, 0.4], [0.75, 0.3]] : [[0.5, 0.3]];
   for (let i = 0; i < n; i++) {
     const rpm = rpmAt[i], ff = (rpm * cyl) / 120;
     ph += TAU * ff / sr;
+    let cough = 0;
+    if (die) {
+      const t = i / sr, cyc = Math.floor(ph / TAU / 1);
+      if (cyc !== lastCyc) { // a new firing: seeded misfire chance grows from 0.3 s, ~70% by 1.2 s
+        lastCyc = cyc;
+        const h = Math.abs(Math.sin(cyc * 12.9898 + 4.1) * 43758.5453) % 1, pm = Math.min(0.72, Math.max(0, (t - 0.3) * 0.8));
+        gate = h < pm ? 0.1 : 1;
+        if (gate < 1) burstT = 0;
+      }
+      gateS += 0.08 * (gate - gateS);
+      burstT += 1 / sr;
+      cough = 2.2 * nz[i] * Math.exp(-burstT / 0.035) * Math.min(1, gain[i] * 3);
+    }
     let s = 0;
     for (const [o, a] of orders) s += a * Math.sin(o * ph + 0.7);
     for (let h = 1; h * ff < (cyl === 8 ? 900 : 1400); h++) s += Math.sin(h * ph + h * 0.4) / h ** 1.3;
     const load = (0.55 + 0.45 * Math.min(1, rpm / 3500)) * gain[i];
-    tone[i] = s * load * (1 + (cyl === 8 ? 0.25 : 0.12) * jit[i]) + 0.35 * nz[i] * load;
+    tone[i] = s * load * (die ? gateS : 1) * (1 + (cyl === 8 ? 0.25 : 0.12) * jit[i]) + 0.35 * nz[i] * load + cough;
   }
   z = lp(tone, cyl === 8 ? 550 : 700, 2);
 } else if (kind === 'hiss') {

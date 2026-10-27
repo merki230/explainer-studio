@@ -3,6 +3,7 @@ import {AbsoluteFill, Sequence, useVideoConfig} from 'remotion';
 import {CoverText} from './components/CoverText';
 import {DetailBox} from './components/DetailBox';
 import {SCENES} from './scenes';
+import {WHEEL_SCENES} from './three/real/wheelMotion';
 import type {SectionRoomSceneProps} from './scenes/SectionRoomScene';
 import type {Mood} from './theme';
 import {VIDEOS} from './videos';
@@ -23,6 +24,8 @@ export const Cover: React.FC<CoverProps> = ({videoId}) => {
   const frame = Math.round((cover.at ?? 2) * fps);
   const durationInFrames = frame + 1;
   const props: Record<string, unknown> = {
+    // a posted video's wheel pin (`VideoSpec.wheels`), as Explainer hands it to the video's scenes
+    ...(VIDEOS[videoId].spec.wheels && WHEEL_SCENES.includes(sceneName) ? {wheels: VIDEOS[videoId].spec.wheels} : {}),
     ...cover.props,
     drift: 0,
     ...(cover.camera ? {camera: {from: cover.camera}} : {}),

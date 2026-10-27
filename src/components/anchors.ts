@@ -1,3 +1,4 @@
+import {carAnchorOnScreen, type CarSliceSceneProps} from '../scenes/CarSliceScene';
 import {cityAnchorOnScreen, type CitySliceSceneProps} from '../scenes/CitySliceScene';
 import {driveUnitAnchorOnScreen, type DriveUnitSceneProps} from '../scenes/DriveUnitScene';
 import {highwayAnchorOnScreen, type HighwaySliceSceneProps} from '../scenes/HighwaySliceScene';
@@ -32,7 +33,7 @@ export const ANCHOR_SCENES = [
  * 'rearTire', 'car', 'window', 'house'. `city-slice`: 'car:k', 'lamps:k', 'youSpot', 'signal', 'stopLine',
  * 'sign:oneway' | 'sign:speed'. `race-slice`: 'cluster:ev' | 'cluster:gas', 'top:ev' | 'top:gas' (just above
  * the car's roof), 'nose:*', 'tree:*', 'lane:*'. `drive-unit`: 'rotor', 'stage:1', 'stage:2', 'output', 'shift', 'hub',
- * 'patch', 'inverter'. Undefined elsewhere
+ * 'patch', 'inverter'. `car-slice`: 'phone', 'cluster', 'head' (= 'youSpot'). Undefined elsewhere
  * or for an unknown name.
  */
 export const anchorOnScreen = (
@@ -54,5 +55,6 @@ export const anchorOnScreen = (
   if (scene.name === 'race-slice') return raceAnchorOnScreen(scene.props as Partial<RaceSliceSceneProps>, anchor, o);
   if (scene.name === 'drive-unit')
     return driveUnitAnchorOnScreen(scene.props as Partial<DriveUnitSceneProps>, anchor, o);
+  if (scene.name === 'car-slice') return carAnchorOnScreen(scene.props as Partial<CarSliceSceneProps>, anchor, o);
   return undefined;
 };

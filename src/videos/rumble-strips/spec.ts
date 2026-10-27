@@ -147,6 +147,8 @@ const STAFF_Y = 0.16;
 const MUSIC_LEVEL = -14.5;
 
 const picture: VideoSpec = {
+  // posted video: wheels exactly as published (`three/real/wheelMotion.ts`); new videos leave this out
+  wheels: 'legacy',
   watermark: null,
   // Cover still (`yarn cover rumble-strips`): the highway at night, YOU's right tires on the row, the groove
   // ribbon lit orange under the rear tire (impacts blurred into one band). Text in the sky band, two lines.

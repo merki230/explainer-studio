@@ -1,7 +1,9 @@
 import React, {useMemo} from 'react';
+import {useCurrentFrame, useVideoConfig} from 'remotion';
 import * as THREE from 'three';
 import {fonts} from '../../fonts';
-import {REAL, section, STREET, type Mood} from '../../theme';
+import {HIGHWAY, MOODS, REAL, section, STREET, type Mood} from '../../theme';
+import {beaconLevels} from './hazard';
 import {raw, roundedBox} from '../plaster';
 import {Figure} from '../section/Figure';
 import {useFontsLoaded} from '../section/useFontsLoaded';
@@ -45,6 +47,9 @@ export const TRUCK = {
 };
 
 export type TruckDirection = 'away' | 'toward';
+
+/** No. 009: the roof light bar (truck frame): its centre across the roof's front half, the four lenses' x. */
+export const LIGHT_BAR = {z: -1.18, lenses: [-0.5, -0.17, 0.17, 0.5], top: 2.18};
 
 /** Truck frame → world: 'away' faces −z (no turn); 'toward' is turned π about y (faces +z). */
 export const truckToWorld = (p: V3, at: [number, number], direction: TruckDirection): V3 =>
@@ -113,12 +118,34 @@ export type UtilityTruckProps = {
   /** World x of the truck's centre line and world z of its origin (the middle of its length). */
   at: [number, number];
   direction?: TruckDirection;
-  /** Wheel turn (rad) and the turn while the shutter is open (motion blur, rad). */
+  /**
+   * Wheel turn (rad) and the turn while the shutter is open (motion blur, rad, signed like `spin`). Rolling forward
+   * (either `direction`) is a NEGATIVE turn: pass −metres driven / `TRUCK.wheelR`, capped with `cappedTravel` and
+   * smeared with `wheelSmear` above `capSpeed` (`wheelMotion.ts`; see `PatrolTruck`).
+   */
   spin?: number;
   blur?: number;
   /** The roof receiver's node dot (the system), 0 (off) to 1 (lit). */
   dot?: number;
   clockOffset?: number;
+  /** The roof receiver (whip and magnetic base). Default true (No. 004); false for the service-patrol truck. */
+  receiver?: boolean;
+  /**
+   * No. 009: a roof light bar across the cab roof (a black base, four lenses in `warning` yellow, D3: no red, no
+   * blue, no lettering). Default false.
+   */
+  lightBar?: boolean;
+  /**
+   * The light bar flashing, 0 (dark lenses) → 1: the two halves alternate on the video clock (`beaconLevels`,
+   * out of step with the hazards), flat emissive, never bloomed, no spill. Default 0.
+   */
+  flashing?: number;
+  /** Headlights, 0 → 1: the lenses lit and two spot lights on the road ahead (Night). Default 0. */
+  headlights?: number;
+  /** The tail lamps lit (running lights), 0 → 1, flat red. Default 0. */
+  tail?: number;
+  /** The brake lamps lit, 0 → 1, flat red, brighter than the running lights. Default 0. */
+  brake?: number;
 };
 
 export const UtilityTruck: React.FC<UtilityTruckProps> = ({
@@ -129,7 +156,15 @@ export const UtilityTruck: React.FC<UtilityTruckProps> = ({
   blur = 0,
   dot = 0,
   clockOffset = 0,
+  receiver = true,
+  lightBar = false,
+  flashing = 0,
+  headlights = 0,
+  tail = 0,
+  brake = 0,
 }) => {
+  const frame = useCurrentFrame();
+  const {fps} = useVideoConfig();
   const env = useStudioEnv();
   const envScale = useEnvStrength();
   const albedo = useAlbedo();
@@ -153,8 +188,23 @@ export const UtilityTruck: React.FC<UtilityTruckProps> = ({
         depthWrite: false,
         side: THREE.DoubleSide,
       }),
-      lamp: phys(STREET.lamp, {roughness: 0.1, clearcoat: 1, metalness: 0.4}),
-      tail: phys(STREET.tailLamp, {roughness: 0.2, clearcoat: 1}),
+      lamp: phys(STREET.lamp, {
+        roughness: 0.1,
+        clearcoat: 1,
+        metalness: 0.4,
+        emissive: raw(HIGHWAY.headlight),
+        emissiveIntensity: 0,
+      }),
+      tail: phys(STREET.tailLamp, {
+        roughness: 0.2,
+        clearcoat: 1,
+        emissive: raw(HIGHWAY.tailLight),
+        emissiveIntensity: 0,
+      }),
+      barLens: [0, 1].map(() =>
+        phys(section.warning, {roughness: 0.15, clearcoat: 1, emissive: raw(section.warning), emissiveIntensity: 0}),
+      ),
+      barBase: phys(REAL.dash, {roughness: 0.5}),
       laptop: phys(STREET.laptop, {roughness: 0.6}),
       steel: phys(REAL.steel, {metalness: 1, roughness: 0.3}),
       chrome: phys(REAL.chrome, {metalness: 1, roughness: 0.18}),
@@ -178,6 +228,31 @@ export const UtilityTruck: React.FC<UtilityTruckProps> = ({
     envScale,
   );
   applyAlbedo([mats.paint, mats.trim, mats.seat, mats.dash, mats.floor, mats.laptop, mats.liner], albedo);
+  // No. 009: the lamps (flat emissive, never bloomed) and the light bar on the video clock
+  const ex = MOODS[mood].exposure;
+  const tailK = Math.max(0, Math.min(1, tail));
+  const brakeK = Math.max(0, Math.min(1, brake));
+  const brakeOn = brakeK > 0 && 1.7 * brakeK >= 0.9 * tailK;
+  mats.tail.emissive.copy(raw(brakeOn ? section.brakeLit : HIGHWAY.tailLight));
+  mats.tail.emissiveIntensity = (brakeOn ? 1.7 * brakeK : 0.9 * tailK) / ex;
+  const headK = Math.max(0, Math.min(1, headlights));
+  mats.lamp.emissiveIntensity = (0.9 * headK) / ex;
+  const flashK = Math.max(0, Math.min(1, flashing));
+  const beacon = beaconLevels(frame / fps + clockOffset);
+  mats.barLens.forEach((m, i) => {
+    // a dark lens is the same yellow, unlit and shaded down (no new colour)
+    m.color.copy(raw(section.warning)).multiplyScalar(0.45);
+    m.emissiveIntensity = (1.1 * flashK * beacon[i]) / ex;
+  });
+  const beams = useMemo(
+    () => [-0.72, 0.72].map(() => new THREE.SpotLight(raw(HIGHWAY.headlight), 0, 30, 0.42, 0.6, 1)),
+    [],
+  );
+  beams.forEach((l, i) => {
+    l.intensity = 14 * headK;
+    l.position.set([-0.72, 0.72][i], 0.93, -3.2);
+    l.target.position.set([-0.72, 0.72][i] * 2, 0, -14);
+  });
 
   // a plain plate with invented characters (no state name, no logo)
   const plate = useMemo(() => {
@@ -234,6 +309,8 @@ export const UtilityTruck: React.FC<UtilityTruckProps> = ({
       mirror: roundedBox(0.07, 0.2, 0.15, 0.025, 3),
       handle: roundedBox(0.03, 0.035, 0.13, 0.01, 2),
       lamp: roundedBox(0.36, 0.17, 0.04, 0.03, 3),
+      barBase: roundedBox(1.4, 0.06, 0.3, 0.02, 3),
+      barLens: roundedBox(0.3, 0.09, 0.24, 0.035, 4),
     };
   }, []);
 
@@ -498,23 +575,50 @@ export const UtilityTruck: React.FC<UtilityTruckProps> = ({
           />
         )),
       )}
+      {/* No. 009: headlight beams on the road ahead (mounted only while lit, so earlier scenes are unchanged) */}
+      {headK > 0
+        ? beams.map((l, i) => (
+            <React.Fragment key={i}>
+              <primitive object={l} />
+              <primitive object={l.target} />
+            </React.Fragment>
+          ))
+        : null}
+      {/* No. 009: the roof light bar: a low black base across the cab roof, four lenses (two a side) */}
+      {lightBar ? (
+        <group position={[0, 2.03, LIGHT_BAR.z]}>
+          <mesh geometry={geo.barBase} material={mats.barBase} position={[0, 0.03, 0]} castShadow />
+          {LIGHT_BAR.lenses.map((x) => (
+            <mesh key={x} geometry={geo.barLens} material={mats.barLens[x < 0 ? 0 : 1]} position={[x, 0.1, 0]} />
+          ))}
+          {[-0.5, 0.5].map((x) => (
+            <mesh key={x} material={mats.barBase} position={[x, 0.005, 0]}>
+              <boxGeometry args={[0.06, 0.03, 0.3]} />
+            </mesh>
+          ))}
+        </group>
+      ) : null}
       {/* the roof receiver: a magnetic base and a whip; its node dot */}
-      <mesh material={mats.trim} position={TRUCK.receiverBase}>
-        <cylinderGeometry args={[0.05, 0.06, 0.03, 20]} />
-      </mesh>
-      <mesh
-        material={mats.trim}
-        position={[TRUCK.receiver[0], (TRUCK.receiver[1] + TRUCK.receiverBase[1]) / 2, TRUCK.receiver[2]]}
-      >
-        <cylinderGeometry args={[0.005, 0.008, TRUCK.receiver[1] - TRUCK.receiverBase[1], 8]} />
-      </mesh>
-      <mesh
-        position={[TRUCK.receiver[0], TRUCK.receiver[1] + 0.02, TRUCK.receiver[2]]}
-        material={lit ? mats.on : mats.off}
-        userData={{glow: lit}}
-      >
-        <sphereGeometry args={[0.035, 16, 12]} />
-      </mesh>
+      {receiver ? (
+        <>
+          <mesh material={mats.trim} position={TRUCK.receiverBase}>
+            <cylinderGeometry args={[0.05, 0.06, 0.03, 20]} />
+          </mesh>
+          <mesh
+            material={mats.trim}
+            position={[TRUCK.receiver[0], (TRUCK.receiver[1] + TRUCK.receiverBase[1]) / 2, TRUCK.receiver[2]]}
+          >
+            <cylinderGeometry args={[0.005, 0.008, TRUCK.receiver[1] - TRUCK.receiverBase[1], 8]} />
+          </mesh>
+          <mesh
+            position={[TRUCK.receiver[0], TRUCK.receiver[1] + 0.02, TRUCK.receiver[2]]}
+            material={lit ? mats.on : mats.off}
+            userData={{glow: lit}}
+          >
+            <sphereGeometry args={[0.035, 16, 12]} />
+          </mesh>
+        </>
+      ) : null}
     </group>
   );
 };

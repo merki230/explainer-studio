@@ -107,6 +107,8 @@ const AT = {
 };
 
 export const spec: VideoSpec = {
+  // posted video: wheels exactly as published (`three/real/wheelMotion.ts`); new videos leave this out
+  wheels: 'legacy',
   watermark: null,
   // enters at 3 s (default startAt, after the hook's first line), fades in over 2 s, out to silence at the end
   music: {src: `audio/music-${MUSIC_TAKE}.mp3`, level: MUSIC_LEVEL[MUSIC_TAKE], duckDb: 0},

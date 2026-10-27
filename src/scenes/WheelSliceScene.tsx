@@ -1,8 +1,9 @@
 import React, {useMemo} from 'react';
 import {AbsoluteFill, useCurrentFrame, useVideoConfig} from 'remotion';
-import {ease, framingAtKeys, integrateSpeed, keyed, type CameraKey, type SpeedKey} from './keyframes';
+import {ease, framingAtKeys, integrateSpeed, keyed, speedAt, type CameraKey, type SpeedKey} from './keyframes';
 import * as THREE from 'three';
-import {MOODS, section, type Mood} from '../theme';
+import {FPS, MOODS, section, type Mood} from '../theme';
+import {capRevs, cappedTravel, wheelMode, wheelSmear, type WheelMode} from '../three/real/wheelMotion';
 import {raw} from '../three/plaster';
 import {RealWheel, WHEEL, wheelPoint} from '../three/real/RealWheel';
 import {sensorPartAt, TireSensor, type SensorPart} from '../three/real/TireSensor';
@@ -52,6 +53,12 @@ export const wheelFramings = (home = VALVE_HOME): Record<WheelFraming, Framing> 
 
 export type WheelSliceSceneProps = {
   durationInFrames: number;
+  /**
+   * How fast the wheel may look to turn (`three/real/wheelMotion.ts`; the floating wheel has no road, so no
+   * direction): 'forward' (default: the drawn turn capped at 26° a frame, ≈ 2.1 rev/s, the spokes smeared above
+   * it, so a fast `spin` never strobes backward) or 'legacy' (posted videos only: No. 002 as rendered, the real rate).
+   */
+  wheels?: WheelMode;
   /** Day (default) or Night. */
   mood?: Mood;
   /** Realistic objects (accepted for consistency; the wheel is always realistic). */
@@ -154,7 +161,9 @@ export const wheelCameraStart = (p: Partial<WheelSliceSceneProps>, d: number, fp
 export const wheelCameraEnd = (p: Partial<WheelSliceSceneProps>, d: number, fps: number): Framing =>
   wheelCameraMove(p, d, fps).to;
 
-const integrate = (keys: SpeedKey[], t: number, ramp: number) => integrateSpeed(keys, t, ramp) * Math.PI * 2;
+/** The turn (rad) by t; with a `cap` (rev/s) the drawn turn, never faster than the cap ('forward'). */
+const integrate = (keys: SpeedKey[], t: number, ramp: number, cap?: number) =>
+  (cap === undefined ? integrateSpeed(keys, t, ramp) : cappedTravel((x) => speedAt(keys, x, ramp), t, cap)) * Math.PI * 2;
 
 /** The wheel's spin angle at t (radians), anchored so the valve is at home at the scene's start or end. */
 export const wheelSpinAt = (p: Partial<WheelSliceSceneProps>, t: number, durationSec: number) => {
@@ -163,9 +172,10 @@ export const wheelSpinAt = (p: Partial<WheelSliceSceneProps>, t: number, duratio
   const home = (p.valveAt ?? VALVE_HOME) - WHEEL.valveBase;
   const last = [...keys].sort((a, b) => a.at - b.at).at(-1);
   const anchor = p.spinAnchor ?? (last && last.speed === 0 ? 'end' : 'start');
-  const raw = integrate(keys, t, ramp);
+  const cap = wheelMode(p.wheels) === 'forward' ? capRevs(FPS) : undefined;
+  const raw = integrate(keys, t, ramp, cap);
   if (anchor === 'start') return home + raw;
-  return home + raw - integrate(keys, durationSec, ramp);
+  return home + raw - integrate(keys, durationSec, ramp, cap);
 };
 
 /**
@@ -248,7 +258,14 @@ export const WheelSliceScene: React.FC<WheelSliceSceneProps> = (props) => {
 
   const spin = wheelSpinAt(props, t, durationInFrames / fps);
   // the angle turned while the shutter is open (half a frame), for the wheel's motion blur
-  const motionBlur = ((wheelSpinAt(props, t + 0.5 / fps, durationInFrames / fps) - wheelSpinAt(props, t - 0.5 / fps, durationInFrames / fps)) * SHUTTER);
+  const motionBlur = (() => {
+    const real = (q: Partial<WheelSliceSceneProps>) =>
+      (wheelSpinAt(q, t + 0.5 / fps, durationInFrames / fps) - wheelSpinAt(q, t - 0.5 / fps, durationInFrames / fps)) * SHUTTER;
+    if (wheelMode(props.wheels) === 'legacy') return real(props);
+    // 'forward': the real blur, growing to a full smear of the spokes by 4× the cap
+    const v = speedAt(props.spin ?? [{at: 0, speed: 0}], t, props.spinRamp ?? 0.8);
+    return (v < 0 ? -1 : 1) * wheelSmear(real({...props, wheels: 'legacy'}), v, capRevs(fps));
+  })();
   const pressure = keyed(props.pressure, t, 1);
 
   // the sensor: state, wake flash, pulses
