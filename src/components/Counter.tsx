@@ -215,6 +215,10 @@ const CounterRows: React.FC<
       {sub}
     </div>
   );
+  // A row whose number grows a digit (9 → 30 min) would widen the box mid-count: then every row keeps
+  // the room of its final value from the start (an invisible copy under the digits). Rows that keep
+  // their width (0.0 → 3.6 s, No. 007) render as before.
+  const grows = rows.some((r) => fmt(r.to).length !== fmt(Math.min(from, r.to)).length);
   return (
     <div
       style={{
@@ -258,7 +262,14 @@ const CounterRows: React.FC<
                 fontVariantNumeric: 'tabular-nums lining-nums',
               }}
             >
-              {fmt(Math.min(clock, r.to))}
+              {grows ? (
+                <span style={{display: 'inline-grid', justifyItems: 'end'}}>
+                  <span style={{gridArea: '1 / 1', visibility: 'hidden'}}>{fmt(r.to)}</span>
+                  <span style={{gridArea: '1 / 1'}}>{fmt(Math.min(clock, r.to))}</span>
+                </span>
+              ) : (
+                fmt(Math.min(clock, r.to))
+              )}
             </span>
             <span style={{fontFamily: fonts.sans, fontWeight: 600, fontSize: 34, color: ink}}>{label}</span>
           </React.Fragment>

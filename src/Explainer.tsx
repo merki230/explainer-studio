@@ -14,6 +14,7 @@ import {DETAIL_FADE, DetailBox} from './components/DetailBox';
 import {FULLSCREEN_FADE, FullScreen} from './components/FullScreen';
 import {NameTag, TAG_FADE} from './components/NameTag';
 import {NoteStaff} from './components/NoteStaff';
+import {PLACE_FADE, PlaceLabel} from './components/PlaceLabel';
 import {Statement, STATEMENT_FADE} from './components/Statement';
 import {TITLE_FADE, TITLE_HOLD, TitleBlock} from './components/TitleBlock';
 import {SCENES} from './scenes';
@@ -29,6 +30,7 @@ import {musicalCameraEnd, musicalCameraStart} from './scenes/MusicalRoadScene';
 import {cityCameraEnd, cityCameraStart} from './scenes/CitySliceScene';
 import {driveUnitCameraEnd, driveUnitCameraStart} from './scenes/DriveUnitScene';
 import {raceCameraEnd, raceCameraStart, raceCarry} from './scenes/RaceSliceScene';
+import {chargeCameraEnd, chargeCameraStart} from './scenes/ChargeSliceScene';
 import type {Framing} from './three/section/SectionCamera';
 
 type CameraFn = (p: Record<string, unknown>, durationInFrames: number, fps: number) => Framing;
@@ -46,6 +48,7 @@ const CAMERAS: Record<string, {start: CameraFn; end: CameraFn}> = {
   'city-slice': {start: cityCameraStart as CameraFn, end: cityCameraEnd as CameraFn},
   'drive-unit': {start: driveUnitCameraStart as CameraFn, end: driveUnitCameraEnd as CameraFn},
   'race-slice': {start: raceCameraStart as CameraFn, end: raceCameraEnd as CameraFn},
+  'charge-slice': {start: chargeCameraStart as CameraFn, end: chargeCameraEnd as CameraFn},
 };
 import {transitionInto, type Transition} from './scenes/transitions';
 import {clickOffFrame, type ClickOff} from './scenes/clickOff';
@@ -109,7 +112,9 @@ const ErrorCard: React.FC<{videoId: string; message: string}> = ({videoId, messa
 /** Frames an overlay takes to fade out before its `until`. */
 const OVERLAY_EXIT = 8;
 const exitFrames = (o: ResolvedOverlay) =>
-  o.type === 'statement'
+  o.type === 'place'
+    ? PLACE_FADE
+    : o.type === 'statement'
     ? STATEMENT_FADE
     : o.type === 'attribution'
       ? ATTRIBUTION_FADE
@@ -148,10 +153,16 @@ const autoEnd = (o: ResolvedOverlay, from: number, words: Word[]): number | unde
 
 /**
  * Frame (absolute) by which an overlay with `until` has faded out: the cue's first word, or
- * seconds after the scene starts. Never later than the scene's cut, so it is gone before the
- * next scene fades in; never before the overlay has fully entered.
+ * seconds after the scene starts. Never later than the scene's cut (or `limit`, the end of the run
+ * a carried card rides through), so it is gone before the next scene fades in; never before the
+ * overlay has fully entered.
  */
-export const overlayEnd = (o: ResolvedOverlay, s: ResolvedScene, words: Word[]): number | undefined => {
+export const overlayEnd = (
+  o: ResolvedOverlay,
+  s: ResolvedScene,
+  words: Word[],
+  limit: number = s.endFrame,
+): number | undefined => {
   const from = Math.max(
     0,
     words.findIndex((w) => Math.round(w.start * FPS) >= s.startFrame),
@@ -166,8 +177,14 @@ export const overlayEnd = (o: ResolvedOverlay, s: ResolvedScene, words: Word[]):
   } else {
     end = s.startFrame + Math.round(o.until * FPS);
   }
-  return Math.max(o.startFrame + 12 + exitFrames(o), Math.min(end, s.endFrame));
+  return Math.max(o.startFrame + 12 + exitFrames(o), Math.min(end, limit));
 };
+
+/** Overlay types that may ride across cuts (`carry`): cards that don't point into the picture. */
+const CARRY_TYPES = ['counter', 'chart', 'place', 'statement', 'title'];
+/** Whether an overlay is carried across the cuts after its scene (an anchored place label isn't). */
+const isCarried = (o: ResolvedOverlay) =>
+  !!o.carry && CARRY_TYPES.includes(o.type) && !(o.type === 'place' && o.anchor);
 
 const FadeOut: React.FC<{children: React.ReactNode; at?: number; frames?: number}> = ({
   children,
@@ -215,6 +232,8 @@ const Overlay: React.FC<{o: ResolvedOverlay; scene: SceneContext}> = ({o, scene}
       return <NoteStaff {...o} mood={mood} scene={scene} />;
     case 'chart':
       return <ChartCard {...o} mood={mood} />;
+    case 'place':
+      return <PlaceLabel {...o} mood={mood} scene={scene} />;
     case 'sfx':
       // sounds play outside the scene's layers (see SceneSounds), so a click can outlast the cut
       return null;
@@ -362,16 +381,6 @@ const ExplainerBody: React.FC<{
   if (video.voice?.src && !overrideUrl && baseUrl) {
     console.warn(`[sound] voice.src ${video.voice.src} missing: playing ${transcript.audio} instead.`);
   }
-  // Captions are suppressed while a statement card is up (style guide § 5, § 7).
-  const quiet = useMemo(
-    () =>
-      timeline.scenes.flatMap((s) =>
-        s.overlays
-          .filter((o) => o.type === 'statement')
-          .map((o) => [o.startFrame, overlayEnd(o, s, transcript.words) ?? s.endFrame] as [number, number]),
-      ),
-    [timeline, transcript.words],
-  );
   // Transitions (§ 8): how each scene comes in, and the props each scene gets (a scene that
   // continues the previous one starts its camera where the previous one ended).
   const plan = useMemo(() => {
@@ -410,6 +419,30 @@ const ExplainerBody: React.FC<{
     });
     return {into, props};
   }, [timeline, video.wheels]);
+  // Carried cards (`carry`): each scene's run of following scenes joined by continue, glide or cut
+  // ends at this frame (a slide, follow or dissolve, or the video's end, stops it).
+  const carryLimit = useMemo(
+    () =>
+      timeline.scenes.map((_, i) => {
+        let j = i;
+        while (j < last && ['continue', 'glide', 'cut'].includes(plan.into[j + 1]?.kind ?? '')) j++;
+        return {frame: timeline.scenes[j].endFrame, toEnd: j === last};
+      }),
+    [timeline, plan, last],
+  );
+  // Captions are suppressed while a statement card is up (style guide § 5, § 7).
+  const quiet = useMemo(
+    () =>
+      timeline.scenes.flatMap((s, i) =>
+        s.overlays
+          .filter((o) => o.type === 'statement')
+          .map((o) => {
+            const limit = isCarried(o) ? carryLimit[i].frame : s.endFrame;
+            return [o.startFrame, overlayEnd(o, s, transcript.words, limit) ?? limit] as [number, number];
+          }),
+      ),
+    [timeline, transcript.words, carryLimit],
+  );
   return (
     <AbsoluteFill style={{backgroundColor: theme.museum}}>
       {timeline.scenes.map((s, i) => {
@@ -434,7 +467,7 @@ const ExplainerBody: React.FC<{
             <Transitioned into={plan.into[i]} out={out} span={span}>
               <Scene durationInFrames={duration} startFrame={s.startFrame} {...props} />
               {s.overlays.map((o, k) => {
-                if (o.type === 'sfx') return null;
+                if (o.type === 'sfx' || isCarried(o)) return null;
                 const end = overlayEnd(o, s, transcript.words);
                 return (
                   <Sequence
@@ -462,6 +495,41 @@ const ExplainerBody: React.FC<{
           </Sequence>
         );
       })}
+      {/*
+        Carried cards (`carry`) sit outside the scenes: one element from their start to their end,
+        across the continue, glide and cut joins between, so a counter keeps running and never blinks.
+      */}
+      {timeline.scenes.flatMap((s, i) =>
+        s.overlays.map((o, k) => {
+          if (o.type === 'sfx' || !isCarried(o)) return null;
+          const lim = carryLimit[i];
+          const end =
+            o.until === undefined && lim.toEnd && overlayEnd(o, s, transcript.words, lim.frame) === undefined
+              ? undefined
+              : (overlayEnd(o, s, transcript.words, lim.frame) ?? lim.frame);
+          return (
+            <Sequence
+              key={`carry-${i}-${k}`}
+              from={o.startFrame}
+              durationInFrames={end === undefined ? undefined : end - o.startFrame}
+              name={`${o.type} (carried)`}
+            >
+              <FadeOut at={end === undefined ? undefined : end - o.startFrame} frames={exitFrames(o)}>
+                <Overlay
+                  o={o}
+                  scene={{
+                    props: {...plan.props[i], startFrame: s.startFrame},
+                    durationInFrames: s.endFrame - s.startFrame,
+                    offset: o.startFrame - s.startFrame,
+                    mood: moodOf(s),
+                    name: s.scene,
+                  }}
+                />
+              </FadeOut>
+            </Sequence>
+          );
+        }),
+      )}
       {/*
         The exhibit label sits outside the scene crossfades, so it is one continuous element:
         an identical label holds still across a cut, a changed one swaps only its changed text,

@@ -80,7 +80,12 @@ export const SectionLights: React.FC<{
    * (near the origin); a slice with no one there (a car on a road) switches it off.
    */
   figureSpot?: boolean;
-}> = ({mood, palette, target = [0, 0.6, -0.2], lamp = 1, lampAt = [-1.45, 1.3, -0.75], extent, figureSpot = true}) => {
+  /**
+   * No. 010 (the time-lapse): the key (the sun) swung about the vertical through `target` by this angle (rad,
+   * + counter-clockwise seen from above), so the shadows swing. Default 0 (unchanged).
+   */
+  keyYaw?: number;
+}> = ({mood, palette, target = [0, 0.6, -0.2], lamp = 1, lampAt = [-1.45, 1.3, -0.75], extent, figureSpot = true, keyYaw = 0}) => {
   const m = palette ?? MOODS[mood];
   // created once; colours and intensities set every frame (so a blended palette just works)
   const lights = useMemo(() => {
@@ -127,6 +132,10 @@ export const SectionLights: React.FC<{
       lights.key.shadow.map = null;
     }
   } else lights.key.position.set(...m.key.position);
+  if (keyYaw) {
+    const c = new THREE.Vector3(...target);
+    lights.key.position.sub(c).applyAxisAngle(new THREE.Vector3(0, 1, 0), keyYaw).add(c);
+  }
   lights.key.target.position.set(...target);
   lights.key.target.updateMatrixWorld();
   lights.fill.position.set(...m.fill.position);

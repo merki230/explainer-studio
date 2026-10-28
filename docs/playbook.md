@@ -88,6 +88,15 @@ updates them in the same step. Before closing a rule change, grep the repo for t
   - `night --name night-bed` (16 s, -28, seamless loop, 1.2 s cross-fade): low wind with slow gusts and three distant crickets (`--crickets 0..1`, default 0.6).
   - `diesel --name diesel-stop` (5 s, -22): inline-six pickup arriving and stopping at 3.2 s, air-brake hiss at the stop, optional light squeal (`--squeal 0..1`, default 0.2) in the last 0.5 s before the stop, idle after.
   - Copy the chosen takes by hand into `src/videos/<slug>/audio/sfx/`.
+- `yarn sfx:contactor|cabfan|pump|latch|heater|heaterfan|station <slug> [--name] [--out] [--seconds] [--lufs]` (one script, `scripts/sfx-charger.mjs`, header lists the models; No. 010 charging-station sounds, free, deterministic, physical only, no whine, whoosh or riser; same output rules as `sfx:engine`). Recipes used for `ev-charging` (levels are the target LUFS, measured on the clip repeated to 4 s):
+  - `contactor --name contactor-close` (0.7 s, -29): heavy relay slam, 62 Hz body thud plus noise burst, two quieter contact bounces at 11 and 23 ms, a metallic click on top (1.9 k and 3.4 k case resonances). `--part open --lufs -31 --name contactor-open`: softer, lower (48 Hz), one release clack. `--pitch X` scales the click resonances. Peaky, so the LUFS is low (the -22 default failed the -1.5 dBTP check); set the spec `volume` against it.
+  - `cabfan` (8 s, -30, seamless loop, 1 s cross-fade): air 180-3200 Hz with a slow wobble, low rumble 45-130 Hz, a 2.5 % amplitude flutter at 47 Hz (no tone). Steady, so fade it in from the spec (`fade`).
+  - `pump` (8 s, -34, seamless loop): 72 Hz motor hum with 144 and 216 Hz partials (whole cycles per loop), a soft 300-900 Hz flow texture and low rumble. Fixed pitch; for "working harder" step the spec `volume` up, never the pitch.
+  - `latch --name latch-in` (0.3 s, -26): plastic snap at 2.4 k then a lower metal clack 28 ms later and a 190 Hz body thump. `--part out --name latch-out`: clack first, softer (the release).
+  - `heater --name heater-click` (0.9 s, -28): rocker-switch click with a 380 Hz body, then three soft thermal ticks of the housing between 0.25 and 0.85 s.
+  - `heaterfan` (6 s, -32, seamless loop): small ceramic-heater fan, air 350-4200 Hz plus 100/200 Hz motor body. No whistle.
+  - `station --name station-bed` (20 s, -32, seamless loop, 2 s cross-fade): light wind with slow gusts, six faint far car/truck passes, a thin steady far hum. Start it at the video's start; loop under each location.
+  - Copy the chosen takes by hand into `src/videos/<slug>/audio/sfx/`. Preview all in order with 1 s gaps: decode each to wav with `npx remotion ffmpeg` (the bundled build has no filters or pipes), join in Node, encode to `out/<slug>/raw/sfx/preview.mp3`.
 - Both cost credits: ask the owner first. `--dry-run` prints the request (no key) and writes nothing; `--help`
   lists the options.
 - Every generated file is appended to `src/videos/<slug>/audio-log.md` (date, plan, endpoint, model, prompt,

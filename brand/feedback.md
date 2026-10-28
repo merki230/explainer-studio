@@ -35,6 +35,35 @@ First two data points: No. 002 (evening, about 7 PM, 2026-10-17) and No. 003 (mi
 
 ---
 
+## No. 006–010: production values for the record (not all published)
+
+- **Recorded:** 2026-10-27, brand-director, at the main session's request · **Applies to:** No. 010 onward (posted videos never change)
+
+**Owner's notes** (as recorded in the repo; no new quotes)
+
+- Motion check, 2026-10-27 (`.claude/agents/visual-reviewer.md`): wheels roll forward, everything moves with the world, the same object across cuts, stopped cars show lit brake or hazard lamps. "A motion bug is a FIX, never a note." Wheels: "no wheel ever turns backward in a new video; posted videos never change" (README, Wheels row).
+- No. 006 brake lamp: "a clearly bright, saturated red, no pink cast" (`theme.ts`, `brakeLit`). Rust: "darker and browner"; copper: the brighter one "read as the system already lit".
+- No. 007: "the cars fill most frames"; "the road too" (README).
+- No. 009 decisions D1–D3 (`mile-markers/av-script.md`): Day then Night with one time-passes beat; title `What do exit numbers count?`; a service-patrol pickup with a `warning` light bar. Overpass approved 2026-10-18.
+
+**What we're changing** (CHANGELOG v0.13; values 🧪)
+
+| Rule (file § name) | Change | Basis |
+|---|---|---|
+| style-guide § 6 Name tags on cars | New: roof leader, paint square with 2 px ink outline, name as spoken | No. 010 D5 (director), brand-director value |
+| style-guide § 6 Place label | New: Inter 700 30 px, 0.14em, rule on, sky band x 120 / y 300 | No. 010 N8 as built, brand-director value |
+| style-guide § 1 Status green; Lamps on vehicles | `signalGreen` for go/on/flowing; heater pilot `warning`; hazards and brake lamps | As built No. 006–010; owner fix (brake red); owner D3 (light bar) |
+| style-guide § 1 Location palettes | Wet `HIGHWAY`, `CITY`, `CAR.friend`, rust, copper, `RACE`, `CHARGE` (bayGreen → `#5c9d72`, new `ghost`); `lineYellow` exception; `tailLight` kept | As built; brand-director values |
+| style-guide § 2 Subject pool at Night | `carLight` ≈ 1.8, cool, subject only | As built No. 009 |
+| style-guide § 3 Real road furniture; Ghost outline | MUTCD signs, Overpass; dashed "not here" outline | Owner direction (No. 009 brief), Overpass ✅; ghost: owner to confirm |
+| style-guide § 5 The ruler | Count along the ground as the system | As built No. 009 |
+| style-guide § 6 Detail box (off-screen screen); Chart card; § 1 Never orange | Dispatch map rule; chart card rule; in-card orange marks | Shipped No. 007, No. 009 |
+| style-guide § 8 principle 4; checklist 14 | The motion check | ✅ owner decision 2026-10-27 |
+
+**Open for the owner:** (1) "Stopped cars show lit lamps" vs parked charging cars with lamps off (No. 010); recommended: the rule covers road stops and breakdowns, not parked cars. (2) The ghost outline as a house convention. (3) The rows marked 🧪 brand-director are proposals until the owner sees them on No. 010's stills.
+
+---
+
 ## No. 005 · rumble-strips (`rumble-strips`): owner decisions in production (not published)
 
 - **Decided:** 2026-10-18, owner, during the previews, relayed by the main session · **Applies to:** No. 005 onward

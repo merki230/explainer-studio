@@ -739,6 +739,53 @@ export const RACE = {
   haze: '#c3c4c6',
 };
 
+/**
+ * No. 010 `charge-slice` (the charging station; scene-builder values, 🧪 until the brand-director's review):
+ *  - The two cars' paints: `teslaPaint` #cdd1d4 (a light pearl grey, a step under white so the cut car's
+ *    clearcoat never clips) and `bydPaint` #34465c (a deep slate blue, ≈ 213°, 28% saturation: 12° and far
+ *    less saturated than YOU's cobalt, so it never reads as a cast colour). Different in value too.
+ *  - The charger: `cabinet` (the body, a warm light grey), `cabinetDark` (the front panel, the cap, the
+ *    holster), `screen` (the unlit, unread screen glass). The port light is `section.signalGreen`, flat.
+ *  - The bays: `concrete` (the China pad), `bayGreen` (the green bay paint many Chinese EV bays have,
+ *    China only; brand-director v0.13, replacing a sage that read grey), `canopy` / `canopyUnder` (the
+ *    roof's fascia and soffit), `column` (its steel columns).
+ *  - `ghost`: the dashed outline of a car that isn't there, Day (Night uses `section.cut`); v0.13.
+ *  - Approved as built (v0.13): the two paints, `coolant`, `coolantFlow`.
+ *  - The cable's cut-away: `coolant` (the liquid in the cooling hoses: a neutral blue-grey, never orange)
+ *    and `coolantFlow` (its moving streaks, lighter); the copper is `REAL.copper`, the jacket `REAL.cable`.
+ */
+export const CHARGE = {
+  teslaPaint: '#cdd1d4',
+  bydPaint: '#34465c',
+  cabinet: '#d3d4d1',
+  cabinetDark: '#2a2d32',
+  screen: '#14181d',
+  concrete: '#bcb8b0',
+  bayGreen: '#5c9d72',
+  canopy: '#dcdcd8',
+  canopyUnder: '#babdbd',
+  column: '#868b91',
+  coolant: '#8ea3ad',
+  coolantFlow: '#d9e3e7',
+  /** The ghost car's dashed outline in Day (Night: `section.cut`). */
+  ghost: '#24262c',
+  /** No. 010 draft 2: the kerb stone beside each bay (a step darker than the slab, so its edge reads). */
+  curb: '#a9a59f',
+  /** The station clock: its face (a step under white) and its rim and hands (ink). */
+  clockFace: '#eceae4',
+  clockInk: '#24262c',
+  /** Clouds in the sky band, Day / Night (soft, flat, never the system). */
+  cloud: '#f5f7f9',
+  cloudNight: '#2c3554',
+};
+
+/**
+ * No. 010 draft 2: the second grey extra (the owner: "two different-looking extras"): the extras' slate
+ * clothes with another skin and hair from the cast's range (style guide § 8), so the two drivers read as
+ * two people. The first extra is `CAST.extra` as it is.
+ */
+export const EXTRA_B: Partial<CastLook> = {skin: '#6e4630', hair: '#1a120c', bottom: '#4b505a'};
+
 export type CastName = 'you' | 'friend' | 'mom' | 'extra';
 export type CastLook = {
   top: string;

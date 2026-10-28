@@ -54,6 +54,9 @@ out/<slug>/raw/         scratch only: raw mix, music/sfx/voice takes, stills, re
   `out/<slug>/raw/sfx/` (free, deterministic; `yarn sfx:engine <slug> --die` = gas-engine stall; recipes in `docs/playbook.md`)
 - `yarn sfx:cruise <slug> day|night [--name] [--seconds] [--lufs] [--ramp dB] ...`: highway cruise heard from outside (dry tire roar +
   distant four-cylinder, mixed from `sfx:hiss`/`sfx:engine` stems; No. 009) into `out/<slug>/raw/sfx/` (free, deterministic; header lists options)
+- `yarn sfx:contactor|cabfan|pump|latch|heater|heaterfan|station <slug> [--name] [--part] [--seconds] [--lufs]`: self-made
+  charging-station sounds (relay clunk, cabinet fan, coolant pump hum, plug latch, space heater, outdoor bed), into
+  `out/<slug>/raw/sfx/` (free, deterministic, physical only; recipes in `docs/playbook.md`)
 - `yarn voice:room <slug> [--wet <dB>] [--size <0..1>] [--width <0..1>] [--out <name>]`: optional light room on the
   voiceover (free, local). Not the default: the owner prefers the dry voice
 - `yarn transcribe <slug> [audio]`: Scribe v2 timings from a human recording (costs money, ask first)

@@ -1,0 +1,14 @@
+[intrigued] In China, some electric cars now claim to charge in about the time of a stop at the gas pump.
+BYD says five minutes, from ten to seventy percent.
+A Tesla Model Y charging next to it would take about half an hour, from ten to eighty percent.
+That gap comes down to amps.
+[pause] Power is volts times amps, and a Model Y runs on about 400 volts, so charging faster means more amps.
+More amps means more heat in the cable and the battery, like an extension cord with a space heater plugged in.
+To protect the battery, the Tesla also slows down as it fills.
+The BYD gets around that with about a thousand volts, so it gets the same power with less than half the amps.
+Even so, BYD's chargers reportedly push up to fifteen hundred amps.
+[pause] That's China, though.
+Here in the US, BYD doesn't sell its passenger cars.
+And a federal rule bans their connected-car software starting with 2027 models.
+Our fastest chargers top out around 400 kilowatts for most cars, and a Model Y can use only 250.
+[curious] If your charging stops already take about half an hour, would BYD's five minutes change much?

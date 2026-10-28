@@ -758,7 +758,46 @@ export type BatteryPackProps = {
   /** The levels' glow (0 → 1): the loop fades them out. */
   glow?: number;
   inkScale?: number;
+  /**
+   * No. 010: heat in the cells (0 → 1): a soft orange bloom on every module's cut face, brightest in the cells'
+   * cores, distinct from the levels (not a band, the whole face). Illustrative, not a temperature. Default none.
+   */
+  heat?: number;
+  /**
+   * No. 010 (draft 2): the charge as one level sweeping the pack from the rear (where the HV lead comes in) to
+   * the front, 0 → 1, every module full height up to it, with a bright filling front (`orangeDot` core, orange
+   * halo) at its edge. Replaces `fill` when given. Default none.
+   */
+  sweep?: number;
+  /** The filling front's width (m; the scene widens it in wide shots so it reads). Default 0.035. */
+  frontWidth?: number;
 };
+
+/** The heat glow's alpha (one module's face): a soft vertical bloom per cell, faded toward the module's edges. */
+const heatTexture = (() => {
+  let t: THREE.CanvasTexture | null = null;
+  return () => {
+    if (t) return t;
+    const c = document.createElement('canvas');
+    c.width = 256;
+    c.height = 128;
+    const cx = c.getContext('2d')!;
+    cx.clearRect(0, 0, 256, 128);
+    const n = 12;
+    const w = 256 / n;
+    for (let i = 0; i < n; i++) {
+      const g = cx.createRadialGradient(i * w + w / 2, 66, 2, i * w + w / 2, 66, w * 1.9);
+      g.addColorStop(0, 'rgba(255,255,255,0.95)');
+      g.addColorStop(0.45, 'rgba(255,255,255,0.45)');
+      g.addColorStop(1, 'rgba(255,255,255,0)');
+      cx.fillStyle = g;
+      cx.fillRect(i * w - w * 2, 0, w * 5, 128);
+    }
+    t = new THREE.CanvasTexture(c);
+    t.colorSpace = THREE.SRGBColorSpace;
+    return t;
+  };
+})();
 
 /** A canvas of cells cut lengthwise (one module's face): cylindrical cells, their caps, a bus bar. */
 const cellTexture = (() => {
@@ -795,7 +834,7 @@ const cellTexture = (() => {
 })();
 
 /** The battery pack cut open (see the file comment). */
-export const BatteryPack: React.FC<BatteryPackProps> = ({mood, fill, glow = 1, inkScale = 1}) => {
+export const BatteryPack: React.FC<BatteryPackProps> = ({mood, fill, glow = 1, inkScale = 1, heat, sweep, frontWidth = 0.035}) => {
   const {env, envScale, albedo} = usePhys();
   const mats = useMemo(
     () => ({
@@ -806,9 +845,23 @@ export const BatteryPack: React.FC<BatteryPackProps> = ({mood, fill, glow = 1, i
       moduleSide: phys(REAL.module, {roughness: 0.55}),
       dark: phys(REAL.labDark, {roughness: 0.7}),
       levels: [...Array(EV.modules).keys()].map(() => glowMat()),
+      heat: new THREE.MeshBasicMaterial({
+        color: raw(section.orange),
+        map: heatTexture(),
+        transparent: true,
+        depthWrite: false,
+        opacity: 0,
+      }),
+      frontCore: new THREE.MeshBasicMaterial({color: raw(section.orangeDot), transparent: true, depthWrite: false}),
+      frontHalo: new THREE.MeshBasicMaterial({color: raw(section.orange), transparent: true, depthWrite: false, opacity: 0.6}),
     }),
     [],
   );
+  // the sweep's front (car frame x): from the rear module's back wall to the front one's
+  const sw = sweep === undefined ? null : Math.max(0, Math.min(1, sweep));
+  const sweepX = sw === null ? 0 : moduleSpan(EV.modules - 1)[0] + sw * (moduleSpan(0)[1] - moduleSpan(EV.modules - 1)[0]);
+  const heatK = Math.max(0, Math.min(1, heat ?? 0));
+  mats.heat.opacity = 0.85 * heatK;
   applyEnv(
     env,
     [
@@ -871,9 +924,12 @@ export const BatteryPack: React.FC<BatteryPackProps> = ({mood, fill, glow = 1, i
       </mesh>
       {[...Array(EV.modules).keys()].map((k) => {
         const [a, b] = moduleSpan(k);
-        const lv = Math.max(0, Math.min(1, fill?.[k] ?? 0));
+        const lv = sw !== null ? (sweepX > a ? 1 : 0) : Math.max(0, Math.min(1, fill?.[k] ?? 0));
         mats.levels[k].opacity = 0.75 * Math.max(0, Math.min(1, glow));
         const h = (MODULE_Y[1] - MODULE_Y[0]) * lv;
+        // the sweep: the level covers the module from its rear edge up to the front, full height
+        const lw = sw !== null ? Math.max(0, Math.min(b, sweepX) - a) : b - a - 0.012;
+        const lx = sw !== null ? a + lw / 2 : (a + b) / 2;
         return (
           <group key={k}>
             <mesh
@@ -891,19 +947,41 @@ export const BatteryPack: React.FC<BatteryPackProps> = ({mood, fill, glow = 1, i
             >
               <boxGeometry args={[b - a, MODULE_Y[1] - MODULE_Y[0], z - 0.01 - zb - 0.03]} />
             </mesh>
+            {heat !== undefined && heatK > 0.004 ? (
+              // No. 010: the heat in the cells, a soft bloom over the whole face
+              <mesh
+                position={[(a + b) / 2, (MODULE_Y[0] + MODULE_Y[1]) / 2, z - 0.004]}
+                material={mats.heat}
+                userData={{glow: true}}
+                renderOrder={4}
+              >
+                <planeGeometry args={[b - a - 0.006, MODULE_Y[1] - MODULE_Y[0]]} />
+              </mesh>
+            ) : null}
             {/* the level: a band of orange rising from the module's floor */}
             <mesh
-              position={[(a + b) / 2, MODULE_Y[0] + h / 2, z - 0.006]}
+              position={[lx, MODULE_Y[0] + h / 2, z - 0.006]}
               material={mats.levels[k]}
-              visible={lv > 0.005 && glow > 0.01}
+              visible={lv > 0.005 && glow > 0.01 && lw > 1e-4}
               userData={{glow: true}}
               renderOrder={3}
             >
-              <planeGeometry args={[b - a - 0.012, Math.max(1e-4, h)]} />
+              <planeGeometry args={[Math.max(1e-4, lw), Math.max(1e-4, h)]} />
             </mesh>
           </group>
         );
       })}
+      {sw !== null && sw > 0.002 && sw < 0.998 && glow > 0.01 ? (
+        // the filling front: a bright edge a little taller than the modules
+        <group position={[sweepX, (MODULE_Y[0] + MODULE_Y[1]) / 2, z - 0.003]}>
+          <mesh material={mats.frontHalo} userData={{glow: true}} renderOrder={5}>
+            <planeGeometry args={[frontWidth * 2.6, (MODULE_Y[1] - MODULE_Y[0]) * 1.12]} />
+          </mesh>
+          <mesh material={mats.frontCore} position={[0, 0, 0.001]} userData={{glow: true}} renderOrder={6}>
+            <planeGeometry args={[frontWidth, (MODULE_Y[1] - MODULE_Y[0]) * 1.06]} />
+          </mesh>
+        </group>
+      ) : null}
     </group>
   );
 };

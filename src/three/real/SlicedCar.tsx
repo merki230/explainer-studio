@@ -2,7 +2,7 @@ import React, {useMemo} from 'react';
 import {random, useCurrentFrame, useVideoConfig} from 'remotion';
 import * as THREE from 'three';
 import {fonts} from '../../fonts';
-import {CAR, HIGHWAY, MOODS, RACE, section, type CastName, type Mood} from '../../theme';
+import {CAR, HIGHWAY, MOODS, RACE, section, type CastLook, type CastName, type Mood} from '../../theme';
 import {OrangePath} from '../OrangePath';
 import {CurveArrow, PushArrow, pushArrowState, type PushArrowKeys} from '../PushArrow';
 import {raw, roundedBox} from '../plaster';
@@ -13,6 +13,7 @@ import {
   RealCar,
   RearDriveUnit,
   rearUnitPoint,
+  SEDAN_SEAT_DROP,
   type CoupeStyle,
 } from './RealCar';
 import type {ShellProfile} from './CarShell';
@@ -526,6 +527,24 @@ export type SlicedCarOptions = {
    * `signalGreen`. Null: off (default).
    */
   hazardAt?: number | null;
+  /**
+   * No. 010 ('ev'): the near rear quarter drawn whole with a charging port on it (`RealCar` `port`,
+   * `chargePortAt`); `light` 0 → 1 lights its ring (flat `signalGreen`, never bloomed). Null for none (default).
+   */
+  chargePort?: {light?: number} | null;
+  /**
+   * No. 010 ('ev'): the pack charging. `soc` 0 → 1 is every module's orange level (the charge going in;
+   * it overrides the regen's fill); `heat` 0 → 1 a soft glow on the cells' cut faces (`BatteryPack` `heat`).
+   * Null for none (default).
+   */
+  packCharge?: {soc: number; heat?: number; sweep?: boolean; frontWidth?: number} | null;
+  /**
+   * No. 010 (draft 2): the driver drawn in the seat. false: the seat is empty (the driver is out of the car,
+   * drawn by the scene). Default true.
+   */
+  driverShown?: boolean;
+  /** Colour overrides on the driver (`Figure` `look`, theme tokens), e.g. a second extra. Default none. */
+  driverLook?: Partial<CastLook>;
 };
 
 /**
@@ -564,7 +583,7 @@ export const slicedCarPhone = (p: Partial<SlicedCarOptions>, t: number): V3 => {
   const lay = layoutOf(p);
   const sd = (p.call?.side ?? 'near') === 'near' ? -1 : 1;
   const k = callLift(p.call, t);
-  const seatUp = p.shape === 'coupe' ? COUPE_SEAT_DROP : 0;
+  const seatUp = p.shape === 'coupe' ? COUPE_SEAT_DROP : p.shape === 'sedan' ? SEDAN_SEAT_DROP : 0;
   // figure-local (+x the figure's left, +z ahead): low in the hand → the ear
   const f: V3 = [sd * (0.07 + 0.13 * k), 0.98 + 0.3 * k, 0.27 - 0.24 * k];
   // the seated figure is turned π/2: local (x, y, z) → car (z, y, −x)
@@ -1260,7 +1279,7 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
   // No. 007: the coupe (seats lower: the hands rise to the same wheel), the far-side driver (the pedals move
   // across with them), the V8 with its gearbox and rear drive, the AWD electric car's rear unit
   const side = driverSideOf(props);
-  const seatUp = props.shape === 'coupe' ? COUPE_SEAT_DROP : 0;
+  const seatUp = props.shape === 'coupe' ? COUPE_SEAT_DROP : props.shape === 'sedan' ? SEDAN_SEAT_DROP : 0;
   const dz = bay && side === 'far' ? CAR_LAYOUT.driver[2] - -CAR_LAYOUT.driver[2] : 0;
   const v8 = gas && props.engine === 'v8';
   const crank = v8 ? slicedCarCrank(props, t) : 0;
@@ -1537,7 +1556,9 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
   // the idle foot tucked back under the knee; in the coupe (the seat ≈ 0.3 lower: the legs reach forward,
   // No. 007 realism pass) it rests further forward, flatter, on the floor
   const tuck: {ankle: V3; pitch?: number} =
-    props.shape === 'coupe' ? {ankle: toFig(0.52, C.floor + 0.09), pitch: -0.3} : {ankle: toFig(0.35, C.floor + 0.18), pitch: -0.5};
+    props.shape === 'coupe' || props.shape === 'sedan'
+      ? {ankle: toFig(0.52, C.floor + 0.09), pitch: -0.3}
+      : {ankle: toFig(0.35, C.floor + 0.18), pitch: -0.5};
   const legs: [{ankle: V3; pitch?: number; side?: number}, {ankle: V3; pitch?: number; side?: number}] | undefined = gas
     ? ([
         tuck,
@@ -1920,11 +1941,14 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
               tunnel={v8 && props.shape === 'coupe' ? true : undefined}
               mirrored={left ? true : undefined}
               coupeStyle={props.shape === 'coupe' ? props.coupeStyle : undefined}
+              {...(ev && props.chargePort ? {port: props.chargePort} : {})}
             />
           </group>
+          {props.driverShown === false ? null : (
           <Figure
             who={driver}
             mood={mood}
+            look={props.driverLook}
             position={[lay.driver[0] + bodyJ[0], lay.driver[1] + bodyY + bodyJ[1], lay.driver[2] + bodyJ[2]]}
             rotationY={Math.PI / 2}
             gestures={gestures}
@@ -1939,6 +1963,7 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
             callSide={(props.call?.side ?? 'near') === 'near' ? 'right' : 'left'}
             screenOn={props.call ? callScreen : undefined}
           />
+          )}
           {hazardAtOn ? (
             <HazardLamps
               on={hazard > 0}
@@ -2103,7 +2128,19 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
                   inkScale={inkK}
                 />
               ) : null}
-              <BatteryPack mood={mood} fill={regen?.modules} glow={rg} inkScale={inkK} />
+              {props.packCharge ? (
+                <BatteryPack
+                  mood={mood}
+                  fill={[...Array(EV.modules).keys()].map(() => Math.max(0, Math.min(1, props.packCharge!.soc)))}
+                  glow={1}
+                  inkScale={inkK}
+                  heat={props.packCharge.heat ?? 0}
+                  sweep={props.packCharge.sweep ? props.packCharge.soc : undefined}
+                  frontWidth={props.packCharge.frontWidth}
+                />
+              ) : (
+                <BatteryPack mood={mood} fill={regen?.modules} glow={rg} inkScale={inkK} />
+              )}
               {dz ? (
                 <group position={[0, 0, dz]}>
                   <PedalBox mood={mood} accel={foot ? foot.press : 0} sensor={props.drive !== undefined} />

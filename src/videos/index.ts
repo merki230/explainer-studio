@@ -27,6 +27,8 @@ import {spec as driveByWire} from './drive-by-wire/spec';
 import driveByWireTranscript from './drive-by-wire/transcript.json';
 import {spec as mileMarkers} from './mile-markers/spec';
 import mileMarkersTranscript from './mile-markers/transcript.json';
+import {spec as evCharging} from './ev-charging/spec';
+import evChargingTranscript from './ev-charging/transcript.json';
 // </imports>
 
 export type VideoEntry = {spec: VideoSpec; transcript: Transcript};
@@ -50,5 +52,6 @@ export const VIDEOS: Record<string, VideoEntry> = {
   'ev-acceleration': {spec: evAcceleration, transcript: evAccelerationTranscript as Transcript},
   'drive-by-wire': {spec: driveByWire, transcript: driveByWireTranscript as Transcript},
   'mile-markers': {spec: mileMarkers, transcript: mileMarkersTranscript as Transcript},
+  'ev-charging': {spec: evCharging, transcript: evChargingTranscript as Transcript},
   // </entries>
 };

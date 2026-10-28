@@ -100,6 +100,38 @@ export const COUPE_LAYOUT_NEAR: typeof CAR_LAYOUT = {
   roofCut: COUPE_ROOF_CUT,
 };
 /**
+ * The cut sedan (No. 010, `shape: 'sedan'` cut): the crossover's wheelbase, wheels, floor, pedals, drive unit
+ * and pack (every drive part fits unchanged), a lower four-door cabin: the seats and the steering wheel sit
+ * `SEDAN_SEAT_BACK` further back, the whole cabin (seats, low dash, wheel, cluster) `SEDAN_CABIN_SINK` lower
+ * and the seats `SEDAN_SEAT_DROP` lower again, under a sedan's roof (the cut at `SEDAN_ROOF_CUT`, the
+ * crossover's 1.92, the coupe's 1.57). A low hood, a raked rear window and a short trunk deck; the trunk is
+ * hollow in the section. Generic: no maker's silhouette, badge or lamp signature.
+ */
+export const SEDAN_SEAT_DROP = 0.06;
+export const SEDAN_CABIN_SINK = 0.18;
+export const SEDAN_SEAT_BACK = 0.1;
+const SEDAN_ROOF_CUT = 1.7;
+const sedanDropped = (p: V3): V3 => [p[0] - SEDAN_SEAT_BACK, p[1] - SEDAN_SEAT_DROP - SEDAN_CABIN_SINK, p[2]];
+const sedanSunkBack = (p: V3): V3 => [p[0] - SEDAN_SEAT_BACK, p[1] - SEDAN_CABIN_SINK, p[2]];
+const sedanSunk = (p: V3): V3 => [p[0], p[1] - SEDAN_CABIN_SINK, p[2]];
+export const SEDAN_LAYOUT: typeof CAR_LAYOUT = {
+  ...CAR_LAYOUT,
+  driver: sedanDropped(CAR_LAYOUT.driver),
+  passenger: sedanDropped(CAR_LAYOUT.passenger),
+  steering: sedanSunkBack(CAR_LAYOUT.steering),
+  cluster: sedanSunk(CAR_LAYOUT.cluster),
+  roofCut: SEDAN_ROOF_CUT,
+};
+export const SEDAN_LAYOUT_NEAR: typeof CAR_LAYOUT = {
+  ...LAYOUT_NEAR,
+  driver: sedanDropped(LAYOUT_NEAR.driver),
+  passenger: sedanDropped(LAYOUT_NEAR.passenger),
+  steering: sedanSunkBack(LAYOUT_NEAR.steering),
+  cluster: sedanSunk(LAYOUT_NEAR.cluster),
+  roofCut: SEDAN_ROOF_CUT,
+};
+
+/**
  * The layout for a shape and a driver's side. The whole car (`whole`) keeps the crossover's layout for
  * every shape and sinks its interior instead (`wholeSink` + `shellSink(shape)`), so a figure driving a
  * whole car goes at `driver` minus both.
@@ -113,9 +145,13 @@ export const carLayout = (
     ? driverSide === 'near'
       ? COUPE_LAYOUT_NEAR
       : COUPE_LAYOUT
-    : driverSide === 'near'
-      ? LAYOUT_NEAR
-      : CAR_LAYOUT;
+    : shape === 'sedan' && !whole
+      ? driverSide === 'near'
+        ? SEDAN_LAYOUT_NEAR
+        : SEDAN_LAYOUT
+      : driverSide === 'near'
+        ? LAYOUT_NEAR
+        : CAR_LAYOUT;
 
 /** The side section: lower body with the cabin hollowed and two wheel arches (x forward, y up). */
 const arch = (cx: number, r = 0.44, n = 14): P2[] =>
@@ -479,6 +515,172 @@ const coupeWindows = (s?: CoupeStyle): P2[][] =>
           ],
         ];
 
+/*
+ * The cut sedan's pieces (No. 010, see `SEDAN_LAYOUT`), like the coupe's: the nose and hood, the open bay
+ * (firewall, hood skin, front wall, bumper; sectioned at `EV_FIREWALL_Z`), the rear (the sill over the rear
+ * arch, the bulkhead behind the rear bench, the parcel shelf, the trunk deck, the rear wall and bumper; the
+ * trunk hollow), the far side with a four-door glasshouse, the windshield and rear glass.
+ */
+/** The sedan's wheel arches (between the coupe's 0.405 and the crossover's 0.44). */
+const SEDAN_ARCH_R = 0.42;
+/** The nose and hood's outer line: the front bumper's foot → the cowl (x 1.4). */
+const SEDAN_NOSE: P2[] = [
+  [2.31, 0.24],
+  [2.43, 0.42],
+  [2.42, 0.68],
+  [2.28, 0.86],
+  [2.0, 0.96],
+  [1.4, 1.06],
+];
+const SEDAN_FRONT: P2[] = [
+  ...SEDAN_NOSE,
+  ...COWL,
+  [0.88, 0.34],
+  [-0.88, 0.34],
+  [-0.91, 0.24],
+  [0.91, 0.24],
+  ...arch(1.35, SEDAN_ARCH_R),
+  [1.79, 0.24],
+];
+const SEDAN_BAY_FRONT: P2[] = [
+  [0.88, 0.34],
+  [0.925, 0.34],
+  [1.005, 0.8],
+  [1.03, 0.985],
+  [1.5, 0.99],
+  [1.9, 0.92],
+  [2.1, 0.84],
+  [2.15, 0.76],
+  [2.15, 0.24],
+  ...SEDAN_NOSE,
+  ...COWL,
+];
+/** The deck and tail's outer line: the parcel shelf's back edge → the rear bumper's foot. */
+const SEDAN_TAIL: P2[] = [
+  [-1.88, 1.165],
+  [-2.05, 1.17],
+  [-2.24, 1.158],
+  [-2.36, 1.12],
+  [-2.425, 1.02],
+  [-2.445, 0.62],
+  [-2.35, 0.24],
+];
+const SEDAN_REAR: P2[] = [
+  [-0.88, 0.34],
+  [-0.88, 0.78],
+  [-1.74, 0.78],
+  [-1.78, 1.1],
+  [-1.84, 1.15],
+  ...SEDAN_TAIL,
+  [-1.79, 0.24],
+  ...arch(-1.35, SEDAN_ARCH_R),
+];
+/** The trunk, hollow in the section (a hole in `SEDAN_REAR`): its floor, the deck lid's and the rear wall's skins. */
+const SEDAN_TRUNK: P2[] = [
+  [-1.92, 0.6],
+  [-1.92, 1.11],
+  [-2.22, 1.118],
+  [-2.33, 1.085],
+  [-2.385, 1.0],
+  [-2.39, 0.6],
+];
+/** The windshield's foot (at the cowl) and top (the roof cut). */
+const SEDAN_WS: [P2, P2] = [
+  [1.4, 1.06],
+  [0.42, SEDAN_ROOF_CUT],
+];
+const SEDAN_ROOF_X: P2 = [-0.95, 0.42];
+/** The rear glass's line from the roof cut's back end down to the deck. */
+const SEDAN_BACKLIGHT: P2[] = [
+  [-1.3, 1.58],
+  [-1.65, 1.37],
+  [-1.88, 1.18],
+];
+const SEDAN_FAR: P2[] = [
+  ...SEDAN_NOSE,
+  SEDAN_WS[1],
+  [SEDAN_ROOF_X[0], SEDAN_ROOF_CUT],
+  ...SEDAN_BACKLIGHT,
+  ...SEDAN_TAIL.filter(([x]) => x < -1.9),
+  [-1.79, 0.24],
+  ...arch(-1.35, SEDAN_ARCH_R),
+  [-0.91, 0.24],
+  [0.91, 0.24],
+  ...arch(1.35, SEDAN_ARCH_R),
+  [1.79, 0.24],
+];
+/** Four doors: the front and rear door windows (a sedan's C-pillar behind the rear one). */
+const SEDAN_WINDOWS: P2[][] = [
+  [
+    [1.15, 1.15],
+    [0.43, 1.63],
+    [-0.1, 1.63],
+    [-0.1, 1.15],
+  ],
+  [
+    [-0.22, 1.15],
+    [-0.22, 1.63],
+    [-0.9, 1.63],
+    [-1.38, 1.36],
+    [-1.5, 1.15],
+  ],
+];
+
+/**
+ * No. 010: a cut car's side silhouette (car frame, x forward), for a drawing of it (`GhostCar`): the body
+ * with its glasshouse (the far side's outline), the windows, and the wheels (centre x, y; radius). The sedan
+ * and the coupe have their own; any other shape is the crossover's.
+ */
+export const carSilhouette = (
+  shape: ShellProfile = 'crossover',
+): {body: P2[]; windows: P2[][]; wheels: {c: P2; r: number}[]; roof: P2} => {
+  const wheels = [CAR_LAYOUT.axleX.front, CAR_LAYOUT.axleX.rear].map((x) => ({c: [x, CAR_LAYOUT.wheelR] as P2, r: CAR_LAYOUT.wheelR}));
+  if (shape === 'sedan')
+    return {body: SEDAN_FAR, windows: SEDAN_WINDOWS, wheels, roof: [(SEDAN_ROOF_X[0] + SEDAN_ROOF_X[1]) / 2, SEDAN_ROOF_CUT]};
+  if (shape === 'coupe')
+    return {body: coupeFar(), windows: coupeWindows(), wheels, roof: [(COUPE_ROOF_X[0] + COUPE_ROOF_X[1]) / 2, COUPE_ROOF_CUT]};
+  return {body: FAR, windows: WINDOWS, wheels, roof: [-0.5, CAR_LAYOUT.roofCut]};
+};
+
+/**
+ * No. 010: the charging port on the near rear quarter (car frame, x forward), its centre on the quarter's
+ * outer skin (`QUARTER_Z`). The scene plugs a connector in here (`ChargeCable`).
+ */
+export const QUARTER_Z = 0.93;
+export const chargePortAt = (shape: ShellProfile = 'crossover'): V3 =>
+  shape === 'sedan' ? [-2.08, 0.9, QUARTER_Z] : shape === 'coupe' ? [-2.05, 0.82, QUARTER_Z] : [-2.05, 0.95, QUARTER_Z];
+/** Where the quarter drawn whole begins (just behind the rear arch). */
+const QUARTER_X = -1.83;
+/** A closed outline shrunk by d (each vertex moved along its bisector; enough for a gentle bevel). */
+const offsetIn = (p: P2[], d: number): P2[] => {
+  const area = p.reduce((s, [x, y], i) => s + x * p[(i + 1) % p.length][1] - p[(i + 1) % p.length][0] * y, 0);
+  const sgn = area > 0 ? 1 : -1;
+  return p.map(([x, y], i) => {
+    const [px, py] = p[(i - 1 + p.length) % p.length];
+    const [nx, ny] = p[(i + 1) % p.length];
+    const n1 = [-(y - py), x - px];
+    const n2 = [-(ny - y), nx - x];
+    const l1 = Math.hypot(n1[0], n1[1]) || 1;
+    const l2 = Math.hypot(n2[0], n2[1]) || 1;
+    const m = [n1[0] / l1 + n2[0] / l2, n1[1] / l1 + n2[1] / l2];
+    const ml = Math.hypot(m[0], m[1]) || 1;
+    return [x + (sgn * d * m[0]) / ml, y + (sgn * d * m[1]) / ml] as P2;
+  });
+};
+/** A closed outline clipped to x ≤ x0 (Sutherland–Hodgman). */
+const clipBehind = (p: P2[], x0: number): P2[] => {
+  const out: P2[] = [];
+  for (let i = 0; i < p.length; i++) {
+    const a = p[i];
+    const b = p[(i + 1) % p.length];
+    const ina = a[0] <= x0;
+    const inb = b[0] <= x0;
+    if (ina) out.push(a);
+    if (ina !== inb) out.push([x0, a[1] + ((b[1] - a[1]) * (x0 - a[0])) / (b[0] - a[0])]);
+  }
+  return out;
+};
+
 /**
  * The second drive unit of the all-wheel-drive coupe (`awd`), for the scene to mount in the car's frame:
  * the front `DriveUnit` as it is, mirrored about x = 0, so its final gear sits on the rear axle, its motor
@@ -591,6 +793,12 @@ export type RealCarProps = {
    * none (the plain coupe).
    */
   coupeStyle?: CoupeStyle;
+  /**
+   * No. 010 (cut car only): the near rear quarter drawn whole (not sectioned), from just behind the rear arch to
+   * the rear bumper, with a charging port on it (`chargePortAt`): a recessed socket, its flap open, a ring
+   * light `light` 0 (off, `ledOff`) → 1 (`section.signalGreen`, flat, never bloomed). Default none.
+   */
+  port?: {light?: number};
 };
 
 const TAIL_RED = raw(HIGHWAY.tailLight);
@@ -623,11 +831,14 @@ export const RealCar: React.FC<RealCarProps> = ({
   passengerSeat = true,
   tunnel = false,
   coupeStyle,
+  port,
 }) => {
   const split = gas || splitDash;
   // the gas car's body is the EV's (open bay) plus a sill
   const bay = ev || gas;
   const coupe = shape === 'coupe';
+  // No. 010: the cut sedan uses the coupe's low-cabin pieces with its own outlines (`SEDAN_LAYOUT`)
+  const sedanCut = shape === 'sedan' && !whole;
   // the coupe's style (No. 007 realism pass): ignored on the other shapes
   const style = coupe ? coupeStyle : undefined;
   const ready = useFontsLoaded();
@@ -809,8 +1020,18 @@ export const RealCar: React.FC<RealCarProps> = ({
     }),
     [],
   );
-  // the cut coupe's pieces, for its style
+  // the cut coupe's pieces, for its style (No. 010: the cut sedan's, from its own outlines)
   const cg = useMemo(() => {
+    if (sedanCut)
+      return {
+        front: extrude(shapeOf(SEDAN_FRONT), -0.87, CAR_LAYOUT.cutZ),
+        bay: extrude(shapeOf(SEDAN_BAY_FRONT), -0.87, EV_FIREWALL_Z),
+        bayTunnel: extrude(shapeOf(SEDAN_BAY_FRONT), -0.87, TUNNEL_Z),
+        rear: extrude(shapeOf(SEDAN_REAR, [SEDAN_TRUNK]), -0.87, CAR_LAYOUT.cutZ),
+        rearBay: extrude(shapeOf(SEDAN_REAR, [SEDAN_TRUNK]), -0.87, REAR_BAY_Z),
+        far: extrude(shapeOf(SEDAN_FAR, SEDAN_WINDOWS), CAR_LAYOUT.farZ, -0.87),
+        glass: SEDAN_WINDOWS.map((w) => new THREE.ShapeGeometry(shapeOf(w))),
+      };
     if (!coupe || whole) return null;
     const win = coupeWindows(style);
     return {
@@ -822,11 +1043,20 @@ export const RealCar: React.FC<RealCarProps> = ({
       far: extrude(shapeOf(coupeFar(style), win), CAR_LAYOUT.farZ, -0.87),
       glass: win.map((w) => new THREE.ShapeGeometry(shapeOf(w))),
     };
-  }, [coupe, whole, style]);
+  }, [coupe, whole, style, sedanCut]);
   const zRear = rearBay ? REAR_BAY_Z : CAR_LAYOUT.cutZ;
   const bodyInk = useMemo(
     () =>
-      coupe
+      sedanCut
+        ? [
+            bay
+              ? SEDAN_BAY_FRONT.map(([x, y]) => [x, y, (tunnel ? TUNNEL_Z : EV_FIREWALL_Z) + 0.003] as V3)
+              : SEDAN_FRONT.map(([x, y]) => [x, y, CAR_LAYOUT.cutZ + 0.003] as V3),
+            SEDAN_REAR.map(([x, y]) => [x, y, zRear + 0.003] as V3),
+            SEDAN_TRUNK.map(([x, y]) => [x, y, zRear + 0.003] as V3),
+            ...(gas ? [SILL_GAS.map(([x, y]) => [x, y, CAR_LAYOUT.cutZ + 0.003] as V3)] : []),
+          ]
+        : coupe
         ? [
             ...(bay
               ? [coupeBayFront(style).map(([x, y]) => [x, y, (tunnel ? TUNNEL_Z : EV_FIREWALL_Z) + 0.003] as V3)]
@@ -841,22 +1071,32 @@ export const RealCar: React.FC<RealCarProps> = ({
               ...(gas ? [SILL_GAS.map(([x, y]) => [x, y, CAR_LAYOUT.cutZ + 0.003] as V3)] : []),
             ]
           : [BODY.map(([x, y]) => [x, y, CAR_LAYOUT.cutZ + 0.003] as V3)],
-    [bay, gas, coupe, zRear, tunnel, style],
+    [bay, gas, coupe, zRear, tunnel, style, sedanCut],
   );
   const inkT = 0.011 * inkScale;
-  const ws = coupe ? new THREE.Vector3(...COUPE_WS[0], 0) : new THREE.Vector3(1.12, 1.2, 0);
-  const we = coupe ? new THREE.Vector3(...COUPE_WS[1], 0) : new THREE.Vector3(0.45, L.roofCut, 0);
+  const ws = sedanCut
+    ? new THREE.Vector3(...SEDAN_WS[0], 0)
+    : coupe
+      ? new THREE.Vector3(...COUPE_WS[0], 0)
+      : new THREE.Vector3(1.12, 1.2, 0);
+  const we = sedanCut
+    ? new THREE.Vector3(...SEDAN_WS[1], 0)
+    : coupe
+      ? new THREE.Vector3(...COUPE_WS[1], 0)
+      : new THREE.Vector3(0.45, L.roofCut, 0);
   // the roof rail's cut (x0, x1) on the far side's top
-  const rail: P2 = coupe ? COUPE_ROOF_X : [-1.45, 0.45];
+  const rail: P2 = sedanCut ? SEDAN_ROOF_X : coupe ? COUPE_ROOF_X : [-1.45, 0.45];
   const wLen = ws.distanceTo(we);
   const wAng = Math.atan2(we.y - ws.y, we.x - ws.x);
   const [sx, sy, sz] = L.steering;
   // across the car: the whole width, or from the far side to the near cut
   const span = whole ? {w: 1.6, z: 0} : {w: L.cutZ + 0.87, z: (L.cutZ - 0.87) / 2};
   // the cut car's lamps (x, y): headlights on the nose, the far tail lamp, the centre high-mount lamp
-  const lamps: Record<'head' | 'tail' | 'high', P2> = coupe
-    ? {head: [2.43, 0.6], tail: [-2.4, 0.88], high: [-2.22, 1.065]}
-    : {head: [2.33, 0.86], tail: [-2.39, 1.0], high: [-2.33, 1.315]};
+  const lamps: Record<'head' | 'tail' | 'high', P2> = sedanCut
+    ? {head: [2.345, 0.78], tail: [-2.415, 0.98], high: [-1.86, 1.19]}
+    : coupe
+      ? {head: [2.43, 0.6], tail: [-2.4, 0.88], high: [-2.22, 1.065]}
+      : {head: [2.33, 0.86], tail: [-2.39, 1.0], high: [-2.33, 1.315]};
 
   return (
     <group>
@@ -909,6 +1149,18 @@ export const RealCar: React.FC<RealCarProps> = ({
           {bodyInk.map((b, i) => (
             <InkLine key={i} points={b} thickness={inkT} />
           ))}
+          {port ? (
+            <ChargeQuarter
+              outline={sedanCut ? SEDAN_REAR : coupe ? coupeRear(style) : bay ? BODY_EV_REAR : BODY}
+              port={chargePortAt(shape)}
+              light={port.light ?? 0}
+              lampY={lamps.tail[1]}
+              lampX={lamps.tail[0]}
+              mood={mood}
+              mats={mats}
+              inkT={inkT}
+            />
+          ) : null}
           {/* the far side with its windows, standing like a room's back wall; the roof rail cut on top */}
           <mesh geometry={cg ? cg.far : geo.far} material={[mats.paint, mats.paint]} castShadow receiveShadow />
           {(cg ? cg.glass : geo.glass).map((g, i) => (
@@ -940,7 +1192,17 @@ export const RealCar: React.FC<RealCarProps> = ({
           </mesh>
           {cg ? (
             // the coupe's fastback glass, cut at the roof and at the near cut like the windshield
-            <RearGlass to={coupeRearGlass(style)} z={span.z} w={span.w} material={mats.rakedGlass} />
+            sedanCut ? (
+              <RearGlass
+                from={[SEDAN_ROOF_X[0], SEDAN_ROOF_CUT]}
+                to={SEDAN_BACKLIGHT[2]}
+                z={span.z}
+                w={span.w}
+                material={mats.rakedGlass}
+              />
+            ) : (
+              <RearGlass to={coupeRearGlass(style)} z={span.z} w={span.w} material={mats.rakedGlass} />
+            )
           ) : null}
           {style && cg ? (
             <CoupeExtras
@@ -1158,11 +1420,41 @@ export const RealCar: React.FC<RealCarProps> = ({
           style ? (
             <SportSeat key={i} at={p} mats={mats} drop={whole ? 0 : COUPE_SEAT_DROP + COUPE_CABIN_SINK} />
           ) : (
-            <Seat key={i} at={p} mats={mats} drop={coupe && !whole ? COUPE_SEAT_DROP + COUPE_CABIN_SINK : 0} />
+            <Seat
+              key={i}
+              at={p}
+              mats={mats}
+              drop={coupe && !whole ? COUPE_SEAT_DROP + COUPE_CABIN_SINK : sedanCut ? SEDAN_SEAT_DROP + SEDAN_CABIN_SINK : 0}
+            />
           ),
         )}
         {/* the rear bench on its riser (none in the coupe: two seats) */}
-        {coupe ? null : (
+        {coupe ? null : sedanCut ? (
+          <>
+            {/* the cut sedan's rear bench, lower and shorter-backed under its roof; the trunk's carpet */}
+            <mesh
+              geometry={roundedBox(0.55, 0.14, 1.5, 0.05, 4)}
+              material={mats.seat}
+              position={[-1.3, 0.92 - SEDAN_CABIN_SINK, -0.05]}
+              castShadow
+              receiveShadow
+            />
+            <mesh
+              geometry={roundedBox(0.14, 0.5, 1.5, 0.05, 4)}
+              material={mats.seat}
+              position={[-1.57, 1.03, -0.05]}
+              rotation={[0, 0, 0.2]}
+              castShadow
+              receiveShadow
+            />
+            <mesh position={[-2.155, 0.603, (zRear - 0.87) / 2]} rotation={[-Math.PI / 2, 0, 0]} material={mats.carpet}>
+              <planeGeometry args={[0.46, zRear + 0.87]} />
+            </mesh>
+            <mesh position={[-2.155, 0.85, -0.865]} material={mats.carpet}>
+              <planeGeometry args={[0.46, 0.5]} />
+            </mesh>
+          </>
+        ) : (
           <>
             <mesh
               geometry={roundedBox(0.55, 0.14, 1.5, 0.05, 4)}
@@ -1252,8 +1544,14 @@ const topAtX = (p: P2[], x: number) => {
 };
 
 /** The coupe's fastback glass (cut car): a pane from the roof cut's back end down to `to`, across the cabin. */
-const RearGlass: React.FC<{to: P2; z: number; w: number; material: THREE.Material}> = ({to, z, w, material}) => {
-  const a = new THREE.Vector2(COUPE_ROOF_X[0], COUPE_ROOF_CUT);
+const RearGlass: React.FC<{from?: P2; to: P2; z: number; w: number; material: THREE.Material}> = ({
+  from = [COUPE_ROOF_X[0], COUPE_ROOF_CUT],
+  to,
+  z,
+  w,
+  material,
+}) => {
+  const a = new THREE.Vector2(...from);
   const b = new THREE.Vector2(...to);
   return (
     <mesh
@@ -1590,6 +1888,117 @@ const SportSeat: React.FC<{
         ))}
         <mesh geometry={roundedBox(0.11, 0.26, 0.3, 0.06, 4)} material={mats.seat} position={[0, 0.44, 0]} castShadow />
         <mesh geometry={roundedBox(0.12, 0.05, 0.1, 0.02, 2)} material={mats.bolster} position={[0.005, 0.28, 0]} />
+      </group>
+    </group>
+  );
+};
+
+/**
+ * No. 010: the near rear quarter drawn whole (`RealCar` `port`): the rear body's outline behind the rear arch
+ * extruded from the cut out to the outer skin (`QUARTER_Z`), its step face at `QUARTER_X` hatched and inked
+ * (it is a cut), the near tail lamp carried round onto it, and the charging port: a recessed socket with its
+ * pins, a flap hinged at its front edge and swung open, and a ring light (flat `signalGreen` while `light`,
+ * else `ledOff`; never bloomed). Car frame (x forward).
+ */
+const ChargeQuarter: React.FC<{
+  outline: P2[];
+  port: V3;
+  light: number;
+  lampX: number;
+  lampY: number;
+  mood: Mood;
+  mats: {paint: THREE.Material; cut: THREE.Material; tail: THREE.Material; trim: THREE.Material};
+  inkT: number;
+}> = ({outline, port, light, lampX, lampY, mood, mats, inkT}) => {
+  const m = MOODS[mood];
+  const geo = useMemo(() => {
+    const q = clipBehind(outline, QUARTER_X);
+    const ys = q.filter(([x]) => Math.abs(x - QUARTER_X) < 1e-6).map(([, y]) => y);
+    return {
+      body: (() => {
+        // the skin's outer edges rounded (a pressed panel, not a slab)
+        const b = 0.022;
+        const g = new THREE.ExtrudeGeometry(shapeOf(offsetIn(q, b)), {
+          depth: QUARTER_Z - CAR_LAYOUT.cutZ - b,
+          bevelEnabled: true,
+          bevelThickness: b,
+          bevelSize: b,
+          bevelSegments: 3,
+          curveSegments: 12,
+        });
+        g.translate(0, 0, CAR_LAYOUT.cutZ - 0.0005);
+        return g;
+      })(),
+      step: ys.length >= 2 ? ([Math.min(...ys), Math.max(...ys)] as P2) : null,
+      flap: roundedBox(0.14, 0.13, 0.008, 0.02, 3),
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(outline)]);
+  const pm = useMemo(
+    () => ({
+      socket: new THREE.MeshStandardMaterial({color: raw(REAL.labDark), roughness: 0.6}),
+      face: new THREE.MeshStandardMaterial({color: raw(REAL.dash), roughness: 0.45}),
+      pin: new THREE.MeshStandardMaterial({color: raw('#0b0c0e'), roughness: 0.9}),
+      ring: new THREE.MeshStandardMaterial({color: raw(section.ledOff), roughness: 0.35}),
+    }),
+    [],
+  );
+  const k = Math.max(0, Math.min(1, light));
+  pm.ring.color.copy(raw(section.ledOff)).lerp(raw(section.signalGreen), k);
+  pm.ring.emissive.copy(raw(section.signalGreen));
+  pm.ring.emissiveIntensity = (1.1 * k) / m.exposure;
+  const [px, py, pz] = port;
+  const zMid = (CAR_LAYOUT.cutZ + QUARTER_Z) / 2;
+  return (
+    <group>
+      <mesh geometry={geo.body} material={[mats.paint, mats.paint]} castShadow receiveShadow />
+      {geo.step ? (
+        <>
+          <mesh
+            position={[QUARTER_X + 0.0015, (geo.step[0] + geo.step[1]) / 2, zMid]}
+            rotation={[0, Math.PI / 2, 0]}
+            material={mats.cut}
+          >
+            <planeGeometry args={[QUARTER_Z - CAR_LAYOUT.cutZ, geo.step[1] - geo.step[0]]} />
+          </mesh>
+          <CutOutline
+            rects={[
+              [
+                [QUARTER_X + 0.002, geo.step[0], CAR_LAYOUT.cutZ],
+                [QUARTER_X + 0.002, geo.step[1], QUARTER_Z],
+              ],
+            ]}
+            thickness={inkT}
+          />
+        </>
+      ) : null}
+      {/* the near tail lamp, carried round the whole corner */}
+      <mesh position={[lampX, lampY, zMid]} material={mats.tail}>
+        <boxGeometry args={[0.04, 0.17, QUARTER_Z - CAR_LAYOUT.cutZ]} />
+      </mesh>
+      {/* the port: the recess, the socket's face with its pins, the ring light, the open flap */}
+      <mesh position={[px, py, pz + 0.001]} rotation={[Math.PI / 2, 0, 0]} material={pm.socket}>
+        <cylinderGeometry args={[0.066, 0.066, 0.004, 40]} />
+      </mesh>
+      <mesh position={[px, py, pz + 0.004]} rotation={[Math.PI / 2, 0, 0]} material={pm.face}>
+        <cylinderGeometry args={[0.048, 0.05, 0.006, 40]} />
+      </mesh>
+      {[
+        [-0.02, 0.012],
+        [0.02, 0.012],
+        [0, -0.022],
+        [-0.024, -0.012],
+        [0.024, -0.012],
+      ].map(([dx, dy], i) => (
+        <mesh key={i} position={[px + dx, py + dy, pz + 0.0075]} rotation={[Math.PI / 2, 0, 0]} material={pm.pin}>
+          <cylinderGeometry args={[i < 2 ? 0.011 : 0.006, i < 2 ? 0.011 : 0.006, 0.002, 20]} />
+        </mesh>
+      ))}
+      <mesh position={[px, py, pz + 0.004]} material={pm.ring}>
+        <torusGeometry args={[0.058, 0.0055, 10, 40]} />
+      </mesh>
+      <group position={[px + 0.075, py, pz + 0.002]} rotation={[0, (100 * Math.PI) / 180, 0]}>
+        <mesh geometry={geo.flap} material={mats.paint} position={[-0.072, 0, 0.004]} castShadow />
       </group>
     </group>
   );

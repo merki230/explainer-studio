@@ -7,6 +7,7 @@ import type {DetailBoxProps} from './components/DetailBox';
 import type {FullScreenProps} from './components/FullScreen';
 import type {NameTagProps} from './components/NameTag';
 import type {NoteStaffProps} from './components/NoteStaff';
+import type {PlaceLabelProps} from './components/PlaceLabel';
 import type {SearchBarProps} from './components/SearchBar';
 import type {StatementProps} from './components/Statement';
 import type {TitleBlockProps} from './components/TitleBlock';
@@ -95,6 +96,15 @@ export type OverlaySpec = Timing & {
    * over 10 frames. Overlays take the scene's mood (v0.8 colours).
    */
   until?: string | number;
+  /**
+   * Carry the card across the cuts that follow (No. 010): it stays on screen as one element, still
+   * running (a counter's clock doesn't restart, nothing blinks), through every next scene joined by
+   * `continue`, `glide` or `cut`, until its `until` (a cue or seconds after *this* scene starts, which
+   * may lie in a later scene). Without `until` it leaves before the first `slide`, `follow` or
+   * `dissolve`, or at the video's end. For cards that don't point into the picture: `counter`,
+   * `chart`, `place`, `statement`, `title`; anchored overlays (callout, tag, detail, ...) ignore it.
+   */
+  carry?: boolean;
 } & (
     | ({type: 'callout'} & CalloutProps)
     | ({type: 'search'} & SearchBarProps)
@@ -108,6 +118,7 @@ export type OverlaySpec = Timing & {
     | ({type: 'screen'} & FullScreenProps)
     | ({type: 'staff'} & NoteStaffProps)
     | ({type: 'chart'} & ChartCardProps)
+    | ({type: 'place'} & PlaceLabelProps)
     | SfxOverlay
   );
 

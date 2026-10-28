@@ -83,6 +83,36 @@ things we already have 3D parts for when possible. Jump on a topic when it's in 
 
 All unverified until researched.
 
+## Shortlist: Tesla vs Chinese EVs (owner, 2026-10-27)
+
+Tesla comes up in many of our comments. Compare how Tesla does something with other EV makers, especially Chinese ones.
+Naming is allowed: the story is about their own products. Most Chinese EVs aren't sold in the US, so "what US drivers
+aren't seeing" can be the surprise. The tech moves fast: research must be current and every claim hedged as its source.
+
+| Angle | Tesla | Others (mostly Chinese) | Status |
+|---|---|---|---|
+| Charging | Superchargers | BYD's "flash" charging claims (minutes, far higher power) | **No. 010 candidate** |
+| Battery | Packs of many small cylindrical cells | BYD's long flat "Blade" cells, different chemistry | **No. 010 candidate** |
+| Self-driving | Cameras only | Many add lidar | shortlisted (claims change monthly) |
+| Body | Giant single castings | Some copied it, others weld many parts | shortlisted |
+
+The flying car (researched, `src/videos/flying-car/sources.md`) waits until after No. 010.
+
+## Test: "then vs now" (owner, 2026-10-27; car topics first)
+
+Explain an old technology, then how the modern one does the same job. The slice can show both side by side or morph
+one into the other. Nostalgia for older viewers, discovery for younger ones.
+
+| Topic | Then | Now | Status |
+|---|---|---|---|
+| Speedometer | A cable spun by the gearbox turns a magnet that drags the needle | Wheel-speed sensors count pulses; the same sensors run ABS | **first pick** (car, reuses wheel/car parts) |
+| Carburetor vs fuel injection | Air rushing through a narrow throat sucks fuel in | A computer times an exact squirt many times a second | candidate (car) |
+| Landline vs cell phone | Your voice as current on your own copper pair | Voice as numbers, hopping towers | candidate |
+| Light bulb vs LED | A wire heated until it glows | A chip that gives off light directly | candidate |
+| Tube TV vs pixels | An electron beam paints lines | Millions of lights switching on their own | candidate |
+
+All unverified until researched.
+
 ## Parked: self-checkout bagging scale (owner, 2026-10-24)
 
 Chosen because topics viewers argue about draw the most comments, but the video is an explanation of how it works above

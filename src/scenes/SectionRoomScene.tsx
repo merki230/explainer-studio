@@ -7,11 +7,12 @@ import {OrangePath} from '../three/OrangePath';
 import {raw} from '../three/plaster';
 import {Figure} from '../three/section/Figure';
 import {blendMood} from '../three/section/moods';
+import {CordCorner} from '../three/section/CordCorner';
 import {LivingRoomSlice, SLICE} from '../three/section/LivingRoomSlice';
 import {projectToFrame, SectionCamera, sectionCameraAt, type Framing} from '../three/section/SectionCamera';
 import {SectionLights, SectionStage} from '../three/section/SectionStage';
 import {PHONE_PITCH_TO_FACE, phoneLocalAt, poseAt, type Gesture} from '../three/rig';
-import {section, type CastName, type Mood} from '../theme';
+import {MOODS, section, type CastName, type Mood} from '../theme';
 
 type V3 = [number, number, number];
 
@@ -21,10 +22,27 @@ type V3 = [number, number, number];
  * ≈ 20% (floor's front edge ≈ y 1540 on average). Camera ≈ (5.45, 4.90, 10.87).
  * 'couch': the two people on the couch; at 8.0 a seated figure fills ≈ 40% of the frame height,
  * the closest a push may come (§ 8).
+ * 'cord' (No. 010, with `corner`): the extension-cord corner close, right of the couch: the outlet, the
+ * cord's cut-away run and the heater.
  */
-export const SECTION_FRAMINGS: Record<'wide' | 'couch', Framing> = {
+export const SECTION_FRAMINGS: Record<'wide' | 'couch' | 'cord', Framing> = {
   wide: {look: [-0.2, 1.36, 0], distance: 12.75},
   couch: {look: [0.0, 0.92, -0.45], distance: 8.0},
+  cord: {look: [1.5, -0.04, -0.86], distance: 3.0},
+};
+
+/** Keys `{at, value}` (seconds into the scene, value 0 → 1), eased between (cubic in-out). */
+export type LevelKeys = {at: number; value: number}[];
+
+/**
+ * The extension-cord corner (No. 010): an outlet on the back wall right of the couch, an extension cord with a short
+ * lengthwise cut-away, and a small ceramic fan heater plugged into it.
+ */
+export type SectionCorner = {
+  /** Seconds into the scene when the heater switches on (pilot lamp, fan spins up over 1 s). Negative: already on. Omit: off. */
+  heaterAt?: number;
+  /** The heat glow in the cord's copper, 0 → 1, on keys (orange: the hidden system). Default none. */
+  glow?: LevelKeys;
 };
 
 /** A camera move at the fixed angle: from one framing to another (truck/crane via `look`, push via `distance`). */
@@ -113,6 +131,8 @@ export type SectionRoomSceneProps = {
   led?: number;
   /** Laptop on the coffee table (lid toward the couch). */
   laptop?: boolean;
+  /** The extension-cord corner with its heater (No. 010; frame it with `camera: 'cord'`). Default none. */
+  corner?: SectionCorner;
   /**
    * Realism pass: the living room's objects realistic (router, couch, table, cup, rug, plant, lamp,
    * with studio reflections scaled per mood), and the cast hold the realistic phone. Default false.
@@ -390,6 +410,16 @@ const ramp = (t: number, a: number, b: number) =>
     easing: Easing.inOut(Easing.cubic),
   });
 
+/** The value of eased keys at `t` (before the first key: its value; after the last: its value). */
+const levelAt = (keys: LevelKeys | undefined, t: number) => {
+  const ks = [...(keys ?? [])].sort((a, b) => a.at - b.at);
+  if (!ks.length) return 0;
+  if (t <= ks[0].at) return ks[0].value;
+  for (let i = 0; i < ks.length - 1; i++)
+    if (t < ks[i + 1].at) return ks[i].value + (ks[i + 1].value - ks[i].value) * ramp(t, ks[i].at, ks[i + 1].at);
+  return ks[ks.length - 1].value;
+};
+
 // The route's geometry through the section (§ 5).
 const P = 0.025; // proud of the cut faces
 const WZ = SLICE.z0 - SLICE.wallThickness / 2; // inside the back wall
@@ -635,6 +665,21 @@ export const SectionRoomScene: React.FC<SectionRoomSceneProps> = (props) => {
         clock={clock}
         leaves={life}
       />
+      {props.corner ? (() => {
+        const c = props.corner;
+        // the fan: a linear spin-up over 1 s, then full speed (its turn in full-speed seconds)
+        const on = c.heaterAt === undefined ? -1 : t - c.heaterAt;
+        const run = on <= 0 ? 0 : on < 1 ? (on * on) / 2 : on - 0.5;
+        const heater = c.heaterAt === undefined ? 0 : interpolate(t, [c.heaterAt, c.heaterAt + 0.1], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+        return (
+          <CordCorner
+            palette={palette ?? MOODS[mm]}
+            heater={heater * unlocked}
+            run={run}
+            glow={levelAt(c.glow, t) * unlocked}
+          />
+        );
+      })() : null}
       {people.map(({who, seat}) => {
         const s = screens[who];
         const screenOn = (s === undefined ? 1 : typeof s === 'number' ? s : ramp(t, s.at, s.at + 0.3)) * unlocked;

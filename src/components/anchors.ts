@@ -5,6 +5,7 @@ import {highwayAnchorOnScreen, type HighwaySliceSceneProps} from '../scenes/High
 import {hotelAnchorOnScreen, type HotelLobbySceneProps} from '../scenes/HotelLobbyScene';
 import {musicalAnchorOnScreen, type MusicalRoadSceneProps} from '../scenes/MusicalRoadScene';
 import {raceAnchorOnScreen, type RaceSliceSceneProps} from '../scenes/RaceSliceScene';
+import {chargeAnchorOnScreen, type ChargeSliceSceneProps} from '../scenes/ChargeSliceScene';
 import {streetAnchorOnScreen, type StreetSliceSceneProps} from '../scenes/StreetSliceScene';
 import {towerAnchorOnScreen, type TowerSliceSceneProps} from '../scenes/TowerSliceScene';
 
@@ -21,6 +22,7 @@ export const ANCHOR_SCENES = [
   'city-slice',
   'race-slice',
   'drive-unit',
+  'charge-slice',
 ];
 
 /**
@@ -33,7 +35,8 @@ export const ANCHOR_SCENES = [
  * 'rearTire', 'car', 'window', 'house'. `city-slice`: 'car:k', 'lamps:k', 'youSpot', 'signal', 'stopLine',
  * 'sign:oneway' | 'sign:speed'. `race-slice`: 'cluster:ev' | 'cluster:gas', 'top:ev' | 'top:gas' (just above
  * the car's roof), 'nose:*', 'tree:*', 'lane:*'. `drive-unit`: 'rotor', 'stage:1', 'stage:2', 'output', 'shift', 'hub',
- * 'patch', 'inverter'. `car-slice`: 'phone', 'cluster', 'head' (= 'youSpot'). Undefined elsewhere
+ * 'patch', 'inverter'. `car-slice`: 'phone', 'cluster', 'head' (= 'youSpot'). `charge-slice`: 'top:top' | 'top:bottom'
+ * (above a bay's roof), 'pack:*', 'port:*', 'cable:*', 'cabinet:*', 'lane:*', 'under:*', 'ghost'. Undefined elsewhere
  * or for an unknown name.
  */
 export const anchorOnScreen = (
@@ -56,5 +59,7 @@ export const anchorOnScreen = (
   if (scene.name === 'drive-unit')
     return driveUnitAnchorOnScreen(scene.props as Partial<DriveUnitSceneProps>, anchor, o);
   if (scene.name === 'car-slice') return carAnchorOnScreen(scene.props as Partial<CarSliceSceneProps>, anchor, o);
+  if (scene.name === 'charge-slice')
+    return chargeAnchorOnScreen(scene.props as Partial<ChargeSliceSceneProps>, anchor, o);
   return undefined;
 };
