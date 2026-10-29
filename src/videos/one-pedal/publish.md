@@ -10,7 +10,13 @@ Use it as the YouTube Shorts title (32 characters, the phrase people search). Ti
 
 ## Description (YouTube)
 
-How does one pedal driving work? Do electric cars brake at a red light, and do the brake lights come on when you lift your foot?
+How does one pedal driving work?
+
+Some electric cars can stop at a red light with no foot on the brake. So what is doing the braking?
+
+Regen braking: love it or hate it?
+
+Do electric cars brake at a red light, and do the brake lights come on when you lift your foot?
 
 Some electric cars slow down when you lift off the accelerator, and some stop completely. The wheels turn the motor, which acts as a generator (regenerative braking) and sends electricity back to the battery. That's also why brake pads can wear less: one modeling study estimates brake wear drops by 64 to 95 percent.
 
@@ -33,11 +39,23 @@ Paste the caption, then the hashtags below. The sources are in the YouTube descr
 
 **TikTok:**
 
-How does one pedal driving work? Some electric cars stop at a red light without you touching the brake. Cars, streets and numbers are examples.
+How does one pedal driving work?
+
+Some electric cars stop at a red light without you touching the brake. So who is doing the braking?
+
+Regen braking: love it or hate it?
+
+Illustrative scene. Sources: YouTube description.
 
 **Instagram:**
 
-How does one pedal driving work? Some electric cars stop at a red light with no foot on the brake. The motor acts as a generator, and one modeling study estimates brake wear drops by 64 to 95 percent. Cars, streets and numbers are examples.
+How does one pedal driving work?
+
+Lift your foot at a red light, and some electric cars just stop. What is slowing them down?
+
+Regen braking: love it or hate it?
+
+Illustrative scene. Sources: YouTube description.
 
 ## Hashtags
 
@@ -48,6 +66,35 @@ How does one pedal driving work? Some electric cars stop at a red light with no 
 ## Pinned comment
 
 Sources are in the YouTube description. The brake-wear number is one modeling study's estimate, and the rust warning comes from a brake supplier. Some electric cars can't stop completely on lift-off. The cars, streets and numbers on screen are drawn examples. Does your EV stop on its own when you lift, or only slow down? Tell me which car and which setting.
+
+## Poll
+
+Added after posting on all three platforms (owner, 2026-10-28: TikTok allows a poll on an already-posted video). Owner rule (2026-10-28): exactly two opposite answers, no middle option, no opt-out, same two answers everywhere. Many comments were about regen braking, and love-or-hate is what commenters argue about. It differs from the pinned-comment question (what the car does on lift-off). It is a taste question, so it makes no claim beyond sources.md and names no car or company.
+
+**Question:** Regen braking: love it or hate it?
+
+**Answers:** Love it / Hate it
+
+**TikTok** (add to the posted video; paste as is):
+
+- Question: `Regen braking: love it or hate it?`
+- Option 1: `Love it`
+- Option 2: `Hate it`
+
+**Instagram** (2-option poll sticker on the Reel, or on a Story that shares the Reel; paste as is):
+
+- Sticker question: `Regen braking: love it or hate it?`
+- Options: `Love it` / `Hate it`
+
+**YouTube** (Posts tab, poll post published right after the Short; paste as is):
+
+- Post text: `Regen braking: love it or hate it? (Short: <paste the Short link>)`
+- Option 1: `Love it`
+- Option 2: `Hate it`
+
+**Emoji fallback** (post as a separate comment, not an edit of the pinned one, on any platform where the sticker is missing):
+
+> Quick vote: Regen braking: love it or hate it? Reply 😍 for "Love it" or 😖 for "Hate it."
 
 ## Cover
 

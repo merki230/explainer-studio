@@ -20,7 +20,7 @@ Living document: update it whenever a step causes rework, so the next video does
    move to the next. A locked beat is only reopened for something serious.
 3. **Final pass:** one full watch in the Studio, then render the MP4.
 4. **Post with a poll** (owner, 2026-10-28): every post carries the poll from `publish.md` § Poll. TikTok's
-   sticker goes on in the editor before posting; Instagram uses the sticker on the Reel or a Story; YouTube
+   poll can go on at posting or afterwards on the posted video (owner, 2026-10-28); Instagram uses the sticker on the Reel or a Story; YouTube
    gets a poll post right after the Short. If a sticker would sit over the opening and can't be timed, use
    the pinned-comment poll instead. Report votes, comments and followers gained at the 72 h and 14 day
    snapshots (`brand/feedback.md`).

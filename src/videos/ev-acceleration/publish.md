@@ -10,7 +10,13 @@ Use it as the YouTube Shorts title (39 characters, a phrase people type). TikTok
 
 ## Description (YouTube)
 
-Are electric cars faster than gas cars? Off the line, often yes. In one published test, an electric muscle car beat a 797-horsepower gas car to 60 mph (3.3 seconds to 3.6), but the gas car reached 100 first (7.8 seconds to 8.0).
+Are electric cars faster than gas cars?
+
+One electric car and one 797-horsepower gas car, with two finish lines to watch.
+
+For speed, electric or gas?
+
+Off the line, often yes. In one published test, an electric muscle car beat a 797-horsepower gas car to 60 mph (3.3 seconds to 3.6), but the gas car reached 100 first (7.8 seconds to 8.0).
 
 An electric motor pushes hardest from a stop, and that usually holds until around 30 mph. Past that, the push shrinks as speed climbs, while a gas car's gears keep bringing its engine back close to where it's strongest. At high speed, power per pound matters most, and the electric car had less power and was about 1,400 pounds heavier. That's why some fast EVs have a two-speed gearbox.
 
@@ -35,11 +41,23 @@ Paste the caption, then the hashtags below. The sources are in the YouTube descr
 
 **TikTok:**
 
-Are electric cars faster than gas cars? To 60, one EV beat a 797-hp muscle car. To 100, the gas car got there first. Race is illustrative.
+Are electric cars faster than gas cars?
+
+One EV, one 797-hp gas car, and a race with two different checkpoints.
+
+For speed, electric or gas?
+
+Illustrative scene. Sources: YouTube description.
 
 **Instagram:**
 
-EV vs gas 0-60: in one test, an electric muscle car beat a 797-horsepower gas car to 60 mph, then the gas car reached 100 first. An electric motor pushes hardest off the line, and that push shrinks as speed climbs. Race and cars are illustrative.
+EV vs gas: which one is really faster?
+
+Same two cars, timed at 60 mph and again at 100. Watch both.
+
+For speed, electric or gas?
+
+Illustrative scene. Sources: YouTube description.
 
 ## Hashtags
 
@@ -50,6 +68,35 @@ EV vs gas 0-60: in one test, an electric muscle car beat a 797-horsepower gas ca
 ## Pinned comment
 
 Sources are in the YouTube description: one published instrument test for the numbers, plus a peer-reviewed paper and university course notes for the motor and gear physics. It's one pair of cars, so it's not a verdict on every EV. Would you take the instant push off the line or the pull at the top end?
+
+## Poll
+
+Added after posting on all three platforms (owner, 2026-10-28: TikTok allows a poll on an already-posted video). Owner rule (2026-10-28): exactly two opposite answers, no middle option, no opt-out, same two answers everywhere. Electric vs gas is what commenters argue about. It differs from the pinned-comment question (push off the line vs pull at the top end). It is a taste question, so it makes no claim beyond sources.md and names no car or company.
+
+**Question:** For speed, electric or gas?
+
+**Answers:** Electric / Gas
+
+**TikTok** (add to the posted video; paste as is):
+
+- Question: `For speed, electric or gas?`
+- Option 1: `Electric`
+- Option 2: `Gas`
+
+**Instagram** (2-option poll sticker on the Reel, or on a Story that shares the Reel; paste as is):
+
+- Sticker question: `For speed, electric or gas?`
+- Options: `Electric` / `Gas`
+
+**YouTube** (Posts tab, poll post published right after the Short; paste as is):
+
+- Post text: `For speed, electric or gas? (Short: <paste the Short link>)`
+- Option 1: `Electric`
+- Option 2: `Gas`
+
+**Emoji fallback** (post as a separate comment, not an edit of the pinned one, on any platform where the sticker is missing):
+
+> Quick vote: for speed, electric or gas? Reply ⚡ for "Electric" or ⛽ for "Gas."
 
 ## Cover
 

@@ -1,6 +1,6 @@
 # Secretly Works: channel kit
 
-v0.1, 2026-10-15; updated 2026-10-16 (handle, logo, watermark: owner decisions; § 3 copy rewritten after owner feedback); 2026-10-28 (a poll on every post, § 5, owner decision). Owner: brand-director. The copy, asset specs and setup steps for the YouTube, TikTok and Instagram profiles. Rules for the profile come from brand.md § Channel identity; this file holds the values. Profile copy: the owner picked one variant per field on 2026-10-16 (✅, § 3). The logo is chosen (mark C, the "S-line", Night palette, § 4); the assets below are specs, not files yet.
+v0.1, 2026-10-15; updated 2026-10-16 (handle, logo, watermark: owner decisions; § 3 copy rewritten after owner feedback); 2026-10-28 (a poll on every post, § 5; one bio on all three, § 3; owner decisions). Owner: brand-director. The copy, asset specs and setup steps for the YouTube, TikTok and Instagram profiles. Rules for the profile come from brand.md § Channel identity; this file holds the values. Profile copy: the owner picked one variant per field on 2026-10-16 (✅, § 3). The logo is chosen (mark C, the "S-line", Night palette, § 4); the assets below are specs, not files yet.
 
 Tags: **[official]** = the platform's own help or developer page; **[secondary]** = third-party guide (the official page was not loadable or doesn't state it); **[analysis]** = our reasoning. All pages seen **2026-10-15**. TikTok's and Instagram's help centres render with JavaScript and returned no text to the fetch tool, so their character limits are **unverified**: check them in the app's Edit profile screen (it refuses over-long text).
 
@@ -75,19 +75,27 @@ History: `@secretlyworks` was not free on YouTube and `@howitsecretlyworks` was 
 
 Character counts include spaces; ↵ marks a line break. Rewritten 2026-10-16 after owner feedback ("those descriptions are just like AI ... enough for people to understand what we do and not how", `feedback.md`). The rules for this copy (brand.md § Channel identity, Profile copy):
 
-- **What, not how.** Say what the viewer gets: the everyday things around them and what they're really up to. No 3D, no sourcing, no AI-voice line, no style, no process. The AI disclosure is the per-post platform label (§ 5, every upload).
-- **Short.** YouTube: 1 to 3 sentences, plus at most one short line about what's coming. TikTok and Instagram: one line, two at most. Search words go in the keywords field, not the description.
-- **Spoken.** Read it aloud; if a real person wouldn't say it to a friend, rewrite it. None of: "Ever wondered", "dive into", "unlock", "the hidden world of", "Join us", "Your daily dose of", lists of three, colon or em-dash taglines, an opening question answered by the next line, emoji strings, exclamation marks (brand.md § Voice, banned patterns).
-- **One channel.** The chosen texts share the words "everyday things" and "really up to", so the three profiles sound like one channel without repeating one fixed opening. **The pronouns differ on purpose (✅ owner choice, 2026-10-16): "we" on YouTube, "I" on TikTok, no pronoun on Instagram.** This is not an inconsistency to fix; change it only through `feedback.md` with the owner.
+- **What the visitor gets.** The everyday things they'll see and what those secretly do. **"in 3D" is allowed as a format tag** (✅ owner decision, 2026-10-28); no other process words: no sourcing, no AI-voice line, no style, no tools. The AI disclosure is the per-post platform label (§ 5, every upload).
+- **Short.** YouTube: the bio, plus at most two short sentences. TikTok and Instagram: the bio, one line. Search words go in the keywords field, not the description.
+- **Spoken.** Read it aloud; if a real person wouldn't say it to a friend, rewrite it. None of: "Ever wondered", "dive into", "unlock", "the hidden world of", "Join us", "Your daily dose of", lists of three (except the bio's "Cars, roads and gadgets", ✅ owner decision, 2026-10-28), colon or em-dash taglines, an opening question answered by the next line, emoji strings, exclamation marks (brand.md § Voice, banned patterns).
+- **One channel, one bio** (✅ owner decision, 2026-10-28): the same bio on all three accounts, and the YouTube description opens with it. The 2026-10-16 pronoun split ("we" / "I" / none) is retired.
 
-The ✅ entry in each field is the owner's choice (2026-10-16); the other variants stay below as alternatives, with their original letters.
+The ✅ entry in each field is the owner's choice (2026-10-16, or 2026-10-28 where dated); the other variants stay below as alternatives, with their original letters.
+
+**2026-10-28 (✅ owner decision): one bio on all three accounts, variant D:** `How everyday things secretly work. Cars, roads and gadgets, in 3D.` (66 by this file's count; the brief said 67; fits TikTok's 80 and Instagram's 150). Why: ≈ 0.7 followers per 1,000 views (`feedback.md` § Platform numbers), and the old bios didn't say what a visitor gets. The rules above and brand.md § Channel identity, Profile copy were amended to fit it (✅ owner decision, CHANGELOG v0.13.4). The 2026-10-16 choices below are history.
 
 ### YouTube
 
 - **Channel name:** `Secretly Works` (14)
 - **Handle:** `@thesecretlyworks` (§ 2)
 
-**Description, variant B (✅ owner choice, 2026-10-16; 208 characters, "we").**
+**Description, variant D (✅ owner decision, 2026-10-28, live; 221 characters, no pronoun).** Opens with the bio; no schedule, no link.
+
+```
+How everyday things secretly work. Cars, roads and gadgets, in 3D. Each short video picks one thing you use all the time, like the sensor inside your tire or the number on a highway exit, and shows the part you never see.
+```
+
+History: **description, variant B** (owner choice 2026-10-16, replaced by D 2026-10-28; 208 characters, "we").
 
 ```
 We make short videos about the everyday things around you and what they're really up to. Pretty much anything you touch on a normal day has a story going on inside it, and that's the part we love showing you.
@@ -123,7 +131,8 @@ Short videos about the everyday things around you and what they're really up to.
 
 - **Name:** `Secretly Works` (14)
 - **Username:** `@thesecretlyworks` (§ 2)
-- **Bio, variant A (✅ owner choice, 2026-10-16; 57, "I"):** `I love showing you what everyday things are really up to.`
+- **Bio, variant D (✅ owner decision, 2026-10-28; 66, no pronoun):** `How everyday things secretly work. Cars, roads and gadgets, in 3D.`
+- History: variant A (owner choice 2026-10-16, replaced 2026-10-28; 57, "I") `I love showing you what everyday things are really up to.`
 - Alternatives: variant B (57) `Short videos about what everyday things are really up to.`; variant C (58) `The everyday stuff around you, and what it's really doing.`
 
 All three fit TikTok's lowest reported limit (80).
@@ -132,7 +141,8 @@ All three fit TikTok's lowest reported limit (80).
 
 - **Name field** (searchable; ≤ 30, unverified): variant A `Secretly Works` (14) (✅ owner choice, 2026-10-16). Alternatives: variant B `Secretly Works | How It Works` (29); variant C `Secretly Works | Explainers` (27). It replaces the current "Secretly Works | Tech in 3D", which narrows the topic to tech (brand.md § Promise).
 - **Username:** `@thesecretlyworks` (§ 2; renamed from `@secretlyworks`)
-- **Bio, variant B (✅ owner choice, 2026-10-16; 80, no pronoun):** `Short videos about the everyday things around you and what they're really up to.`
+- **Bio, variant D (✅ owner decision, 2026-10-28; 66, no pronoun):** `How everyday things secretly work. Cars, roads and gadgets, in 3D.`
+- History: variant B (owner choice 2026-10-16, replaced 2026-10-28; 80, no pronoun) `Short videos about the everyday things around you and what they're really up to.`
 - Alternatives: variant A (98, "I") `The everyday things around you are up to a lot more than you'd guess, and I love showing you what.`; variant C (96, two lines) `What the everyday things around you are really up to.` ↵ `First up, whether your phone is listening.` (line 2 dates: update or drop it after No. 002)
 - **Category:** **Education** (alternative: *Science, Technology & Engineering*). Category lists change in-app; pick the closest match. Show the category on the profile: off (it adds a line and says less than the bio) [analysis].
 
@@ -201,14 +211,16 @@ Where an account already exists (brand.md § Name: an Instagram account and a Yo
 3. **Name** `Secretly Works`; **Bio** (variant chosen); **photo** `profile-800.png`. Website: none.
 4. Settings → Privacy: **Private account off** (public).
 5. On every post: More options → **AI-generated content: on** (brand.md § Sourcing policy).
-6. On every post: **the poll sticker, added in the editor before you post** (✅ owner decision, 2026-10-28; text from `publish.md`), in the sky band (x 120 to 888, y 288 to 430), never over the captions or the title block, timed to the last scene only (🧪 values); if the editor can't time it, no sticker: use the pinned-comment emoji poll from `publish.md` (✅ owner decision, 2026-10-28: the first second stays clean).
+6. On every post: **the poll sticker, added at posting or afterwards on the posted video** (✅ owner decision, 2026-10-28; adding it after posting works, owner observation 2026-10-28; text from `publish.md`), in the sky band (x 120 to 888, y 288 to 430), never over the captions or the title block, timed to the last scene only (🧪 values); if the editor can't time it, no sticker: use the pinned-comment emoji poll from `publish.md` (✅ owner decision, 2026-10-28: the first second stays clean).
+7. On every post: **the caption from `publish.md`**: hook question, tease, poll question, then `Illustrative scene.` (when the video has invented specifics) and always `Sources: YouTube description.` (brand.md § Sourcing policy).
 
 ### Instagram
 1. Log in to the existing "Secretly Works" account and, in Edit profile, **rename the Username from `secretlyworks` to `thesecretlyworks`**. ✅ Owner decision: the old handle `@secretlyworks` is freed by the rename and anyone may claim it; the owner accepted that. Old links to `@secretlyworks` stop working.
 2. Settings → Account type and tools → **Switch to professional account → Creator**; **Category: Education**; display category on profile: off. Professional accounts are public.
 3. Edit profile: **Name** (variant chosen, replacing "Secretly Works | Tech in 3D"), **Bio** (variant chosen), **photo** `profile-800.png`. Links: none.
 4. On every reel: Advanced settings → **AI label: on** (required for a realistic AI voiceover, P§6).
-5. On every reel: **the poll sticker** (✅ owner decision, 2026-10-28; text from `publish.md`), placed and timed as on TikTok, or on a Story that shares the Reel; if the sticker can't be timed or isn't available, the pinned-comment emoji poll from `publish.md` instead (✅ owner decision, 2026-10-28).
+5. On every reel: **the poll sticker** (✅ owner decision, 2026-10-28; text from `publish.md`), placed and timed as on TikTok, or on a Story that shares the Reel; if the sticker can't be timed, isn't available, or the poll has more answers than the sticker takes (two), the pinned-comment emoji poll from `publish.md` instead (✅ owner decisions, 2026-10-28).
+6. On every reel: **the caption from `publish.md`**, as on TikTok (§ 5 TikTok, line 7).
 
 ### Avoid
 1. Linking or cross-posting from personal accounts (personal Facebook, a personal TikTok, a personal YouTube channel) or connecting the profiles to unrelated pages. If Instagram asks to connect a Facebook Page, skip it unless a channel Page exists.

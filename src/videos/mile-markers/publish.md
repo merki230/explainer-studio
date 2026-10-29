@@ -11,7 +11,13 @@ Alternates for YouTube: "How are highway exits numbered?", "Mile markers explain
 
 ## Description (YouTube)
 
-What do exit numbers mean on the highway? On most interstates, Exit 150 is about 150 miles from the state line: mile markers and exit numbers share one count that starts at the state's south or west end and goes up.
+What do exit numbers mean on the highway?
+
+That number on the green sign isn't random, and neither are the little markers beside the road.
+
+Exit numbers: by mile or in order?
+
+On most interstates, Exit 150 is about 150 miles from the state line: mile markers and exit numbers share one count that starts at the state's south or west end and goes up.
 
 Those little green mile markers are there partly for emergencies. If your car breaks down, your phone usually sends a rough location when you call 911, and the mile marker beside you helps crews find the spot. Some states, mostly in the Northeast, still number exits in order instead of by mile.
 
@@ -35,15 +41,33 @@ Paste the caption, then the hashtags below. The sources are in the YouTube descr
 
 **TikTok:**
 
-What do exit numbers mean? On most interstates, Exit 150 is about 150 miles from the state line. Subtract two exits and you get roughly the miles between them. Breakdown story is illustrative.
+What do exit numbers mean?
+
+The number on the sign is telling you something about where you are.
+
+Exit numbers: by mile or in order?
+
+Illustrative scene. Sources: YouTube description.
 
 **Instagram:**
 
-How are highway exits numbered? On most interstates, the count starts at the state's south or west end, and exit numbers follow the same count as the green mile markers. Those markers are there partly so crews can find a breakdown or a crash. Story and numbers are illustrative.
+How are highway exits numbered?
+
+There is a reason for the number, and a reason for the green markers between exits.
+
+Exit numbers: by mile or in order?
+
+Illustrative scene. Sources: YouTube description.
 
 **Short TikTok alternate:**
 
-Mile markers explained: Exit 150 is about 150 miles in. Story and numbers are illustrative.
+What does Exit 150 mean?
+
+It is more than a label on a sign.
+
+Exit numbers: by mile or in order?
+
+Illustrative scene. Sources: YouTube description.
 
 ## Hashtags
 
@@ -54,6 +78,35 @@ Mile markers explained: Exit 150 is about 150 miles in. Story and numbers are il
 ## Pinned comment
 
 Sources are in the YouTube description: the federal sign manual for the mile count and the exit rule, the FCC rule for 911 location, and state transportation pages for how crews use the markers. "Most" interstates is the word that matters: some states, mostly in the Northeast, still number exits in order. Which interstate do you drive most, and does your state's exit numbering match the mile markers?
+
+## Poll
+
+Added after posting on all three platforms (owner, 2026-10-28: TikTok allows a poll on an already-posted video). Owner rule (2026-10-28): exactly two opposite answers, no middle option, no opt-out, same two answers everywhere. The pinned comment already notes that some states (mostly in the Northeast) still number exits in order, which is what commenters argue about. It is a preference question, so it makes no claim beyond sources.md and names no state.
+
+**Question:** Exit numbers: by mile or in order?
+
+**Answers:** By mile / In order
+
+**TikTok** (add to the posted video; paste as is):
+
+- Question: `Exit numbers: by mile or in order?`
+- Option 1: `By mile`
+- Option 2: `In order`
+
+**Instagram** (2-option poll sticker on the Reel, or on a Story that shares the Reel; paste as is):
+
+- Sticker question: `Exit numbers: by mile or in order?`
+- Options: `By mile` / `In order`
+
+**YouTube** (Posts tab, poll post published right after the Short; paste as is):
+
+- Post text: `Exit numbers: by mile or in order? (Short: <paste the Short link>)`
+- Option 1: `By mile`
+- Option 2: `In order`
+
+**Emoji fallback** (post as a separate comment, not an edit of the pinned one, on any platform where the sticker is missing):
+
+> Quick vote: exit numbers, by mile or in order? Reply 📍 for "By mile" or 🔢 for "In order."
 
 ## Cover
 

@@ -38,6 +38,31 @@ First two data points: No. 002 (evening, about 7 PM, 2026-10-17) and No. 003 (mi
 
 ---
 
+## Profiles and captions: one bio, a caption pattern (owner decisions, not a video)
+
+- **Decided:** 2026-10-28, owner, relayed by the main session · **Applies to:** the three profiles now; the caption pattern on every new post and on the four posts getting polls (`ev-charging`, `one-pedal`, `ev-acceleration`, `mile-markers`)
+
+**Owner's notes** (as relayed)
+
+- Bio, all three accounts: "How everyday things secretly work. Cars, roads and gadgets, in 3D." For YouTube, a slightly longer description opening with the same sentence, plain and calm, no schedule, no link.
+- Context: ≈ 0.7 followers per 1,000 views (TikTok profile snapshot, § Platform numbers); the old bio didn't say what a visitor gets.
+- Caption, TikTok and Instagram, and the start of the YouTube description: line 1 the hook question; line 2 a tease, not the answer (the mechanism is not given away); line 3 the poll question, to invite comments; last, a short "Illustrative scene." Longer illustrative details stay in the YouTube description.
+
+- Owner answers, same day: amend the Profile copy rule so the bio fits ("in 3D" as a format tag, this list, one shared bio, pronoun split retired); TikTok and Instagram captions end with "Illustrative scene. Sources: YouTube description.", the specific illustrative line stays in the YouTube description; YouTube variant D approved as written.
+
+**What we're changing** (✅ owner decisions; whether they move follows 🧪; CHANGELOG v0.13.3, v0.13.4)
+
+| Rule (file § name) | Change | Note |
+|---|---|---|
+| channel-kit.md § 3 TikTok and Instagram bios | Variant D on both (and as the YouTube opening); 2026-10-16 choices kept as history | The decision |
+| channel-kit.md § 3 YouTube description | Variant D live (221 characters): the bio + one sentence with two real examples (tire sensor, highway exit number); B is history | Brand-director draft, approved as written |
+| brand.md § Channel identity, Profile copy; channel-kit § 3 rule bullets | "in 3D" allowed as a format tag; the bio's list allowed; one shared bio on all three; pronoun split retired | Owner answer 1 |
+| brand.md § Sourcing policy (sources, illustrative) | Full sources and the specific "Illustrative: …" line in the YouTube description; TikTok and Instagram captions: hook question / tease (never the mechanism) / poll question / `Illustrative scene.` (only with invented specifics; every video so far) / always `Sources: YouTube description.` | Owner answer 2, condition confirmed the same day; caption pattern applies to new posts and the four posts getting polls |
+
+**To watch:** profile visits → follows where the platform shows it; followers per 1,000 views against the ≈ 0.7 baseline at the next profile snapshot; comments asking "so what's the answer?" under the tease (a good sign) or complaining the caption hides it.
+
+---
+
 ## All posts: a poll on every publication (owner decision, not a video)
 
 - **Decided:** 2026-10-28, owner, relayed by the main session · **Applies to:** every post from now on, starting with No. 010 `ev-charging` (its script already ends on a question); posted videos are not re-posted
@@ -46,21 +71,32 @@ First two data points: No. 002 (evening, about 7 PM, 2026-10-17) and No. 003 (mi
 
 - "For all our next publications we should add a poll."
 - Context: the TikTok profile snapshot of 2026-10-28 (§ Platform numbers above: 257 followers, 11.5K likes, ≈ 360K+ views over 9 videos) shows low follows for the reach. The poll is one of several follow and engagement levers discussed; the others are not decided.
+- Lesson, same day, on `one-pedal`: ask directly about regen braking, because that is what the comments argued about.
+- Refinement, same day: "We need to create those questions in a way that pushes people to choose a side."
+- Right after: "That might be more if the question needs it."
 
-**What we're changing** (✅ owner decision; whether it moves follows 🧪; CHANGELOG v0.13.1)
+**The poll's form** (✅ owner decision 2026-10-28, refinement; CHANGELOG v0.13.2)
+
+- The question is about **what viewers argue about in that video** (on `one-pedal`, regen braking), not a general topic question.
+- **Two opposite answers by default**, e.g. "Love it" / "Hate it", "Electric" / "Gas". **More only when the debate really has more camps**, each still a real side. Never a middle option ("Depends", "Both") or an opt-out ("I don't drive one", "Not sure").
+- Wording fair to every side: the question doesn't lean, and no answer is the "right" one.
+- The **same answers on all platforms**, including the pinned-comment emoji version (one emoji per answer). If there are more than two answers and a platform's sticker takes only two (Instagram, as relayed by the main session; not yet in `brand/research/platforms.md` [unverified]), that platform uses the pinned-comment version. Why two by default: it pushes a choice.
+
+**What we're changing** (✅ owner decision; whether it moves follows 🧪; CHANGELOG v0.13.1, v0.13.2)
 
 | Rule (file § name) | Change | Note |
 |---|---|---|
-| channel-kit.md § 5 YouTube, TikTok, Instagram ("On every …" lines) | One line each: the poll from `publish.md`. TikTok: sticker in the editor before posting. Instagram: sticker on the Reel or on a Story sharing it. YouTube: poll post linking the Short, right after it. Pinned-comment emoji version where a sticker isn't available | The decision; the poll's form (one neutral question, 2 to 4 answers) lives in `.claude/agents/publisher.md` § Task 5 |
+| channel-kit.md § 5 YouTube, TikTok, Instagram ("On every …" lines) | One line each: the poll from `publish.md`. TikTok: sticker at posting or afterwards on the posted video (owner observation, 2026-10-28). Instagram: sticker on the Reel or on a Story sharing it. YouTube: poll post linking the Short, right after it. Pinned-comment emoji version where a sticker isn't available | The decision; the poll's form is above (two opposite answers by default, more only for more real camps, v0.13.2) and in `.claude/agents/publisher.md` § Task 5 |
 | channel-kit.md § 5 (placement, brand-director value 🧪) | Sticker in the sky band (x 120 to 888, y 288 to 430), never over the captions or the title block (style-guide § 6 and § 7), timed to the last scene only | brand.md § What we never do: no overlay text in the first second except the title block's question and the captions |
 | channel-kit.md § 5 TikTok and Instagram (✅ owner decision, 2026-10-28, relayed by the main session) | If the editor can't time the sticker, no sticker: the pinned-comment emoji poll instead | Owner: keep the first second clean. Settles the brand-director's open question of the same day |
 
-Platform mechanics (TikTok sticker only before posting, Instagram and YouTube options, sticker duration) are from `.claude/agents/publisher.md`, **not yet checked in `brand/research/platforms.md`** [unverified].
+Platform mechanics: **TikTok poll at posting or afterwards on the posted video** (owner observation, 2026-10-28; corrects the publisher brief's "it can't be added afterwards"). The Instagram and YouTube options and sticker duration are from `.claude/agents/publisher.md`, **not yet checked in `brand/research/platforms.md`** [unverified].
 
 **To watch** (per post, against the posts before the poll; same snapshot times, 72 h and 14 d)
 
 - Poll votes per platform, and votes per 1,000 views.
 - Comments per post, and how many answer or argue about the poll.
+- The vote split: a near-even split (≈ 50/50 on two answers) means the question found a real argument; one answer near 90% means it didn't.
 - Followers gained per post (§ Platform numbers), and followers per 1,000 views against the 2026-10-28 profile baseline (≈ 0.7).
 - Whether the sticker hurts the picture: swipe-away at the point it appears, comments about it.
 - Caveat: other levers may change at the same time, and topics differ, so a single post proves nothing. No 🧪 → ✅ until several posts with a poll are in.

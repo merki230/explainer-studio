@@ -2,11 +2,37 @@
 
 Every change to `brand.md` or `style-guide.md` gets a line here: date, what changed, why (pointing to a `feedback.md` entry or a research section). Nothing changes silently.
 
+## v0.13.4 · 2026-10-28 · Profile copy and sourcing rules amended for the new bio and captions (owner answers)
+
+Owner answers of 2026-10-28 to the brand-director's v0.13.3 questions, relayed by the main session (✅). Logged in `feedback.md` ("Profiles and captions"). brand.md header → v0.13.4.
+
+- **brand.md § Channel identity, Profile copy** rewritten: what the visitor gets; one shared bio on all three (`How everyday things secretly work. Cars, roads and gadgets, in 3D.`); YouTube = the bio + at most two short sentences; "in 3D" allowed as a format tag, no other process words; the bio's list allowed, no other lists of three; no schedule, no link. Retires the 2026-10-16 "no 3D" rule, the pronoun split and the chosen texts (kept as history in channel-kit). channel-kit § 3 rule bullets match.
+- **YouTube description variant D** live as written; B moved to history.
+- **brand.md § Sourcing policy:** full sources and the specific "Illustrative: [what is invented]." line go in the YouTube description; TikTok and Instagram captions, after the hook question, the tease and the poll question, always end with `Sources: YouTube description.`, preceded by `Illustrative scene.` when the video has invented specifics (owner, same day, keeping the publisher brief's condition). channel-kit § 5 TikTok line 7 and Instagram line 6 added.
+
+## v0.13.3 · 2026-10-28 · One bio on all three; a post caption pattern (owner decisions)
+
+Owner decisions of 2026-10-28, relayed by the main session (✅). Logged in `feedback.md` ("Profiles and captions"). Why: ≈ 0.7 followers per 1,000 views (TikTok profile snapshot); the old bio didn't say what a visitor gets.
+
+- **Bio.** channel-kit § 3: variant D, `How everyday things secretly work. Cars, roads and gadgets, in 3D.` (66 characters by count; brief said 67), on TikTok and Instagram and as the YouTube opening. TikTok A and Instagram B kept as history. Header dated.
+- **YouTube description.** channel-kit § 3: variant D proposed (221 characters): the bio plus "Each short video picks one thing you use all the time, like the sensor inside your tire or the number on a highway exit, and shows the part you never see." No schedule, no link. Owner to approve; B stays live until then.
+- **Caption pattern** (TikTok and Instagram captions; the start of the YouTube description): (1) the hook question; (2) a tease, never the mechanism; (3) the poll question; last, "Illustrative scene." Longer illustrative details stay in the YouTube description. New posts and the four posts getting polls (`ev-charging`, `one-pedal`, `ev-acceleration`, `mile-markers`). No brand file holds captions yet, so it is recorded only in `feedback.md` and here.
+- **Not yet amended, owner to confirm:** brand.md § Channel identity, Profile copy ("no 3D", no lists of three, pronouns per platform; the "really up to" shared wording) and § Sourcing policy (the "Illustrative: [what is invented]." line right after the hook, and the "Sources: …" line in the post description).
+
+## v0.13.2 · 2026-10-28 · Polls pick a side: two opposite answers by default (owner decision)
+
+Owner decisions of 2026-10-28, relayed by the main session (✅), refining v0.13.1: "We need to create those questions in a way that pushes people to choose a side", then "That might be more if the question needs it." Logged in `feedback.md` ("All posts: a poll on every publication", § The poll's form). Replaces the publisher brief's earlier "one neutral question, 2 to 4 answers, one may be an opt-out".
+
+- **Question:** about what viewers argue about in that video. Owner lesson the same day: on `one-pedal`, ask directly about regen braking, because that is what the comments argued about.
+- **Answers:** two opposite ones by default ("Love it" / "Hate it", "Electric" / "Gas"); more only when the debate really has more camps, each a real side; never a middle option or an opt-out; wording fair to every side; the same answers on every platform and in the pinned-comment emoji fallback. Why two by default: it pushes a choice.
+- **More than two answers:** a platform whose sticker takes only two (Instagram [unverified, as relayed]) uses the pinned-comment version. channel-kit.md § 5 Instagram line says so; its other poll lines take the text from `publish.md` and don't describe the answers.
+- To watch, added: the vote split (near 50/50 = a real argument).
+
 ## v0.13.1 · 2026-10-28 · A poll on every post (owner decision)
 
 Owner decision of 2026-10-28, relayed by the main session (✅): "For all our next publications we should add a poll." Why: the TikTok profile (2026-10-28: 257 followers, 11.5K likes, ≈ 360K+ views over 9 videos, `one-pedal` ≈ 220K of them) turns reach into very few follows (≈ 0.7 per 1,000 views); a poll is one of several levers discussed, the only one decided. Logged in `feedback.md` ("All posts: a poll on every publication" and a profile-snapshot row in § Platform numbers). Whether it moves follows is 🧪. brand.md and style-guide.md unchanged (neither has a posting checklist).
 
-- **Posting checklist.** channel-kit.md § 5: one "on every upload/post/reel" line per platform. YouTube: poll post linking the Short, right after it. TikTok: poll sticker in the editor before posting. Instagram: sticker on the Reel or on a Story sharing it; pinned-comment emoji version where no sticker is available. Poll text comes from `publish.md` (publisher, `.claude/agents/publisher.md` § Task 5, updated by the main session). Header dated.
+- **Posting checklist.** channel-kit.md § 5: one "on every upload/post/reel" line per platform. YouTube: poll post linking the Short, right after it. TikTok: poll sticker at posting or afterwards on the posted video (owner observation, 2026-10-28, correcting the earlier "before posting only"). Instagram: sticker on the Reel or on a Story sharing it; pinned-comment emoji version where no sticker is available. Poll text comes from `publish.md` (publisher, `.claude/agents/publisher.md` § Task 5, updated by the main session). Header dated.
 - **Sticker placement** (brand-director value, 🧪): sky band x 120 to 888, y 288 to 430, never over the captions or the title block (style-guide § 6 and § 7), timed to the last scene only. Why: brand.md § What we never do bars overlay text in the first second other than the title block's question and the captions.
 - **Untimable sticker → pinned-comment poll** (✅ owner decision, 2026-10-28, relayed by the main session). If the TikTok or Instagram editor can't time the sticker, the post gets no sticker and uses the pinned-comment emoji poll instead. Why: owner, keep the first second clean. channel-kit § 5 TikTok line 6 and Instagram line 5.
 - Platform mechanics come from the publisher brief and are not yet in `brand/research/platforms.md` [unverified].

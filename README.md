@@ -43,7 +43,7 @@ Shared building blocks (`src/scenes`, `src/three`, `src/components`, `src/theme.
    - Your own recording: put it at `src/videos/my-topic/audio/voiceover.mp3`, then `yarn transcribe my-topic` (Scribe v2)
    - Legacy local Whisper: `yarn from-whisper` (see `scripts/whisper-to-transcript.mjs`)
      Every factual claim gets a source in `sources.md` ([format](docs/sources-format.md)); the sources go in
-     the post description.
+     the YouTube description (TikTok and Instagram captions point there).
 4. **Lay out scenes** in `spec.ts`. Each scene starts on a `cue`, which is the first words of a phrase in
    the voiceover, and runs until the next scene. Overlays start on a `cue` or `at` seconds into their scene.
    Cues keep working when you re-record the voiceover.
@@ -56,7 +56,7 @@ Shared building blocks (`src/scenes`, `src/three`, `src/components`, `src/theme.
    `yarn cover my-topic` (writes `src/videos/my-topic/release/cover.png`). Check it small too:
    `npx remotion still my-topic-cover out/my-topic/raw/review/cover-scale-5.png --scale=0.2` (and `--scale=0.1`).
 
-8. **Package:** `yarn package my-topic` renders `release/youtube-frame.png` (the frame named by the `<!-- youtube-frame: N -->` marker in `publish.md`) and prints a checklist. Every post carries a poll (owner, 2026-10-28): `publish.md` has a **Poll** section with the question and answers per platform. Add the TikTok poll sticker in the editor *before* posting (it can't be added later); if a sticker can't be timed off the opening, use the pinned-comment version instead. Everything you upload is in the video folder:
+8. **Package:** `yarn package my-topic` renders `release/youtube-frame.png` (the frame named by the `<!-- youtube-frame: N -->` marker in `publish.md`) and prints a checklist. Every post carries a poll (owner, 2026-10-28): `publish.md` has a **Poll** section with the question and answers per platform. On TikTok the poll can be added at posting or afterwards on the posted video; if a sticker can't be timed off the opening, use the pinned-comment version instead. Everything you upload is in the video folder:
 
 ```
 src/videos/<slug>/

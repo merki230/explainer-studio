@@ -14,7 +14,13 @@ TikTok and Instagram have no title field, so they use the captions below.
 
 ## Description (YouTube)
 
-Why does EV charging take so long? In independent tests, a Tesla Model Y takes about half an hour to go from 10 to 80 percent. BYD says its newest cars go from 10 to 70 percent in five minutes.
+Why does EV charging take so long?
+
+Two cars, one stop, and a very different wait.
+
+5-minute charging: game changer or overhyped?
+
+In independent tests, a Tesla Model Y takes about half an hour to go from 10 to 80 percent. BYD says its newest cars go from 10 to 70 percent in five minutes.
 
 Power is volts times amps. A Model Y runs on about 400 volts, so more power means more amps, and more amps means more heat in the cable and the battery. The Model Y also slows its charge as the battery fills. BYD says it uses about 1,000 volts, which gets the same power with less than half the current, and reports say its chargers push up to 1,500 amps.
 
@@ -48,15 +54,33 @@ Paste the caption, then the hashtags below. The sources are in the YouTube descr
 
 **TikTok:**
 
-Why does EV charging take so long? A Model Y runs on about 400 volts, so more power means more amps and more heat. BYD says its 1,000-volt system does 10 to 70 percent in 5 minutes. BYD doesn't sell its passenger cars in the US. The scene is staged and illustrative.
+Why does EV charging take so long?
+
+Two cars, one stop, and a very different wait.
+
+5-minute charging: game changer or overhyped?
+
+Illustrative scene. Sources: YouTube description.
 
 **Instagram:**
 
-Why does EV charging take so long? In tests a Model Y needs about half an hour for 10 to 80 percent. BYD says its newest cars need five minutes for 10 to 70. It starts with volts and amps. BYD says about 1,000 volts gets the same power with less than half the current. BYD doesn't sell its passenger cars in the US. The side-by-side station and the drivers are illustrative.
+Why does EV charging take so long?
+
+Two cars pull in side by side. Only one of them is done early.
+
+5-minute charging: game changer or overhyped?
+
+Illustrative scene. Sources: YouTube description.
 
 **Short TikTok alternate:**
 
-BYD says it can charge in 5 minutes. A Model Y takes about 30, and volts and amps are why. Illustrative scene.
+Can a car really charge in 5 minutes?
+
+One car takes about 30 minutes. BYD says its newest takes 5.
+
+5-minute charging: game changer or overhyped?
+
+Illustrative scene. Sources: YouTube description.
 
 ## Hashtags
 
@@ -67,6 +91,35 @@ BYD says it can charge in 5 minutes. A Model Y takes about 30, and volts and amp
 ## Pinned comment
 
 Sources are in the description. BYD's five minutes and 1,500 amps come from the company and a press report, so they're the company's claims. No independent test of BYD's newest system was found. How long is your usual stop at a fast charger?
+
+## Poll
+
+Added after posting on all three platforms (owner, 2026-10-28: TikTok allows a poll on an already-posted video). Owner rule (2026-10-28): exactly two opposite answers, no middle option, no opt-out, same two answers everywhere. It follows the script's last line (whether BYD's five minutes would change much for a 30-minute stop) and is what commenters argue about. It is a taste question, so it makes no claim beyond sources.md and names no car or company.
+
+**Question:** 5-minute charging: game changer or overhyped?
+
+**Answers:** Game changer / Overhyped
+
+**TikTok** (add to the posted video; paste as is):
+
+- Question: `5-minute charging: game changer or overhyped?`
+- Option 1: `Game changer`
+- Option 2: `Overhyped`
+
+**Instagram** (2-option poll sticker on the Reel, or on a Story that shares the Reel; paste as is):
+
+- Sticker question: `5-minute charging: game changer or overhyped?`
+- Options: `Game changer` / `Overhyped`
+
+**YouTube** (Posts tab, poll post published right after the Short; paste as is):
+
+- Post text: `5-minute charging: game changer or overhyped? (Short: <paste the Short link>)`
+- Option 1: `Game changer`
+- Option 2: `Overhyped`
+
+**Emoji fallback** (post as a separate comment, not an edit of the pinned one, on any platform where the sticker is missing):
+
+> Quick vote: 5-minute charging: game changer or overhyped? Reply ⚡ for "Game changer" or 🧊 for "Overhyped."
 
 ## Cover
 

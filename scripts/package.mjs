@@ -48,7 +48,7 @@ for (const [file, required, label] of items) {
 }
 if (existsSync(publish)) {
   const hasPoll = /^##+\s*Poll/im.test(readFileSync(publish, 'utf8'));
-  console.log(`  [${hasPoll ? 'x' : ' '}] publish.md § Poll  poll for every post (TikTok sticker before posting)`);
+  console.log(`  [${hasPoll ? 'x' : ' '}] publish.md § Poll  poll for every post (all three platforms)`);
   if (!hasPoll) warnings.push('publish.md has no "## Poll" section (every post carries a poll; the publisher writes it)');
 }
 if (frame === null && existsSync(publish)) warnings.push('publish.md names no YouTube frame (no marker or "frame <n>" in ## Cover)');
