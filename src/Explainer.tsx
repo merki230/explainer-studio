@@ -13,6 +13,7 @@ import {MusicBed, Sfx} from './components/Sound';
 import {DETAIL_FADE, DetailBox} from './components/DetailBox';
 import {FULLSCREEN_FADE, FullScreen} from './components/FullScreen';
 import {NameTag, TAG_FADE} from './components/NameTag';
+import {PriceTag, PRICE_TAG_FADE} from './components/PriceTag';
 import {NoteStaff} from './components/NoteStaff';
 import {PLACE_FADE, PlaceLabel} from './components/PlaceLabel';
 import {Statement, STATEMENT_FADE} from './components/Statement';
@@ -120,7 +121,9 @@ const exitFrames = (o: ResolvedOverlay) =>
     ? STATEMENT_FADE
     : o.type === 'attribution'
       ? ATTRIBUTION_FADE
-      : o.type === 'tag' || o.type === 'detail' || o.type === 'screen' || o.type === 'chart'
+      : o.type === 'pricetag'
+        ? PRICE_TAG_FADE
+        : o.type === 'tag' || o.type === 'detail' || o.type === 'screen' || o.type === 'chart'
         ? Math.max(TAG_FADE, DETAIL_FADE, FULLSCREEN_FADE, CHART_FADE)
         : o.type === 'title'
           ? TITLE_FADE
@@ -226,6 +229,8 @@ const Overlay: React.FC<{o: ResolvedOverlay; scene: SceneContext}> = ({o, scene}
       return <TitleBlock {...o} mood={mood} />;
     case 'tag':
       return <NameTag {...o} mood={mood} scene={scene} />;
+    case 'pricetag':
+      return <PriceTag {...o} mood={mood} scene={scene} />;
     case 'detail':
       return <DetailBox {...o} mood={mood} scene={scene} />;
     case 'screen':

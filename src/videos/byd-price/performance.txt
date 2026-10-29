@@ -1,12 +1,14 @@
 [calm] In China, a B-Y-D the size of a Tesla Model Three starts at about half the price.
-Analysts who took one apart found B-Y-D makes about three quarters of that car's parts, starting with the battery.
-People tend to credit subsidies and cheap labor.
-Subsidies do help, but Tesla builds the Model Three in China too, and the teardown pointed mainly to the parts.
-The battery is the most expensive part, and industry analysts put it at thirty to forty percent of an electric car's cost.
-Tesla's annual report says it buys its battery cells from suppliers like Panasonic and C-A-T-L.
-B-Y-D makes its own cells, which are long, flat iron-phosphate blades, and it builds the pack into the car's floor.
-A different teardown found B-Y-D makes its own motors and the electronics that run them, even the body panels and lights.
-But that first teardown found the BYD costs only about fifteen percent less to build than a Model Three made in China.
-Part of the remaining price gap comes from the cheapest trim's shorter range and China's price war.
-[pause] You can't buy one in the US.
-There's a 100 percent tariff, and a ban on Chinese-linked car software starts with 2027 models.
+People usually assume it's subsidies and cheap labor.
+Subsidies do help, but Tesla builds the Model Three in China too.
+So analysts took a B-Y-D sedan apart, and found B-Y-D makes about three quarters of that car's parts, starting with the battery.
+The battery is the most expensive part of an electric car, and industry estimates put it at thirty to forty percent of the car's cost.
+Tesla's annual report says it buys the cells inside its batteries from suppliers like Panasonic and C-A-T-L.
+B-Y-D makes its own cells... long flat iron-phosphate blades... and builds the battery pack into the car's floor.
+Engineers who took apart a smaller B-Y-D found B-Y-D's own motors in it too, and the electronics that run them.
+Even the body panels and lights were B-Y-D's.
+Even so, the analysts estimated the sedan they took apart cost only about fifteen percent less to build than a China-made Model Three.
+Part of the remaining price gap is range, because the half-price B-Y-D doesn't go as far on a charge as the Model Three.
+Another part is China's price war, since B-Y-D has been cutting prices sharply there.
+[pause] You won't see those prices in the US, where B-Y-D doesn't sell its passenger cars.
+There's a 100 percent tariff on Chinese-made E-Vs, and starting with 2027 models, a ban on car software linked to China.

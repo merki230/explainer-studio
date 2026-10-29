@@ -95,7 +95,7 @@ aren't seeing" can be the surprise. The tech moves fast: research must be curren
 | Battery | Packs of many small cylindrical cells | BYD's long flat "Blade" cells, different chemistry | **No. 010 candidate** |
 | Self-driving | Cameras only | Many add lidar | shortlisted (claims change monthly) |
 | Body | Giant single castings | Some copied it, others weld many parts | shortlisted |
-| Price: why a BYD costs so much less | Buys most cells from suppliers | BYD makes the parts itself; the battery (its own iron-phosphate cells, pack built into the floor) is the worked example, then motor, chips, seats, ships in one beat; ending on the range trade-off and why US drivers see neither | **in research** (owner, 2026-10-28; slug `byd-price`; one story, not a list of reasons) |
+| Price: why a BYD costs so much less | Buys most cells from suppliers | BYD makes the parts itself; the battery (its own iron-phosphate cells, pack built into the floor) is the worked example, then motor, chips, seats, ships in one beat; ending on the range trade-off and why US drivers see neither | **No. 011, in production** (owner approved the script and voice on 2026-10-29; slug `byd-price`; one story, not a list of reasons; hook A, "about half, in China") |
 
 The flying car (researched, `src/videos/flying-car/sources.md`) waits until after No. 010.
 

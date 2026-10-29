@@ -90,7 +90,7 @@ export const MadeByCar: React.FC<MadeByCarProps> = ({madeBy, t, r, shape, ev, ga
     k ? {at: k.at + shift, surge: [...(k.surge ?? []), ...(mb.surge ?? [])], fadeAt: k.fadeAt ?? mb.fadeAt} : undefined;
   const outlines = useMemo(() => cutCarOutlines({shape, ev, gas}), [shape, ev, gas]);
   const panelLines = useMemo(() => PANELS.map(([a, b]) => outlines.flatMap((o) => clipPolylineX(o, a, b))), [outlines]);
-  const lamps = useMemo(() => cutCarLamps(shape, brake), [shape, brake]);
+  const lamps = useMemo(() => cutCarLamps(shape, brake, ev || !!gas), [shape, brake, ev, gas]);
   const [x0, x1, y0, y1] = EV.pack;
   const top = packTop ?? y1;
   const zc = EV.packZ;
@@ -172,7 +172,9 @@ export const MadeByCar: React.FC<MadeByCarProps> = ({madeBy, t, r, shape, ev, ga
         ? lamps.map((l, i) => {
             const st = madeByState(keys(mb.lamps, (l.kind === 'head' ? 0 : 1) * lampStagger * 2 + (i % 2) * lampStagger), t);
             return (
-              <GlowShell key={i} geometry={roundedBox(l.size[0] + 0.01, l.size[1] + 0.01, l.size[2] + 0.01, 0.005, 2)} lit={st.lit} surge={st.surge} r={r} core position={l.at} />
+              <group key={i} position={l.at} rotation={[0, 0, l.rot ?? 0]}>
+                <GlowShell geometry={roundedBox(l.size[0] + 0.01, l.size[1] + 0.01, l.size[2] + 0.01, 0.005, 2)} lit={st.lit} surge={st.surge} r={r} core position={[0, 0, 0]} />
+              </group>
             );
           })
         : null}

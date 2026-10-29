@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import {REAL, section, type Mood} from '../../theme';
 import {raw, roundedBox} from '../plaster';
 import {cutMaterial, INK, InkLine} from '../section/cutLook';
-import {GlowEdge} from './madeBy';
+import {GlowEdge, GlowShell, haloOpacity} from './madeBy';
 import {applyAlbedo, applyEnv, useAlbedo, useEnvStrength, useStudioEnv} from './useStudioEnv';
 
 type V3 = [number, number, number];
@@ -796,8 +796,13 @@ export type BladeState = {
   floorOut?: number;
   /** Cell-to-body: the pack's lid rises to the floor's height, 0 → 1 (the lid is the floor). */
   lid?: number;
-  /** The "made by" glow on the blades and the lid (orange edge, the cut faces stay `cut`): lit 0 → 1, surge, core radius. */
-  glow?: {lit: number; surge?: number; r: number};
+  /**
+   * The "made by" glow on the blades and the lid (orange edge + 25 % halo, the cut faces stay `cut`): lit 0 → 1,
+   * surge, core radius (already × any width factor). The slid-out blade (`show`) gets the full § 5 look while out:
+   * its cut end's outline in orange and a halo shell round it, lit with the slide, at `showR` (default `r`; § 5's
+   * weight, so its thin cut end still reads as a surface).
+   */
+  glow?: {lit: number; surge?: number; r: number; showR?: number};
 };
 
 /** The blade pack's layout (car frame, m): blade count and pitch, blade heights, the lid's travel, the old floor. */
@@ -935,6 +940,7 @@ export const BatteryPack: React.FC<BatteryPackProps> = ({mood, fill, glow = 1, i
       carpet: phys(REAL.carpet, {roughness: 0.95, transparent: true}),
       lidCarpet: phys(REAL.carpet, {roughness: 0.95, transparent: true}),
       bladeEdge: new THREE.MeshBasicMaterial({color: raw(section.orange), transparent: true}),
+      bladeHalo: new THREE.MeshBasicMaterial({color: raw(section.orange), transparent: true, depthWrite: false}),
     }),
     [],
   );
@@ -1086,6 +1092,7 @@ type PackMats = {
   carpet: THREE.MeshPhysicalMaterial;
   lidCarpet: THREE.MeshPhysicalMaterial;
   bladeEdge: THREE.MeshBasicMaterial;
+  bladeHalo: THREE.MeshBasicMaterial;
 };
 
 /**
@@ -1095,6 +1102,9 @@ type PackMats = {
  * fades, the lid rises to the floor's height and takes the carpet. Lit (made by the maker): each blade's top cut edge
  * and the lid's cut edge turn orange (the scene adds the halo); the cut faces stay `cut`.
  */
+/** A unit box, for the slid-out blade's halo shell (scaled to the blade). */
+const unitBox = new THREE.BoxGeometry(1, 1, 1);
+
 const BladePack: React.FC<{blade: BladeState; mats: PackMats; inkScale: number}> = ({blade, mats, inkScale}) => {
   const [x0, x1, y0] = EV.pack;
   const z = EV.packZ;
@@ -1116,7 +1126,13 @@ const BladePack: React.FC<{blade: BladeState; mats: PackMats; inkScale: number}>
   const lidTop = B.lidFrom + (B.lidTo - B.lidFrom) * lidK;
   const lit = blade.glow ? Math.max(0, Math.min(1, blade.glow.lit)) : 0;
   const r = blade.glow?.r ?? 0.005;
+  const surge = blade.glow?.surge ?? 0;
+  const rShow = blade.glow?.showR ?? r;
   mats.bladeEdge.opacity = lit;
+  // each top edge's halo: § 5's 25 % (45 % on a surge), 3 × the core's width
+  mats.bladeHalo.opacity = haloOpacity(lit, surge);
+  // the slid-out blade lights with its slide (only where the pack has a glow at all)
+  const showLit = blade.glow ? Math.max(0, Math.min(1, show / 0.25)) : 0;
   // the old floor panel: lifts and fades; the lid's carpet comes in as it arrives
   const floorY = out * B.floorLift;
   const floorO = 1 - Math.min(1, out * 1.25);
@@ -1135,6 +1151,12 @@ const BladePack: React.FC<{blade: BladeState; mats: PackMats; inkScale: number}>
   const bladeLen = z - 0.01 - (zb + 0.03);
   const bladeZ = (z - 0.01 + zb + 0.03) / 2;
   const edges: V3[][] = [];
+  const shown = (() => {
+    const h = (B.y1 - B.y0) * rise(showK);
+    if (show <= 0.001 || h < 0.002) return null;
+    const [a, b] = bladeSpan(showK);
+    return {a, b, h, z: bladeZ + show * B.slide};
+  })();
   return (
     <group>
       {parts.map(([a, b, c, d], i) => (
@@ -1205,6 +1227,51 @@ const BladePack: React.FC<{blade: BladeState; mats: PackMats; inkScale: number}>
           <boxGeometry args={[Math.abs(e[1][0] - e[0][0]), r * 1.2, r * 1.2]} />
         </mesh>
       ))}
+      {/* …and its halo, 25 % (bloomed) */}
+      {lit > 0.003
+        ? edges.map((e, i) => (
+            <mesh
+              key={`h${i}`}
+              position={[(e[0][0] + e[1][0]) / 2, e[0][1], e[0][2]]}
+              material={mats.bladeHalo}
+              userData={{glow: true}}
+              renderOrder={6}
+            >
+              <boxGeometry args={[Math.abs(e[1][0] - e[0][0]), r * 3.6, r * 3.6]} />
+            </mesh>
+          ))
+        : null}
+      {/* the slid-out blade, "made by" (§ 5): its cut end's outline in orange, a halo shell round it */}
+      {shown && showLit > 0.003
+        ? ((sb: {a: number; b: number; h: number; z: number}) => {
+            const zf = sb.z + bladeLen / 2 + 0.004;
+            return (
+              <group>
+                <GlowEdge
+                  lines={[
+                    [
+                      [sb.a, B.y0, zf],
+                      [sb.b, B.y0, zf],
+                      [sb.b, B.y0 + sb.h, zf],
+                      [sb.a, B.y0 + sb.h, zf],
+                    ],
+                  ]}
+                  lit={showLit}
+                  surge={surge}
+                  r={rShow}
+                />
+                <GlowShell
+                  geometry={unitBox}
+                  lit={showLit}
+                  surge={surge}
+                  r={rShow}
+                  position={[(sb.a + sb.b) / 2, B.y0 + sb.h / 2, sb.z]}
+                  scale={[sb.b - sb.a, sb.h, bladeLen]}
+                />
+              </group>
+            );
+          })(shown)
+        : null}
       {/* the lid: resting on the blades, rising to the floor's height (the lid is the floor) */}
       <mesh
         position={[(x0 + x1) / 2, lidTop - B.lidT / 2, (z + zb) / 2]}

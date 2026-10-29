@@ -105,6 +105,7 @@ out/<slug>/raw/         scratch only: raw mix, music/sfx/voice takes, stills, re
 | scriptwriter    | `script.txt`                                             |
 | fact-checker    | statuses in `sources.md` (read-only on everything else)  |
 | ai-tell-checker | nothing (flags AI-sounding script and copy, suggests rewrites) |
+| spoken-check    | nothing (reads the script aloud as the narrator; flags jumps, pronouns, register, breath; suggests rewrites) |
 | voice           | voiceover and timings                                    |
 | director        | `spec.ts`, `av-script.md` (the A/V script, before voice) |
 | scene-builder   | `src/scenes`, `src/three`, `src/components`, `src/brand` (brand-asset generator; exports to `brand/assets/` from the brand-director's spec in `brand/channel-kit.md`) |
@@ -113,7 +114,9 @@ out/<slug>/raw/         scratch only: raw mix, music/sfx/voice takes, stills, re
 | tooling         | `scripts/`, deps, config                                 |
 | brand-director  | `brand/` (brand.md, style-guide.md, feedback, changelog) |
 
-New video pipeline: researcher → scriptwriter → fact-checker (**PASS** needed) + ai-tell-checker (**CLEAN** or polished) → director drafts the A/V script (`av-script.md`: each line → what's on
+New video pipeline: researcher → scriptwriter → fact-checker (**PASS** needed) + ai-tell-checker (**CLEAN** or polished) +
+spoken-check (**CLEAN** or polished), the three in parallel on every script version, their fixes batched into one
+scriptwriter pass → director drafts the A/V script (`av-script.md`: each line → what's on
 screen, motion, transition; flags lines hard to show or badly paced; fixes go back into the script) → **user approves the
 script** → voice → director → scene-builder (only if a scene is missing) → visual-reviewer (**SHIP**
 needed) → publisher → **user approves and commits**.

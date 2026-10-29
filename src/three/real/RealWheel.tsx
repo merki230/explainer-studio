@@ -422,6 +422,13 @@ export type RealWheelProps = {
    */
   sport?: {spokes: 'split' | 'turbine'; caliper: string; face?: string; side?: string};
   /**
+   * The rim's face (No. 011, the real car models, style guide v0.15 § 3; invented designs, never a copy of a real
+   * wheel): 'alloy' (default: the five twin spokes, as before), 'aero5' (the Model 3's: a flat dark aero cover, five
+   * broad flat spokes with narrow windows between them, a closed outer ring) or 'twin10' (the Seal 06's: ten thin
+   * straight spokes in five parallel pairs). Five-fold like the alloy (the turn cap is unchanged). Ignored with `sport`.
+   */
+  design?: 'alloy' | 'aero5' | 'twin10';
+  /**
    * The wheel ghosted (No. 007 `race-slice`): every material's opacity × this (0 → 1), so what stands behind
    * it (a drive unit) reads through in a close framing. Default none (as before); 1 restores it.
    */
@@ -522,7 +529,11 @@ const SpokeSet: React.FC<{
   shadows?: boolean;
   /** Draw the lug nuts (the blur copies skip them: near the axis they barely move). */
   nuts?: boolean;
-}> = ({face, side, nut, fill, shadows = false, nuts = true}) => {
+  /** The arms of one spoke (default `ARMS`, the alloy's V twins; `TWIN_ARMS`: the 'twin10' face's parallel pair). */
+  arms?: [number, number][];
+  /** The arms' width across (default 0.085). */
+  width?: number;
+}> = ({face, side, nut, fill, shadows = false, nuts = true, arms = ARMS, width = 0.085}) => {
   const armMats = [face, side, side, side, side, side];
   return (
     <>
@@ -530,7 +541,7 @@ const SpokeSet: React.FC<{
         const t = (k / 5) * Math.PI * 2;
         return (
           <group key={k} rotation={[t, 0, 0]}>
-            {ARMS.map(([h, rimAng], j) => {
+            {arms.map(([h, rimAng], j) => {
               const S = new THREE.Vector2(ARM_R[0] * Math.cos(h), ARM_R[0] * Math.sin(h));
               const E = new THREE.Vector2(ARM_R[1] * Math.cos(rimAng), ARM_R[1] * Math.sin(rimAng));
               const mid = S.clone().add(E).multiplyScalar(0.5);
@@ -538,8 +549,8 @@ const SpokeSet: React.FC<{
               const ang = Math.atan2(d.y, d.x); // from +y toward +z
               return (
                 <group key={j} position={[0.205, mid.x, mid.y]} rotation={[ang, 0, 0]}>
-                  <mesh geometry={ARM} material={armMats} scale={[0.07, d.length(), 0.085]} castShadow={shadows} receiveShadow={shadows} />
-                  {fill ? <mesh geometry={ARM} material={fill} scale={[0.07, d.length(), 0.085]} /> : null}
+                  <mesh geometry={ARM} material={armMats} scale={[0.07, d.length(), width]} castShadow={shadows} receiveShadow={shadows} />
+                  {fill ? <mesh geometry={ARM} material={fill} scale={[0.07, d.length(), width]} /> : null}
                 </group>
               );
             })}
@@ -555,6 +566,78 @@ const SpokeSet: React.FC<{
     </>
   );
 };
+
+/** The 'twin10' face (No. 011, the Seal 06's invented wheel): each of the five spokes a parallel pair of thin arms. */
+const TWIN_ARMS: [number, number][] = [
+  [-0.105, -0.036],
+  [0.105, 0.036],
+];
+
+/** An annular sector in the wheel's face plane (r0 → r1, angle a0 → a1 at r0 and b0 → b1 at r1), `d` deep outboard. */
+const sectorGeo = (r0: number, r1: number, a: [number, number], b: [number, number], d: number) => {
+  const n = 10;
+  const pts: THREE.Vector2[] = [];
+  for (let i = 0; i <= n; i++) {
+    const t = b[0] + ((b[1] - b[0]) * i) / n;
+    pts.push(new THREE.Vector2(r1 * Math.cos(t), r1 * Math.sin(t)));
+  }
+  for (let i = n; i >= 0; i--) {
+    const t = a[0] + ((a[1] - a[0]) * i) / n;
+    pts.push(new THREE.Vector2(r0 * Math.cos(t), r0 * Math.sin(t)));
+  }
+  const g = new THREE.ExtrudeGeometry(new THREE.Shape(pts), {depth: d, bevelEnabled: false, curveSegments: 4});
+  // shape (x, y) → wheel (−z, y)... turned so the shape's plane is the face (y–z) and the depth runs outboard (+x)
+  g.rotateY(Math.PI / 2);
+  return g;
+};
+/** The 'aero5' face's pieces (radius-1 units): five broad flat spokes, the closed outer ring, the dark backing disc. */
+const AERO = (() => {
+  const w0 = 0.3; // half-angle of a spoke at the hub
+  const w1 = 0.42; // and at the ring (period 1.2566: the windows between are ≈ 0.42 rad at the ring)
+  return {
+    spoke: sectorGeo(0.22, 0.575, [-w0, w0], [-w1, w1], 0.022),
+    ring: (() => {
+      const s = new THREE.Shape();
+      s.absarc(0, 0, 0.628, 0, Math.PI * 2, false);
+      const h = new THREE.Path();
+      h.absarc(0, 0, 0.565, 0, Math.PI * 2, true);
+      s.holes.push(h);
+      const g = new THREE.ExtrudeGeometry(s, {depth: 0.024, bevelEnabled: false, curveSegments: 48});
+      g.rotateY(Math.PI / 2);
+      return g;
+    })(),
+    back: new THREE.CircleGeometry(0.6, 48).rotateY(Math.PI / 2),
+  };
+})();
+
+/** The 'aero5' face and the lug nuts, in the turning frame (one set: the sharp one or a blur copy). */
+const AeroSet: React.FC<{
+  cover: THREE.Material;
+  ring: THREE.Material;
+  back?: THREE.Material;
+  nut: THREE.Material;
+  shadows?: boolean;
+  nuts?: boolean;
+}> = ({cover, ring, back, nut, shadows = false, nuts = true}) => (
+  <>
+    {back ? <mesh geometry={AERO.back} material={back} position={[0.16, 0, 0]} /> : null}
+    {[0, 1, 2, 3, 4].map((k) => (
+      <group key={k} rotation={[(k / 5) * Math.PI * 2, 0, 0]}>
+        <mesh geometry={AERO.spoke} material={cover} position={[0.19, 0, 0]} castShadow={shadows} receiveShadow={shadows} />
+      </group>
+    ))}
+    <mesh geometry={AERO.ring} material={cover} position={[0.17, 0, 0]} castShadow={shadows} receiveShadow={shadows} />
+    {/* the ring's outer lip, machined */}
+    <mesh material={ring} position={[0.196, 0, 0]} rotation={[0, Math.PI / 2, 0]}>
+      <torusGeometry args={[0.6, 0.012, 6, 64]} />
+    </mesh>
+    {[0, 1, 2, 3, 4].map((k) => (
+      <group key={k} rotation={[(k / 5) * Math.PI * 2 + Math.PI / 5, 0, 0]} visible={nuts}>
+        <Axial a0={0.212} a1={0.236} r={0.028} mats={[nut]} geometry={HEX} y={0.15} />
+      </group>
+    ))}
+  </>
+);
 
 /**
  * One turbine blade (`sport.spokes: 'turbine'`), in the turning frame at angle 0: a lofted strip from the hub
@@ -669,6 +752,7 @@ export const RealWheel: React.FC<RealWheelProps> = ({
   inkScale = 1,
   brake,
   sport: sportIn,
+  design = 'alloy',
   ghost,
 }) => {
   const gl = useThree((s) => s.gl);
@@ -1032,6 +1116,10 @@ export const RealWheel: React.FC<RealWheelProps> = ({
           <TurbineSet face={sportMats.face} side={sportMats.side} nut={mats.nut} fill={mats.fill} shadows />
         ) : sportMats ? (
           <SpokeSet face={sportMats.face} side={sportMats.side} nut={mats.nut} fill={mats.fill} shadows />
+        ) : design === 'aero5' ? (
+          <AeroSet cover={mats.paint} ring={mats.face} back={mats.dark} nut={mats.nut} shadows />
+        ) : design === 'twin10' ? (
+          <SpokeSet face={mats.face} side={mats.paint} nut={mats.nut} fill={mats.fill} shadows arms={TWIN_ARMS} width={0.05} />
         ) : (
           <SpokeSet face={mats.face} side={mats.paint} nut={mats.nut} fill={mats.fill} shadows />
         )}
@@ -1071,6 +1159,10 @@ export const RealWheel: React.FC<RealWheelProps> = ({
                 <TurbineSet face={sportMats.ghostFace[i]} side={sportMats.ghostSide[i]} nut={mats.ghostNut[i]} nuts={false} />
               ) : sportMats ? (
                 <SpokeSet face={sportMats.ghostFace[i]} side={sportMats.ghostSide[i]} nut={mats.ghostNut[i]} nuts={false} />
+              ) : design === 'aero5' ? (
+                <AeroSet cover={mats.ghostPaint[i]} ring={mats.ghostFace[i]} nut={mats.ghostNut[i]} nuts={false} />
+              ) : design === 'twin10' ? (
+                <SpokeSet face={mats.ghostFace[i]} side={mats.ghostPaint[i]} nut={mats.ghostNut[i]} nuts={false} arms={TWIN_ARMS} width={0.05} />
               ) : (
                 <SpokeSet face={mats.ghostFace[i]} side={mats.ghostPaint[i]} nut={mats.ghostNut[i]} nuts={false} />
               )}

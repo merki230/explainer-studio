@@ -100,6 +100,37 @@ Platform mechanics: **TikTok poll at posting or afterwards on the posted video**
 - Followers gained per post (§ Platform numbers), and followers per 1,000 views against the 2026-10-28 profile baseline (≈ 0.7).
 - Whether the sticker hurts the picture: swipe-away at the point it appears, comments about it.
 - Caveat: other levers may change at the same time, and topics differ, so a single post proves nothing. No 🧪 → ✅ until several posts with a poll are in.
+
+---
+
+## Owner decision · whole wheels on cut-open cars (2026-10-29)
+
+- **Decided:** 2026-10-29, owner, relayed by the main session · **Applies to:** new car videos (posted videos unchanged)
+
+**Owner's decision:** cut-open cars keep their near-side wheels whole (full tire and rim in front of the cut face); a wheel is cut only when the story's hidden system is in the wheel (e.g. the tire-pressure sensor video).
+
+**What we're changing:** style-guide § 3, new row "Wheels on a cut-open car" (CHANGELOG v0.15).
+
+---
+
+## Owner decision · recognisable real car models (2026-10-29)
+
+- **Decided:** 2026-10-29, owner, relayed by the main session · **Applies to:** videos made after No. 011 ships (No. 011 and posted videos keep their generic cars)
+
+**Owner's decision:** the procedural cars get **recognisable silhouettes of the real products**: Model 3: grille-less rounded nose, glass roof, fastback tail and its lamp shape; BYD Seal: low front with a light bar, sharper creases, short overhangs. Built in the existing `RealCar` / `SlicedCar` system, **not downloaded models**; the drawn, cut-open Section look stays.
+
+**What we're changing**
+
+| Rule (file § name) | Change | Basis |
+|---|---|---|
+| brand.md Open decisions, row 8 | New open item: how far "recognisable" goes (features in; logos, badges, wordmarks out; only cars the voice names) | Owner decision; brand-director spec before the scene-builder starts |
+| brand.md What we never do (real brand on a device) | Notes the coming exception for named cars; the ban holds until the spec exists | Owner decision |
+| Publish copy (publisher) | The "the cars are generic designs" line in the illustrative disclosure changes for videos that use these cars (e.g. "the cars are drawn after the real models; the scene is illustrative") | Owner decision; brand.md § Sourcing policy |
+
+**Update, same day (owner, 2026-10-29):** wanted **now, for No. 011** ("the opening is weak, let's go for realistic ones"), not after it ships. Specced in style-guide v0.15 § 3 Real car models (Model 3 Highland RWD and Seal 06 EV: proportions from maker/reference dimensions, nose, roof and glass, tail lamps, creases, invented wheels; banned: logos, badges, wordmarks, maker typefaces, real wheel designs, real plates; the inside of the cut stays ours). The hatch stays generic for now. brand.md Open decision 8 settled; § What we never do carries the cars-only exception. No. 011's disclosure: "the cars are drawn to resemble the real models; no logos".
+
+---
+
 ## No. 011 · byd-price: brand decisions before the build (not published)
 
 - **Recorded:** 2026-10-28, brand-director, at the main session's request · **Applies to:** No. 011 onward

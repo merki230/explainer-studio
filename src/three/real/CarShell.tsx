@@ -151,8 +151,14 @@ const GLASS_HATCH: P2[] = roundPoly(
   8,
 );
 
-/** The whole car's shapes: 'crossover' (No. 005), 'sedan' (No. 006), 'coupe' (No. 007), 'hatch' (No. 009). */
-export type ShellProfile = 'crossover' | 'sedan' | 'coupe' | 'hatch';
+/**
+ * The car shapes: 'crossover' (No. 005), 'sedan' (No. 006), 'coupe' (No. 007), 'hatch' (No. 009), and the real
+ * models (No. 011, style guide v0.15 § 3; `realModels.ts`): 'model3' (Tesla Model 3 Highland) and 'seal06' (BYD
+ * Seal 06 EV), drawn cut; seen whole they use the sedan's shell (`wholeProfile`).
+ */
+export type ShellProfile = 'crossover' | 'sedan' | 'coupe' | 'hatch' | 'model3' | 'seal06';
+/** The whole car's shell for a shape: the real models (cut only, so far) fall back to the sedan's. */
+export const wholeProfile = (p: ShellProfile = 'crossover'): ShellProfile => (p === 'model3' || p === 'seal06' ? 'sedan' : p);
 
 /**
  * The coupe's lower body (No. 007, `profile: 'coupe'`): a generic two-door, the same wheelbase, arches
@@ -269,7 +275,7 @@ const COUPE = {
 };
 /** How much lower a whole car's interior and driver sit for a shape (0 for the crossover). */
 export const shellSink = (profile: ShellProfile = 'crossover') =>
-  profile === 'sedan' ? SEDAN.sink : profile === 'coupe' ? COUPE.sink : 0;
+  wholeProfile(profile) === 'sedan' ? SEDAN.sink : profile === 'coupe' ? COUPE.sink : 0;
 
 const signedArea = (p: P2[]) =>
   p.reduce((s, [x, y], i) => s + x * p[(i + 1) % p.length][1] - p[(i + 1) % p.length][0] * y, 0) / 2;
@@ -426,7 +432,8 @@ export const CarShell: React.FC<{
    * Default none (the plain coupe).
    */
   style?: ShellStyle;
-}> = ({mats, profile = 'crossover', style: styleIn}) => {
+}> = ({mats, profile: profileIn = 'crossover', style: styleIn}) => {
+  const profile = wholeProfile(profileIn);
   const sedan = profile === 'sedan';
   const coupe = profile === 'coupe';
   const hatch = profile === 'hatch';

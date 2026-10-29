@@ -39,6 +39,7 @@ import {EV, moduleSpan, MODULE_Y} from '../three/real/EvDrive';
 import {GhostCar, ghostRoof} from '../three/real/GhostCar';
 import {chargePortAt} from '../three/real/RealCar';
 import {bladeTipAt, layoutOf, SlicedCar, type SlicedCarOptions} from '../three/real/SlicedCar';
+import {isRealShape, REAL_CUT} from '../three/real/realModels';
 import {capRevs} from '../three/real/wheelMotion';
 import {projectToFrame, SECTION_ANGLE, SectionCamera, sectionCameraAt, type Framing} from '../three/section/SectionCamera';
 import {SectionLights, SectionStage} from '../three/section/SectionStage';
@@ -103,6 +104,14 @@ export type ChargeBought = {
   }[];
   /** Where a crate stands (bay frame x, z; its foot on the bay). Default [3.45, 1.0], behind the car's rear. */
   at?: [number, number];
+  /**
+   * How a module travels to its slot. Default: an arc out in front of the car (1.6 m toward the camera) and down
+   * into the slot. 'low': it lifts just clear of the crate's wall, steps off the crate's car-side edge and out past
+   * the car's near side, drops to the slot's height there, slides in under the sill to the pack's cut face and
+   * along it into its slot; it never crosses the wheels on screen (it passes behind the near rear wheel). Made for
+   * a crate behind the car's rear (the default `at`).
+   */
+  route?: 'low';
 };
 
 /** A state-of-charge curve: percent against charging minutes (piecewise linear). */
@@ -463,9 +472,10 @@ const crateOpen = (c: ChargeBought['crates'][number], t: number) => {
 };
 /**
  * The bought-in modules at t: each slot's offset from its place (car frame), null while the slot is empty and its
- * module isn't anywhere yet; and each crate's pose. `carX`: the car's x along the bay (bay frame).
+ * module isn't anywhere yet; and each crate's pose. `carX`: the car's x along the bay (bay frame). `floorY`: the
+ * crate's floor in the car's frame (default 0, the bay; negative for a car lifted above the floor, e.g. on stands).
  */
-export const chargeBoughtAt = (b: ChargeBought, t: number, carX = 0) => {
+export const chargeBoughtAt = (b: ChargeBought, t: number, carX = 0, floorY = 0) => {
   const slots: (V3 | null)[] = [...Array(EV.modules).keys()].map(() => null);
   const h = MODULE_Y[1] - MODULE_Y[0];
   let next = 0;
@@ -478,17 +488,40 @@ export const chargeBoughtAt = (b: ChargeBought, t: number, carX = 0) => {
       const S = slotCentre(k);
       // the slot in the bay's frame (the car faces −x: car x → −x)
       const Sw: V3 = [carX - S[0], S[1], S[2]];
-      const cs = crateSlot(j % 3, h);
+      const cs0 = crateSlot(j % 3, h);
+      const cs: V3 = [cs0[0], cs0[1] + floorY, cs0[2]];
       const P0: V3 = [crateX(b, c, Math.min(t, d)) + cs[0], cs[1], z + cs[2]];
       const u = t - d;
       let W: V3;
+      const mix = (p: V3, q: V3, k2: number): V3 => [p[0] + (q[0] - p[0]) * k2, p[1] + (q[1] - p[1]) * k2, p[2] + (q[2] - p[2]) * k2];
       if (u <= 0) W = [x + cs[0], cs[1], z + cs[2]];
-      else {
+      else if (b.route === 'low') {
+        // lift clear of the wall, step off the crate's car side and out past the car's near side (the module is
+        // ≈ 1.3 m long across the car), drop to the slot's height there, slide in under the sill to line up with the
+        // cut face, then along it into the slot (behind the near rear wheel)
+        const cx = crateX(b, c, Math.min(t, d));
+        const clear = floorY + CRATE.pallet + CRATE.h + h / 2 + 0.06;
+        const xOff = cx - CRATE.w / 2 - 0.3;
+        const zOut = Math.max(P0[2], Sw[2] + 1.62);
+        const up: V3 = [P0[0], clear, P0[2]];
+        const off: V3 = [xOff, clear, zOut];
+        const down: V3 = [xOff, Sw[1], zOut];
+        const line: V3 = [xOff, Sw[1], Sw[2]];
+        W =
+          u < 0.18
+            ? mix(P0, up, ease(u, 0, 0.18))
+            : u < 0.36
+              ? mix(up, off, ease(u, 0.18, 0.36))
+              : u < 0.5
+                ? mix(off, down, ease(u, 0.36, 0.5))
+                : u < 0.68
+                  ? mix(down, line, ease(u, 0.5, 0.68))
+                  : mix(line, Sw, ease(u, 0.68, 1.1));
+      } else {
         const zOut = Sw[2] + 1.62;
         const up: V3 = [P0[0], P0[1] + 0.62, P0[2]];
         const A: V3 = [Sw[0], Sw[1] + 0.7, zOut];
         const B: V3 = [Sw[0], Sw[1], zOut];
-        const mix = (p: V3, q: V3, k2: number): V3 => [p[0] + (q[0] - p[0]) * k2, p[1] + (q[1] - p[1]) * k2, p[2] + (q[2] - p[2]) * k2];
         W =
           u < 0.25
             ? mix(P0, up, ease(u, 0, 0.25))
@@ -950,7 +983,9 @@ export const chargeAnchorOnScreen = (
   const shape = (car?.shape ?? 'sedan') as ShellProfile;
   if (name === 'top') {
     const roof = car ? layoutOf(car).roofCut : ghostRoof(shape)[1];
-    return projectToFrame(cam, carToWorld(p, w, [0, roof + 0.15, 0], dx));
+    // a real model's tag leader starts at its roof's highest point on the centre line (v0.15 § 3); others at x 0
+    const rx = car && isRealShape(car.shape) ? REAL_CUT[car.shape].roofTop[0] : 0;
+    return projectToFrame(cam, carToWorld(p, w, [rx, roof + 0.15, 0], dx));
   }
   if (name === 'driver') {
     const pose = act?.driver ? driverPoseAt(act.driver, t) : null;

@@ -43,9 +43,10 @@ Check every sentence against each family. A sentence can hit several.
 - **Written-English tells (owner, 2026-10-16: the voice is spoken American English):** missing contractions
   ("it is", "does not", "you will" where a person says "it's", "doesn't", "you'll"); formal or legal words a
   person wouldn't say out loud ("require", "approximately", "utilize", "regulators found", "in order to");
-  stiff connectives ("however", "therefore", "additionally"). Suggest the casual spoken form, including
-  "gonna", "wanna", "kinda", "gotta" where a real American narrator would naturally say them. Use those sparingly
-  (they also appear in the captions), never inside a fact-checked hedge, and never two in one sentence.
+  stiff connectives ("however", "therefore", "additionally"). Suggest the plain spoken form with normal
+  contractions. The register is plain, professional spoken American English (owner, 2026-10-29): no slang or
+  idioms ("chalk it up", "gonna", "kinda", "gotta"), and no written-only words either. Never change a
+  fact-checked hedge.
 
 - **Template hooks and openers (owner, 2026-10-23):** formulas that sound like a thousand AI videos even when
   every word is fine: "Do/Push/Try X, and you're (only) Y", "Here's why…", "Here's the thing", "You won't

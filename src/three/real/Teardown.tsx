@@ -613,23 +613,138 @@ export const AxleStand: React.FC<{position: V3; h?: number; mat: THREE.Material}
   </group>
 );
 
-/** The rolling tool chest (`CHARGE.cabinetDark`): drawers with plain bar handles, casters; nothing readable. */
-export const ToolChest: React.FC<{position: V3; mats: {body: THREE.Material; handle: THREE.Material; wheel: THREE.Material}}> = ({position, mats}) => (
+/** The tool chest's drawer that opens (`ToolChest` `drawer`): which handle row, how far it slides (m). */
+export const CHEST_DRAWER = {row: 2, travel: 0.3};
+
+/**
+ * The rolling tool chest (`CHARGE.cabinetDark`): drawers with plain bar handles, casters; nothing readable. `drawer`
+ * 0 (shut) → 1 slides one drawer out `CHEST_DRAWER.travel` m toward the room (two plain tools in its tray).
+ */
+export const ToolChest: React.FC<{position: V3; drawer?: number; mats: {body: THREE.Material; handle: THREE.Material; wheel: THREE.Material}}> = ({position, drawer = 0, mats}) => {
+  const rows = [0.25, 0.42, 0.59, 0.76, 0.93];
+  const yd = rows[CHEST_DRAWER.row];
+  const out = CHEST_DRAWER.travel * Math.max(0, Math.min(1, drawer));
+  return (
+    <group position={position}>
+      <mesh geometry={rb(0.68, 0.92, 0.46, 0.02, 3)} material={mats.body} position={[0, 0.56, 0]} castShadow receiveShadow />
+      {rows.map((y, i) =>
+        i === CHEST_DRAWER.row ? null : <mesh key={y} geometry={rb(0.5, 0.016, 0.02, 0.006)} material={mats.handle} position={[0, y, 0.24]} />,
+      )}
+      {/* the drawer's opening (dark, hidden behind its front while shut) */}
+      <mesh geometry={rb(0.6, 0.13, 0.004, 0.002)} material={mats.wheel} position={[0, yd - 0.05, 0.231]} />
+      <group position={[0, 0, out]}>
+        <mesh geometry={rb(0.64, 0.155, 0.02, 0.005)} material={mats.body} position={[0, yd - 0.05, 0.243]} castShadow />
+        <mesh geometry={rb(0.5, 0.016, 0.02, 0.006)} material={mats.handle} position={[0, yd, 0.262]} />
+        {/* the tray: floor and sides */}
+        <mesh geometry={rb(0.58, 0.012, 0.4, 0.003)} material={mats.wheel} position={[0, yd - 0.115, 0.03]} />
+        {[-0.285, 0.285].map((x) => (
+          <mesh key={x} geometry={rb(0.012, 0.1, 0.4, 0.003)} material={mats.body} position={[x, yd - 0.07, 0.03]} />
+        ))}
+        <mesh geometry={rb(0.58, 0.1, 0.012, 0.003)} material={mats.body} position={[0, yd - 0.07, -0.165]} />
+        {/* two plain tools: a spanner and a screwdriver */}
+        <mesh geometry={rb(0.26, 0.012, 0.03, 0.005)} material={mats.handle} position={[-0.08, yd - 0.103, 0.02]} rotation={[0, 0.25, 0]} />
+        <mesh geometry={CYL(0.022, 0.022, 0.012, 14)} material={mats.handle} position={[0.045, yd - 0.103, -0.012]} />
+        <mesh geometry={CYL(0.014, 0.014, 0.12, 10)} material={mats.wheel} position={[0.12, yd - 0.095, 0.1]} rotation={[0, 0, P]} />
+        <mesh geometry={CYL(0.004, 0.004, 0.11, 6)} material={mats.handle} position={[0.005, yd - 0.095, 0.1]} rotation={[0, 0, P]} />
+      </group>
+      {[-0.28, 0.28].flatMap((x) =>
+        [-0.17, 0.17].map((z) => (
+          <mesh key={`${x}${z}`} geometry={CYL(0.045, 0.045, 0.03, 16)} material={mats.wheel} position={[x, 0.05, z]} rotation={[P, 0, 0]} />
+        )),
+      )}
+    </group>
+  );
+};
+
+/** A plain shop stool (padded round seat on a post, five castor legs), where the mechanic sits; its seat top at `STOOL.top`. */
+export const STOOL = {top: 0.5, r: 0.19};
+export const ShopStool: React.FC<{position: V3; mats: {seat: THREE.Material; steel: THREE.Material; wheel: THREE.Material}}> = ({position, mats}) => (
   <group position={position}>
-    <mesh geometry={rb(0.68, 0.92, 0.46, 0.02, 3)} material={mats.body} position={[0, 0.56, 0]} castShadow receiveShadow />
-    {[0.25, 0.42, 0.59, 0.76, 0.93].map((y) => (
-      <mesh key={y} geometry={rb(0.5, 0.016, 0.02, 0.006)} material={mats.handle} position={[0, y, 0.24]} />
-    ))}
-    {[-0.28, 0.28].flatMap((x) =>
-      [-0.17, 0.17].map((z) => (
-        <mesh key={`${x}${z}`} geometry={CYL(0.045, 0.045, 0.03, 16)} material={mats.wheel} position={[x, 0.05, z]} rotation={[P, 0, 0]} />
-      )),
-    )}
+    <mesh geometry={CYL(STOOL.r, STOOL.r, 0.07, 24)} material={mats.seat} position={[0, STOOL.top - 0.035, 0]} castShadow receiveShadow />
+    <mesh geometry={CYL(0.022, 0.022, STOOL.top - 0.14, 12)} material={mats.steel} position={[0, (STOOL.top - 0.07 + 0.07) / 2, 0]} castShadow />
+    {[0, 1, 2, 3, 4].map((i) => {
+      const a = (i / 5) * Math.PI * 2 + 0.3;
+      return (
+        <group key={i} rotation={[0, a, 0]}>
+          <mesh geometry={rb(0.26, 0.022, 0.03, 0.006)} material={mats.steel} position={[0.13, 0.07, 0]} castShadow />
+          <mesh geometry={CYL(0.028, 0.028, 0.022, 12)} material={mats.wheel} position={[0.24, 0.028, 0]} rotation={[P, 0, 0]} />
+        </group>
+      );
+    })}
   </group>
 );
 
-/** The room: the cut block, floor with the tape grid, the two walls, the sky behind (see the file comment). */
-export const TeardownRoom: React.FC<{mood: Mood; inkScale?: number; grid?: boolean}> = ({mood, inkScale = 1, grid = true}) => {
+/**
+ * The low shop dolly (No. 011's opening): a flat grey steel plate on four swivel castors, a car standing on it on its
+ * own tires. Plate `DOLLY.l` × `DOLLY.w`, its top at `DOLLY.top`; nothing readable. Centred on its group's origin.
+ */
+export const DOLLY = {l: 4.0, w: 2.05, top: 0.15, plate: 0.04, castorR: 0.05, trail: 0.03, inset: 0.22};
+
+/** The dolly's castor axes (x, z), front left, front right, back left, back right. */
+export const dollyCastors = (): [number, number][] => {
+  const hx = DOLLY.l / 2 - DOLLY.inset;
+  const hz = DOLLY.w / 2 - DOLLY.inset;
+  return [
+    [-hx, -hz],
+    [-hx, hz],
+    [hx, -hz],
+    [hx, hz],
+  ];
+};
+
+/**
+ * The dolly. `yaw` (rad, one per castor): which way each castor's fork points (its wheel trails toward the fork's −x);
+ * `spin` (rad): every castor wheel's turn (rolling toward the fork's +x is a negative turn).
+ */
+export const ShopDolly: React.FC<{yaw: number[]; spin: number; mats: {plate: THREE.Material; steel: THREE.Material; wheel: THREE.Material}}> = ({yaw, spin, mats}) => {
+  const D = DOLLY;
+  const rc = D.castorR;
+  const yPlate = D.top - D.plate / 2;
+  const ySwivel = D.top - D.plate - 0.006;
+  return (
+    <group>
+      <mesh geometry={rb(D.l, D.plate, D.w, 0.012, 3)} material={mats.plate} position={[0, yPlate, 0]} castShadow receiveShadow />
+      {/* two stiffening rails under the plate, along its length */}
+      {[-D.w / 2 + D.inset, D.w / 2 - D.inset].map((z) => (
+        <mesh key={z} geometry={rb(D.l - 0.1, 0.03, 0.06, 0.006)} material={mats.plate} position={[0, D.top - D.plate - 0.015, z * 0.62]} castShadow />
+      ))}
+      {dollyCastors().map(([x, z], i) => (
+        <group key={i} position={[x, 0, z]} rotation={[0, yaw[i] ?? 0, 0]}>
+          <mesh geometry={rb(0.1, 0.012, 0.1, 0.004)} material={mats.steel} position={[0, ySwivel, 0]} castShadow />
+          <mesh geometry={CYL(0.022, 0.022, 0.02, 12)} material={mats.steel} position={[0, ySwivel - 0.016, 0]} />
+          {[-0.026, 0.026].map((fz) => (
+            <mesh key={fz} geometry={rb(0.05, ySwivel - 0.026 - rc + 0.012, 0.006, 0.002)} material={mats.steel} position={[-D.trail / 2, (ySwivel - 0.026 + rc - 0.012) / 2, fz]} castShadow />
+          ))}
+          <group position={[-D.trail, rc, 0]} rotation={[0, 0, spin]}>
+            <mesh geometry={CYL(rc, rc, 0.036, 20)} material={mats.wheel} rotation={[P, 0, 0]} castShadow />
+            {/* the hub and one bolt head off-centre, so the turn reads */}
+            {[-0.019, 0.019].map((hz) => (
+              <React.Fragment key={hz}>
+                <mesh geometry={CYL(0.024, 0.024, 0.004, 14)} material={mats.steel} position={[0, 0, hz]} rotation={[P, 0, 0]} />
+                <mesh geometry={rb(0.012, 0.012, 0.006, 0.002)} material={mats.plate} position={[0.034, 0, hz]} />
+              </React.Fragment>
+            ))}
+          </group>
+        </group>
+      ))}
+    </group>
+  );
+};
+
+/**
+ * The room: the cut block, floor with the tape grid, the two walls, the sky behind (see the file comment). `x0` / `x1`
+ * move the left wall / the right cut end (default `TEARDOWN_ROOM`'s 8.0 m; wider for a second car); `chest` moves the
+ * tool chest (default at the left wall, 1.0 m from the back); `drawer` opens its drawer (0 → 1).
+ */
+export const TeardownRoom: React.FC<{mood: Mood; inkScale?: number; grid?: boolean; x0?: number; x1?: number; chest?: [number, number]; drawer?: number}> = ({
+  mood,
+  inkScale = 1,
+  grid = true,
+  x0: roomX0,
+  x1: roomX1,
+  chest,
+  drawer = 0,
+}) => {
   const m = MOODS[mood];
   const lab = LAB[mood];
   const albedo = useAlbedo();
@@ -652,7 +767,8 @@ export const TeardownRoom: React.FC<{mood: Mood; inkScale?: number; grid?: boole
   mats.sky.color.setScalar(1 / m.exposure);
   applyEnv(env, [[mats.chest, 0.6], [mats.handle, 1]], envScale);
   applyAlbedo([mats.floor, mats.wall, mats.tape, mats.chest, mats.wheel], albedo);
-  const R = TEARDOWN_ROOM;
+  const R = {...TEARDOWN_ROOM, x0: roomX0 ?? TEARDOWN_ROOM.x0};
+  R.w = (roomX1 ?? TEARDOWN_ROOM.x0 + TEARDOWN_ROOM.w) - R.x0;
   const G = TEARDOWN_GRID;
   const X1 = R.x0 + R.w;
   const D = R.d;
@@ -715,7 +831,7 @@ export const TeardownRoom: React.FC<{mood: Mood; inkScale?: number; grid?: boole
           ))}
         </group>
       ) : null}
-      <ToolChest position={[R.x0 + 0.42, 0, R.z0 + 1.0]} mats={{body: mats.chest, handle: mats.handle, wheel: mats.wheel}} />
+      <ToolChest position={chest ? [chest[0], 0, chest[1]] : [R.x0 + 0.42, 0, R.z0 + 1.0]} drawer={drawer} mats={{body: mats.chest, handle: mats.handle, wheel: mats.wheel}} />
     </group>
   );
 };

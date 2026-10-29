@@ -2,6 +2,45 @@
 
 Every change to `brand.md` or `style-guide.md` gets a line here: date, what changed, why (pointing to a `feedback.md` entry or a research section). Nothing changes silently.
 
+## style-guide v0.15 · 2026-10-29 · Whole near-side wheels on cut-open cars (owner decision)
+
+Owner decision of 2026-10-29, relayed by the main session (✅). Logged in `feedback.md` ("Owner decision · whole wheels on cut-open cars"). § 3 new row: near-side wheels stay whole (full tire and rim in front of the cut face); a wheel is cut only when the hidden system is in it (e.g. the tire-pressure sensor). Default for new car videos; posted videos unchanged.
+
+## style-guide v0.15 as built · 2026-10-29 · The Lab · teardown, No. 011's new opening
+
+Scene-builder's as-built values, recorded in § 3 The Lab: teardown dressing; no rule change. The owner moved the opening from the twin lot into the teardown room. 8.0 × 7.0 m is now the single-car size; a second car widens the room to x ≈ 8.0 (≈ 9.7 with a crate) and stands on four stands, a low grey shop dolly (4.0 × 2.05 m, castors, top 0.15 m, no text) or its tires; shop stool; one working tool-chest drawer (0.3 m, 0.4 s); the mechanic = grey extra with the `charge-slice` actions; crates may feed a raised car. Title block `NO. 011 · THE LAB · 1:20 PM`; no place label.
+
+## style-guide v0.15 as built · 2026-10-29 · Real car models (No. 011)
+
+Scene-builder's as-built values, recorded in § 3 Real car models; no rule change: house wheelbase kept (axles ±1.35), lengths 4.43 / 4.66 units, roof cuts 1.36 / 1.44; hood and cowl ≈ 7 cm high (inverter clearance); tires 10–14 % over the real 18 in share, rim faces `aero5` / `twin10`; seats on the floor, heads 1–3 cm under the roof cut; Model 3 greenhouse all black incl. the C-pillar sail, high-mount brake lamp a deck bar; no Seal 06 front light bar; nose cues show only in profile (tail-on camera); flush handles and lower door crease not drawn; tails a flat extruded slab.
+
+## style-guide v0.15 correction · 2026-10-29 · Seal 06 EV dimensions
+
+Fact-checker (`byd-price/sources.md` claim 20): the priced Seal 06 EV is the 2027 model year (launched 2026-08), 4,870 × 1,890 × 1,495 mm, wheelbase 2,820. § 3 Real car models updated (wheelbase ≈ 0.579 L, overhangs ≈ 0.20 / 0.22, height ≈ 0.307 L); Model 3 filing figures 4,720 × 1,848 × 1,442, wheelbase 2,875; "same length" note replaced: the BYD is about 3 % longer and taller with a shorter wheelbase, "about the size of" holds.
+
+## style-guide v0.15, brand.md v0.13.6 · 2026-10-29 · Real car models from No. 011 (owner decision)
+
+Owner change of 2026-10-29, relayed by the main session (✅): the recognisable cars are wanted now, for No. 011 ("the opening is weak, let's go for realistic ones"). Logged in `feedback.md` ("Owner decision · recognisable real car models", update). Dimensions: Model 3 Highland from auto-data.net / basenor.com (4,720 × 1,850 × 1,441, wheelbase 2,875, overhangs 868 / 977); Seal 06 EV from Wikipedia and CarNewsChina (4,720 × 1,880 × 1,495, wheelbase 2,820; closed front, lower trapezoidal intake, sharp LED headlamps, full-width tail light bar, flush handles). Values 🧪.
+
+- **style-guide § 3, new row "Real car models":** for cars the voice names as the story's product, drawn to resemble the real model in `RealCar` / `SlicedCar`; proportions as ratios of length; Model 3 cues (grille-less nose, slim headlamps, fastback, dark glass roof, C-shaped tail lamps, smooth flanks) and Seal 06 cues (closed low front, trapezoidal intake, taller greenhouse, body-coloured roof to check, sharp shoulder crease, full-width tail bar); invented wheels; paints kept; banned list; the cut's inside stays generic; same shape in every location and for the ghost; tags unchanged; still check "told apart by silhouette alone". The hatch stays generic. § 3 Generic devices points to it.
+- **brand.md:** Open decision 8 settled (row removed, noted in the intro); § What we never do's device row carries the cars-only exception and the disclosure wording.
+
+## style-guide v0.14.2 · 2026-10-29 · Car price tag (No. 011 N9)
+
+Brand-director decision on the director's N9 request (relayed by the main session): two price callouts would break § 6's one-card rule beside the title block. No owner decision involved; values 🧪.
+
+- **style-guide § 6, new row "Car price tag":** the car name tag with up to three lines (name Inter 700 26 px ≤ 18 characters, maker as spoken plus model; price Inter 800 32 px; sub Inter 600 22 px `inkSub`), ≤ 440 px wide, a tag not a card, ≤ 2, once per video, may share the frame with the title block, never with a card. Not in the first second: name on the spoken car name, price lines on the spoken price; out together over 10 frames. Placement left at x 120, ≥ 24 px under the title block, clear of car bodies; drop line 3 before overlapping. Checklist 7.
+- **Changed from the director's proposal:** line 1 carries the maker as spoken (`BYD SEAL 06 EV`, `TESLA MODEL 3 RWD`, a fact-checker OK needed, since only the maker is added); the yuan line in `inkSub`, not ink; the price lines enter on the spoken price, not with the tag.
+
+## brand.md v0.13.5 · 2026-10-29 · Recognisable real car models (owner decision, spec pending)
+
+Owner decision of 2026-10-29, relayed by the main session (✅). Logged in `feedback.md` ("Owner decision · recognisable real car models").
+
+- (Superseded the same day by brand.md v0.13.6: now from No. 011.) **brand.md Open decisions, new row 8:** after No. 011 ships, cars the story names get recognisable silhouettes of the real products (Model 3, BYD Seal features as listed), built in `RealCar` / `SlicedCar`, never downloaded models; the Section look stays. How far "recognisable" goes is open for the brand-director to spec (style-guide § 3) before the scene-builder starts; logos, wordmarks, badges and maker typefaces stay banned.
+- **brand.md What we never do:** the "signature shape" ban notes the coming exception; it still holds until the spec exists.
+- **Publish copy:** the "cars are generic designs" disclosure line changes for videos that use these cars (publisher).
+- brand.md header to v0.13.5.
+
 ## v0.13.4 · 2026-10-28 · Profile copy and sourcing rules amended for the new bio and captions (owner answers)
 
 Owner answers of 2026-10-28 to the brand-director's v0.13.3 questions, relayed by the main session (✅). Logged in `feedback.md` ("Profiles and captions"). brand.md header → v0.13.4.
@@ -37,6 +76,7 @@ Owner decision of 2026-10-28, relayed by the main session (✅): "For all our ne
 - **Untimable sticker → pinned-comment poll** (✅ owner decision, 2026-10-28, relayed by the main session). If the TikTok or Instagram editor can't time the sticker, the post gets no sticker and uses the pinned-comment emoji poll instead. Why: owner, keep the first second clean. channel-kit § 5 TikTok line 6 and Instagram line 5.
 - Platform mechanics come from the publisher brief and are not yet in `brand/research/platforms.md` [unverified].
 - First post with a poll: No. 010 `ev-charging`.
+
 ## v0.14.1 · 2026-10-28 · No. 011 as built (scene-builder, stills verified)
 
 Values from the scene-builder's No. 011 build to v0.14, relayed by the main session. Facts only; no owner decisions.

@@ -9,13 +9,14 @@ import {raw, roundedBox} from '../plaster';
 import {
   CAR_LAYOUT,
   carLayout,
-  COUPE_SEAT_DROP,
+  lowCabin,
   RealCar,
   RearDriveUnit,
   rearUnitPoint,
-  SEDAN_SEAT_DROP,
+  seatRise,
   type CoupeStyle,
 } from './RealCar';
+import {isRealShape, realFootReach, realWheelDesign} from './realModels';
 import type {ShellProfile} from './CarShell';
 import {BatteryPack, BLADE, DriveUnit, EV, EV_BOARD, evDriveRoute, footPose, moduleSpan, MODULE_Y, PedalBox, type BladeState} from './EvDrive';
 import {bladeLidTop, MadeByCar, type SlicedCarMadeBy} from './MadeByCar';
@@ -402,9 +403,17 @@ export type SlicedCarOptions = {
   drive?: GasPathKeys | null;
   /**
    * The near wheels drawn whole (No. 008, owner: the story explains nothing about the wheel): tire, rim and
-   * brake corner un-cut and un-hatched, while the body, bay and cabin stay sectioned. Default false.
+   * brake corner un-cut and un-hatched, while the body, bay and cabin stay sectioned. Default false. The older
+   * spelling of `nearWheels: 'whole'` (kept for No. 007–010's specs).
    */
   wheelsWhole?: boolean;
+  /**
+   * No. 011 (owner, 2026-10-29): the near wheels 'cut' through their mid-plane (the tire's cavity, the sensor, the
+   * brake behind; No. 002–010) or 'whole' (the full tire, the rim's face in the shape's design, the hub, standing in
+   * front of the cut face; the sensor, the speed rings, the tick and the brake wedge hidden). The far wheels are
+   * unchanged either way. Default: 'whole' on the real shapes (`model3`, `seal06`) or with `wheelsWhole`, else 'cut'.
+   */
+  nearWheels?: 'cut' | 'whole';
   /** 'gas': the gas signal path (see `GasPathKeys`); null for none (default). */
   gasPath?: GasPathKeys | null;
   /**
@@ -459,7 +468,11 @@ export type SlicedCarOptions = {
   wheelFrom?: number;
   /**
    * The body (No. 007): 'crossover' (default) or 'coupe' (`RealCar` `shape`: two doors, low, a fastback; its
-   * seats sit `COUPE_SEAT_DROP` lower, and the driver's hands and feet follow).
+   * seats sit `COUPE_SEAT_DROP` lower, and the driver's hands and feet follow); 'sedan' (No. 010); the real models
+   * (No. 011, style guide v0.15 § 3): 'model3' (Tesla Model 3 Highland: a low rounded nose, one fastback line, a
+   * black glass greenhouse, C-shaped tail lamps, flat 5-spoke aero wheels) and 'seal06' (BYD Seal 06 EV: a blunter
+   * closed nose with a trapezoid intake, a taller body-coloured greenhouse, a notched boot, a full-width tail bar,
+   * 10-spoke twin wheels). Same wheelbase, drive parts and pack as every shape; the cabin sits lower.
    */
   shape?: ShellProfile;
   /**
@@ -567,6 +580,49 @@ export type SlicedCarOptions = {
    * offset (car frame, m) moves it (dropping in from a crate). Default: all in place.
    */
   packModules?: (V3 | null)[];
+  /**
+   * No. 011 (N7): the pack "rewind", 'ev' (see `SlicedCarPackRewind`): the pack is drawn full until `at`, then empties
+   * quickly (modules slide out through the cut face and away to frame right; blades sink into the tray), so a later
+   * fill beat (`packModules` from crates, `blade.growAt`) starts from an empty tray. Null for none (default).
+   */
+  packRewind?: SlicedCarPackRewind | null;
+};
+
+/**
+ * No. 011 (N7, `SlicedCarOptions.packRewind`): seconds into the scene (may lie outside it). Before `at` the pack is
+ * full whatever `packModules` / `blade.growAt` say; over `for` s (default 0.5) it empties, eased; after, those props
+ * alone draw it. One module per slot: a `packModules` module (e.g. waiting in a closed crate) isn't drawn until that
+ * slot's rewound module has gone, so end the rewind before a crate opens.
+ */
+export type SlicedCarPackRewind = {at: number; for?: number};
+
+/** How far a rewound module travels: out through the cut face (m, +z), then to frame right (m, world +x). */
+const REWIND_OUT = 1.8;
+const REWIND_AWAY = 6;
+
+/** The rewind's progress, 0 (full) → 1 (empty). */
+export const packRewindK = (r: SlicedCarPackRewind, t: number) => ease(t, r.at, r.at + (r.for ?? 0.5));
+
+/**
+ * The pack's module places at t with a rewind (`BatteryPack` `modules`, car frame): each module, the one nearest
+ * frame right first, slides out through the cut face and then away to frame right; null once gone. `dir`: +1 facing
+ * right, −1 facing left. Once a slot's module has gone, the `given` slot (e.g. a crate's module) takes it over; until
+ * then it isn't drawn (one module per slot), so finish the rewind before that module shows (a crate's lid opens).
+ */
+export const rewoundModules = (r: SlicedCarPackRewind, t: number, dir: number, given?: (V3 | null)[]): (V3 | null)[] => {
+  const n = EV.modules;
+  const D = r.for ?? 0.5;
+  const m = D * 0.55; // each module's own move
+  return [...Array(n).keys()].map((k) => {
+    // order: frame right first (module 0 is the car's front)
+    const i = dir > 0 ? k : n - 1 - k;
+    const s = r.at + (i * (D - m)) / Math.max(1, n - 1);
+    if (t >= s + m) return given ? given[k] : null;
+    const u = Math.max(0, (t - s) / m);
+    const out = ease(u, 0, 0.4);
+    const away = ease(u, 0.3, 1);
+    return [dir * REWIND_AWAY * away * away, 0.06 * Math.sin(Math.PI * out), REWIND_OUT * out];
+  });
 };
 
 /**
@@ -592,21 +648,33 @@ export type SlicedCarBlade = {
   settleAt?: number;
   /** The blades' "made by" glow (each blade's top cut edge as it rises; the pack's edge and halo). Default `{at: growAt}`; null: none. */
   glow?: MadeByKeys | null;
+  /**
+   * × the glow's width: the blades' orange top edges, their halo and the lid's edge (e.g. 2.5 so a wide shot's growing
+   * pack reads at phone size). The slid-out blade (`showAt`) keeps § 5's weight. Default 1 (§ 5's weight for the
+   * camera distance).
+   */
+  glowR?: number;
 };
 
 /** The blade pack's state at t from its keys (`SlicedCarBlade`), for `BatteryPack` `blade`; `r` the glow's core radius. */
-export const bladeStateAt = (b: SlicedCarBlade, t: number, r: number): BladeState & {settle: number} => {
+export const bladeStateAt = (
+  b: SlicedCarBlade,
+  t: number,
+  r: number,
+  rewind?: SlicedCarPackRewind | null,
+): BladeState & {settle: number} => {
   const show = b.showAt == null ? 0 : ease(t, b.showAt, b.showAt + (b.showFor ?? 0.6)) * (b.backAt == null ? 1 : 1 - ease(t, b.backAt, b.backAt + (b.showFor ?? 0.6)));
   const lidAt = b.floorAt == null ? null : (b.lidAt ?? b.floorAt + 0.8);
   const settleAt = lidAt == null ? null : (b.settleAt ?? lidAt + 1.0);
   const g = b.glow === null ? null : madeByState(b.glow ?? {at: b.growAt}, t);
   return {
-    grow: ease(t, b.growAt, b.growAt + (b.growFor ?? 3)),
+    // N7: full until the rewind, sinking over it, then the grow as keyed
+    grow: Math.max(ease(t, b.growAt, b.growAt + (b.growFor ?? 3)), rewind ? 1 - packRewindK(rewind, t) : 0),
     show,
     showIndex: b.showIndex,
     floorOut: b.floorAt == null ? 0 : ease(t, b.floorAt, b.floorAt + 0.8),
     lid: lidAt == null ? 0 : ease(t, lidAt, lidAt + 0.6),
-    glow: g ? {lit: g.lit, surge: g.surge, r} : undefined,
+    glow: g ? {lit: g.lit, surge: g.surge, r: r * Math.max(0, b.glowR ?? 1), showR: r} : undefined,
     settle: settleAt == null ? 0 : ease(t, settleAt, settleAt + 0.4),
   };
 };
@@ -657,7 +725,7 @@ export const slicedCarPhone = (p: Partial<SlicedCarOptions>, t: number): V3 => {
   const lay = layoutOf(p);
   const sd = (p.call?.side ?? 'near') === 'near' ? -1 : 1;
   const k = callLift(p.call, t);
-  const seatUp = p.shape === 'coupe' ? COUPE_SEAT_DROP : p.shape === 'sedan' ? SEDAN_SEAT_DROP : 0;
+  const seatUp = seatRise(p.shape);
   // figure-local (+x the figure's left, +z ahead): low in the hand → the ear
   const f: V3 = [sd * (0.07 + 0.13 * k), 0.98 + 0.3 * k, 0.27 - 0.24 * k];
   // the seated figure is turned π/2: local (x, y, z) → car (z, y, −x)
@@ -665,6 +733,9 @@ export const slicedCarPhone = (p: Partial<SlicedCarOptions>, t: number): V3 => {
 };
 
 export const isEv = (p: Partial<SlicedCarOptions>) => p.variant === 'ev';
+/** The near wheels drawn whole (`nearWheels`, its defaults: `wheelsWhole`, then the real shapes). */
+export const nearWheelsWhole = (p: Partial<SlicedCarOptions>) =>
+  (p.nearWheels ?? (p.wheelsWhole || isRealShape(p.shape) ? 'whole' : 'cut')) === 'whole';
 export const isGas = (p: Partial<SlicedCarOptions>) => p.variant === 'gas';
 /** The cars with the driver by the cut and the bay open (No. 006 'ev', No. 008 'gas'). */
 export const isBay = (p: Partial<SlicedCarOptions>) => isEv(p) || isGas(p);
@@ -1353,7 +1424,7 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
   // No. 007: the coupe (seats lower: the hands rise to the same wheel), the far-side driver (the pedals move
   // across with them), the V8 with its gearbox and rear drive, the AWD electric car's rear unit
   const side = driverSideOf(props);
-  const seatUp = props.shape === 'coupe' ? COUPE_SEAT_DROP : props.shape === 'sedan' ? SEDAN_SEAT_DROP : 0;
+  const seatUp = seatRise(props.shape);
   const dz = bay && side === 'far' ? CAR_LAYOUT.driver[2] - -CAR_LAYOUT.driver[2] : 0;
   const v8 = gas && props.engine === 'v8';
   const crank = v8 ? slicedCarCrank(props, t) : 0;
@@ -1630,8 +1701,9 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
   // the idle foot tucked back under the knee; in the coupe (the seat ≈ 0.3 lower: the legs reach forward,
   // No. 007 realism pass) it rests further forward, flatter, on the floor
   const tuck: {ankle: V3; pitch?: number} =
-    props.shape === 'coupe' || props.shape === 'sedan'
-      ? {ankle: toFig(0.52, C.floor + 0.09), pitch: -0.3}
+    lowCabin(props.shape)
+      ? // the real models' seats sit further back and lower still (`realModels.ts` cabin): the foot rests further forward
+        {ankle: toFig(0.52 + realFootReach(props.shape), C.floor + 0.09), pitch: -0.3}
       : {ankle: toFig(0.35, C.floor + 0.18), pitch: -0.5};
   const legs: [{ankle: V3; pitch?: number; side?: number}, {ankle: V3; pitch?: number; side?: number}] | undefined = gas
     ? ([
@@ -1697,7 +1769,9 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
   const pathR = bay ? VIB_R * Math.max(0.3, Math.min(1, Math.round((camD / 9) * 20) / 20)) : VIB_R;
   // ---- No. 011: the "made by" glow's core radius, the blade pack, the stripped shell
   const mbR = madeByCoreR(camD);
-  const bladeSt = ev && props.blade ? bladeStateAt(props.blade, t, mbR) : null;
+  const bladeSt = ev && props.blade ? bladeStateAt(props.blade, t, mbR, props.packRewind) : null;
+  // No. 011 (N7): the modules with the rewind (full, emptying, then `packModules` alone)
+  const packMods = ev && props.packRewind && !props.blade ? rewoundModules(props.packRewind, t, isLeft(props) ? -1 : 1, props.packModules) : props.packModules;
   // the seats stand on the old floor panel (2.2 cm up) until the cell-to-body beat settles them onto the lid
   const seatLift = bladeSt ? (BLADE.floor[1] - C.floor) * (1 - bladeSt.settle) : 0;
   const settleRock = bladeSt && props.blade?.floorAt != null ? (() => {
@@ -1835,7 +1909,7 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
   const bvThin = bvk ? Math.max(0, Math.min(1, bvk.thin === undefined ? 0.7 * bvBack : keyedValue(bvk.thin, t, 0))) : 0;
   const bvGlow = bvk ? ease(t, bvk.at, bvk.at + 0.3) * (bvk.fadeAt == null ? 1 : 1 - ease(t, bvk.fadeAt, bvk.fadeAt + 0.5)) : 0;
   // the hub end: the near wheel's cut face, or its outer face when the wheel is drawn whole
-  const hubZ = props.wheelsWhole ? C.cutZ + 0.115 : C.cutZ - 0.005;
+  const hubZ = nearWheelsWhole(props) ? C.cutZ + 0.115 : C.cutZ - 0.005;
   const evRoute = useMemo(() => evDriveRoute(hubZ), [hubZ]);
   const driveUnits = dpk
     ? (['front', 'rear'] as const)
@@ -1897,7 +1971,7 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
 
   const gdk = gas && v8 && props.gasDrive ? props.gasDrive : null;
   const gd = gasDriveState(gdk, t);
-  const gasHubZ = props.wheelsWhole ? C.cutZ + 0.115 : C.cutZ - 0.005;
+  const gasHubZ = nearWheelsWhole(props) ? C.cutZ + 0.115 : C.cutZ - 0.005;
   // the routes in the active gear and (during a change) the gear before, each with its share of the glow
   const gasRoutes =
     gd && gearNow
@@ -2232,7 +2306,7 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
                 <BatteryPack mood={mood} inkScale={inkK} blade={bladeSt} />
               ) : props.packCharge ? (
                 <BatteryPack
-                  modules={props.packModules}
+                  modules={packMods}
                   mood={mood}
                   fill={[...Array(EV.modules).keys()].map(() => Math.max(0, Math.min(1, props.packCharge!.soc)))}
                   glow={1}
@@ -2242,7 +2316,7 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
                   frontWidth={props.packCharge.frontWidth}
                 />
               ) : (
-                <BatteryPack mood={mood} fill={regen?.modules} glow={rg} inkScale={inkK} modules={props.packModules} />
+                <BatteryPack mood={mood} fill={regen?.modules} glow={rg} inkScale={inkK} modules={packMods} />
               )}
               {dz ? (
                 <group position={[0, 0, dz]}>
@@ -2452,7 +2526,8 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
         const spin = wheelRevs(props, id, t) * Math.PI * 2;
         // the turn while the shutter is open (half a frame): the wheel's motion blur
         const blur = wheelBlurOf(props, id, t, fps);
-        const cutNear = w.near && !props.wheelsWhole && (sensors || hw || bay);
+        const wholeNear = w.near && nearWheelsWhole(props);
+        const cutNear = w.near && !wholeNear && (sensors || hw || bay);
         // facing left the wheels sit mirrored and turn the other way
         const turn = w.near ? -dir : dir;
         // the gas car's front wheels steer (🎭 `steerRatio`)
@@ -2468,6 +2543,7 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
             spin={turn * spin}
             motionBlur={turn * blur}
             sport={sportWheel}
+            design={realWheelDesign(props.shape)}
             ghost={props.wheelGhost?.[id]}
             brake={
               ev && id === 'FR'
@@ -2481,9 +2557,9 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
             pressure={lowWheel === id ? 1 - 0.25 * lowK : 1}
             low={!w.near}
             axle
-            tick={!sensors && speedRings && w.near}
-            toneRing={!sensors && speedRings && w.near}
-            sensor={sensors ? <TireSensor dot={1} /> : null}
+            tick={!sensors && speedRings && w.near && !wholeNear}
+            toneRing={!sensors && speedRings && w.near && !wholeNear}
+            sensor={sensors && !wholeNear ? <TireSensor dot={1} /> : null}
             sensorScale={1.7}
             inkScale={w.near ? Math.round(inkK * 20) / 20 : 1}
           />

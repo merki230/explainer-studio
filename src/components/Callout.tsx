@@ -34,6 +34,11 @@ export type CalloutProps = {
   title: string;
   sub?: string;
   /**
+   * The sub-line's colour: 'inkSub' (default, the § 6 secondary grey) or 'ink' (full ink, for a sub-line over a
+   * mid-grey background where the grey sinks in).
+   */
+  subInk?: 'ink' | 'inkSub';
+  /**
    * Type size × this (default 1: Inter 700 26 px, sub 600 20 px). From 1.15 up the title goes to 800
    * and the sub-line to 700, and the leader to 2.5 px (No. 005 visual review: 1.2 reads at phone size
    * over a busy close-up).
@@ -63,6 +68,7 @@ export const Callout: React.FC<CalloutProps & {mood?: Mood; scene?: AnchorScene}
   via,
   title,
   sub,
+  subInk = 'inkSub',
   size = 1,
   mood = 'day',
 }) => {
@@ -132,7 +138,7 @@ export const Callout: React.FC<CalloutProps & {mood?: Mood; scene?: AnchorScene}
               fontWeight: bold ? 700 : 600,
               fontSize: SUB,
               letterSpacing: '0.04em',
-              color: inkSub,
+              color: subInk === 'ink' ? ink : inkSub,
               textShadow: paperHalo(mood, 10),
               whiteSpace: 'nowrap',
               marginTop: 4,

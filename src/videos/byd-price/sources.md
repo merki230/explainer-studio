@@ -245,6 +245,19 @@ Everything was accessed on 2026-10-28 unless marked. **How to read the quotes** 
 
 ---
 
+## 20. Dimensions of the two priced cars ("the size of a Tesla Model 3")
+
+- **Script:** line 1, "a BYD the size of a Tesla Model 3"; also the scene-builder's car models.
+- **Status:** 🟡 for "the size of" (✅ for "about the size of", same class, every dimension within about 4%); ✅ (tool) for the figures below. Manufacturer pages (byd.com, tesla.cn) were not opened or not reachable; the figures rest on trade press quoting regulatory filings, plus Wikipedia as a marked reference.
+- **Which Seal 06 EV carries 109,900 yuan:** the **2027 model-year Seal 06 EV**, launched 2026-08-11 in Shenzhen; the 109,900 trim is the 530 km "舒享型" (ifanr, tool: "EV 版包括 10.99 万元的 530 舒享型"; "2027 款比亚迪海豹 06 在深圳正式上市"). Its body (shared by EV and DM-i): **4,870 × 1,890 × 1,495 mm, wheelbase 2,820 mm**.
+- **Source (2027 Seal 06):** [ifanr, 2026-08](https://www.ifanr.com/1674738) (tool): "长宽高 4870/1890/1495mm", "轴距 2820mm". [CarNewsChina, Liu Miao, 2026-08-12](https://carnewschina.com/2026/08/12/the-2027-byd-seal-06-launches-in-china-featuring-flash-charging-and-disus-c-starting-from-14700-usd/) (tool): "4870mm in length, 1890mm in width, and 1495mm in height" / "The wheelbase has increased by 30mm to 2820mm."
+- **Reconciliation:** the brand-director's 4,720 × 1,880 × 1,495 mm, wheelbase 2,820 is the **previous (2025 to early 2026) Seal 06 EV**, per a search summary and Wikipedia (second generation: length "4,720 mm (2025–2026); 4,870 mm (2026–present)", width 1,880, height 1,495, wheelbase 2,820; tool). The 2027 car, the one with the 109,900 price, is **150 mm longer and 10 mm wider** than that; wheelbase and height unchanged. Wikipedia still lists 1,880 mm width for 2026-present; the 2027 filings and both launch articles say 1,890. Use the launch figures. Do **not** pair the 109,900 price with the 4,720 mm body.
+- **Source (Model 3, Highland, China):** [InsideEVs, Mark Kane, 2023-09-12](https://insideevs.com/news/686350/new-tesla-model3-regulatory-filing-china/) (tool), from the MIIT filing: **4,720 × 1,848 × 1,442 mm, wheelbase 2,875 mm** (length up from 4,694; width from 1,850; height from 1,443). Other listings (search summary, not opened): width 1,849-1,850, height 1,440-1,441 (CarExpert, auto-data), so the brief's 4,720 × 1,850 × 1,441 / 2,875 is within 2 mm of the filing. Model 3 RWD China-built shares the Highland body (not separately verified for the Shanghai car; Highland is the current Model 3 body worldwide).
+- **Note (🧮):** Seal 06 EV (2027) vs Model 3: length 4,870 vs 4,720 = +3.2% (+150 mm); width 1,890 vs 1,848 = +2.3% (+42 mm); height 1,495 vs 1,442 = +3.7% (+53 mm); wheelbase 2,820 vs 2,875 = -1.9% (-55 mm, the Model 3 has the longer wheelbase). Same class (compact/mid-size electric sedans), within ~4% on every dimension; the BYD is a little longer, wider and taller, the Tesla has more wheelbase. Electrek's "about the same size" matches. **Ruling on line 1: holds.** "The size of" is fair for two cars within 4% on all four dimensions; "about the size of" is the safer wording if the voice is ever re-cut. Don't claim "identical size".
+- **For the scene-builder (use these):** Model 3 (Highland): **4,720 × 1,848 × 1,442 mm, wheelbase 2,875** (1,850 × 1,441 also fine). BYD Seal 06 EV (2027, the priced car): **4,870 × 1,890 × 1,495 mm, wheelbase 2,820**. The BYD should read slightly longer and taller with a shorter wheelbase (front and rear overhang longer). Seal (2023 UBS teardown car, bars-card label only) is a different, larger car (Wikipedia first generation sedan 4,830 × 1,875 × 1,495, wheelbase 2,790; tool): not needed for the models.
+
+---
+
 ## P. Our calculations (🧮)
 
 **P1. Price ratios (China, list, yuan):** Seal 06 EV base 109,900 ÷ Model 3 RWD 235,500 = 0.467. Seal 06 EV top 155,900 ÷ 235,500 = 0.662. Seal 07 EV 169,900 ÷ 235,500 = 0.721. 2025 Seal 175,800 ÷ 2024 Model 3 231,900 = 0.758. Seagull (2nd gen) 65,900 ÷ 235,500 = 0.280. Dollar equivalents at 6.73 yuan/$ (CnEVPost 2026-10-01 rate): 109,900 ≈ $16,300; 155,900 ≈ $23,200; 169,900 ≈ $25,200; 65,900 ≈ $9,790; 235,500 = $34,970.
@@ -322,7 +335,142 @@ Everything was accessed on 2026-10-28 unless marked. **How to read the quotes** 
 
 ---
 
-## Script check, revision 3 (fact-checker, 2026-10-29, 12-line script.txt; current)
+## Script check, revision 8 (fact-checker, 2026-10-29, 14-line script.txt, last polish; current)
+
+Script re-read after the batch landed (an earlier read showed the old text, so this is the applied version). No new sources; all quotes from the existing claims. Lines 1-3, 5, 13 unchanged (cleared in revision 7).
+
+| Line | Script wording | Status | Notes / fix |
+|---|---|---|---|
+| 4 | "...found BYD makes about three quarters of that car's parts, starting with the battery." | ✅ | UBS Seal, 75% incl. battery. Scope fixed: "that car's". |
+| 6 | "Tesla's annual report says it buys the cells inside its batteries from suppliers like Panasonic and CATL." | ✅ | 10-K "we rely on suppliers such as Panasonic and ... CATL for these cells". Tesla makes its own packs (claim 7); the line says cells only. No "all/most". |
+| 7 | "BYD makes its own cells, long flat iron-phosphate blades, and builds the battery pack into the car's floor." | ✅ cells; 🟡 floor | BYD's cell-to-body claim for the Seal; optional "in cars like the Seal". |
+| 8 | "Engineers who took apart a smaller BYD found its battery was BYD's own too." | ✅ | Caresoft/InsideEVs: "batteries ... all made in-house, by BYD itself" (Seagull). "Too" = like the Seal (UBS, battery included). The vague "the same thing" is gone. |
+| 9 | "So were the motors and the electronics that run them, even the body panels and lights." | ✅ | Same Caresoft sentence: "Body panels, light clusters, motors, batteries, power electronics". Reads as a continuation of line 8's Seagull teardown; keep lines 8-9 adjacent. |
+| 10 | "Even so, the analysts estimated the sedan they took apart cost only about 15 percent less to build than a China-made Model 3." | ✅ | UBS: Seal "15% more cost-efficient" than the Shanghai Model 3. "Estimated" and "the sedan they took apart" fix the scope and certainty. Bars-card labels/footnote still required (the Seal 06 is also a sedan). |
+| 11 | "Part of the remaining price gap is range, because the half-price BYD doesn't go as far on a charge as the Model 3." | ✅ range; 🟡 "part of the gap" | 530 km vs 634 km CLTC (about 16% less 🧮; Model 3 figure press-only). "Part of" is the hedge. |
+| 12 | "Another part is China's price war, since BYD has been cutting prices sharply there." | ✅ cuts; 🟡 "part of the gap" | Yahoo 2026-04-28 ("repeatedly cut prices", "two-year peak in March"); Fortune 2025 (up to 34% on 22 models). No "all/the rest"; no loss claim. |
+| 14 | "There's a 100 percent tariff on Chinese-made EVs, and starting with 2027 models, a ban on car software linked to China." | ✅ | White House 2024-05-14 (Section 301 EVs 25% to 100%); BIS rule MY2027 ("nexus to the PRC", also Russia). Shorthand for a ban on selling vehicles with such software; don't say "illegal to own". |
+
+**Bars card:** conditions unchanged (model/year labels, footnote, 47% bar, `ABOUT 15 % LESS`, `THE REST`), over lines 10-12.
+
+**Legally sensitive:** BYD, Tesla, Panasonic, CATL named; UBS, Caresoft not named.
+
+**Verdict: PASS.** No ❌, no REQUIRED script fix.
+
+### On-screen ruling: scene 1 price tags (fact-checker, 2026-10-29)
+
+**Ruling: PASS with required wording.** Inputs check out: Seal 06 EV base 109,900 yuan and Model 3 RWD 235,500 yuan (claim 1; CnEVPost 2026-10-01 gives the Tesla at "$34,970"; Electrek $16,500 and CarNewsChina $16,100 for the BYD). 109,900 ÷ 6.73 = $16,330; 235,500 ÷ 6.73 = $34,990 (P1).
+
+- **(a) Wording.**
+  - BYD tag, three lines: `SEAL 06 EV` / `FROM ABOUT $16,300` / `¥109,900 · CHINA LIST PRICE`.
+  - Tesla tag: `MODEL 3 RWD` / `FROM ABOUT $35,000` / `¥235,500 · CHINA LIST PRICE`.
+  - **Required on both:** "FROM" (list prices are starting prices; the Model 3 line starts at 235,500) and "ABOUT" on the dollar figure, and "CHINA LIST PRICE" on the same tag at readable size, not in a footnote. The Tesla tag in the proposal lacks "FROM": add it so the pair is parallel. Optional "2026" after "CHINA LIST" (the Seal 06 launched 2026-08; the Model 3 price is unchanged since 2025-01).
+  - $16,300 is inside the sourced range ($16,100-16,500) and "about" covers it; $16,000 is an acceptable rounder alternative. Do not show $16,500 or $34,970 as if exact on the BYD side.
+- **(b) Model name: yes, required.** The BYD tag must say `SEAL 06 EV` (and the Tesla `MODEL 3 RWD`). Reason: the later bars card uses the 2023 Seal for build cost and the 2026 Seal 06 for price (earlier ruling); an unnamed "BYD" tag on scene 1 would be the first place the two models blur, and "from" is only true for the cheapest Seal 06 trim (530 km CLTC). Naming a model is a product label, not a source citation.
+- **(c) Dollars: acceptable**, provided (i) the yuan figure stays on the tag (it is the sourced number; the dollar figure is our 🧮 conversion, though close to the sources' own), (ii) "CHINA LIST PRICE" sits right under the dollars so a US viewer doesn't read them as US prices (line 13 later says "You won't see those prices in the US"), and (iii) the post description carries the disclosure. Wording for the publisher's "Illustrative:" / sources area: "Dollar figures are converted from China list prices (¥109,900 and ¥235,500) at about 6.7 yuan per dollar; exchange rates move. They are not US prices." Yuan-only is not required.
+- **(d) "Half" rule:** no "half", "50 %", "47 %" or ratio text on or near the tags. Show the two numbers only; the voice says "about half". The numbers support it (47%). No arrows or "-53 %". **Clarification (2026-10-29):** this bars added graphics, not the captions. The word-by-word caption of the spoken line ("...starts at about half the price") may be on screen under the tags: it is the voice's own hedged wording, and the tags show the two numbers (47%). No need to delay the tags until the caption moves on.
+- **Don't:** put a US price or tariff-inclusive price on the tag (claim 19 stays ❌), call the Seal 06 "BYD's cheapest car" (the Seagull is, at 65,900 yuan), or imply the Model 3 range or trim matches (the Seal 06 base has less range, said in line 11).
+
+---
+
+## Script check, revision 7 (superseded; 14-line script.txt after spoken-English fixes)
+
+Script re-read in full. Lines 1, 3, 6 unchanged and cleared. No new sources; BIS wording from the existing claim 18 quote. Line numbers are the new ones.
+
+| Line | Script wording | Status | Notes / fix |
+|---|---|---|---|
+| 2 | "People usually assume it's subsidies and cheap labor." | ✅ | Marketplace (subsidies, low-paid labor among four drivers). A belief, not a claim about BYD's labor. |
+| 4 | "So analysts took a BYD sedan apart, and found BYD makes about three quarters of its parts, starting with the battery." | ✅ | UBS: the Seal (a sedan), 75% in-house incl. battery. "BYD makes ... its parts" now reads company-wide; the figure is the Seal's. Optional: "of that car's parts". |
+| 5 | "...30 to 40 percent of the car's cost." | ✅ | S&P "30-40% of the total cost"; Russo "most expensive component". |
+| 7 | "BYD makes its own cells, ... and builds the battery pack into the car's floor." | ✅ cells; 🟡 floor | BYD's cell-to-body claim for the Seal; optional "in cars like the Seal". |
+| 8-9 | "Engineers who took apart a smaller BYD found the same thing." / "BYD makes its own motors and the electronics that run them, even the body panels and lights." | ✅, with a caveat on "the same thing" | Caresoft (InsideEVs): "Not much, if anything, on the Seagull is outsourced"; "Body panels, light clusters, motors, batteries, power electronics, and more are all made in-house, by BYD itself." So "the same thing" = BYD makes most of its own parts ✅ (Caresoft found *at least* as much in-house; it gave no percentage, and the voice gives none). It does **not** overstate, **provided** it is heard as line 4's finding. Risk: right after line 7 it could be heard as "the Seagull also has blade cells and a pack-in-floor" (not sourced for the Seagull; Caresoft says batteries are in-house, not their design). Line 9 spells out exactly what was found, which limits this. Optional clearer: "found almost nothing was outsourced." No REQUIRED fix. |
+| 10 | "Even so, the analysts put that sedan's build cost only about 15 percent under a China-made Model 3." | ✅ (conditional on card) | UBS Seal vs Shanghai Model 3. "That sedan" = line 4's BYD sedan. Seal 06 is also a sedan, so the bars-card model labels and footnote over lines 10-12 stay a condition (earlier ruling). |
+| 11 | "Part of the remaining price gap is range, because the half-price BYD goes less far on a charge than the Model 3." | ✅ range; 🟡 "part of the gap" | 530 km vs 634 km CLTC (about 16% less 🧮; Model 3 figure press-only). "Because" is now attached to the *comparison*; keep "part of". |
+| 12 | "Another part is pricing, since BYD has been cutting prices sharply in China's price war." | ✅ cuts; 🟡 "part is pricing" | Yahoo 2026-04-28 ("repeatedly cut prices", "two-year peak in March"); Fortune 2025 (up to 34%). "Sharply" is supported by those; "another part" with line 11 names two parts and no "all/the rest": keep it so. |
+| 13 | "You won't see those prices in the US, where BYD doesn't sell its passenger cars." | ✅ | Hedge-table wording (Legal Planet, Motor1). "Those prices" = the China list prices; no US price is claimed (claim 19 stays ❌/skipped). |
+| 14 | "There's a 100 percent tariff on Chinese-made EVs, and a ban on car software linked to China starts with 2027 models." | ✅ | Tariff: White House 2024-05-14, Section 301 on EVs from China, 25% to 100% ("Chinese-made" scope ✅). Software: BIS rule "prohibits manufacturers with a sufficient nexus to the PRC or Russia from selling new connected vehicles" (software prohibitions MY2027). "Linked to China" matches "nexus to the PRC"; the rule also covers Russia, which the script omits (fine for a China story, not wrong). Note: "ban on car software" is shorthand for a ban on selling vehicles with such software; don't say "illegal to own". |
+
+**Bars card:** conditions unchanged and now span lines 10-12 (model/year labels, footnote, 47% bar, `ABOUT 15 % LESS`, `THE REST`).
+
+**Legally sensitive:** BYD, Tesla, Panasonic, CATL named; UBS, Caresoft not named. Line 14 is trade policy: facts only, as now.
+
+**Verdict: PASS.** No ❌, no REQUIRED script fix. Optional: lines 4, 7, 8 tweaks above.
+
+---
+
+## Script check, revision 6 (superseded; 13-line script.txt, ending lines 9-12)
+
+Script file re-read and matches the lines below. Lines 1-8 and 13 are unchanged from revision 5 (cleared). No new sources.
+
+| Line | Script wording | Status | Notes / fix |
+|---|---|---|---|
+| 9 | **Final:** "Even so, the analysts put the sedan's build cost only about 15 percent under a China-made Model 3." (superseded draft: "that car's build cost", which the nearest antecedent, line 8's smaller BYD, would have captured: that draft was a REQUIRED fix) | ✅ claim (UBS: the Seal, a sedan, "15% more cost-efficient" than the Shanghai Model 3); 🟡 clarity | "The sedan" removes the Seagull misreading (a hatch). It does **not** separate the Seal from line 1's half-price BYD, because the Seal 06 is also a sedan (Electrek: "BYD's new EV sedan"). Line 10's "the half-price BYD" is what tells the listener they are different cars. **Acceptable with the bars card on screen over lines 9-11** (labels `TO BUILD · 2023 SEAL` / `TO BUY · 2026 SEAL 06` + footnote); no REQUIRED script fix. Recommended: "the sedan they took apart" (adds "they took apart", ties it to line 4's teardown and closes the Seal 06 gap). If the card is not up over line 9, this becomes REQUIRED. |
+| 10 | "Part of the remaining gap is range: the half-price BYD goes less far on a charge than the Model 3." | ✅ range; 🟡 "part of the remaining gap" | 530 km (cheapest Seal 06 trim) vs 634 km CLTC (Model 3 RWD, press-only figure), about 16% less 🧮. "Part of" is the hedge; no source prices range. "Remaining gap" assumes the 15% cost gap is part of the same price gap, though they are different models (Seal vs Seal 06); the card's labels and footnote carry that. |
+| 11 | "Part of it is pricing: BYD has been cutting prices hard in China's price war." | ✅ price cuts; 🟡 "part of it is pricing" | Yahoo 2026-04-28 ("repeatedly cut prices", two-year peak in March), Fortune 2025. "Part of" hedges the inference. Together lines 10-11 name two parts with no "all"/"the rest"; do not add either. |
+| 12 | "None of that reaches the US, where BYD doesn't sell its passenger cars." | 🟡 | Rests on BYD selling no passenger cars in the US (Legal Planet 2026-03-18, Motor1; secondary, consistent) and is qualified by the clause itself ("passenger cars"; BYD sells buses and trucks). "None of that" = the price and cost advantage reaching US buyers; fine as stated. Keep the "passenger cars" qualifier. |
+| 13 | tariff and software ban | ✅ | Unchanged. |
+
+**Bars card:** still over lines 9-11 with model/year labels, footnote, 47% bar, `ABOUT 15 % LESS`, bracket `THE REST`.
+
+**Verdict: PASS** with line 9 as "the sedan's" (conditional on the bars card, labels and footnote on screen over lines 9-11). No ❌, no REQUIRED script fix. Recommended: "the sedan they took apart". Lines 10-12 pass as 🟡 hedged ("part of", "passenger cars").
+
+---
+
+## Script check, revision 5 (superseded for lines 9-12; 13-line script.txt)
+
+Checked against the claims already opened (UBS/TechNode, Caresoft/InsideEVs, S&P, Russo/Marketplace, Marketplace, Yahoo 2026-04-28, ifanr/Autohome, CarNewsChina, Legal Planet/Motor1, White House, BIS). Lines 1, 3, 6, 7, 13 unchanged from the cleared versions.
+
+| Line | Script wording | Status | Notes / fix |
+|---|---|---|---|
+| 2 | "People usually chalk that up to subsidies and cheap labor." | ✅ | Marketplace names subsidies and low-paid labor among four drivers (also competition, supply chain). "Usually" is a touch stronger than "tend to"; optional "often". No claim that BYD's labor is cheaper than Tesla's. |
+| 4 | "When analysts took a BYD apart, they found it makes about three quarters of its parts, starting with the battery." | ✅ | UBS lab took apart the Seal; 75% in-house incl. battery; "it" = that one BYD (scope fix applied). |
+| 5 | "The battery is the most expensive part of an electric car, and industry estimates put it at 30 to 40 percent of the cost." | ✅ | Russo "most expensive component"; S&P "30-40% of the total cost". |
+| 7 | "BYD makes its own cells, which are long, flat iron-phosphate blades, and builds the pack into the car's floor." | ✅ cells; 🟡 floor | BYD's cell-to-body claim for the Seal; optional "in cars like the Seal". |
+| 8 | "Engineers who took apart a smaller BYD found it makes its own motors and the electronics that run them, even the body panels and lights." | ✅ | Caresoft, 2024 Seagull. |
+| 9 | "But the analysts found the car they took apart costs only about 15 percent less to build than a Model 3 made in China." (final wording; replaces "that first BYD", so the voice no longer relies on the card alone to separate it from the half-price car) | ✅ (final: PASS with line 10, card on screen over lines 9-11) | UBS: Seal 15% more cost-efficient than the Shanghai Model 3. Scope fix applied. |
+| 10 | "That half-price BYD also goes less far on a charge than the Model 3, which is part of the gap." (final wording; replaces "so part of what you save is range") | ✅ range comparison; 🟡 "which is part of the gap" | The explicit "than the Model 3" makes the comparison clear (both CLTC, same cycle). "Part of the gap" is the same hedged inference as before (a shorter-range trim is cheaper; no source prices range), acceptable with "part". "The gap" = the price gap; keep it so (not the build-cost gap). 530 km (cheapest Seal 06 trim) vs 634 km CLTC (Model 3 RWD, press-only figure), about 16% less 🧮. "Part" is the hedge; no source prices range. "A bit less car" is gone. Say "on a charge" only about range, nothing else. |
+| 11 | "BYD has been cutting prices hard in China's price war, so some of that gap is pricing." | 🟡 | Price cuts ✅ (Yahoo 2026-04-28 "repeatedly cut prices"; Fortune 2025-05-26). "So some of that gap is pricing" is an inference (sticker gap about half vs UBS cost gap 15%, different models; Tesla's Model 3 price unchanged at 235,500, CnEVPost 2026-10-01). "Some" is the hedge. Do not strengthen to "most" or "because of the price war". |
+| 12 | "In the US, though, BYD doesn't sell its passenger cars." | ✅ | The hedge table's own wording (Legal Planet 2026-03-18, Motor1). |
+
+**Ruling: "that first BYD" (teardown Seal) vs "That half-price BYD" (Seal 06) told apart by adjectives in the voice.** Acceptable **only with the bars card on screen, with the model/year row labels and footnote, through lines 9-11**. Reasons: (a) the 15% cost figure belongs to the Seal and the half price to the Seal 06; (b) "first" can be heard as "the first BYD mentioned" (line 1's half-price car), which would put the 15% on the wrong car; (c) the card's labels `TO BUILD · 2023 SEAL` / `TO BUY · 2026 SEAL 06` and its footnote ("Different BYD models. Cost: 2023 estimate. Price: China list, cheapest trim.") are what stops that misreading, so they are a condition of this PASS, not decoration. Captions-only or audio-only viewers still get the "analysts found ... that first BYD" attribution, so the claim stays accurate even if misheard as "the car they took apart". Recommended (not required) voice fix: "the car the analysts took apart" or "that teardown BYD" instead of "that first BYD". If the card is cut or shortened so it is not up during lines 9-10, this ruling flips to a REQUIRED voice fix.
+
+**Bars card (earlier ruling):** row labels, footnote, 47% bar, gap label `ABOUT 15 % LESS`, bracket `THE REST` still required; the card now covers script lines 9-11.
+
+**Legally sensitive:** BYD, Tesla, Panasonic, CATL named; UBS and Caresoft not named.
+
+**Verdict: PASS** (conditional on the bars-card labels and footnote on screen over lines 9-11). No ❌, no REQUIRED script fix.
+
+---
+
+## Script check, revision 4 (superseded; 15-line script.txt)
+
+Script reordered. Lines 1-3, 7, 8, 14, 15 carry the cleared claims (old lines 1, 2, 3, 6, 7, 11, 12) with small rewording; lines 4-6 and 9-13 are checked below. New source this pass, opened: [BYD Q1 2026 earnings: profit falls 55% amid EV price war](https://finance.yahoo.com/markets/stocks/articles/byd-q1-2026-earnings-profit-131017150.html), Yahoo Finance, 2026-04-28 (accessed 2026-10-29), (tool): "Pressure from competitors such as Xiaomi and Geely has compelled BYD to repeatedly cut prices" / "the price cuts reached a two-year peak in March" / net income "55% drop ... to 4.08 billion yuan" / "four consecutive quarters" of falling profit; no discount percentages given. Seen only in a search summary (not opened, 🟡): Bloomberg, average BYD discounts a record 10% in March 2026.
+
+| Line | Script wording | Status | Notes / fix |
+|---|---|---|---|
+| 1-3 | Price pair; "People tend to credit subsidies and cheap labor."; "Subsidies do help, but Tesla builds the Model 3 in China too." | 🟡 / ✅ / ✅ | Unchanged (line 1 hedge-table wording; 2 Marketplace; 3 Kiel/CSIS + TechNode Shanghai). The old "teardown pointed mainly to the parts" is gone, which removes the UBS-scope risk. |
+| 4 | "So analysts took a BYD apart." | ✅ | UBS's lab "took apart the Seal" (TechNode). |
+| 5 | "They found BYD makes about three quarters of its parts, starting with the battery." | ✅ | UBS: 75% of the Seal's parts incl. battery. "Its" binds to line 4's single BYD. Optional: "of that car's parts" (the figure is one 2023 Seal, not BYD's whole range; BYD's own "over 70%" is ❌). |
+| 6 | "The battery is the most expensive part of an electric car, about 30 to 40 percent of its cost by industry estimates." | ✅ | Russo "most expensive component"; S&P "30-40% of the total cost" (re-quoted). "By industry estimates" is the right hedge (Goldman, Benchmark lower). |
+| 7 | "Tesla's own annual report says it buys its battery cells from suppliers like Panasonic and CATL." | ✅ | 10-K "we rely on suppliers such as Panasonic and ... CATL for these cells". |
+| 8 | "BYD makes its own, long flat iron-phosphate blades, and builds the pack right into the floor." | ✅ cells; 🟡 floor | "Its own" = cells (line 7). Floor = BYD's cell-to-body claim for the Seal. Optional "in cars like the Seal". |
+| 9 | "In a smaller BYD, engineers found the motors, the electronics that run them, even the body panels and lights were BYD's too." | ✅ | Caresoft, 2024 Seagull teardown (InsideEVs). "Smaller" ✅ (4,205 mm hatch vs a sedan). |
+| 10 | "Even so, the analysts put BYD's build cost only about 15 percent under a China-made Model 3." | 🟡 | UBS: Seal "15% more cost-efficient" than the Shanghai Model 3 (TechNode). **REQUIRED fix (scope):** line 9's smaller BYD (Seagull) sits between line 4 and this line, so "BYD's build cost" reads as BYD in general or the smaller car. The 15% is the Seal's alone. Use "the analysts put that BYD's build cost ..." or "that first BYD's" (or "the Seal's"). On screen the bars card already labels `2023 SEAL`. |
+| 11 | "That half-price BYD also comes with less range, so you're paying half for a bit less car." | 🟡 | Range ✅: cheapest Seal 06 trim 530 km CLTC (109,900; ifanr/Autohome, tool) vs Model 3 RWD 634 km CLTC (CarNewsChina 2025-01-10; 2026 listing in an unopened search result; no Tesla page), so about **16% less range** 🧮 (104 ÷ 634), same cycle. The Model 3 range is press-only. "Half" = 47% ✅. **REQUIRED fix (scope):** "a bit less car" claims the whole car; only range is sourced (no feature, equipment or battery-kWh comparison; trim battery size is unstated). "A bit" is also our characterization of 16%. Use "so you're paying half for a car with less range" or "...with about a sixth less range" 🧮. "Half-price" needs "starts at"/cheapest-trim already said in line 1; keep it tied to the cheapest trim. |
+| 12 | "BYD has been cutting prices hard in China's price war, too." | ✅ | Yahoo Finance 2026-04-28 ("repeatedly cut prices", "two-year peak in March") and Fortune/Bloomberg 2025-05-26 (up to 34% on 22 models). Present perfect fits through 2026. Don't add a number without dating it (34% is May 2025). Don't say "at a loss". |
+| 13 | "Some of that gap is pricing, not cost." | 🟡 | Inference, hedged by "some of". Sourced inputs: sticker gap about half (47%, claim 1) vs UBS build-cost gap 15% (different models: Seal vs Seal 06); no source splits the gap; the Seal 06's own build cost is unknown. Like-for-like Seal list gap was 24% vs 15% cost (2024-25), so a pricing/margin share is real for that pair. Acceptable as worded. The ✅ form is a plain comparison: "The sticker gap is wider than the build-cost gap." Do not extend to "most" or "all", and keep the bracket label `THE REST` (never `NOT FROM BUILD COST`). |
+| 14 | "You can't buy any of them in the US." | 🟡 | BYD sells no passenger cars in the US (Legal Planet 2026-03-18; Motor1). "Them" = the cars shown; buses and trucks are sold. Optional: "BYD doesn't sell its passenger cars in the US." |
+| 15 | "There's a 100 percent tariff, and a ban on Chinese-linked car software starts with 2027 models." | ✅ | White House 2024-05-14; BIS rule MY2027. Optional scope: "on Chinese-made EVs". |
+
+**Bars card (earlier ruling) still applies:** now spans script lines 10-13 (build cost line 10, range line 11, price war 12, gap 13). Model/year row labels, footnote, 47% bar, `ABOUT 15 % LESS` and `THE REST` stay required; if line 10 says "that BYD" the card and voice agree.
+
+**Legally sensitive:** BYD, Tesla, Panasonic, CATL named; UBS and Caresoft not named.
+
+**Verdict: FAIL, two REQUIRED scope fixes (lines 10 and 11).** No ❌. After both, PASS.
+
+---
+
+## Script check, revision 3 (superseded; 12-line script.txt)
 
 "Expected answer" beat restored. Lines 1-2 and 6-12 are the old revision-2 lines 1-2 and 4-11 (renumbered +1 from line 6), unchanged. The revision-2 table and on-screen ruling below still apply with line numbers shifted (the bars card now covers script lines 9-10).
 

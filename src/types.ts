@@ -6,6 +6,7 @@ import type {CounterProps} from './components/Counter';
 import type {DetailBoxProps} from './components/DetailBox';
 import type {FullScreenProps} from './components/FullScreen';
 import type {NameTagProps} from './components/NameTag';
+import type {PriceTagProps} from './components/PriceTag';
 import type {NoteStaffProps} from './components/NoteStaff';
 import type {PlaceLabelProps} from './components/PlaceLabel';
 import type {SearchBarProps} from './components/SearchBar';
@@ -92,6 +93,7 @@ export type OverlaySpec = Timing & {
    * `statement` and `attribution` time themselves when `until` is omitted and they start on a `cue`
    * (style guide § 7): a statement holds until 0.8 s after its last word or the next word, whichever
    * comes first (1.2–3.0 s); an attribution holds to the end of the sentence (at least 2.0 s).
+   * A `pricetag` has no auto end: give it an `until` before the scene's cut (§ 6), it fades out over 10 frames.
    * They fade out over 12 and 10 frames. `title` holds its `hold` (2.5 s) and `tag` 2.0 s, then fade
    * over 10 frames. Overlays take the scene's mood (v0.8 colours).
    */
@@ -114,6 +116,7 @@ export type OverlaySpec = Timing & {
     | ({type: 'attribution'} & AttributionProps)
     | ({type: 'title'} & TitleBlockProps)
     | ({type: 'tag'} & NameTagProps)
+    | ({type: 'pricetag'} & PriceTagProps)
     | ({type: 'detail'} & DetailBoxProps)
     | ({type: 'screen'} & FullScreenProps)
     | ({type: 'staff'} & NoteStaffProps)
