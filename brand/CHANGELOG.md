@@ -2,6 +2,16 @@
 
 Every change to `brand.md` or `style-guide.md` gets a line here: date, what changed, why (pointing to a `feedback.md` entry or a research section). Nothing changes silently.
 
+## v0.13.1 · 2026-10-28 · A poll on every post (owner decision)
+
+Owner decision of 2026-10-28, relayed by the main session (✅): "For all our next publications we should add a poll." Why: the TikTok profile (2026-10-28: 257 followers, 11.5K likes, ≈ 360K+ views over 9 videos, `one-pedal` ≈ 220K of them) turns reach into very few follows (≈ 0.7 per 1,000 views); a poll is one of several levers discussed, the only one decided. Logged in `feedback.md` ("All posts: a poll on every publication" and a profile-snapshot row in § Platform numbers). Whether it moves follows is 🧪. brand.md and style-guide.md unchanged (neither has a posting checklist).
+
+- **Posting checklist.** channel-kit.md § 5: one "on every upload/post/reel" line per platform. YouTube: poll post linking the Short, right after it. TikTok: poll sticker in the editor before posting. Instagram: sticker on the Reel or on a Story sharing it; pinned-comment emoji version where no sticker is available. Poll text comes from `publish.md` (publisher, `.claude/agents/publisher.md` § Task 5, updated by the main session). Header dated.
+- **Sticker placement** (brand-director value, 🧪): sky band x 120 to 888, y 288 to 430, never over the captions or the title block (style-guide § 6 and § 7), timed to the last scene only. Why: brand.md § What we never do bars overlay text in the first second other than the title block's question and the captions.
+- **Untimable sticker → pinned-comment poll** (✅ owner decision, 2026-10-28, relayed by the main session). If the TikTok or Instagram editor can't time the sticker, the post gets no sticker and uses the pinned-comment emoji poll instead. Why: owner, keep the first second clean. channel-kit § 5 TikTok line 6 and Instagram line 5.
+- Platform mechanics come from the publisher brief and are not yet in `brand/research/platforms.md` [unverified].
+- First post with a poll: No. 010 `ev-charging`.
+
 ## v0.13 · 2026-10-27 · No. 006–010 values recorded; tags on cars, place label, chart card, motion check
 
 Brand-director decisions for values that came up in No. 006 to No. 010 and were built or shipped without a guide entry, plus the owner's motion check of 2026-10-27 (✅). Read in `src/theme.ts`, `src/components/PlaceLabel.tsx`, `src/scenes/HighwaySliceScene.tsx`, `.claude/agents/visual-reviewer.md`, `README.md` (No. 006–010 rows), `src/videos/{mile-markers,ev-charging}/av-script.md`. Logged in `feedback.md` ("No. 006–010: production values for the record"). No code changed; theme edits go to the scene-builder through the main session. Values 🧪; rows marked "owner to confirm" are proposals.

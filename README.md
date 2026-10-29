@@ -56,7 +56,7 @@ Shared building blocks (`src/scenes`, `src/three`, `src/components`, `src/theme.
    `yarn cover my-topic` (writes `src/videos/my-topic/release/cover.png`). Check it small too:
    `npx remotion still my-topic-cover out/my-topic/raw/review/cover-scale-5.png --scale=0.2` (and `--scale=0.1`).
 
-8. **Package:** `yarn package my-topic` renders `release/youtube-frame.png` (the frame named by the `<!-- youtube-frame: N -->` marker in `publish.md`) and prints a checklist. Everything you upload is in the video folder:
+8. **Package:** `yarn package my-topic` renders `release/youtube-frame.png` (the frame named by the `<!-- youtube-frame: N -->` marker in `publish.md`) and prints a checklist. Every post carries a poll (owner, 2026-10-28): `publish.md` has a **Poll** section with the question and answers per platform. Add the TikTok poll sticker in the editor *before* posting (it can't be added later); if a sticker can't be timed off the opening, use the pinned-comment version instead. Everything you upload is in the video folder:
 
 ```
 src/videos/<slug>/

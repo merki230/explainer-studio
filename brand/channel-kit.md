@@ -1,6 +1,6 @@
 # Secretly Works: channel kit
 
-v0.1, 2026-10-15; updated 2026-10-16 (handle, logo, watermark: owner decisions; § 3 copy rewritten after owner feedback). Owner: brand-director. The copy, asset specs and setup steps for the YouTube, TikTok and Instagram profiles. Rules for the profile come from brand.md § Channel identity; this file holds the values. Profile copy: the owner picked one variant per field on 2026-10-16 (✅, § 3). The logo is chosen (mark C, the "S-line", Night palette, § 4); the assets below are specs, not files yet.
+v0.1, 2026-10-15; updated 2026-10-16 (handle, logo, watermark: owner decisions; § 3 copy rewritten after owner feedback); 2026-10-28 (a poll on every post, § 5, owner decision). Owner: brand-director. The copy, asset specs and setup steps for the YouTube, TikTok and Instagram profiles. Rules for the profile come from brand.md § Channel identity; this file holds the values. Profile copy: the owner picked one variant per field on 2026-10-16 (✅, § 3). The logo is chosen (mark C, the "S-line", Night palette, § 4); the assets below are specs, not files yet.
 
 Tags: **[official]** = the platform's own help or developer page; **[secondary]** = third-party guide (the official page was not loadable or doesn't state it); **[analysis]** = our reasoning. All pages seen **2026-10-15**. TikTok's and Instagram's help centres render with JavaScript and returned no text to the fetch tool, so their character limits are **unverified**: check them in the app's Edit profile screen (it refuses over-long text).
 
@@ -193,6 +193,7 @@ Where an account already exists (brand.md § Name: an Instagram account and a Yo
 7. Settings → Upload defaults → Advanced settings: **Category: Education**.
 8. Verify the channel with a phone number (Settings → Channel → Feature eligibility).
 9. On every upload: **Altered or synthetic content → Yes** (brand.md § Sourcing policy, AI label on all three; costs nothing, P§6).
+10. On every upload: **a poll** (✅ owner decision, 2026-10-28): a poll post (Posts tab) with the question and answers from `publish.md`, linking the Short, published right after it.
 
 ### TikTok
 1. Sign up in the app with the business email. Keep it a **personal (creator) account**, not Business: the Business music library is restricted, and third-party guides say Business accounts can't join Creator Rewards [secondary, unverified].
@@ -200,12 +201,14 @@ Where an account already exists (brand.md § Name: an Instagram account and a Yo
 3. **Name** `Secretly Works`; **Bio** (variant chosen); **photo** `profile-800.png`. Website: none.
 4. Settings → Privacy: **Private account off** (public).
 5. On every post: More options → **AI-generated content: on** (brand.md § Sourcing policy).
+6. On every post: **the poll sticker, added in the editor before you post** (✅ owner decision, 2026-10-28; text from `publish.md`), in the sky band (x 120 to 888, y 288 to 430), never over the captions or the title block, timed to the last scene only (🧪 values); if the editor can't time it, no sticker: use the pinned-comment emoji poll from `publish.md` (✅ owner decision, 2026-10-28: the first second stays clean).
 
 ### Instagram
 1. Log in to the existing "Secretly Works" account and, in Edit profile, **rename the Username from `secretlyworks` to `thesecretlyworks`**. ✅ Owner decision: the old handle `@secretlyworks` is freed by the rename and anyone may claim it; the owner accepted that. Old links to `@secretlyworks` stop working.
 2. Settings → Account type and tools → **Switch to professional account → Creator**; **Category: Education**; display category on profile: off. Professional accounts are public.
 3. Edit profile: **Name** (variant chosen, replacing "Secretly Works | Tech in 3D"), **Bio** (variant chosen), **photo** `profile-800.png`. Links: none.
 4. On every reel: Advanced settings → **AI label: on** (required for a realistic AI voiceover, P§6).
+5. On every reel: **the poll sticker** (✅ owner decision, 2026-10-28; text from `publish.md`), placed and timed as on TikTok, or on a Story that shares the Reel; if the sticker can't be timed or isn't available, the pinned-comment emoji poll from `publish.md` instead (✅ owner decision, 2026-10-28).
 
 ### Avoid
 1. Linking or cross-posting from personal accounts (personal Facebook, a personal TikTok, a personal YouTube channel) or connecting the profiles to unrelated pages. If Instagram asks to connect a Facebook Page, skip it unless a channel Page exists.

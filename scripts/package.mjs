@@ -6,6 +6,7 @@
 // The YouTube frame comes from publish.md, preferably a machine-readable marker line
 //   <!-- youtube-frame: 1490 -->
 // and otherwise the first "frame <n>" in the "## Cover" section. Output: release/youtube-frame.png.
+// Also checks publish.md for a "## Poll" section (every post carries a poll) and warns if it is missing.
 import {execFileSync} from 'node:child_process';
 import {existsSync, mkdirSync, readFileSync} from 'node:fs';
 import {hasCover, videoPaths} from './lib.mjs';
@@ -44,6 +45,11 @@ for (const [file, required, label] of items) {
   const optional = !required && !ok;
   console.log(`  [${ok ? 'x' : optional ? '-' : ' '}] ${file}  ${label}${optional ? ' (not applicable)' : ''}`);
   if (!ok && required) warnings.push(`${file} is missing: ${label}`);
+}
+if (existsSync(publish)) {
+  const hasPoll = /^##+\s*Poll/im.test(readFileSync(publish, 'utf8'));
+  console.log(`  [${hasPoll ? 'x' : ' '}] publish.md § Poll  poll for every post (TikTok sticker before posting)`);
+  if (!hasPoll) warnings.push('publish.md has no "## Poll" section (every post carries a poll; the publisher writes it)');
 }
 if (frame === null && existsSync(publish)) warnings.push('publish.md names no YouTube frame (no marker or "frame <n>" in ## Cover)');
 for (const w of warnings) console.warn(`WARNING: ${w}`);

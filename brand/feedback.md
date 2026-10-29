@@ -26,12 +26,44 @@ One row per video, platform and snapshot; add new rows at the bottom, never over
 | No. 003 `elevator-dispatch` | 92.9 s | Instagram | 2026-10-18, 12:00 PM, America/Chicago | pending | pending | pending | pending | pending | pending | pending | pending | midday slot |
 | No. 003 `elevator-dispatch` | 92.9 s | YouTube Shorts | 2026-10-18, 12:00 PM, America/Chicago | pending | pending | pending | pending | pending | pending | pending | pending | midday slot |
 | No. 004 `water-meter` | 61.8 s | all (planned) | planned: next week (week of 2026-10-19), about 7 PM, America/Chicago | not yet posted | / | / | / | / | / | / | / | evening slot; also tests length (≈ 62 s vs 81 s and 93 s) and H5 |
+| **Profile snapshot, not per-video**: whole TikTok account, 9 videos | / | TikTok | / | profile as of 2026-10-28 | ≈ 360K+ (all 9 videos) | 11.5K (all videos) | 257 (total followers, not gained by one video) | / | / | / | / | `one-pedal` alone ≈ 220K views; numbers as the owner reported them |
 
 Reading notes: YouTube views include replays (P§4). TikTok's "retention 32%" matches its average watch ÷ length, so it's probably the same figure, not a separate one. YouTube's "8.9" doesn't square with its average: 8.9 h ÷ 1,195 views ≈ 27 s, not 38 s; confirm the unit (or the denominator YouTube uses) at the 72 h snapshot.
+
+Profile snapshot, TikTok, 2026-10-28 (computed here): ≈ 45 likes per follower (11.5K ÷ 257) and ≈ 0.7 followers per 1,000 views (257 ÷ ≈ 360K), so views and likes are not turning into follows. `one-pedal` is ≈ 61% of all views (≈ 220K of ≈ 360K), so the account average is one video's average. Take the next profile snapshot on the same terms (total followers, total likes, total views, video count) to measure followers gained between snapshots.
 
 **Posting time is a variable to test** (owner, 2026-10-18). No. 002 went out in the evening (about 19:00 local; America/Chicago, confirmed by the owner 2026-10-18). Over the next videos, compare a midday post against an evening post, same snapshot times, and note the time in "Posted at" for every row. One video per slot is not enough to conclude anything; no rule until several posts per slot are in.
 
 First two data points: No. 002 (evening, about 7 PM, 2026-10-17) and No. 003 (midday, 12:00 PM, 2026-10-18), both America/Chicago. No. 004 is planned for the evening slot (about 7 PM, next week). Caveat: these also differ in length (81 s, 92.9 s, 61.8 s) and topic (No. 004 is an H5 hidden-tech video), so time of day is not the only variable between them.
+
+---
+
+## All posts: a poll on every publication (owner decision, not a video)
+
+- **Decided:** 2026-10-28, owner, relayed by the main session · **Applies to:** every post from now on, starting with No. 010 `ev-charging` (its script already ends on a question); posted videos are not re-posted
+
+**Owner's notes** (quoted as relayed)
+
+- "For all our next publications we should add a poll."
+- Context: the TikTok profile snapshot of 2026-10-28 (§ Platform numbers above: 257 followers, 11.5K likes, ≈ 360K+ views over 9 videos) shows low follows for the reach. The poll is one of several follow and engagement levers discussed; the others are not decided.
+
+**What we're changing** (✅ owner decision; whether it moves follows 🧪; CHANGELOG v0.13.1)
+
+| Rule (file § name) | Change | Note |
+|---|---|---|
+| channel-kit.md § 5 YouTube, TikTok, Instagram ("On every …" lines) | One line each: the poll from `publish.md`. TikTok: sticker in the editor before posting. Instagram: sticker on the Reel or on a Story sharing it. YouTube: poll post linking the Short, right after it. Pinned-comment emoji version where a sticker isn't available | The decision; the poll's form (one neutral question, 2 to 4 answers) lives in `.claude/agents/publisher.md` § Task 5 |
+| channel-kit.md § 5 (placement, brand-director value 🧪) | Sticker in the sky band (x 120 to 888, y 288 to 430), never over the captions or the title block (style-guide § 6 and § 7), timed to the last scene only | brand.md § What we never do: no overlay text in the first second except the title block's question and the captions |
+| channel-kit.md § 5 TikTok and Instagram (✅ owner decision, 2026-10-28, relayed by the main session) | If the editor can't time the sticker, no sticker: the pinned-comment emoji poll instead | Owner: keep the first second clean. Settles the brand-director's open question of the same day |
+
+Platform mechanics (TikTok sticker only before posting, Instagram and YouTube options, sticker duration) are from `.claude/agents/publisher.md`, **not yet checked in `brand/research/platforms.md`** [unverified].
+
+**To watch** (per post, against the posts before the poll; same snapshot times, 72 h and 14 d)
+
+- Poll votes per platform, and votes per 1,000 views.
+- Comments per post, and how many answer or argue about the poll.
+- Followers gained per post (§ Platform numbers), and followers per 1,000 views against the 2026-10-28 profile baseline (≈ 0.7).
+- Whether the sticker hurts the picture: swipe-away at the point it appears, comments about it.
+- Caveat: other levers may change at the same time, and topics differ, so a single post proves nothing. No 🧪 → ✅ until several posts with a poll are in.
 
 ---
 

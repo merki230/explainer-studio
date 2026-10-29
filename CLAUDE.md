@@ -15,7 +15,7 @@ src/
     spec.ts             scene + overlay layout, keyed to cues in the script
     transcript.json     word timings, GENERATED, never hand-edit
     sources.md          every claim in the script, with its source and status
-    publish.md          titles, description with sources, hashtags (made by the publisher)
+    publish.md          titles, description with sources, hashtags, pinned comment, poll (made by the publisher)
     music.txt           optional: ElevenLabs music prompt (mood, instruments, tempo; no artist names)
     audio-log.md        generation record for every ElevenLabs music/SFX file, GENERATED, never hand-edit
     audio/              voiceover.mp3, music.mp3, sfx/<name>.mp3 (in git; bundled through src/audioAssets.ts)
@@ -66,7 +66,7 @@ out/<slug>/raw/         scratch only: raw mix, music/sfx/voice takes, stills, re
 - `yarn stills <slug>`: one PNG per scene in `out/<slug>/raw/stills/` (read them to review layout)
 - `yarn render <slug> [--no-normalize] [--post-only] [--force]`: renders `out/<slug>/raw/<slug>.raw.mp4`, then loudness-normalises (-14 LUFS, -1.5 dBTP) to the final `src/videos/<slug>/release/<slug>.mp4` (git-ignored); `yarn normalize <slug>` runs only that step
 - `yarn cover <slug>`: render the cover still to `src/videos/<slug>/release/cover.png` (only if `spec.cover`; else says so, exit 0)
-- `yarn package <slug>`: render `release/youtube-frame.png` (frame from the `<!-- youtube-frame: N -->` marker in publish.md); prints a checklist of the posting files
+- `yarn package <slug>`: render `release/youtube-frame.png` (frame from the `<!-- youtube-frame: N -->` marker in publish.md); prints a checklist of the posting files and warns if publish.md has no Poll section
 - `yarn verify`: typecheck + lint + check. Run before calling any change done.
 
 ## Rules
@@ -109,7 +109,7 @@ out/<slug>/raw/         scratch only: raw mix, music/sfx/voice takes, stills, re
 | director        | `spec.ts`, `av-script.md` (the A/V script, before voice) |
 | scene-builder   | `src/scenes`, `src/three`, `src/components`, `src/brand` (brand-asset generator; exports to `brand/assets/` from the brand-director's spec in `brand/channel-kit.md`) |
 | visual-reviewer | nothing (renders stills and reports)                     |
-| publisher       | `publish.md` and the cover frame                         |
+| publisher       | `publish.md` (including the poll on every post) and the cover frame |
 | tooling         | `scripts/`, deps, config                                 |
 | brand-director  | `brand/` (brand.md, style-guide.md, feedback, changelog) |
 
