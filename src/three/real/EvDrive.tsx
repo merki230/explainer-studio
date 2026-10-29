@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import {REAL, section, type Mood} from '../../theme';
 import {raw, roundedBox} from '../plaster';
 import {cutMaterial, INK, InkLine} from '../section/cutLook';
+import {GlowEdge} from './madeBy';
 import {applyAlbedo, applyEnv, useAlbedo, useEnvStrength, useStudioEnv} from './useStudioEnv';
 
 type V3 = [number, number, number];
@@ -771,6 +772,57 @@ export type BatteryPackProps = {
   sweep?: number;
   /** The filling front's width (m; the scene widens it in wide shots so it reads). Default 0.035. */
   frontWidth?: number;
+  /**
+   * No. 011 (cells bought in): each module's place, front (0) to back: null leaves its slot empty (the cooling plate
+   * shows), an offset (car frame, m) moves it from its slot (a module dropping in from a crate). Default: all in place.
+   */
+  modules?: (V3 | null)[];
+  /** No. 011: the blade-cell pack instead of the modules (see `BladeState`). Default none. */
+  blade?: BladeState | null;
+};
+
+/**
+ * No. 011, the blade pack's state at a frame (`BatteryPack` `blade`; `SlicedCar` `blade` keys it). Many long, flat
+ * cells standing edge-on across the car (the lengthwise cut shows their ends side by side); generic, no chemistry.
+ */
+export type BladeState = {
+  /** The blades growing in, 0 → 1: each rises out of the tray in turn, front to back. */
+  grow: number;
+  /** One blade slid out toward the camera across the car's width, 0 → 1 (≈ 1 m out). */
+  show?: number;
+  /** Which blade slides out (index front to back; default the middle one). */
+  showIndex?: number;
+  /** Cell-to-body: the old floor panel lifts away and fades, 0 → 1. */
+  floorOut?: number;
+  /** Cell-to-body: the pack's lid rises to the floor's height, 0 → 1 (the lid is the floor). */
+  lid?: number;
+  /** The "made by" glow on the blades and the lid (orange edge, the cut faces stay `cut`): lit 0 → 1, surge, core radius. */
+  glow?: {lit: number; surge?: number; r: number};
+};
+
+/** The blade pack's layout (car frame, m): blade count and pitch, blade heights, the lid's travel, the old floor. */
+export const BLADE = {
+  count: 56,
+  y0: 0.155,
+  y1: 0.28,
+  /** The lid's top before (resting on the blades) and after (the floor's height, `CAR_LAYOUT.floor`) the beat. */
+  lidFrom: 0.296,
+  lidTo: 0.34,
+  lidT: 0.014,
+  /** The old floor panel (a slab over the pack) and how high it lifts as it fades. */
+  floor: [0.336, 0.362] as [number, number],
+  floorLift: 0.32,
+  /** How far a blade slides out toward the camera. */
+  slide: 1.0,
+};
+
+/** A blade's x span (x0, x1) along the pack, front (k = 0) to back. */
+export const bladeSpan = (k: number): [number, number] => {
+  const [x0, x1] = EV.pack;
+  const t = 0.014;
+  const pitch = (x1 - x0 - 2 * t) / BLADE.count;
+  const hi = x1 - t - k * pitch;
+  return [hi - pitch + 0.0045, hi - 0.0045];
 };
 
 /** The heat glow's alpha (one module's face): a soft vertical bloom per cell, faded toward the module's edges. */
@@ -833,8 +885,29 @@ const cellTexture = (() => {
   };
 })();
 
+/** A blade's cut end: its aluminium case round the layered electrode stack (neutral greys, no chemistry). */
+const bladeTexture = (() => {
+  let t: THREE.CanvasTexture | null = null;
+  return () => {
+    if (t) return t;
+    const c = document.createElement('canvas');
+    c.width = 32;
+    c.height = 128;
+    const cx = c.getContext('2d')!;
+    cx.fillStyle = REAL.alu;
+    cx.fillRect(0, 0, 32, 128);
+    cx.fillStyle = REAL.cell;
+    cx.fillRect(5, 6, 22, 116);
+    cx.fillStyle = REAL.module;
+    for (let y = 10; y < 120; y += 6) cx.fillRect(7, y, 18, 2);
+    t = new THREE.CanvasTexture(c);
+    t.colorSpace = THREE.SRGBColorSpace;
+    return t;
+  };
+})();
+
 /** The battery pack cut open (see the file comment). */
-export const BatteryPack: React.FC<BatteryPackProps> = ({mood, fill, glow = 1, inkScale = 1, heat, sweep, frontWidth = 0.035}) => {
+export const BatteryPack: React.FC<BatteryPackProps> = ({mood, fill, glow = 1, inkScale = 1, heat, sweep, frontWidth = 0.035, modules, blade}) => {
   const {env, envScale, albedo} = usePhys();
   const mats = useMemo(
     () => ({
@@ -854,6 +927,14 @@ export const BatteryPack: React.FC<BatteryPackProps> = ({mood, fill, glow = 1, i
       }),
       frontCore: new THREE.MeshBasicMaterial({color: raw(section.orangeDot), transparent: true, depthWrite: false}),
       frontHalo: new THREE.MeshBasicMaterial({color: raw(section.orange), transparent: true, depthWrite: false, opacity: 0.6}),
+      // No. 011, the blade pack: the blades' case, their cut ends, the old floor panel (paint-grey steel), its carpet
+      bladeCase: phys(REAL.alu, {metalness: 0.75, roughness: 0.35}),
+      bladeEnd: phys('#ffffff', {roughness: 0.6, map: bladeTexture()}),
+      floorPan: phys(REAL.housing, {metalness: 0.4, roughness: 0.6, transparent: true}),
+      floorCut: cutMaterial(),
+      carpet: phys(REAL.carpet, {roughness: 0.95, transparent: true}),
+      lidCarpet: phys(REAL.carpet, {roughness: 0.95, transparent: true}),
+      bladeEdge: new THREE.MeshBasicMaterial({color: raw(section.orange), transparent: true}),
     }),
     [],
   );
@@ -871,7 +952,12 @@ export const BatteryPack: React.FC<BatteryPackProps> = ({mood, fill, glow = 1, i
     envScale,
   );
   applyAlbedo([mats.casing, mats.plate, mats.module, mats.moduleSide, mats.dark], albedo);
+  if (blade) {
+    applyEnv(env, [[mats.bladeCase, 0.9], [mats.floorPan, 0.6]], envScale);
+    applyAlbedo([mats.bladeCase, mats.bladeEnd, mats.floorPan, mats.carpet, mats.lidCarpet], albedo);
+  }
   void mood;
+  if (blade) return <BladePack blade={blade} mats={mats} inkScale={inkScale} />;
   const [x0, x1, y0, y1] = EV.pack;
   const z = EV.packZ;
   const zb = EV.packBack;
@@ -924,6 +1010,8 @@ export const BatteryPack: React.FC<BatteryPackProps> = ({mood, fill, glow = 1, i
       </mesh>
       {[...Array(EV.modules).keys()].map((k) => {
         const [a, b] = moduleSpan(k);
+        const place: V3 | null | undefined = modules ? modules[k] : [0, 0, 0];
+        if (place === null || place === undefined) return null;
         const lv = sw !== null ? (sweepX > a ? 1 : 0) : Math.max(0, Math.min(1, fill?.[k] ?? 0));
         mats.levels[k].opacity = 0.75 * Math.max(0, Math.min(1, glow));
         const h = (MODULE_Y[1] - MODULE_Y[0]) * lv;
@@ -931,7 +1019,7 @@ export const BatteryPack: React.FC<BatteryPackProps> = ({mood, fill, glow = 1, i
         const lw = sw !== null ? Math.max(0, Math.min(b, sweepX) - a) : b - a - 0.012;
         const lx = sw !== null ? a + lw / 2 : (a + b) / 2;
         return (
-          <group key={k}>
+          <group key={k} position={modules ? place : undefined}>
             <mesh
               position={[(a + b) / 2, (MODULE_Y[0] + MODULE_Y[1]) / 2, (z - 0.01 + zb + 0.03) / 2]}
               material={[
@@ -980,6 +1068,205 @@ export const BatteryPack: React.FC<BatteryPackProps> = ({mood, fill, glow = 1, i
           <mesh material={mats.frontCore} position={[0, 0, 0.001]} userData={{glow: true}} renderOrder={6}>
             <planeGeometry args={[frontWidth, (MODULE_Y[1] - MODULE_Y[0]) * 1.06]} />
           </mesh>
+        </group>
+      ) : null}
+    </group>
+  );
+};
+
+type PackMats = {
+  cut: THREE.Material;
+  casing: THREE.Material;
+  plate: THREE.Material;
+  dark: THREE.Material;
+  bladeCase: THREE.Material;
+  bladeEnd: THREE.Material;
+  floorPan: THREE.MeshPhysicalMaterial;
+  floorCut: THREE.MeshStandardMaterial;
+  carpet: THREE.MeshPhysicalMaterial;
+  lidCarpet: THREE.MeshPhysicalMaterial;
+  bladeEdge: THREE.MeshBasicMaterial;
+};
+
+/**
+ * No. 011, the blade pack (`BatteryPack` `blade`): the casing (tray, end walls; no modules), `BLADE.count` blades
+ * standing across the car, each rising out of the tray in turn (front to back), one sliding out toward the camera,
+ * the lid resting on them, and above it the old floor panel with its carpet. Cell-to-body: the old floor lifts and
+ * fades, the lid rises to the floor's height and takes the carpet. Lit (made by the maker): each blade's top cut edge
+ * and the lid's cut edge turn orange (the scene adds the halo); the cut faces stay `cut`.
+ */
+const BladePack: React.FC<{blade: BladeState; mats: PackMats; inkScale: number}> = ({blade, mats, inkScale}) => {
+  const [x0, x1, y0] = EV.pack;
+  const z = EV.packZ;
+  const zb = EV.packBack;
+  const t = 0.014;
+  const ink = INK * inkScale;
+  const B = BLADE;
+  const N = B.count;
+  const grow = Math.max(0, Math.min(1, blade.grow));
+  const W = 7; // blades rising at once
+  const rise = (k: number) => {
+    const u = Math.max(0, Math.min(1, (grow * (N + W) - k) / W));
+    return u * u * (3 - 2 * u);
+  };
+  const showK = blade.showIndex ?? Math.floor(N / 2);
+  const show = Math.max(0, Math.min(1, blade.show ?? 0));
+  const lidK = Math.max(0, Math.min(1, blade.lid ?? 0));
+  const out = Math.max(0, Math.min(1, blade.floorOut ?? 0));
+  const lidTop = B.lidFrom + (B.lidTo - B.lidFrom) * lidK;
+  const lit = blade.glow ? Math.max(0, Math.min(1, blade.glow.lit)) : 0;
+  const r = blade.glow?.r ?? 0.005;
+  mats.bladeEdge.opacity = lit;
+  // the old floor panel: lifts and fades; the lid's carpet comes in as it arrives
+  const floorY = out * B.floorLift;
+  const floorO = 1 - Math.min(1, out * 1.25);
+  mats.floorPan.opacity = floorO;
+  mats.floorCut.transparent = true;
+  mats.floorCut.opacity = floorO;
+  mats.carpet.opacity = floorO;
+  mats.lidCarpet.opacity = Math.max(0, (lidK - 0.6) / 0.4);
+  const wallTop = B.lidFrom - B.lidT;
+  // the casing's section: tray and end walls up to the lid's resting place
+  const parts: [number, number, number, number][] = [
+    [x0, x1, y0, y0 + t],
+    [x0, x0 + t, y0, wallTop],
+    [x1 - t, x1, y0, wallTop],
+  ];
+  const bladeLen = z - 0.01 - (zb + 0.03);
+  const bladeZ = (z - 0.01 + zb + 0.03) / 2;
+  const edges: V3[][] = [];
+  return (
+    <group>
+      {parts.map(([a, b, c, d], i) => (
+        <mesh
+          key={i}
+          position={[(a + b) / 2, (c + d) / 2, (z + zb) / 2]}
+          material={[mats.casing, mats.casing, mats.casing, mats.casing, mats.cut, mats.casing]}
+          castShadow
+          receiveShadow
+        >
+          <boxGeometry args={[b - a, d - c, z - zb]} />
+        </mesh>
+      ))}
+      <InkLine
+        points={[
+          [x0, wallTop, z + 0.002],
+          [x0, y0, z + 0.002],
+          [x1, y0, z + 0.002],
+          [x1, wallTop, z + 0.002],
+        ]}
+        closed={false}
+        thickness={ink}
+      />
+      <InkLine
+        points={[
+          [x0 + t, wallTop, z + 0.002],
+          [x0 + t, y0 + t, z + 0.002],
+          [x1 - t, y0 + t, z + 0.002],
+          [x1 - t, wallTop, z + 0.002],
+        ]}
+        closed={false}
+        thickness={ink}
+      />
+      <mesh position={[(x0 + x1) / 2, (y0 + wallTop) / 2, zb + 0.01]} material={mats.dark}>
+        <planeGeometry args={[x1 - x0, wallTop - y0]} />
+      </mesh>
+      <mesh position={[(x0 + x1) / 2, y0 + t + 0.009, (z + zb) / 2]} material={mats.plate} receiveShadow>
+        <boxGeometry args={[x1 - x0 - 2 * t, 0.018, z - zb - 0.03]} />
+      </mesh>
+      {[...Array(N).keys()].map((k) => {
+        const h = (B.y1 - B.y0) * rise(k);
+        if (h < 0.002) return null;
+        const [a, b] = bladeSpan(k);
+        const slid = k === showK ? show * B.slide : 0;
+        const yc = B.y0 + h / 2;
+        if (lit > 0.003) edges.push([[a, B.y0 + h, z + 0.003 + slid], [b, B.y0 + h, z + 0.003 + slid]]);
+        return (
+          <mesh
+            key={k}
+            position={[(a + b) / 2, yc, bladeZ + slid]}
+            material={[mats.bladeCase, mats.bladeCase, mats.bladeCase, mats.bladeCase, mats.bladeEnd, mats.bladeCase]}
+            castShadow
+            receiveShadow
+          >
+            <boxGeometry args={[b - a, h, bladeLen]} />
+          </mesh>
+        );
+      })}
+      {/* each lit blade's top cut edge: a thin orange line */}
+      {edges.map((e, i) => (
+        <mesh
+          key={`e${i}`}
+          position={[(e[0][0] + e[1][0]) / 2, e[0][1], e[0][2]]}
+          material={mats.bladeEdge}
+          userData={{glow: true}}
+          renderOrder={7}
+        >
+          <boxGeometry args={[Math.abs(e[1][0] - e[0][0]), r * 1.2, r * 1.2]} />
+        </mesh>
+      ))}
+      {/* the lid: resting on the blades, rising to the floor's height (the lid is the floor) */}
+      <mesh
+        position={[(x0 + x1) / 2, lidTop - B.lidT / 2, (z + zb) / 2]}
+        material={[mats.casing, mats.casing, mats.casing, mats.casing, mats.cut, mats.casing]}
+        castShadow
+        receiveShadow
+      >
+        <boxGeometry args={[x1 - x0, B.lidT, z - zb]} />
+      </mesh>
+      <InkLine
+        points={[
+          [x0, lidTop - B.lidT, z + 0.002],
+          [x1, lidTop - B.lidT, z + 0.002],
+          [x1, lidTop, z + 0.002],
+          [x0, lidTop, z + 0.002],
+        ]}
+        thickness={ink}
+      />
+      {/* lit: the lid's cut edge turns orange (it is the maker's floor) */}
+      <GlowEdge
+        lines={[
+          [
+            [x0, lidTop - B.lidT, z + 0.004],
+            [x1, lidTop - B.lidT, z + 0.004],
+            [x1, lidTop, z + 0.004],
+            [x0, lidTop, z + 0.004],
+          ],
+        ]}
+        lit={lit * Math.max(0, Math.min(1, lidK * 4))}
+        surge={blade.glow?.surge ?? 0}
+        r={r}
+      />
+      {lidK > 0.6 ? (
+        <mesh position={[(x0 + x1) / 2, lidTop + 0.002, (z + zb) / 2 - 0.03]} rotation={[-Math.PI / 2, 0, 0]} material={mats.lidCarpet} receiveShadow>
+          <planeGeometry args={[x1 - x0, z - zb - 0.06]} />
+        </mesh>
+      ) : null}
+      {/* the old floor panel and its carpet: lift away and fade */}
+      {floorO > 0.004 ? (
+        <group position={[0, floorY, 0]}>
+          <mesh
+            position={[(x0 + x1) / 2, (B.floor[0] + B.floor[1]) / 2, (z + zb) / 2]}
+            material={[mats.floorPan, mats.floorPan, mats.floorPan, mats.floorPan, mats.floorCut, mats.floorPan]}
+            castShadow={floorO > 0.5}
+            receiveShadow
+          >
+            <boxGeometry args={[x1 - x0 + 0.1, B.floor[1] - B.floor[0], z - zb]} />
+          </mesh>
+          <mesh position={[(x0 + x1) / 2, B.floor[1] + 0.002, (z + zb) / 2 - 0.03]} rotation={[-Math.PI / 2, 0, 0]} material={mats.carpet}>
+            <planeGeometry args={[x1 - x0 + 0.1, z - zb - 0.06]} />
+          </mesh>
+          {floorO > 0.5 ? (
+            <InkLine
+              points={[
+                [x0 - 0.05, B.floor[0], z + 0.002],
+                [x1 + 0.05, B.floor[0], z + 0.002],
+                [x1 + 0.05, B.floor[1], z + 0.002],
+                [x0 - 0.05, B.floor[1], z + 0.002],
+              ]}
+              thickness={ink}
+            />
+          ) : null}
         </group>
       ) : null}
     </group>

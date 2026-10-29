@@ -291,6 +291,11 @@ export const LAB: Record<
     segLow: string;
     /** App icon colours on the conveyor (cool and mid hues, outside the reserved band). */
     icons: string[];
+    /**
+     * The floor-tape grid of the teardown dressing (v0.14, No. 011, style guide § 1 / § 3): darker than the floor so
+     * the cells read; never `cutLine` (ink is for cut edges only).
+     */
+    tape: string;
   }
 > = {
   day: {
@@ -304,6 +309,7 @@ export const LAB: Record<
     segOff: '#363b46',
     segLow: '#8f97a5',
     icons: ['#5b7bd5', '#3fa37a', '#8a5cc2', '#3b9bb0', '#c9b54a', '#7d8796'],
+    tape: '#9ea4ab',
   },
   night: {
     floor: '#3a3d47',
@@ -316,6 +322,7 @@ export const LAB: Record<
     segOff: '#2a2f3a',
     segLow: '#7d8696',
     icons: ['#5b7bd5', '#3fa37a', '#8a5cc2', '#3b9bb0', '#c9b54a', '#7d8796'],
+    tape: '#5d6372',
   },
 };
 

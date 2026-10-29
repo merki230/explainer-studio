@@ -100,6 +100,22 @@ Platform mechanics: **TikTok poll at posting or afterwards on the posted video**
 - Followers gained per post (§ Platform numbers), and followers per 1,000 views against the 2026-10-28 profile baseline (≈ 0.7).
 - Whether the sticker hurts the picture: swipe-away at the point it appears, comments about it.
 - Caveat: other levers may change at the same time, and topics differ, so a single post proves nothing. No 🧪 → ✅ until several posts with a poll are in.
+## No. 011 · byd-price: brand decisions before the build (not published)
+
+- **Recorded:** 2026-10-28, brand-director, at the main session's request · **Applies to:** No. 011 onward
+
+**Owner's notes** (relayed by the main session): the script is approved; keep the Section look; orange only for the hidden system ("made by BYD" in this video), so the price and cost bars are not orange.
+
+**What we're changing** (CHANGELOG v0.14; values 🧪)
+
+| Rule (file § name) | Change | Basis |
+|---|---|---|
+| style-guide § 6 Chart card: bars mode | New: ink and paper only, hatched reference vs solid subject bar, each row on its own scale, bracket (exact or by eye), 24 px footnote inside the card, grow from the left | A/V script N6; owner: bars not orange; fact-checker's "Bars card requirements" |
+| style-guide § 3 The Lab: teardown dressing | New: Lab re-dress, no place label, tape grid, real parts by system, no names, scan line | A/V script N1; § 3 The Lab |
+| style-guide § 5 "Made by" glow | New: orange edge and halo; surfaces and cut faces unchanged | A/V script N1, N2; § 1 Never orange |
+| style-guide § 1 `CHARGE`, `LAB.tape`; § 3 Set props; § 8 framings, `EXTRA_B` | No. 010 as built recorded; `LAB.tape` proposed | As built No. 010; owner "two different-looking extras" |
+
+**Open for the owner:** (1) the ghost outline as a house convention (second use here); (2) a distance-scaled push limit for the twin-section framings; (3) still open from No. 010: stopped-car lamps vs parked cars (No. 011 follows the recommended scope: the BYD's brake lamps on while it stops, off once parked).
 
 ---
 

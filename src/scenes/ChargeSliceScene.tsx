@@ -28,13 +28,17 @@ import {
   ChargeHorizon,
   CHARGER_AT,
   ChargerCabinet,
+  CRATE,
+  crateSlot,
   DriftingClouds,
   ISLAND_H,
   StationClock,
+  SupplierCrate,
 } from '../three/real/ChargeSite';
+import {EV, moduleSpan, MODULE_Y} from '../three/real/EvDrive';
 import {GhostCar, ghostRoof} from '../three/real/GhostCar';
 import {chargePortAt} from '../three/real/RealCar';
-import {layoutOf, SlicedCar, type SlicedCarOptions} from '../three/real/SlicedCar';
+import {bladeTipAt, layoutOf, SlicedCar, type SlicedCarOptions} from '../three/real/SlicedCar';
 import {capRevs} from '../three/real/wheelMotion';
 import {projectToFrame, SECTION_ANGLE, SectionCamera, sectionCameraAt, type Framing} from '../three/section/SectionCamera';
 import {SectionLights, SectionStage} from '../three/section/SectionStage';
@@ -65,7 +69,41 @@ type Which = 'top' | 'bottom';
 const WHICH: Which[] = ['bottom', 'top'];
 type V3 = [number, number, number];
 
-export type ChargeFraming = 'twin' | 'cables' | 'teslaCharge' | 'byd' | 'wide' | 'emptyBay' | 'usCharger' | 'stack' | 'cableClose';
+export type ChargeFraming =
+  | 'twin'
+  | 'cables'
+  | 'teslaCharge'
+  | 'byd'
+  | 'wide'
+  | 'emptyBay'
+  | 'usCharger'
+  | 'stack'
+  | 'cableClose'
+  | 'bottomPack'
+  | 'topPack';
+
+/**
+ * No. 011 (N4): cells bought in. The bay's pack starts with its module slots empty; each crate (an unmarked
+ * steel container on a pallet, `SupplierCrate`) slides in from frame right to stand behind the car, opens, and its
+ * grey modules lift out one by one and slide into the pack's slots through the cut face; then it slides away. Never
+ * orange. Times are seconds into the scene (any may lie outside it).
+ */
+export type ChargeBought = {
+  crates: {
+    /** It starts sliding in (0.7 s) from frame right. */
+    in: number;
+    /** Its lid opens (0.5 s). Default `in` + 0.8. */
+    open?: number;
+    /** Each module lifts out at these times (≈ 1.1 s each to its slot). */
+    drops: number[];
+    /** It slides away to the right (0.7 s). Default never. */
+    out?: number | null;
+    /** Which slots its modules fill (front 0 → back 5). Default: the next ones in order. */
+    slots?: number[];
+  }[];
+  /** Where a crate stands (bay frame x, z; its foot on the bay). Default [3.45, 1.0], behind the car's rear. */
+  at?: [number, number];
+};
 
 /** A state-of-charge curve: percent against charging minutes (piecewise linear). */
 export type SocCurve = {at: number; value: number}[];
@@ -192,6 +230,8 @@ export type ChargeBaySpec = {
   cycle?: {start: number; every: number; count: number; dwell?: number; from?: number; for?: number; look?: ('a' | 'b')[]};
   /** Seconds when the bay's pulses surge (brighten and swell once, 0.4 s). */
   surge?: number[];
+  /** No. 011 (N4): the cells bought in, delivered by crates into the empty slots (see `ChargeBought`). Default none. */
+  bought?: ChargeBought | null;
 };
 
 /** The ghost of a car that isn't there (`GhostCar`), drawn into a bay. */
@@ -270,6 +310,12 @@ export type ChargeSliceSceneProps = {
   curb?: boolean;
   /** The bottom bay's cut ground block depth (m): deeper fills a tall framing. Default 0.6. */
   groundDepth?: number;
+  /**
+   * No. 011 (N5c): the chargers drawn (cabinets, islands, cables, the cars' HV lead, the open charging port). Default
+   * true; false: a plain parking bay in both regions (no current flows; drivers walk, get in and out, sit at the curb;
+   * don't key `plug` / `unplug`).
+   */
+  chargers?: boolean;
   /** Where the bays' blocks begin when cars drive in (m along x). Default −40 (a drive-in lane off the frame). */
   approach?: number;
   location?: string;
@@ -305,6 +351,9 @@ export const chargeFramings = (gap = 4.5): Record<Exclude<ChargeFraming, 'cableC
   wide: {look: [0.6, gap / 2 + 1.3, -0.3], distance: 56},
   emptyBay: {look: [0.35, gap + 0.8, 0.3], distance: 21},
   usCharger: {look: [2.3, 0.6, 0.9], distance: 9.5},
+  // No. 011 (N5b): each bay's pack close; the bottom with room for a crate behind the car, the top with the cabin over it
+  bottomPack: {look: [1.85, 0.3, 1.0], distance: 19},
+  topPack: {look: [0.05, gap + 0.45, 0.7], distance: 9},
 });
 
 /**
@@ -391,7 +440,71 @@ const gateOf = (v: Visit, t: number) => {
   return g;
 };
 
-const rawAmps = (p: Partial<ChargeSliceSceneProps>, w: Which, v: Visit, t: number) => Math.max(0, keyedValue(specOf(p, w).amps, t, 0)) * gateOf(v, t);
+const rawAmps = (p: Partial<ChargeSliceSceneProps>, w: Which, v: Visit, t: number) =>
+  p.chargers === false ? 0 : Math.max(0, keyedValue(specOf(p, w).amps, t, 0)) * gateOf(v, t);
+
+// ---------------------------------------------------------------- No. 011: cells bought in (N4)
+
+const CRATE_AT: [number, number] = [3.45, 1.0];
+/** The module slot's centre (car frame). */
+const slotCentre = (k: number): V3 => {
+  const [a, b] = moduleSpan(k);
+  return [(a + b) / 2, (MODULE_Y[0] + MODULE_Y[1]) / 2, (EV.packZ - 0.01 + EV.packBack + 0.03) / 2];
+};
+/** A crate's x (bay frame) at t: sliding in from frame right, standing, sliding away. */
+const crateX = (b: ChargeBought, c: ChargeBought['crates'][number], t: number) => {
+  const x = (b.at ?? CRATE_AT)[0];
+  return x + 7 * (1 - ease(t, c.in, c.in + 0.7)) + (c.out == null ? 0 : 7 * ease(t, c.out, c.out + 0.7));
+};
+/** One crate's lid (0 → 1). */
+const crateOpen = (c: ChargeBought['crates'][number], t: number) => {
+  const o = c.open ?? c.in + 0.8;
+  return ease(t, o, o + 0.5);
+};
+/**
+ * The bought-in modules at t: each slot's offset from its place (car frame), null while the slot is empty and its
+ * module isn't anywhere yet; and each crate's pose. `carX`: the car's x along the bay (bay frame).
+ */
+export const chargeBoughtAt = (b: ChargeBought, t: number, carX = 0) => {
+  const slots: (V3 | null)[] = [...Array(EV.modules).keys()].map(() => null);
+  const h = MODULE_Y[1] - MODULE_Y[0];
+  let next = 0;
+  const crates = b.crates.map((c) => {
+    const x = crateX(b, c, t);
+    const z = (b.at ?? CRATE_AT)[1];
+    c.drops.forEach((d, j) => {
+      const k = c.slots?.[j] ?? next++;
+      if (k < 0 || k >= EV.modules) return;
+      const S = slotCentre(k);
+      // the slot in the bay's frame (the car faces −x: car x → −x)
+      const Sw: V3 = [carX - S[0], S[1], S[2]];
+      const cs = crateSlot(j % 3, h);
+      const P0: V3 = [crateX(b, c, Math.min(t, d)) + cs[0], cs[1], z + cs[2]];
+      const u = t - d;
+      let W: V3;
+      if (u <= 0) W = [x + cs[0], cs[1], z + cs[2]];
+      else {
+        const zOut = Sw[2] + 1.62;
+        const up: V3 = [P0[0], P0[1] + 0.62, P0[2]];
+        const A: V3 = [Sw[0], Sw[1] + 0.7, zOut];
+        const B: V3 = [Sw[0], Sw[1], zOut];
+        const mix = (p: V3, q: V3, k2: number): V3 => [p[0] + (q[0] - p[0]) * k2, p[1] + (q[1] - p[1]) * k2, p[2] + (q[2] - p[2]) * k2];
+        W =
+          u < 0.25
+            ? mix(P0, up, ease(u, 0, 0.25))
+            : u < 0.7
+              ? mix(up, A, ease(u, 0.25, 0.7))
+              : u < 0.85
+                ? mix(A, B, ease(u, 0.7, 0.85))
+                : mix(B, Sw, ease(u, 0.85, 1.1));
+      }
+      // back into the car's frame, as an offset from the slot
+      slots[k] = [-(W[0] - carX) - S[0], W[1] - S[1], W[2] - S[2]];
+    });
+    return {x, z, open: crateOpen(c, t), shown: Math.abs(x - (b.at ?? CRATE_AT)[0]) < 6.9};
+  });
+  return {slots, crates};
+};
 
 /** A visit's state of charge (%) at t, capped at its `socMax`. */
 const visitSoc = (p: Partial<ChargeSliceSceneProps>, v: Visit, t: number) => {
@@ -424,7 +537,7 @@ const visitAmps = (p: Partial<ChargeSliceSceneProps>, w: Which, v: Visit, t: num
 /** A bay's cars, resolved (cached on the props that shape them). */
 const bayModel = (p: Partial<ChargeSliceSceneProps>, w: Which, fps = 30): BayModel => {
   const s = specOf(p, w);
-  const key = JSON.stringify([w, s, p.clock, p.region, p.durationInFrames, fps]);
+  const key = JSON.stringify([w, s, p.clock, p.region, p.durationInFrames, fps, p.chargers]);
   const hit = MODEL_CACHE.get(key);
   if (hit) return hit;
   const car = carOf(p, w);
@@ -461,7 +574,7 @@ const bayModel = (p: Partial<ChargeSliceSceneProps>, w: Which, fps = 30): BayMod
   const visits: Visit[] = raws.map((r, i) => {
     const vcar = {...car, ...(r.car ?? {})};
     const shape = (vcar.shape ?? 'crossover') as ShellProfile;
-    const geo = driverGeo(region, shape);
+    const geo = driverGeo(region, shape, {island: p.chargers !== false});
     let driver: DriverTimeline | null = null;
     if (r.driver === 'auto' && r.arrive && r.plug != null && r.unplug != null)
       driver = driverTimeline(
@@ -846,6 +959,18 @@ export const chargeAnchorOnScreen = (
     return projectToFrame(cam, carToWorld(p, w, [lay.driver[0], lay.driver[1] + 1.4, lay.driver[2]], dx));
   }
   if (name === 'pack') return projectToFrame(cam, carToWorld(p, w, [-0.8, 0.33, 0.62], dx));
+  if (name === 'crate') {
+    const b = specOf(p, w).bought;
+    if (!b) return undefined;
+    const st = chargeBoughtAt(b, t, dx);
+    const c = st.crates.find((q) => q.shown) ?? st.crates[0];
+    return c ? projectToFrame(cam, [c.x, bayY(p, w) + CRATE.pallet + CRATE.h + 0.1, c.z]) : undefined;
+  }
+  if (name === 'blade') {
+    const b = car?.blade;
+    if (!b) return undefined;
+    return projectToFrame(cam, carToWorld(p, w, bladeTipAt(b, t), dx));
+  }
   if (name === 'port') return projectToFrame(cam, carToWorld(p, w, chargePortAt(car?.shape ?? 'crossover'), dx));
   if (name === 'cabinet') {
     const f = cabinetFoot(p, w);
@@ -910,6 +1035,7 @@ export const ChargeSliceScene: React.FC<ChargeSliceSceneProps> = (props) => {
   const sweepFront = Math.max(0.035, Math.min(0.12, camD * 0.0026));
   // both blocks run on to the left (a drive-in lane) when either bay has a car driving
   const anyDrives = WHICH.some((w) => bayModel(props, w, fps).drives);
+  const chargers = props.chargers ?? true;
 
   return (
     <AbsoluteFill>
@@ -952,6 +1078,10 @@ export const ChargeSliceScene: React.FC<ChargeSliceSceneProps> = (props) => {
           const slugs = (count: number): CableSlugs | null =>
             bold ? {count, flow: st.flow, radius: slugR, surge: st.surge, outer: slugOuter} : null;
           const latchedVisit = plugSt.where === 'port' ? plugSt.visit : model.visits.find((v) => v.compat) ?? null;
+          // No. 011 (N4): the crates and the modules they bring (keyed on the bay's parked car)
+          const boughtCarX = model.visits.length ? carDriveAt(model.visits[0].arrive, model.visits[0].leave, t).x : 0;
+          const boughtSt = s.bought ? chargeBoughtAt(s.bought, t, boughtCarX) : null;
+          const bought = boughtSt ? boughtSt.crates : null;
           return (
             <React.Fragment key={w}>
               <ChargeBay
@@ -963,8 +1093,14 @@ export const ChargeSliceScene: React.FC<ChargeSliceSceneProps> = (props) => {
                 x0={anyDrives ? (props.approach ?? -40) : BAY.x0}
                 curb={props.curb ?? true}
                 depth={w === 'bottom' ? props.groundDepth : undefined}
+                island={chargers}
               />
-              <ChargerCabinet kind={region === 'us' ? 'us' : 'china'} position={cabinetFoot(props, w)} />
+              {chargers ? <ChargerCabinet kind={region === 'us' ? 'us' : 'china'} position={cabinetFoot(props, w)} /> : null}
+              {bought
+                ? bought.map((c, i) =>
+                    c.shown ? <SupplierCrate key={`crate${i}`} position={[c.x, y, c.z]} open={c.open} /> : null,
+                  )
+                : null}
               {canopy ? <Canopy mood={mood} y={y} height={props.canopyHeight} inkScale={inkK} /> : null}
               {clockBay === w ? (
                 <group position={[0, y, 0]}>
@@ -992,13 +1128,20 @@ export const ChargeSliceScene: React.FC<ChargeSliceSceneProps> = (props) => {
                   clusterSpeed: car.clusterSpeed ?? 0,
                   power: car.power ?? 0,
                   brakeLights: car.brakeLights ?? (v.compat ? undefined : drive.brake),
-                  chargePort: car.chargePort === null ? null : {light: isLatched ? Math.max(0, Math.min(1, vAmps / 40)) : 0, ...(car.chargePort ?? {})},
-                  packCharge: {
-                    soc,
-                    heat: isLatched ? packHeatNow : 0,
-                    sweep: props.cells === 'sweep',
-                    frontWidth: sweepFront,
-                  },
+                  chargePort:
+                    car.chargePort === null || (!chargers && car.chargePort === undefined)
+                      ? null
+                      : {light: isLatched ? Math.max(0, Math.min(1, vAmps / 40)) : 0, ...(car.chargePort ?? {})},
+                  ...(boughtSt ? {packModules: boughtSt.slots} : {}),
+                  // no chargers (No. 011): no charge level in the modules (nothing here is the system)
+                  packCharge: chargers
+                    ? {
+                        soc,
+                        heat: isLatched ? packHeatNow : 0,
+                        sweep: props.cells === 'sweep',
+                        frontWidth: sweepFront,
+                      }
+                    : null,
                   driverShown: pose ? pose.inCar : true,
                   driverLook: v.driver || !v.compat ? driverLook(v.look) : undefined,
                   startFrame,
@@ -1009,6 +1152,7 @@ export const ChargeSliceScene: React.FC<ChargeSliceSceneProps> = (props) => {
                     <group position={[drive.x, y, 0]}>
                       <SlicedCar {...opts} ground={false} cameraDistance={camD} />
                     </group>
+                    {chargers ? (
                     <HvRun
                       points={hvRoute(car.shape ?? 'crossover').map((q) => carToWorld(props, w, q, drive.x))}
                       arrows={bold ? 0 : hvArrows}
@@ -1018,6 +1162,7 @@ export const ChargeSliceScene: React.FC<ChargeSliceSceneProps> = (props) => {
                       view={SECTION_ANGLE}
                       slugs={bold && hvArrows > 0.02 ? {count: hvArrows, flow: st.flow, radius: slugR * 0.8, surge: st.surge} : null}
                     />
+                    ) : null}
                   </React.Fragment>
                 );
               })}
@@ -1030,6 +1175,7 @@ export const ChargeSliceScene: React.FC<ChargeSliceSceneProps> = (props) => {
                   </group>
                 );
               })}
+              {chargers ? (
               <ChargeCable
                 points={cable.points}
                 plug={cable.plug}
@@ -1044,6 +1190,7 @@ export const ChargeSliceScene: React.FC<ChargeSliceSceneProps> = (props) => {
                 inkScale={inkK}
                 slugs={slugs(st.arrows)}
               />
+              ) : null}
               {g && (g.bay ?? 'top') === w ? (
                 <group position={[0, y, 0]} scale={[-1, 1, 1]}>
                   <GhostCar

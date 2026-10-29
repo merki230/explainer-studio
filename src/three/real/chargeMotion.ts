@@ -227,7 +227,7 @@ const SIT_BACK = 0.52;
  * charger (in front of its holster), the port (behind the rear wheel, the plug at arm's length), the rear
  * quarter (to lean on), the curb (`CURB`, past the charger).
  */
-export const driverGeo = (region: 'china' | 'us', shape: ShellProfile): DriverGeo => {
+export const driverGeo = (region: 'china' | 'us', shape: ShellProfile, o: {island?: boolean} = {}): DriverGeo => {
   const kind = region === 'us' ? 'us' : 'china';
   const c = CABINET[kind];
   const foot: V3 = [CHARGER_AT[0], ISLAND_H, CHARGER_AT[2]];
@@ -250,7 +250,8 @@ export const driverGeo = (region: 'china' | 'us', shape: ShellProfile): DriverGe
     curb: {at: [CURB.x0 + 0.75, (CURB.z0 + CURB.z1) / 2], top: CURB.h, rot: 0.48},
     plugKind: region === 'us' ? 'nacs' : 'gbt',
     avoid: [
-      [cx - 0.82, cx + 0.82, islandFront + 0.26],
+      // No. 011: a plain parking bay (no charger) has no island to walk round
+      ...((o.island ?? true) ? [[cx - 0.82, cx + 0.82, islandFront + 0.26] as [number, number, number]] : []),
       [-2.6, 2.55, 1.08],
       [CURB.x0 - 0.05, CURB.x1 + 0.05, CURB.z1 + 0.05],
     ],

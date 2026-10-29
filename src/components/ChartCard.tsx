@@ -28,6 +28,33 @@ export type ChartCurve = {
 /** A tick on the horizontal axis of the `curves` mode: `at` in data units, its label under the axis. */
 export type ChartTick = {at: number; label: string};
 
+/**
+ * One row of the `bars` mode (v0.14 § 6, No. 011): a full-width row label over two bars, the reference (top, hatched)
+ * and the subject (below, solid ink), on the row's own scale (the reference bar is full length). Times are seconds
+ * after the card enters.
+ */
+export type ChartBarRow = {
+  /** The row label (Inter 700 26 px, uppercase, one line, ≤ 30 characters), e.g. `TO BUILD · 2023 SEAL`. */
+  label: string;
+  /** When the reference bar starts to grow (0.6 s; the row label, its name and the row's zero rule fade in with it). */
+  refAt?: number;
+  /** The subject bar's length as a fraction of the reference (a shape from the voice's numbers), e.g. 0.85. */
+  value: number;
+  /** When the subject bar starts to grow (default `refAt` + 0.5). */
+  valueAt?: number;
+  /** An optional label 12 px past the subject bar's end (Inter 700 22 px, e.g. `ABOUT HALF`); dropped where it doesn't fit. */
+  barLabel?: string;
+  /** When the bar label fades in (default: as the subject bar lands). */
+  barLabelAt?: number;
+  /**
+   * A bracket under the subject bar (3 px ink, 8 px legs up) with a label under it, right-aligned to its right end.
+   * `measured` (default true): it spans the subject's end to the reference's end exactly. `measured: false`: an
+   * unmeasured part, drawn crisp but sized by eye, from the subject's end to `to` × the reference (default 0.75), kept
+   * ≥ 40 px short of the reference's end and ≥ 40 px from any bar end in another row.
+   */
+  bracket?: {label: string; at?: number; labelAt?: number; measured?: boolean; to?: number};
+};
+
 export type ChartCardProps = {
   /** The tab's word, top-left (Mono 700 17 px, like DETAIL). Default 'POWER'. */
   tab?: string;
@@ -69,6 +96,18 @@ export type ChartCardProps = {
   yMax?: number;
   /** Curves mode: ticks on the horizontal axis (default: one, `tick` at `xMax` × `tickAt`). */
   ticks?: ChartTick[];
+  /**
+   * Bars mode (v0.14 § 6, No. 011): paired horizontal bars instead of a plot, ink and paper only (no orange, no axes,
+   * ticks or numbers). ≤ 2 rows with a footnote, ≤ 3 without. Each row on its own scale (see `ChartBarRow`).
+   */
+  bars?: ChartBarRow[];
+  /** Bars mode: the two names in the left column, reference first (≤ 6 characters each). Default `['TESLA', 'BYD']`. */
+  barNames?: [string, string];
+  /**
+   * Bars mode: a footnote of up to two lines (≤ 44 characters each) inside the card under the last row, Inter 600 24 px
+   * `inkSub`, under a 1 px rule; on for the card's whole life. With a footnote the card is 620 high, else 560.
+   */
+  footnote?: string[];
 };
 
 /** Frames the card takes to fade in (and out, see Explainer). */
@@ -172,6 +211,9 @@ export const ChartCard: React.FC<ChartCardProps & {mood?: Mood}> = ({
   xMax,
   yMax,
   ticks,
+  bars,
+  barNames,
+  footnote,
   mood = 'day',
 }) => {
   const frame = useCurrentFrame();
@@ -180,8 +222,9 @@ export const ChartCard: React.FC<ChartCardProps & {mood?: Mood}> = ({
   const {ink, paper} = overlayInk(mood);
   const enter = ease(frame, 0, CHART_FADE);
   const rise = interpolate(enter, [0, 1], [8, 0]);
+  const barsMode = !!bars?.length;
   const W = Math.min(696, width) - 2 * BORDER;
-  const H = Math.min(620, height) - 2 * BORDER;
+  const H = Math.min(620, barsMode ? (footnote?.length ? 620 : 560) : height) - 2 * BORDER;
   // the plot: y axis at x0, x axis at y1; arrowheads past the ends
   const x0 = 64;
   const x1 = W - 40;
@@ -264,6 +307,10 @@ export const ChartCard: React.FC<ChartCardProps & {mood?: Mood}> = ({
           overflow: 'hidden',
         }}
       >
+        {barsMode ? (
+          <BarsBody rows={bars!} names={barNames ?? ['TESLA', 'BYD']} footnote={footnote} t={t} W={W} mood={mood} />
+        ) : (
+        <>
         <svg width={W} height={H} style={{position: 'absolute', left: 0, top: 0}}>
           {/* axes with arrowheads */}
           <path d={`M${x0} ${y0 - 18} V${y1} H${x1 + 18}`} fill="none" stroke={ink} strokeWidth={4} strokeLinejoin="miter" />
@@ -368,7 +415,230 @@ export const ChartCard: React.FC<ChartCardProps & {mood?: Mood}> = ({
             </div>
           );
         })}
+        </>
+        )}
       </div>
     </div>
+  );
+};
+
+// ---------------------------------------------------------------- bars mode (v0.14 § 6, No. 011)
+
+/** The bars mode's layout (px inside the border, style guide § 6). */
+export const BARS = {
+  pad: 40,
+  /** The names' right edge, the bars' left edge (zero rule), the reference length. */
+  nameRight: 152,
+  x0: 168,
+  ref: 480,
+  barH: 48,
+  barGap: 12,
+  /** The row label's height, its gap to the first bar. */
+  labelH: 26,
+  labelGap: 16,
+  rowTop: [40, 272, 504],
+  /** The bracket: 10 px under the subject bar, 3 px line, 8 px legs; its label 12 px under it. */
+  bracketGap: 10,
+  bracketLeg: 8,
+  bracketLabelGap: 12,
+  /** The footnote's rule and first line (with a footnote, ≤ 2 rows). */
+  ruleY: 500,
+  footY: 516,
+  /** Frames: a bar's reveal, the fade of its name / row label / zero rule, a bracket's draw, a label's fade. */
+  growF: 18,
+  fadeF: 6,
+  bracketF: 12,
+  labelF: 10,
+};
+
+/** Rough width of an Inter 700 uppercase label with 0.08em tracking (≈ 0.74 em a letter). */
+const capsWidth = (s: string, size: number) => s.length * size * 0.74;
+
+const BarsBody: React.FC<{
+  rows: ChartBarRow[];
+  names: [string, string];
+  footnote?: string[];
+  t: number;
+  W: number;
+  mood: Mood;
+}> = ({rows, names, footnote, t, W, mood}) => {
+  const {fps} = useVideoConfig();
+  const {ink, paper, inkSub} = overlayInk(mood);
+  const B = BARS;
+  const f = t * fps;
+  const shown = rows.slice(0, footnote?.length ? 2 : 3);
+  // each row's times (s after the card enters), defaults chained: a row draws after the one before
+  let next = 0.4;
+  const timed = shown.map((r) => {
+    const refAt = r.refAt ?? next;
+    const valueAt = r.valueAt ?? refAt + 0.5;
+    const landed = valueAt + B.growF / fps;
+    const bracketAt = r.bracket ? (r.bracket.at ?? landed + 0.2) : landed;
+    next = (r.bracket ? bracketAt + B.bracketF / fps : landed) + 0.6;
+    return {r, refAt, valueAt, landed, bracketAt};
+  });
+  const xRef = B.x0 + B.ref;
+  // every bar end on the card, per row (for keeping a by-eye bracket clear of other rows' values)
+  const ends = timed.map(({r}) => [xRef, B.x0 + B.ref * Math.max(0, Math.min(1, r.value))]);
+  const caps = (size: number): React.CSSProperties => ({
+    position: 'absolute',
+    fontFamily: fonts.sans,
+    fontWeight: 700,
+    fontSize: size,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+    lineHeight: 1,
+    color: ink,
+    whiteSpace: 'nowrap',
+  });
+  const hatchId = `bars-hatch-${mood}`;
+  return (
+    <>
+      <svg width={W} height={B.ruleY + 200} style={{position: 'absolute', left: 0, top: 0}}>
+        <defs>
+          {/* the reference bar's 45° hatch, in card space so a reveal never stretches it */}
+          <pattern id={hatchId} patternUnits="userSpaceOnUse" width={10} height={10} patternTransform="rotate(45)">
+            <rect width={10} height={10} fill={paper} />
+            <rect x={0} y={0} width={2} height={10} fill={ink} />
+          </pattern>
+        </defs>
+        {timed.map(({r, refAt, valueAt, bracketAt}, i) => {
+          const top = B.rowTop[i];
+          const y1 = top + B.labelH + B.labelGap;
+          const y2 = y1 + B.barH + B.barGap;
+          const pRef = ease(f, refAt * fps, refAt * fps + B.growF);
+          const pVal = ease(f, valueAt * fps, valueAt * fps + B.growF);
+          const v = Math.max(0, Math.min(1, r.value));
+          const wv = B.ref * v;
+          const rule = ease(f, refAt * fps, refAt * fps + B.fadeF);
+          let bracket: React.ReactNode = null;
+          if (r.bracket) {
+            const measured = r.bracket.measured ?? true;
+            const a = B.x0 + wv;
+            let b = xRef;
+            if (!measured) {
+              b = Math.min(B.x0 + B.ref * (r.bracket.to ?? 0.75), xRef - 40);
+              for (let k = 0; k < ends.length; k++)
+                if (k !== i) for (const e of ends[k]) if (Math.abs(b - e) < 40 && e > a) b = Math.min(b, e - 40);
+              b = Math.max(a + 24, b);
+            }
+            const yb = y2 + B.barH + B.bracketGap + 1.5;
+            const pb = ease(f, bracketAt * fps, bracketAt * fps + B.bracketF);
+            const len = b - a;
+            if (pb > 0) {
+              const d = `M${a} ${yb - B.bracketLeg} V${yb} H${b} V${yb - B.bracketLeg}`;
+              const total = 2 * B.bracketLeg + len;
+              bracket = (
+                <path
+                  d={d}
+                  fill="none"
+                  stroke={ink}
+                  strokeWidth={3}
+                  strokeLinejoin="miter"
+                  strokeLinecap="butt"
+                  pathLength={total}
+                  strokeDasharray={`${total} ${total}`}
+                  strokeDashoffset={total * (1 - pb)}
+                />
+              );
+            }
+          }
+          return (
+            <g key={i}>
+              {/* the row's own zero rule: its two bars only */}
+              <rect x={B.x0 - 1.5} y={y1} width={3} height={y2 + B.barH - y1} fill={ink} opacity={rule} />
+              {/* reference: paper, hatched, 3 px ink outline; revealed from the left */}
+              {pRef > 0 ? (
+                <g>
+                  <clipPath id={`bars-ref-${i}`}>
+                    <rect x={B.x0} y={y1 - 2} width={B.ref * pRef} height={B.barH + 4} />
+                  </clipPath>
+                  <g clipPath={`url(#bars-ref-${i})`}>
+                    <rect x={B.x0 + 1.5} y={y1 + 1.5} width={B.ref - 3} height={B.barH - 3} fill={`url(#${hatchId})`} stroke={ink} strokeWidth={3} />
+                  </g>
+                </g>
+              ) : null}
+              {/* subject: solid ink, revealed from the left */}
+              {pVal > 0 && wv > 0 ? <rect x={B.x0} y={y2} width={wv * pVal} height={B.barH} fill={ink} /> : null}
+              {bracket}
+            </g>
+          );
+        })}
+        {footnote?.length ? <rect x={B.pad} y={B.ruleY} width={W - 2 * B.pad} height={1} fill={inkSub} /> : null}
+      </svg>
+      {timed.map(({r, refAt, valueAt, landed, bracketAt}, i) => {
+        const top = B.rowTop[i];
+        const y1 = top + B.labelH + B.labelGap;
+        const y2 = y1 + B.barH + B.barGap;
+        const fadeRef = ease(f, refAt * fps, refAt * fps + B.fadeF);
+        const fadeVal = ease(f, valueAt * fps, valueAt * fps + B.fadeF);
+        const v = Math.max(0, Math.min(1, r.value));
+        const xe = B.x0 + B.ref * v;
+        const labelIn = (at: number) => {
+          const k = ease(f, at * fps, at * fps + B.labelF);
+          return {opacity: k, transform: `translateY(${(1 - k) * 6}px)`};
+        };
+        const bl = r.barLabel;
+        const blFits = bl ? xRef - xe >= capsWidth(bl, 22) + 24 : false;
+        const measured = r.bracket?.measured ?? true;
+        let bEnd = xRef;
+        if (r.bracket && !measured) {
+          bEnd = Math.min(B.x0 + B.ref * (r.bracket.to ?? 0.75), xRef - 40);
+          for (let k = 0; k < ends.length; k++)
+            if (k !== i) for (const e of ends[k]) if (Math.abs(bEnd - e) < 40 && e > xe) bEnd = Math.min(bEnd, e - 40);
+          bEnd = Math.max(xe + 24, bEnd);
+        }
+        const bLabelTop = y2 + B.barH + B.bracketGap + 3 + B.bracketLabelGap;
+        // right-aligned to the bracket's right end, clamped inside the padding
+        const bRight = Math.min(bEnd, W - B.pad);
+        return (
+          <React.Fragment key={i}>
+            <div style={{...caps(26), left: B.pad, top, width: W - 2 * B.pad, overflow: 'hidden', opacity: fadeRef}}>{r.label}</div>
+            <div style={{...caps(26), right: W - B.nameRight, top: y1 + B.barH / 2, transform: 'translateY(-50%)', opacity: fadeRef}}>
+              {names[0]}
+            </div>
+            <div style={{...caps(26), right: W - B.nameRight, top: y2 + B.barH / 2, transform: 'translateY(-50%)', opacity: fadeVal}}>
+              {names[1]}
+            </div>
+            {bl && blFits ? (
+              <div style={{...caps(22), left: xe + 12, top: y2 + B.barH / 2 - 11, ...labelIn(r.barLabelAt ?? landed)}}>{bl}</div>
+            ) : null}
+            {r.bracket ? (
+              <div
+                style={{
+                  ...caps(26),
+                  right: W - bRight,
+                  top: bLabelTop,
+                  ...labelIn(r.bracket.labelAt ?? bracketAt + B.bracketF / fps),
+                }}
+              >
+                {r.bracket.label}
+              </div>
+            ) : null}
+          </React.Fragment>
+        );
+      })}
+      {footnote?.length ? (
+        <div
+          style={{
+            position: 'absolute',
+            left: B.pad,
+            top: B.footY,
+            width: W - 2 * B.pad,
+            fontFamily: fonts.sans,
+            fontWeight: 600,
+            fontSize: 24,
+            lineHeight: 1.25,
+            color: inkSub,
+          }}
+        >
+          {footnote.slice(0, 2).map((l, i) => (
+            <div key={i} style={{whiteSpace: 'nowrap'}}>
+              {l}
+            </div>
+          ))}
+        </div>
+      ) : null}
+    </>
   );
 };

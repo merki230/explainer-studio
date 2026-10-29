@@ -17,7 +17,9 @@ import {
   type CoupeStyle,
 } from './RealCar';
 import type {ShellProfile} from './CarShell';
-import {BatteryPack, DriveUnit, EV, EV_BOARD, evDriveRoute, footPose, moduleSpan, MODULE_Y, PedalBox} from './EvDrive';
+import {BatteryPack, BLADE, DriveUnit, EV, EV_BOARD, evDriveRoute, footPose, moduleSpan, MODULE_Y, PedalBox, type BladeState} from './EvDrive';
+import {bladeLidTop, MadeByCar, type SlicedCarMadeBy} from './MadeByCar';
+import {madeByCoreR, madeByState, type MadeByKeys} from './madeBy';
 import {
   CRANK_SCALE,
   EngineBay,
@@ -545,6 +547,78 @@ export type SlicedCarOptions = {
   driverShown?: boolean;
   /** Colour overrides on the driver (`Figure` `look`, theme tokens), e.g. a second extra. Default none. */
   driverLook?: Partial<CastLook>;
+  /**
+   * No. 011 (N2): the "made by" glow per part group, 'ev' (see `SlicedCarMadeBy`: pack, driveUnit, inverter with
+   * pulses, panels door by door, lamps; surge, fade). Orange edge and halo, bloomed; the cut faces stay `cut`. Null for
+   * none (default).
+   */
+  madeBy?: SlicedCarMadeBy | null;
+  /** No. 011 (N3): the blade-cell pack instead of the modules, 'ev' (see `SlicedCarBlade`). Null for none (default). */
+  blade?: SlicedCarBlade | null;
+  /**
+   * No. 011 (N1): the stripped shell (a teardown): the body only (`RealCar` `strip`), no drive unit, pack, pedals,
+   * driver or wheels (unless `wheelsShown`). Default false.
+   */
+  strip?: boolean;
+  /** No. 011: the four wheels drawn. Default true (false with `strip`). */
+  wheelsShown?: boolean;
+  /**
+   * No. 011 (N4): each pack module's place, front to back (`BatteryPack` `modules`): null leaves its slot empty, an
+   * offset (car frame, m) moves it (dropping in from a crate). Default: all in place.
+   */
+  packModules?: (V3 | null)[];
+};
+
+/**
+ * No. 011 (N3, `SlicedCarOptions.blade`): the blade pack's beats, seconds into the scene (any may lie outside it).
+ * Long flat cells standing across the car, generic (no chemistry text).
+ */
+export type SlicedCarBlade = {
+  /** The blades rise out of the tray, front to back, from `growAt` over `growFor` s (default 3). Before: the tray empty. */
+  growAt: number;
+  growFor?: number;
+  /** One blade slides out toward the camera (≈ 1 m, across the car's width) from `showAt` over `showFor` s (default 0.6). */
+  showAt?: number | null;
+  showFor?: number;
+  /** …and slides back from `backAt` (same speed). Default: stays out. */
+  backAt?: number | null;
+  /** Which blade (index front to back; default the middle one). */
+  showIndex?: number;
+  /** Cell-to-body: the old floor panel lifts away and fades from `floorAt` (0.8 s). Default none (it stays). */
+  floorAt?: number | null;
+  /** …the pack's lid rises to the floor's height from `lidAt` (default `floorAt` + 0.8; 0.6 s), taking the carpet. */
+  lidAt?: number;
+  /** …the seats settle 2 cm onto it from `settleAt` (default `lidAt` + 1.0; 0.4 s), the driver rocking once. */
+  settleAt?: number;
+  /** The blades' "made by" glow (each blade's top cut edge as it rises; the pack's edge and halo). Default `{at: growAt}`; null: none. */
+  glow?: MadeByKeys | null;
+};
+
+/** The blade pack's state at t from its keys (`SlicedCarBlade`), for `BatteryPack` `blade`; `r` the glow's core radius. */
+export const bladeStateAt = (b: SlicedCarBlade, t: number, r: number): BladeState & {settle: number} => {
+  const show = b.showAt == null ? 0 : ease(t, b.showAt, b.showAt + (b.showFor ?? 0.6)) * (b.backAt == null ? 1 : 1 - ease(t, b.backAt, b.backAt + (b.showFor ?? 0.6)));
+  const lidAt = b.floorAt == null ? null : (b.lidAt ?? b.floorAt + 0.8);
+  const settleAt = lidAt == null ? null : (b.settleAt ?? lidAt + 1.0);
+  const g = b.glow === null ? null : madeByState(b.glow ?? {at: b.growAt}, t);
+  return {
+    grow: ease(t, b.growAt, b.growAt + (b.growFor ?? 3)),
+    show,
+    showIndex: b.showIndex,
+    floorOut: b.floorAt == null ? 0 : ease(t, b.floorAt, b.floorAt + 0.8),
+    lid: lidAt == null ? 0 : ease(t, lidAt, lidAt + 0.6),
+    glow: g ? {lit: g.lit, surge: g.surge, r} : undefined,
+    settle: settleAt == null ? 0 : ease(t, settleAt, settleAt + 0.4),
+  };
+};
+
+/** The blade that slides out: its tip (car frame) at t, for an overlay's leader. */
+export const bladeTipAt = (b: SlicedCarBlade, t: number): V3 => {
+  const st = bladeStateAt(b, t, 0.005);
+  const [x0, x1] = EV.pack;
+  const k = st.showIndex ?? Math.floor(BLADE.count / 2);
+  const pitch = (x1 - x0 - 0.028) / BLADE.count;
+  const x = x1 - 0.014 - (k + 0.5) * pitch;
+  return [x, BLADE.y1, EV.packZ + BLADE.slide * (st.show ?? 0)];
 };
 
 /**
@@ -1621,6 +1695,18 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
     wedgeFull && wedgeK > 0 ? [wedgeFull[0], wedgeFull[0] + wedgeK * (wedgeFull[1] - wedgeFull[0])] : undefined;
   // the paths keep ≈ their wide-shot thickness on screen in close-ups (quantized: the tube rebuilds on change)
   const pathR = bay ? VIB_R * Math.max(0.3, Math.min(1, Math.round((camD / 9) * 20) / 20)) : VIB_R;
+  // ---- No. 011: the "made by" glow's core radius, the blade pack, the stripped shell
+  const mbR = madeByCoreR(camD);
+  const bladeSt = ev && props.blade ? bladeStateAt(props.blade, t, mbR) : null;
+  // the seats stand on the old floor panel (2.2 cm up) until the cell-to-body beat settles them onto the lid
+  const seatLift = bladeSt ? (BLADE.floor[1] - C.floor) * (1 - bladeSt.settle) : 0;
+  const settleRock = bladeSt && props.blade?.floorAt != null ? (() => {
+    const s0 = props.blade.settleAt ?? (props.blade.lidAt ?? props.blade.floorAt + 0.8) + 1.0;
+    const u = (t - s0 - 0.3) / 0.45;
+    return u > 0 && u < 1 ? -0.012 * Math.sin(Math.PI * u) : 0;
+  })() : 0;
+  const strip = props.strip ?? false;
+  const wheelsShown = props.wheelsShown ?? !strip;
   // ---- No. 008: the gas car's state
   const gasFoot = gas ? gasFootAt(props.foot, t) : null;
   // the signal path: the gas car's `gasPath`, or the electric car's `drive` (No. 008), on the same machinery
@@ -1942,14 +2028,16 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
               mirrored={left ? true : undefined}
               coupeStyle={props.shape === 'coupe' ? props.coupeStyle : undefined}
               {...(ev && props.chargePort ? {port: props.chargePort} : {})}
+              {...(strip ? {strip: true} : {})}
+              {...(bladeSt ? {carpet: false, seatLift} : {})}
             />
           </group>
-          {props.driverShown === false ? null : (
+          {props.driverShown === false || strip ? null : (
           <Figure
             who={driver}
             mood={mood}
             look={props.driverLook}
-            position={[lay.driver[0] + bodyJ[0], lay.driver[1] + bodyY + bodyJ[1], lay.driver[2] + bodyJ[2]]}
+            position={[lay.driver[0] + bodyJ[0], lay.driver[1] + bodyY + bodyJ[1] + seatLift + settleRock, lay.driver[2] + bodyJ[2]]}
             rotationY={Math.PI / 2}
             gestures={gestures}
             phone={false}
@@ -2106,7 +2194,19 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
               )}
             </>
           ) : null}
-          {ev ? (
+          {ev && props.madeBy ? (
+            <MadeByCar
+              madeBy={props.madeBy}
+              t={t}
+              r={mbR}
+              shape={props.shape}
+              ev={ev}
+              brake={brakeK !== undefined}
+              packTop={bladeSt ? bladeLidTop(bladeSt.lid ?? 0) : undefined}
+              pathR={pathR}
+            />
+          ) : null}
+          {ev && !strip ? (
             <>
               <DriveUnit
                 mood={mood}
@@ -2128,8 +2228,11 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
                   inkScale={inkK}
                 />
               ) : null}
-              {props.packCharge ? (
+              {bladeSt ? (
+                <BatteryPack mood={mood} inkScale={inkK} blade={bladeSt} />
+              ) : props.packCharge ? (
                 <BatteryPack
+                  modules={props.packModules}
                   mood={mood}
                   fill={[...Array(EV.modules).keys()].map(() => Math.max(0, Math.min(1, props.packCharge!.soc)))}
                   glow={1}
@@ -2139,7 +2242,7 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
                   frontWidth={props.packCharge.frontWidth}
                 />
               ) : (
-                <BatteryPack mood={mood} fill={regen?.modules} glow={rg} inkScale={inkK} />
+                <BatteryPack mood={mood} fill={regen?.modules} glow={rg} inkScale={inkK} modules={props.packModules} />
               )}
               {dz ? (
                 <group position={[0, 0, dz]}>
@@ -2344,7 +2447,7 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
         </Dip>
       </group>
 
-      {(Object.keys(WHEELS) as WheelId[]).map((id) => {
+      {(wheelsShown ? (Object.keys(WHEELS) as WheelId[]) : []).map((id) => {
         const w = WHEELS[id];
         const spin = wheelRevs(props, id, t) * Math.PI * 2;
         // the turn while the shutter is open (half a frame): the wheel's motion blur

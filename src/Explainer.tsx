@@ -31,6 +31,7 @@ import {cityCameraEnd, cityCameraStart} from './scenes/CitySliceScene';
 import {driveUnitCameraEnd, driveUnitCameraStart} from './scenes/DriveUnitScene';
 import {raceCameraEnd, raceCameraStart, raceCarry} from './scenes/RaceSliceScene';
 import {chargeCameraEnd, chargeCameraStart} from './scenes/ChargeSliceScene';
+import {teardownCameraEnd, teardownCameraStart} from './scenes/TeardownSliceScene';
 import type {Framing} from './three/section/SectionCamera';
 
 type CameraFn = (p: Record<string, unknown>, durationInFrames: number, fps: number) => Framing;
@@ -49,6 +50,7 @@ const CAMERAS: Record<string, {start: CameraFn; end: CameraFn}> = {
   'drive-unit': {start: driveUnitCameraStart as CameraFn, end: driveUnitCameraEnd as CameraFn},
   'race-slice': {start: raceCameraStart as CameraFn, end: raceCameraEnd as CameraFn},
   'charge-slice': {start: chargeCameraStart as CameraFn, end: chargeCameraEnd as CameraFn},
+  'teardown-slice': {start: teardownCameraStart as CameraFn, end: teardownCameraEnd as CameraFn},
 };
 import {transitionInto, type Transition} from './scenes/transitions';
 import {clickOffFrame, type ClickOff} from './scenes/clickOff';

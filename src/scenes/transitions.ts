@@ -39,6 +39,8 @@ const SECTION_DEFAULT_LOCATION: Record<string, string> = {
   'highway-slice': 'highway',
   'musical-road': 'musical-road',
   'city-slice': 'city',
+  // No. 011: the teardown room; each dressing is its own location, so re-dressing slides (§ 3)
+  'teardown-slice': 'teardown-sedan',
 };
 
 /** The transition into `cur` from `prev` (its `transition` prop, or the 'auto' rules). */
@@ -50,7 +52,9 @@ export const transitionInto = (prev: SceneLike, cur: SceneLike): Transition => {
   if (asked !== 'auto') kind = asked;
   else if (!(cur.scene in SECTION_DEFAULT_LOCATION) || !(prev.scene in SECTION_DEFAULT_LOCATION)) kind = 'dissolve';
   else {
-    const loc = (s: SceneLike) => (s.props?.location as string | undefined) ?? SECTION_DEFAULT_LOCATION[s.scene];
+    const loc = (s: SceneLike) =>
+      (s.props?.location as string | undefined) ??
+      (s.scene === 'teardown-slice' ? `teardown-${(s.props?.dressing as string | undefined) ?? 'sedan'}` : SECTION_DEFAULT_LOCATION[s.scene]);
     const mood = (s: SceneLike) => (s.props?.mood as string | undefined) ?? 'day';
     // a scene that opens in another mood (`moodFrom`, the time-passes blend) continues from it
     const opening = (s: SceneLike) => (s.props?.moodFrom as string | undefined) ?? mood(s);

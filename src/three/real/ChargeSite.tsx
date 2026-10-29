@@ -1,6 +1,6 @@
 import React, {useMemo} from 'react';
 import * as THREE from 'three';
-import {CHARGE, HIGHWAY, MOODS, REAL, STREET, type Mood} from '../../theme';
+import {CHARGE, HIGHWAY, MOODS, REAL, STREET, TOWER, type Mood} from '../../theme';
 import {raw, roundedBox, roundedCylinder} from '../plaster';
 import {cutMaterial, CutOutline, INK, type Rect} from '../section/cutLook';
 import {fieldTexture, TreeLine, vnoise} from './StripProps';
@@ -112,10 +112,12 @@ export type ChargeBayProps = {
   curb?: boolean;
   /** No. 010 draft 2: the block's depth (m; default `BAY.depth`): a deep cut ground block fills a tall framing. */
   depth?: number;
+  /** No. 011: the charger's raised island and bollards (default true; false: a plain parking bay). */
+  island?: boolean;
 };
 
 /** One charging bay on its cut block (see the file comment). */
-export const ChargeBay: React.FC<ChargeBayProps> = ({mood, region, paint = false, y, inkScale = 1, x0: blockX0 = BAY.x0, curb = false, depth: D = BAY.depth}) => {
+export const ChargeBay: React.FC<ChargeBayProps> = ({mood, region, paint = false, y, inkScale = 1, x0: blockX0 = BAY.x0, curb = false, depth: D = BAY.depth, island = true}) => {
   const env = useStudioEnv();
   const envScale = useEnvStrength();
   const albedo = useAlbedo();
@@ -201,8 +203,10 @@ export const ChargeBay: React.FC<ChargeBayProps> = ({mood, region, paint = false
         <mesh key={z} geometry={roundedBox(0.16, 0.11, 0.55, 0.03, 3)} material={mats.stop} position={[1.98, 0.055, z]} castShadow receiveShadow />
       ))}
       {/* the charger's island: a raised concrete kerb with two steel bollards */}
-      <mesh geometry={roundedBox(1.25, ISLAND_H, 0.95, 0.04, 3)} material={mats.island} position={[cx, ISLAND_H / 2, cz]} castShadow receiveShadow />
-      {[-0.52, 0.52].map((dz) => (
+      {island ? (
+        <mesh geometry={roundedBox(1.25, ISLAND_H, 0.95, 0.04, 3)} material={mats.island} position={[cx, ISLAND_H / 2, cz]} castShadow receiveShadow />
+      ) : null}
+      {(island ? [-0.52, 0.52] : []).map((dz) => (
         <group key={dz} position={[cx + 0.45, ISLAND_H, cz + dz]}>
           <mesh geometry={roundedCylinder(0.065, 0.85, 0.02, 28)} material={mats.steel} position={[0, 0.425, 0]} castShadow />
           <mesh position={[0, 0.86, 0]} material={mats.cap}>
@@ -619,6 +623,97 @@ export const DriftingClouds: React.FC<DriftingCloudsProps> = ({mood, minutes, y,
           </mesh>
         );
       })}
+    </group>
+  );
+};
+
+// ---------------------------------------------------------------- No. 011: the supplier crate (N4)
+
+/** The supplier crate's size (m): a steel shipping container on a pallet, long enough (z) for a pack module. */
+export const CRATE = {w: 0.92, h: 0.46, d: 1.48, wall: 0.025, pallet: 0.13, palletW: 1.02, palletD: 1.56};
+/** A module's place in the crate (crate frame: its foot at the origin, centred): slot i of 3, side by side along x. */
+export const crateSlot = (i: number, moduleH: number): V3 => [(i - 1) * 0.27, CRATE.pallet + CRATE.wall + moduleH / 2 + 0.01, 0];
+
+export type SupplierCrateProps = {
+  /** Its foot (the pallet's bottom centre), in the bay's frame. */
+  position: V3;
+  /** The lid open, 0 (shut) → 1 (swung up and back, ≈ 110°). */
+  open?: number;
+};
+
+/**
+ * No. 011 (N4): an unmarked supplier crate: a grey steel container on a wooden pallet, its lid hinged at the back.
+ * Generic: no name, label, logo or marking anywhere. Never orange. The modules it carries are drawn by the pack
+ * (`BatteryPack` `modules`), so they can leave it and drop into the slots.
+ */
+export const SupplierCrate: React.FC<SupplierCrateProps> = ({position, open = 0}) => {
+  const env = useStudioEnv();
+  const envScale = useEnvStrength();
+  const albedo = useAlbedo();
+  const mats = useMemo(
+    () => ({
+      steel: new THREE.MeshPhysicalMaterial({color: raw(REAL.cabinet), roughness: 0.5, metalness: 0.45}),
+      rib: new THREE.MeshPhysicalMaterial({color: raw(HIGHWAY.galvanized), roughness: 0.42, metalness: 0.6}),
+      wood: new THREE.MeshStandardMaterial({color: raw(TOWER.walnut), roughness: 0.9}),
+      dark: new THREE.MeshStandardMaterial({color: raw(REAL.labDark), roughness: 0.8}),
+    }),
+    [],
+  );
+  applyEnv(env, [[mats.steel, 0.7], [mats.rib, 0.9]], envScale);
+  applyAlbedo([mats.steel, mats.rib, mats.wood, mats.dark], albedo);
+  const C = CRATE;
+  const y0 = C.pallet;
+  const ang = -1.9 * Math.max(0, Math.min(1, open));
+  return (
+    <group position={position}>
+      {/* the pallet: three runners under a deck of boards */}
+      {[-0.42, 0, 0.42].map((x) => (
+        <mesh key={x} geometry={roundedBox(0.1, C.pallet - 0.025, C.palletD, 0.01, 2)} material={mats.wood} position={[x, (C.pallet - 0.025) / 2, 0]} castShadow receiveShadow />
+      ))}
+      {[...Array(7).keys()].map((i) => (
+        <mesh
+          key={i}
+          geometry={roundedBox(C.palletW, 0.022, 0.16, 0.006, 2)}
+          material={mats.wood}
+          position={[0, C.pallet - 0.011, -C.palletD / 2 + 0.08 + (i * (C.palletD - 0.16)) / 6]}
+          castShadow
+          receiveShadow
+        />
+      ))}
+      {/* the container: floor, four walls, ribs at the corners */}
+      <mesh position={[0, y0 + C.wall / 2, 0]} material={mats.dark} receiveShadow>
+        <boxGeometry args={[C.w, C.wall, C.d]} />
+      </mesh>
+      {(
+        [
+          [0, C.d / 2 - C.wall / 2, C.w, C.wall],
+          [0, -C.d / 2 + C.wall / 2, C.w, C.wall],
+          [C.w / 2 - C.wall / 2, 0, C.wall, C.d],
+          [-C.w / 2 + C.wall / 2, 0, C.wall, C.d],
+        ] as [number, number, number, number][]
+      ).map(([x, z, w, d], i) => (
+        <mesh key={i} position={[x, y0 + C.h / 2, z]} material={mats.steel} castShadow receiveShadow>
+          <boxGeometry args={[w, C.h, d]} />
+        </mesh>
+      ))}
+      {[-1, 1].flatMap((sx) =>
+        [-1, 1].map((sz) => (
+          <mesh
+            key={`${sx}${sz}`}
+            geometry={roundedBox(0.05, C.h + 0.02, 0.05, 0.008, 2)}
+            material={mats.rib}
+            position={[(sx * C.w) / 2, y0 + C.h / 2, (sz * C.d) / 2]}
+            castShadow
+          />
+        )),
+      )}
+      {/* the lid, hinged along the back (−z) edge */}
+      <group position={[0, y0 + C.h, -C.d / 2]} rotation={[ang, 0, 0]}>
+        <mesh geometry={roundedBox(C.w + 0.03, 0.03, C.d + 0.02, 0.008, 2)} material={mats.steel} position={[0, 0.015, C.d / 2]} castShadow receiveShadow />
+        {[0.3, 0.74, 1.18].map((z) => (
+          <mesh key={z} geometry={roundedBox(C.w + 0.035, 0.018, 0.05, 0.006, 2)} material={mats.rib} position={[0, 0.036, z]} />
+        ))}
+      </group>
     </group>
   );
 };

@@ -1,0 +1,1025 @@
+{
+  "audio": null,
+  "words": [
+    {
+      "text": "In",
+      "start": 0.15,
+      "end": 0.37
+    },
+    {
+      "text": "China,",
+      "start": 0.41,
+      "end": 0.78
+    },
+    {
+      "text": "a",
+      "start": 0.98,
+      "end": 1.15
+    },
+    {
+      "text": "BYD",
+      "start": 1.19,
+      "end": 1.46
+    },
+    {
+      "text": "the",
+      "start": 1.5,
+      "end": 1.77
+    },
+    {
+      "text": "size",
+      "start": 1.81,
+      "end": 2.13
+    },
+    {
+      "text": "of",
+      "start": 2.17,
+      "end": 2.39
+    },
+    {
+      "text": "a",
+      "start": 2.43,
+      "end": 2.6
+    },
+    {
+      "text": "Tesla",
+      "start": 2.64,
+      "end": 3.01
+    },
+    {
+      "text": "Model",
+      "start": 3.05,
+      "end": 3.42
+    },
+    {
+      "text": "3",
+      "start": 3.46,
+      "end": 3.63
+    },
+    {
+      "text": "starts",
+      "start": 3.67,
+      "end": 4.09
+    },
+    {
+      "text": "at",
+      "start": 4.13,
+      "end": 4.35
+    },
+    {
+      "text": "about",
+      "start": 4.39,
+      "end": 4.76
+    },
+    {
+      "text": "half",
+      "start": 4.8,
+      "end": 5.12
+    },
+    {
+      "text": "the",
+      "start": 5.16,
+      "end": 5.43
+    },
+    {
+      "text": "price.",
+      "start": 5.47,
+      "end": 5.84
+    },
+    {
+      "text": "Analysts",
+      "start": 6.2,
+      "end": 6.72
+    },
+    {
+      "text": "who",
+      "start": 6.76,
+      "end": 7.03
+    },
+    {
+      "text": "took",
+      "start": 7.07,
+      "end": 7.39
+    },
+    {
+      "text": "one",
+      "start": 7.43,
+      "end": 7.7
+    },
+    {
+      "text": "apart",
+      "start": 7.74,
+      "end": 8.11
+    },
+    {
+      "text": "found",
+      "start": 8.15,
+      "end": 8.52
+    },
+    {
+      "text": "BYD",
+      "start": 8.56,
+      "end": 8.83
+    },
+    {
+      "text": "makes",
+      "start": 8.87,
+      "end": 9.24
+    },
+    {
+      "text": "about",
+      "start": 9.28,
+      "end": 9.65
+    },
+    {
+      "text": "three",
+      "start": 9.69,
+      "end": 10.06
+    },
+    {
+      "text": "quarters",
+      "start": 10.1,
+      "end": 10.62
+    },
+    {
+      "text": "of",
+      "start": 10.66,
+      "end": 10.88
+    },
+    {
+      "text": "that",
+      "start": 10.92,
+      "end": 11.24
+    },
+    {
+      "text": "car's",
+      "start": 11.28,
+      "end": 11.6
+    },
+    {
+      "text": "parts,",
+      "start": 11.64,
+      "end": 12.01
+    },
+    {
+      "text": "starting",
+      "start": 12.21,
+      "end": 12.73
+    },
+    {
+      "text": "with",
+      "start": 12.77,
+      "end": 13.09
+    },
+    {
+      "text": "the",
+      "start": 13.13,
+      "end": 13.4
+    },
+    {
+      "text": "battery.",
+      "start": 13.44,
+      "end": 13.91
+    },
+    {
+      "text": "People",
+      "start": 14.27,
+      "end": 14.69
+    },
+    {
+      "text": "tend",
+      "start": 14.73,
+      "end": 15.05
+    },
+    {
+      "text": "to",
+      "start": 15.09,
+      "end": 15.31
+    },
+    {
+      "text": "credit",
+      "start": 15.35,
+      "end": 15.77
+    },
+    {
+      "text": "subsidies",
+      "start": 15.81,
+      "end": 16.38
+    },
+    {
+      "text": "and",
+      "start": 16.42,
+      "end": 16.69
+    },
+    {
+      "text": "cheap",
+      "start": 16.73,
+      "end": 17.1
+    },
+    {
+      "text": "labor.",
+      "start": 17.14,
+      "end": 17.51
+    },
+    {
+      "text": "Subsidies",
+      "start": 17.87,
+      "end": 18.44
+    },
+    {
+      "text": "do",
+      "start": 18.48,
+      "end": 18.7
+    },
+    {
+      "text": "help,",
+      "start": 18.74,
+      "end": 19.06
+    },
+    {
+      "text": "but",
+      "start": 19.26,
+      "end": 19.53
+    },
+    {
+      "text": "Tesla",
+      "start": 19.57,
+      "end": 19.94
+    },
+    {
+      "text": "builds",
+      "start": 19.98,
+      "end": 20.4
+    },
+    {
+      "text": "the",
+      "start": 20.44,
+      "end": 20.71
+    },
+    {
+      "text": "Model",
+      "start": 20.75,
+      "end": 21.12
+    },
+    {
+      "text": "3",
+      "start": 21.16,
+      "end": 21.33
+    },
+    {
+      "text": "in",
+      "start": 21.37,
+      "end": 21.59
+    },
+    {
+      "text": "China",
+      "start": 21.63,
+      "end": 22
+    },
+    {
+      "text": "too,",
+      "start": 22.04,
+      "end": 22.31
+    },
+    {
+      "text": "and",
+      "start": 22.51,
+      "end": 22.78
+    },
+    {
+      "text": "the",
+      "start": 22.82,
+      "end": 23.09
+    },
+    {
+      "text": "teardown",
+      "start": 23.13,
+      "end": 23.65
+    },
+    {
+      "text": "pointed",
+      "start": 23.69,
+      "end": 24.16
+    },
+    {
+      "text": "mainly",
+      "start": 24.2,
+      "end": 24.62
+    },
+    {
+      "text": "to",
+      "start": 24.66,
+      "end": 24.88
+    },
+    {
+      "text": "the",
+      "start": 24.92,
+      "end": 25.19
+    },
+    {
+      "text": "parts.",
+      "start": 25.23,
+      "end": 25.6
+    },
+    {
+      "text": "The",
+      "start": 25.96,
+      "end": 26.23
+    },
+    {
+      "text": "battery",
+      "start": 26.27,
+      "end": 26.74
+    },
+    {
+      "text": "is",
+      "start": 26.78,
+      "end": 27
+    },
+    {
+      "text": "the",
+      "start": 27.04,
+      "end": 27.31
+    },
+    {
+      "text": "most",
+      "start": 27.35,
+      "end": 27.67
+    },
+    {
+      "text": "expensive",
+      "start": 27.71,
+      "end": 28.28
+    },
+    {
+      "text": "part,",
+      "start": 28.32,
+      "end": 28.64
+    },
+    {
+      "text": "and",
+      "start": 28.84,
+      "end": 29.11
+    },
+    {
+      "text": "industry",
+      "start": 29.15,
+      "end": 29.67
+    },
+    {
+      "text": "analysts",
+      "start": 29.71,
+      "end": 30.23
+    },
+    {
+      "text": "put",
+      "start": 30.27,
+      "end": 30.54
+    },
+    {
+      "text": "it",
+      "start": 30.58,
+      "end": 30.8
+    },
+    {
+      "text": "at",
+      "start": 30.84,
+      "end": 31.06
+    },
+    {
+      "text": "30",
+      "start": 31.1,
+      "end": 31.32
+    },
+    {
+      "text": "to",
+      "start": 31.36,
+      "end": 31.58
+    },
+    {
+      "text": "40",
+      "start": 31.62,
+      "end": 31.84
+    },
+    {
+      "text": "percent",
+      "start": 31.88,
+      "end": 32.35
+    },
+    {
+      "text": "of",
+      "start": 32.39,
+      "end": 32.61
+    },
+    {
+      "text": "an",
+      "start": 32.65,
+      "end": 32.87
+    },
+    {
+      "text": "electric",
+      "start": 32.91,
+      "end": 33.43
+    },
+    {
+      "text": "car's",
+      "start": 33.47,
+      "end": 33.79
+    },
+    {
+      "text": "cost.",
+      "start": 33.83,
+      "end": 34.15
+    },
+    {
+      "text": "Tesla's",
+      "start": 34.51,
+      "end": 34.93
+    },
+    {
+      "text": "annual",
+      "start": 34.97,
+      "end": 35.39
+    },
+    {
+      "text": "report",
+      "start": 35.43,
+      "end": 35.85
+    },
+    {
+      "text": "says",
+      "start": 35.89,
+      "end": 36.21
+    },
+    {
+      "text": "it",
+      "start": 36.25,
+      "end": 36.47
+    },
+    {
+      "text": "buys",
+      "start": 36.51,
+      "end": 36.83
+    },
+    {
+      "text": "its",
+      "start": 36.87,
+      "end": 37.14
+    },
+    {
+      "text": "battery",
+      "start": 37.18,
+      "end": 37.65
+    },
+    {
+      "text": "cells",
+      "start": 37.69,
+      "end": 38.06
+    },
+    {
+      "text": "from",
+      "start": 38.1,
+      "end": 38.42
+    },
+    {
+      "text": "suppliers",
+      "start": 38.46,
+      "end": 39.03
+    },
+    {
+      "text": "like",
+      "start": 39.07,
+      "end": 39.39
+    },
+    {
+      "text": "Panasonic",
+      "start": 39.43,
+      "end": 40
+    },
+    {
+      "text": "and",
+      "start": 40.04,
+      "end": 40.31
+    },
+    {
+      "text": "CATL.",
+      "start": 40.35,
+      "end": 40.67
+    },
+    {
+      "text": "BYD",
+      "start": 41.03,
+      "end": 41.3
+    },
+    {
+      "text": "makes",
+      "start": 41.34,
+      "end": 41.71
+    },
+    {
+      "text": "its",
+      "start": 41.75,
+      "end": 42.02
+    },
+    {
+      "text": "own",
+      "start": 42.06,
+      "end": 42.33
+    },
+    {
+      "text": "cells,",
+      "start": 42.37,
+      "end": 42.74
+    },
+    {
+      "text": "which",
+      "start": 42.94,
+      "end": 43.31
+    },
+    {
+      "text": "are",
+      "start": 43.35,
+      "end": 43.62
+    },
+    {
+      "text": "long,",
+      "start": 43.66,
+      "end": 43.98
+    },
+    {
+      "text": "flat",
+      "start": 44.18,
+      "end": 44.5
+    },
+    {
+      "text": "iron-phosphate",
+      "start": 44.54,
+      "end": 45.31
+    },
+    {
+      "text": "blades,",
+      "start": 45.35,
+      "end": 45.77
+    },
+    {
+      "text": "and",
+      "start": 45.97,
+      "end": 46.24
+    },
+    {
+      "text": "it",
+      "start": 46.28,
+      "end": 46.5
+    },
+    {
+      "text": "builds",
+      "start": 46.54,
+      "end": 46.96
+    },
+    {
+      "text": "the",
+      "start": 47,
+      "end": 47.27
+    },
+    {
+      "text": "pack",
+      "start": 47.31,
+      "end": 47.63
+    },
+    {
+      "text": "into",
+      "start": 47.67,
+      "end": 47.99
+    },
+    {
+      "text": "the",
+      "start": 48.03,
+      "end": 48.3
+    },
+    {
+      "text": "car's",
+      "start": 48.34,
+      "end": 48.66
+    },
+    {
+      "text": "floor.",
+      "start": 48.7,
+      "end": 49.07
+    },
+    {
+      "text": "A",
+      "start": 49.43,
+      "end": 49.6
+    },
+    {
+      "text": "different",
+      "start": 49.64,
+      "end": 50.21
+    },
+    {
+      "text": "teardown",
+      "start": 50.25,
+      "end": 50.77
+    },
+    {
+      "text": "found",
+      "start": 50.81,
+      "end": 51.18
+    },
+    {
+      "text": "BYD",
+      "start": 51.22,
+      "end": 51.49
+    },
+    {
+      "text": "makes",
+      "start": 51.53,
+      "end": 51.9
+    },
+    {
+      "text": "its",
+      "start": 51.94,
+      "end": 52.21
+    },
+    {
+      "text": "own",
+      "start": 52.25,
+      "end": 52.52
+    },
+    {
+      "text": "motors",
+      "start": 52.56,
+      "end": 52.98
+    },
+    {
+      "text": "and",
+      "start": 53.02,
+      "end": 53.29
+    },
+    {
+      "text": "the",
+      "start": 53.33,
+      "end": 53.6
+    },
+    {
+      "text": "electronics",
+      "start": 53.64,
+      "end": 54.31
+    },
+    {
+      "text": "that",
+      "start": 54.35,
+      "end": 54.67
+    },
+    {
+      "text": "run",
+      "start": 54.71,
+      "end": 54.98
+    },
+    {
+      "text": "them,",
+      "start": 55.02,
+      "end": 55.34
+    },
+    {
+      "text": "even",
+      "start": 55.54,
+      "end": 55.86
+    },
+    {
+      "text": "the",
+      "start": 55.9,
+      "end": 56.17
+    },
+    {
+      "text": "body",
+      "start": 56.21,
+      "end": 56.53
+    },
+    {
+      "text": "panels",
+      "start": 56.57,
+      "end": 56.99
+    },
+    {
+      "text": "and",
+      "start": 57.03,
+      "end": 57.3
+    },
+    {
+      "text": "lights.",
+      "start": 57.34,
+      "end": 57.76
+    },
+    {
+      "text": "But",
+      "start": 58.12,
+      "end": 58.39
+    },
+    {
+      "text": "that",
+      "start": 58.43,
+      "end": 58.75
+    },
+    {
+      "text": "first",
+      "start": 58.79,
+      "end": 59.16
+    },
+    {
+      "text": "teardown",
+      "start": 59.2,
+      "end": 59.72
+    },
+    {
+      "text": "found",
+      "start": 59.76,
+      "end": 60.13
+    },
+    {
+      "text": "the",
+      "start": 60.17,
+      "end": 60.44
+    },
+    {
+      "text": "BYD",
+      "start": 60.48,
+      "end": 60.75
+    },
+    {
+      "text": "costs",
+      "start": 60.79,
+      "end": 61.16
+    },
+    {
+      "text": "only",
+      "start": 61.2,
+      "end": 61.52
+    },
+    {
+      "text": "about",
+      "start": 61.56,
+      "end": 61.93
+    },
+    {
+      "text": "15",
+      "start": 61.97,
+      "end": 62.19
+    },
+    {
+      "text": "percent",
+      "start": 62.23,
+      "end": 62.7
+    },
+    {
+      "text": "less",
+      "start": 62.74,
+      "end": 63.06
+    },
+    {
+      "text": "to",
+      "start": 63.1,
+      "end": 63.32
+    },
+    {
+      "text": "build",
+      "start": 63.36,
+      "end": 63.73
+    },
+    {
+      "text": "than",
+      "start": 63.77,
+      "end": 64.09
+    },
+    {
+      "text": "a",
+      "start": 64.13,
+      "end": 64.3
+    },
+    {
+      "text": "Model",
+      "start": 64.34,
+      "end": 64.71
+    },
+    {
+      "text": "3",
+      "start": 64.75,
+      "end": 64.92
+    },
+    {
+      "text": "made",
+      "start": 64.96,
+      "end": 65.28
+    },
+    {
+      "text": "in",
+      "start": 65.32,
+      "end": 65.54
+    },
+    {
+      "text": "China.",
+      "start": 65.58,
+      "end": 65.95
+    },
+    {
+      "text": "Part",
+      "start": 66.31,
+      "end": 66.63
+    },
+    {
+      "text": "of",
+      "start": 66.67,
+      "end": 66.89
+    },
+    {
+      "text": "the",
+      "start": 66.93,
+      "end": 67.2
+    },
+    {
+      "text": "remaining",
+      "start": 67.24,
+      "end": 67.81
+    },
+    {
+      "text": "price",
+      "start": 67.85,
+      "end": 68.22
+    },
+    {
+      "text": "gap",
+      "start": 68.26,
+      "end": 68.53
+    },
+    {
+      "text": "comes",
+      "start": 68.57,
+      "end": 68.94
+    },
+    {
+      "text": "from",
+      "start": 68.98,
+      "end": 69.3
+    },
+    {
+      "text": "the",
+      "start": 69.34,
+      "end": 69.61
+    },
+    {
+      "text": "cheapest",
+      "start": 69.65,
+      "end": 70.17
+    },
+    {
+      "text": "trim's",
+      "start": 70.21,
+      "end": 70.58
+    },
+    {
+      "text": "shorter",
+      "start": 70.62,
+      "end": 71.09
+    },
+    {
+      "text": "range",
+      "start": 71.13,
+      "end": 71.5
+    },
+    {
+      "text": "and",
+      "start": 71.54,
+      "end": 71.81
+    },
+    {
+      "text": "China's",
+      "start": 71.85,
+      "end": 72.27
+    },
+    {
+      "text": "price",
+      "start": 72.31,
+      "end": 72.68
+    },
+    {
+      "text": "war.",
+      "start": 72.72,
+      "end": 72.99
+    },
+    {
+      "text": "You",
+      "start": 73.35,
+      "end": 73.62
+    },
+    {
+      "text": "can't",
+      "start": 73.66,
+      "end": 73.98
+    },
+    {
+      "text": "buy",
+      "start": 74.02,
+      "end": 74.29
+    },
+    {
+      "text": "one",
+      "start": 74.33,
+      "end": 74.6
+    },
+    {
+      "text": "in",
+      "start": 74.64,
+      "end": 74.86
+    },
+    {
+      "text": "the",
+      "start": 74.9,
+      "end": 75.17
+    },
+    {
+      "text": "US.",
+      "start": 75.21,
+      "end": 75.43
+    },
+    {
+      "text": "There's",
+      "start": 75.79,
+      "end": 76.21
+    },
+    {
+      "text": "a",
+      "start": 76.25,
+      "end": 76.42
+    },
+    {
+      "text": "100",
+      "start": 76.46,
+      "end": 76.73
+    },
+    {
+      "text": "percent",
+      "start": 76.77,
+      "end": 77.24
+    },
+    {
+      "text": "tariff,",
+      "start": 77.28,
+      "end": 77.7
+    },
+    {
+      "text": "and",
+      "start": 77.9,
+      "end": 78.17
+    },
+    {
+      "text": "a",
+      "start": 78.21,
+      "end": 78.38
+    },
+    {
+      "text": "ban",
+      "start": 78.42,
+      "end": 78.69
+    },
+    {
+      "text": "on",
+      "start": 78.73,
+      "end": 78.95
+    },
+    {
+      "text": "Chinese-linked",
+      "start": 78.99,
+      "end": 79.76
+    },
+    {
+      "text": "car",
+      "start": 79.8,
+      "end": 80.07
+    },
+    {
+      "text": "software",
+      "start": 80.11,
+      "end": 80.63
+    },
+    {
+      "text": "starts",
+      "start": 80.67,
+      "end": 81.09
+    },
+    {
+      "text": "with",
+      "start": 81.13,
+      "end": 81.45
+    },
+    {
+      "text": "2027",
+      "start": 81.49,
+      "end": 81.81
+    },
+    {
+      "text": "models.",
+      "start": 81.85,
+      "end": 82.27
+    }
+  ]
+}
