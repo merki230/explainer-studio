@@ -7,6 +7,7 @@ import {musicalAnchorOnScreen, type MusicalRoadSceneProps} from '../scenes/Music
 import {raceAnchorOnScreen, type RaceSliceSceneProps} from '../scenes/RaceSliceScene';
 import {chargeAnchorOnScreen, type ChargeSliceSceneProps} from '../scenes/ChargeSliceScene';
 import {teardownAnchorOnScreen, type TeardownSliceSceneProps} from '../scenes/TeardownSliceScene';
+import {reportAnchorOnScreen, type ReportSliceSceneProps} from '../scenes/ReportSliceScene';
 import {streetAnchorOnScreen, type StreetSliceSceneProps} from '../scenes/StreetSliceScene';
 import {towerAnchorOnScreen, type TowerSliceSceneProps} from '../scenes/TowerSliceScene';
 
@@ -25,6 +26,7 @@ export const ANCHOR_SCENES = [
   'drive-unit',
   'charge-slice',
   'teardown-slice',
+  'report-slice',
 ];
 
 /**
@@ -39,7 +41,8 @@ export const ANCHOR_SCENES = [
  * the car's roof), 'nose:*', 'tree:*', 'lane:*'. `drive-unit`: 'rotor', 'stage:1', 'stage:2', 'output', 'shift', 'hub',
  * 'patch', 'inverter'. `car-slice`: 'phone', 'cluster', 'head' (= 'youSpot'). `charge-slice`: 'top:top' | 'top:bottom'
  * (above a bay's roof), 'pack:*', 'port:*', 'cable:*', 'cabinet:*', 'lane:*', 'under:*', 'ghost', 'crate:*' (No. 011: the
- * standing supplier crate), 'blade:*' (the slid-out blade's tip). `teardown-slice`: 'pack', 'roof', 'grid', 'part:<id>'. Undefined elsewhere
+ * standing supplier crate), 'blade:*' (the slid-out blade's tip). `teardown-slice`: 'pack', 'roof', 'grid', 'part:<id>'. `report-slice`: 'module', 'phone', 'top', 'company', 'rack',
+ * 'printer', 'insurer', 'insurer:screen', 'tray', 'head'. Undefined elsewhere
  * or for an unknown name.
  */
 export const anchorOnScreen = (
@@ -66,5 +69,7 @@ export const anchorOnScreen = (
     return chargeAnchorOnScreen(scene.props as Partial<ChargeSliceSceneProps>, anchor, o);
   if (scene.name === 'teardown-slice')
     return teardownAnchorOnScreen(scene.props as Partial<TeardownSliceSceneProps>, anchor, o);
+  if (scene.name === 'report-slice')
+    return reportAnchorOnScreen(scene.props as Partial<ReportSliceSceneProps>, anchor, o);
   return undefined;
 };

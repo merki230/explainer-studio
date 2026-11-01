@@ -41,6 +41,8 @@ const SECTION_DEFAULT_LOCATION: Record<string, string> = {
   'city-slice': 'city',
   // No. 011: the teardown room; each dressing is its own location, so re-dressing slides (§ 3)
   'teardown-slice': 'teardown-sedan',
+  // No. 012: the data chain (the second car, the report company, the insurer on one sheet)
+  'report-slice': 'report-chain',
 };
 
 /** The transition into `cur` from `prev` (its `transition` prop, or the 'auto' rules). */

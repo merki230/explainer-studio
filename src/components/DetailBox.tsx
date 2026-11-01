@@ -17,6 +17,7 @@ import {carHeadBoxOnScreen, clusterOnScreen, type CarSliceSceneProps} from '../s
 import {anchorOnScreen} from './anchors';
 import {MOODS} from '../theme';
 import {StreetBox} from './streetBoxes';
+import {drawTripApp} from './tripAppKit';
 
 export type DetailBoxProps = {
   /** Whose phone it magnifies (the scene's `ui` script for them drives what it shows); for 'dashboard', the driver. Default 'you'. */
@@ -36,7 +37,8 @@ export type DetailBoxProps = {
     | 'laptop'
     | 'usage'
     | 'register'
-    | 'dispatch-map';
+    | 'dispatch-map'
+    | 'trip-app';
   /**
    * 'dispatch-map' (No. 009, any scene with anchors): a generic dispatcher's map, read like a screen. A rough
    * orange circle over the highway (approximate: soft rim, breathing ±4%) collapses over 0.6 s to an orange
@@ -47,6 +49,23 @@ export type DetailBoxProps = {
   collapsed?: boolean;
   /** 'dispatch-map': the pin's label (default 'MILE 137', 🎭). */
   pinLabel?: string;
+  /**
+   * 'trip-app' (No. 012, any scene with anchors; leader to `anchor`, default 'phone'): a generic driving-score app (Day
+   * UI, invented name and icon). Seconds after the box enters. The trip page: the grey route draws over `routeFor`
+   * (default 0.8 s) and each of `tripPins` lands (orange pin, ink label); `scoresAt` (default null: stays on the trip)
+   * the page slides to the scores, whose orange bars fill one after the other (`barsFor` each, default 0.5 s) to each
+   * row's value; `priceAt` (default null) a PRICE row comes in under them: an ink marker on an ink scale that follows
+   * `price` keys (−1 lower → 1 higher, eased; ↓ / ↑ in ink while it moves), no numbers. `appPulses`: one-shot swells of
+   * the pins (trip page) or the bars (scores page).
+   */
+  appName?: string;
+  tripPins?: {at: number; label: string; k: number}[];
+  routeFor?: number;
+  scoresAt?: number | null;
+  scores?: {label: string; value: number}[];
+  priceAt?: number | null;
+  price?: {at: number; value: number}[];
+  appPulses?: number[];
   /** 'usage' (street-slice): seconds after the box enters when the "Possible leak" banner gives way to the hourly page (default 1.2; 0 = the page at once). */
   pageAt?: number;
   /** 'usage': seconds after the box enters when the hourly bars start drawing (default `pageAt` + 0.3), and how long (default 1.2). */
@@ -130,7 +149,9 @@ const BORDER = 4;
 type SceneCtx = {props: Partial<SectionRoomSceneProps>; durationInFrames: number; offset: number; name?: string};
 
 export const DetailBox: React.FC<DetailBoxProps & {mood?: Mood; scene: SceneCtx}> = (p) =>
-  p.content === 'dispatch-map' ? (
+  p.content === 'trip-app' ? (
+    <TripBox {...p} />
+  ) : p.content === 'dispatch-map' ? (
     <DispatchBox {...p} />
   ) : p.content === 'laptop' || p.content === 'usage' || p.content === 'register' ? (
     <StreetBox {...p} content={p.content} scene={{...p.scene, props: p.scene.props as Record<string, unknown>}} />
@@ -662,6 +683,139 @@ const DispatchBox: React.FC<DetailBoxProps & {mood?: Mood; scene: SceneCtx}> = (
       : crosses
         ? `${sideX},${overY} ${target[0]},${overY} ${target[0]},${Math.max(overY, target[1] - 12)}`
         : `${lx},${by} ${lx},${target[1]} ${target[0] + (lx < target[0] ? -12 : 12)},${target[1]}`;
+  return (
+    <div style={{position: 'absolute', inset: 0, opacity: enter}}>
+      {leader && target ? (
+        <svg width={width} height={height} style={{position: 'absolute', inset: 0}}>
+          <polyline points={points} fill="none" stroke={ink} strokeWidth={2} strokeLinejoin="miter" />
+        </svg>
+      ) : null}
+      <Frame left={left} top={boxTop} w={outerW} h={outerH} ink={ink} paper={paper} rise={rise}>
+        <canvas ref={ref} width={innerW} height={innerH} style={{display: 'block', width: innerW, height: innerH}} />
+      </Frame>
+    </div>
+  );
+};
+
+/**
+ * The driving-score app box (No. 012, `content: 'trip-app'`, see the props): the app drawn by `drawTripApp`, read like a
+ * screen; the 2 px `ink` elbow leader goes to the phone that runs it (`anchor`, default 'phone': the cupholder phone in a
+ * `car-slice`). Sits on the side away from the anchor.
+ */
+const TripBox: React.FC<DetailBoxProps & {mood?: Mood; scene: SceneCtx}> = ({
+  size = 360,
+  side,
+  top,
+  left: leftAt,
+  leader = true,
+  anchor = 'phone',
+  appName = 'Tallo',
+  tripPins = [
+    {at: 0.3, label: 'HARD BRAKE', k: 0.3},
+    {at: 1.6, label: 'PHONE', k: 0.72},
+  ],
+  routeFor = 0.8,
+  scoresAt = null,
+  scores = [
+    {label: 'BRAKING', value: 0.7},
+    {label: 'PHONE USE', value: 0.45},
+  ],
+  barsFor = 0.5,
+  priceAt = null,
+  price,
+  appPulses = [],
+  mood = 'day',
+  scene,
+}) => {
+  const frame = useCurrentFrame();
+  const {fps, width, height} = useVideoConfig();
+  const ref = useRef<HTMLCanvasElement>(null);
+  const t = frame / fps;
+  const q3 = (v: number) => Math.round(v * 1000) / 1000;
+  const swellAt = (from: number) =>
+    1 + 0.35 * appPulses.reduce((m, a) => (a >= from && t >= a && t <= a + 0.5 ? Math.max(m, Math.sin((Math.PI * (t - a)) / 0.5)) : m), 0);
+  const page = scoresAt === null ? 0 : ease(t, scoresAt, scoresAt + 0.35);
+  const onScores = scoresAt !== null && t >= scoresAt;
+  const pins = tripPins.map((q) => ({
+    label: q.label,
+    k: q.k,
+    land: q3(ease(t, q.at, q.at + 0.3)),
+    swell: q3((onScores ? 1 : swellAt(q.at + 0.3)) * (1 + 0.25 * Math.max(0, Math.sin(Math.PI * Math.min(1, Math.max(0, (t - q.at - 0.3) / 0.25)))))),
+  }));
+  const bars0 = (scoresAt ?? 0) + 0.3;
+  const rows = scores.map((r, i) => ({
+    label: r.label,
+    value: r.value,
+    fill: q3(scoresAt === null ? 0 : ease(t, bars0 + i * barsFor, bars0 + (i + 1) * barsFor)),
+    swell: q3(onScores ? swellAt(bars0) : 1),
+  }));
+  const priceIn = priceAt === null ? 0 : ease(t, priceAt, priceAt + 0.35);
+  const keys = [...(price ?? [])].sort((a, b) => a.at - b.at);
+  // the marker eases to each key's value over 0.9 s from wherever it was (before the first key: the middle)
+  const markerAt = (x: number) => {
+    let v = 0;
+    for (const k of keys) {
+      if (x < k.at) break;
+      v = v + (k.value - v) * ease(x, k.at, k.at + 0.9);
+    }
+    return v;
+  };
+  const marker = markerAt(t);
+  // the arrow shows the way the last move went, and fades 1.0 → 1.6 s after it began
+  let arrow = 0;
+  let arrowK = 0;
+  const last = [...keys].reverse().find((k) => t >= k.at);
+  if (last) {
+    const d = last.value - markerAt(last.at);
+    if (Math.abs(d) > 0.05) {
+      arrow = Math.sign(d);
+      arrowK = 1 - ease(t, last.at + 1.0, last.at + 1.6);
+    }
+  }
+  const innerW = size;
+  const innerH = Math.round(size * 1.24);
+  const state = {
+    appName,
+    route: q3(ease(t, 0, routeFor)),
+    pins,
+    page: q3(page),
+    scores: rows,
+    price: q3(priceIn),
+    marker: q3(marker),
+    arrow,
+    arrowK: q3(arrowK),
+  };
+  const key = JSON.stringify(state) + innerW;
+  useLayoutEffect(() => {
+    const handle = delayRender('Drawing the trip app');
+    fontsReady().then(() => {
+      const cx = ref.current?.getContext('2d');
+      if (cx) drawTripApp(cx, innerW, innerH, state);
+      continueRender(handle);
+    });
+    // `key` captures everything the drawing depends on
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
+  const target = anchorOnScreen({...scene, props: scene.props as Record<string, unknown>}, anchor, frame, fps);
+  const {ink, paper} = overlayInk(mood);
+  const outerW = innerW + 2 * BORDER;
+  const outerH = innerH + 2 * BORDER;
+  const onLeft = (side ?? (target && target[0] > width / 2 ? 'left' : 'right')) === 'left';
+  const left = leftAt ?? (onLeft ? LEFT : RIGHT - outerW);
+  const boxTop = top ?? Math.max(328, Math.min(1248 - outerH, (target ? target[1] : height / 2) - 70 - outerH));
+  const enter = ease(frame, 0, DETAIL_FADE);
+  const rise = interpolate(enter, [0, 1], [8, 0]);
+  const by = boxTop + outerH;
+  const lx = onLeft ? left + outerW - 28 : left + 28;
+  const under = target ? target[0] >= left + 12 && target[0] <= left + outerW - 12 : false;
+  const points = !target
+    ? ''
+    : under
+      ? `${target[0]},${by} ${target[0]},${Math.max(by, target[1] - 12)}`
+      : target[1] >= by
+        ? `${lx},${by} ${lx},${target[1]} ${target[0] + (lx < target[0] ? -12 : 12)},${target[1]}`
+        : // the phone beside the box (not below it): out of the box's side at the phone's height
+          `${onLeft ? left + outerW : left},${Math.max(boxTop + 24, target[1])} ${target[0] + (onLeft ? -12 : 12)},${Math.max(boxTop + 24, target[1])}`;
   return (
     <div style={{position: 'absolute', inset: 0, opacity: enter}}>
       {leader && target ? (

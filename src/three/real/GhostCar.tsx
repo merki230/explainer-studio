@@ -122,3 +122,95 @@ export const ghostRoof = (shape: ShellProfile = 'sedan', z = 0): V3 => {
   const r = carSilhouette(shape).roof;
   return [r[0], r[1], z];
 };
+
+/** Dashes along a 3D polyline up to `upTo` of its length: flat ribbons `w` wide, turned square to `view`. */
+const dashes3 = (pts: V3[], upTo: number, dash: number, gap: number, w: number, view: THREE.Vector3, out: {pos: number[]; idx: number[]}) => {
+  const seg: number[] = [0];
+  for (let i = 1; i < pts.length; i++) seg.push(seg[i - 1] + new THREE.Vector3(...pts[i]).distanceTo(new THREE.Vector3(...pts[i - 1])));
+  const total = seg[seg.length - 1];
+  const end = total * Math.max(0, Math.min(1, upTo));
+  const at = (s: number) => {
+    let i = 1;
+    while (i < seg.length - 1 && seg[i] < s) i++;
+    const k = (s - seg[i - 1]) / Math.max(1e-9, seg[i] - seg[i - 1]);
+    const a = new THREE.Vector3(...pts[i - 1]);
+    const b = new THREE.Vector3(...pts[i]);
+    return {p: a.clone().lerp(b, k), t: b.clone().sub(a).normalize()};
+  };
+  for (let s0 = 0; s0 < end; s0 += dash + gap) {
+    const s1 = Math.min(end, s0 + dash);
+    const n = Math.max(1, Math.ceil((s1 - s0) / 0.03));
+    const base = out.pos.length / 3;
+    for (let k = 0; k <= n; k++) {
+      const {p, t} = at(s0 + ((s1 - s0) * k) / n);
+      const side = new THREE.Vector3().crossVectors(t, view).normalize().multiplyScalar(w / 2);
+      out.pos.push(p.x + side.x, p.y + side.y, p.z + side.z, p.x - side.x, p.y - side.y, p.z - side.z);
+      if (k > 0) {
+        const a = base + (k - 1) * 2;
+        out.idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2);
+      }
+    }
+  }
+};
+
+export type GhostLinesProps = {
+  mood?: Mood;
+  /** The outline: 3D polylines in the parent's frame (close a loop by repeating its first point). */
+  lines: V3[][];
+  /** How much of every line is drawn, 0 → 1 (each from its first point, together). */
+  draw: number;
+  /** 0 → 1: its strength (fade out). Default 1. */
+  opacity?: number;
+  /** The line's width (m); keep it ≈ 3 px on screen. Default 0.01. */
+  width?: number;
+  /** Dash and gap lengths (m); 16 and 10 px on screen. Default 0.05 and 0.03. */
+  dash?: [number, number];
+  /** The direction toward the camera in the parent's frame (the ribbons face it). Default `SECTION_ANGLE`-like. */
+  view?: V3;
+  /** Draw over whatever stands in front (default false: depth-tested like the set). */
+  onTop?: boolean;
+};
+
+/**
+ * No. 012 (R6): the § 3 ghost outline for any small object that isn't there (a plug-in box under the dash), drawn
+ * from 3D polylines: dashed ink ribbons square to the camera, no fill, no hatch, never orange; `CHARGE.ghost` in
+ * Day, `section.cut` at Night. Same draw-on / fade grammar as `GhostCar`.
+ */
+export const GhostLines: React.FC<GhostLinesProps> = ({
+  mood = 'day',
+  lines,
+  draw,
+  opacity = 1,
+  width = 0.01,
+  dash = [0.05, 0.03],
+  view = [0.44, 0.27, 0.85],
+  onTop = false,
+}) => {
+  const dq = Math.round(Math.max(0, Math.min(1, draw)) * 60) / 60;
+  const dk = [Math.round(dash[0] * 2000) / 2000, Math.round(dash[1] * 2000) / 2000];
+  const wq = Math.round(width * 4000) / 4000;
+  const key = JSON.stringify(lines) + view.join(',');
+  const geo = useMemo(() => {
+    const out = {pos: [] as number[], idx: [] as number[]};
+    const v = new THREE.Vector3(...view).normalize();
+    for (const l of lines) dashes3(l, dq, dk[0], dk[1], wq, v, out);
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(out.pos, 3));
+    g.setIndex(out.idx);
+    return g;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key, dq, wq, dk[0], dk[1]]);
+  useEffect(() => () => geo.dispose(), [geo]);
+  const ink = mood === 'night' ? section.cut : CHARGE.ghost;
+  const mat = useMemo(
+    () =>
+      new THREE.MeshBasicMaterial({color: raw(ink), transparent: true, side: THREE.DoubleSide, depthWrite: false, depthTest: !onTop}),
+    [ink, onTop],
+  );
+  useEffect(() => () => mat.dispose(), [mat]);
+  mat.color.copy(raw(ink)).multiplyScalar(1 / MOODS[mood].exposure);
+  const o = Math.max(0, Math.min(1, opacity));
+  mat.opacity = o;
+  if (o < 0.01 || dq <= 0) return null;
+  return <mesh geometry={geo} material={mat} renderOrder={onTop ? 12 : 7} />;
+};

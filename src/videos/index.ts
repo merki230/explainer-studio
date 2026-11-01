@@ -31,6 +31,8 @@ import {spec as evCharging} from './ev-charging/spec';
 import evChargingTranscript from './ev-charging/transcript.json';
 import {spec as bydPrice} from './byd-price/spec';
 import bydPriceTranscript from './byd-price/transcript.json';
+import {spec as insuranceApp} from './insurance-app/spec';
+import insuranceAppTranscript from './insurance-app/transcript.json';
 // </imports>
 
 export type VideoEntry = {spec: VideoSpec; transcript: Transcript};
@@ -56,5 +58,6 @@ export const VIDEOS: Record<string, VideoEntry> = {
   'mile-markers': {spec: mileMarkers, transcript: mileMarkersTranscript as Transcript},
   'ev-charging': {spec: evCharging, transcript: evChargingTranscript as Transcript},
   'byd-price': {spec: bydPrice, transcript: bydPriceTranscript as Transcript},
+  'insurance-app': {spec: insuranceApp, transcript: insuranceAppTranscript as Transcript},
   // </entries>
 };

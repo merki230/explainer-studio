@@ -33,6 +33,7 @@ import {driveUnitCameraEnd, driveUnitCameraStart} from './scenes/DriveUnitScene'
 import {raceCameraEnd, raceCameraStart, raceCarry} from './scenes/RaceSliceScene';
 import {chargeCameraEnd, chargeCameraStart} from './scenes/ChargeSliceScene';
 import {teardownCameraEnd, teardownCameraStart} from './scenes/TeardownSliceScene';
+import {reportCameraEnd, reportCameraStart, reportCarry} from './scenes/ReportSliceScene';
 import type {Framing} from './three/section/SectionCamera';
 
 type CameraFn = (p: Record<string, unknown>, durationInFrames: number, fps: number) => Framing;
@@ -52,6 +53,7 @@ const CAMERAS: Record<string, {start: CameraFn; end: CameraFn}> = {
   'race-slice': {start: raceCameraStart as CameraFn, end: raceCameraEnd as CameraFn},
   'charge-slice': {start: chargeCameraStart as CameraFn, end: chargeCameraEnd as CameraFn},
   'teardown-slice': {start: teardownCameraStart as CameraFn, end: teardownCameraEnd as CameraFn},
+  'report-slice': {start: reportCameraStart as CameraFn, end: reportCameraEnd as CameraFn},
 };
 import {transitionInto, type Transition} from './scenes/transitions';
 import {clickOffFrame, type ClickOff} from './scenes/clickOff';
@@ -409,6 +411,8 @@ const ExplainerBody: React.FC<{
         if (s.scene === 'car-slice') Object.assign(own, carCarry({...props[i - 1], startFrame: prev.startFrame}, prev.endFrame - prev.startFrame, FPS));
         // race-slice: each car's place on the strip, its wheels' turn, the V8's crank and the race clock
         if (s.scene === 'race-slice') Object.assign(own, raceCarry({...props[i - 1], startFrame: prev.startFrame}, prev.endFrame - prev.startFrame, FPS));
+        // report-slice: the second car's wheel turn (the road runs on)
+        if (s.scene === 'report-slice') Object.assign(own, reportCarry({...props[i - 1], startFrame: prev.startFrame}, prev.endFrame - prev.startFrame, FPS));
         // 'auto' turns a continue into a glide when this scene's framing is too far from where the
         // last one ended to continue smoothly (a preset with the same look-at keeps pushing instead)
         const start = cam.start(own, s.endFrame - s.startFrame, FPS);

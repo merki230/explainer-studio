@@ -18,7 +18,7 @@ import {CutOutline, cutMaterial, INK} from './cutLook';
  *  - A corner: a white stop line across the lane (12 in) and, just past it on the far sidewalk, a
  *    post-mounted US signal (black housing and backplate, three 12 in lenses under cap visors, facing
  *    the oncoming traffic). The lit lens is flat emissive (`section.signalRed` / `signalGreen`), never
- *    bloomed; the yellow is never lit here.
+ *    bloomed; the yellow (No. 012) lights in `section.warning`, flat too.
  *  - Signs: `RoadSign`s on the far sidewalk, facing the traffic.
  */
 
@@ -43,8 +43,8 @@ export type CityCorner = {
   x: number;
   /** Draw the stop line (default true). */
   line?: boolean;
-  /** The signal's lit lens: 'red', 'green' or 'off'; null for no signal at this corner. */
-  signal?: 'red' | 'green' | 'off' | null;
+  /** The signal's lit lens: 'red', 'yellow' (No. 012), 'green' or 'off'; null for no signal at this corner. */
+  signal?: 'red' | 'yellow' | 'green' | 'off' | null;
   /** How far past the stop line the signal's post stands (m, default `CITY_ROAD.postPast`). */
   post?: number;
 };
@@ -145,7 +145,7 @@ const ClipToBlock: React.FC<{planes: THREE.Plane[]; children: React.ReactNode}> 
 };
 
 /** A post-mounted US traffic signal (its foot at the origin, facing +x). */
-const PostSignal: React.FC<{state: 'red' | 'green' | 'off'; mood: Mood; mats: Record<string, THREE.Material>}> = ({
+const PostSignal: React.FC<{state: 'red' | 'yellow' | 'green' | 'off'; mood: Mood; mats: Record<string, THREE.Material>}> = ({
   state,
   mood,
   mats,
@@ -157,7 +157,8 @@ const PostSignal: React.FC<{state: 'red' | 'green' | 'off'; mood: Mood; mats: Re
           new THREE.MeshStandardMaterial({
             color: raw(c === 'red' ? CITY.lensRed : c === 'yellow' ? CITY.lensYellow : CITY.lensGreen),
             roughness: 0.25,
-            emissive: raw(c === 'red' ? section.signalRed : c === 'green' ? section.signalGreen : CITY.lensYellow),
+            // the yellow, when lit (No. 012), is the theme's one yellow (`warning`, theme `section` note), flat
+            emissive: raw(c === 'red' ? section.signalRed : c === 'green' ? section.signalGreen : section.warning),
             emissiveIntensity: 0,
           }),
       ),
@@ -165,7 +166,7 @@ const PostSignal: React.FC<{state: 'red' | 'green' | 'off'; mood: Mood; mats: Re
   );
   const e = MOODS[mood].exposure;
   lens[0].emissiveIntensity = state === 'red' ? 1.1 / e : 0;
-  lens[1].emissiveIntensity = 0;
+  lens[1].emissiveIntensity = state === 'yellow' ? 1.1 / e : 0;
   lens[2].emissiveIntensity = state === 'green' ? 1.1 / e : 0;
   const L = 0.305; // a 12 in lens
   const headH = 1.05;

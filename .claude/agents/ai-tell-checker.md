@@ -48,6 +48,9 @@ Check every sentence against each family. A sentence can hit several.
   idioms ("chalk it up", "gonna", "kinda", "gotta"), and no written-only words either. Never change a
   fact-checked hedge.
 
+- **House endings are not tells (owner, 2026-10-30).** The channel ends on a turn back to the viewer: a
+  "Next time you…" line that adds one last fact, or a direct question to the viewer. Don't flag that shape.
+  Do flag an ending that only restates the hook as a moral or gives advice with no new fact.
 - **Template hooks and openers (owner, 2026-10-23):** formulas that sound like a thousand AI videos even when
   every word is fine: "Do/Push/Try X, and you're (only) Y", "Here's why…", "Here's the thing", "You won't
   believe…", "This is why…", "Ever wondered…", "What if I told you…", "Say/Picture/Imagine/Take…". Flag them

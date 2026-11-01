@@ -94,6 +94,8 @@ export type PushArrowProps = {
   glow?: number;
   /** Draw the node dot at the tail (default true). */
   node?: boolean;
+  /** Draw over the set (no depth test, late render order): an arrow lying across a cabin (No. 012's feel arrow). Default false. */
+  onTop?: boolean;
 };
 
 /** The push at a contact patch (see the file comment). */
@@ -106,8 +108,13 @@ export const PushArrow: React.FC<PushArrowProps> = ({
   brighten = 0,
   glow = 1,
   node = true,
+  onTop = false,
 }) => {
   const mats = useOrangeMats();
+  mats.core.depthTest = !onTop;
+  mats.halo.depthTest = !onTop;
+  mats.node.depthTest = !onTop;
+  const ro = onTop ? 20 : 0;
   const geo = useMemo(
     () => ({
       shaft: new THREE.CylinderGeometry(1, 1, 1, 16).rotateZ(-Math.PI / 2).translate(0.5, 0, 0),
@@ -137,31 +144,31 @@ export const PushArrow: React.FC<PushArrowProps> = ({
   return (
     <group position={position} quaternion={q} visible={show}>
       {node ? (
-        <mesh geometry={geo.dot} material={mats.node} scale={radius * NODE_K * (1 + 0.2 * b)} userData={{glow: true}} />
+        <mesh geometry={geo.dot} material={mats.node} scale={radius * NODE_K * (1 + 0.2 * b)} userData={{glow: true}} renderOrder={onTop ? ro + 2 : 0} />
       ) : null}
       {L > 0.002 ? (
         <>
           {shaftL > 0.001 ? (
             <>
-              <mesh geometry={geo.shaft} material={mats.core} scale={[shaftL, r, r]} userData={{glow: true}} renderOrder={2} />
+              <mesh geometry={geo.shaft} material={mats.core} scale={[shaftL, r, r]} userData={{glow: true}} renderOrder={ro + 2} />
               <mesh
                 geometry={geo.shaft}
                 material={mats.halo}
                 scale={[shaftL, r * hs, r * hs]}
                 userData={{glow: true}}
-                renderOrder={3}
+                renderOrder={ro + 3}
               />
             </>
           ) : null}
           <group position={[L - headL, 0, 0]}>
-            <mesh geometry={geo.head} material={mats.core} scale={[headL, headW, r * 1.6]} userData={{glow: true}} renderOrder={2} />
+            <mesh geometry={geo.head} material={mats.core} scale={[headL, headW, r * 1.6]} userData={{glow: true}} renderOrder={ro + 2} />
             <mesh
               geometry={geo.head}
               material={mats.halo}
               position={[-r * (hs - 1) * 0.6, 0, 0]}
               scale={[headL + r * (hs - 1) * 1.6, headW + r * (hs - 1), r * hs]}
               userData={{glow: true}}
-              renderOrder={3}
+              renderOrder={ro + 3}
             />
           </group>
         </>

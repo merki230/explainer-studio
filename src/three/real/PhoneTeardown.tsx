@@ -140,9 +140,24 @@ const Flex: React.FC<{
   );
 };
 
+/**
+ * No. 012 (R1): the motion sensor (an accelerometer package, 🎭 drawn ≈ 3.5× its real 3 × 3 mm so its insides read),
+ * on the board where the left RF shield sits (that shield is left out). Phone units; `MOTION_CHIP` is its lid's centre.
+ */
+const MOTION = {c: [-0.235, 0.335] as [number, number], s: 0.3, h: 0.022};
+export const MOTION_CHIP: V3 = [MOTION.c[0], MOTION.c[1], BOARD_TOP + MOTION.h];
+/** How far the proof mass swings at `swing` ±1 (phone units, 🎭). */
+const MASS_SWING = 0.045;
+
 export type PhoneTeardownProps = {
   /** The wake-word chip lit, 0–1 (the mood's screen-light colour, never orange). */
   chipLit?: number;
+  /**
+   * No. 012: the motion sensor in place of the left shield (see `MOTION`). `lid` 0 (shut, its invented legend up) → 1
+   * (hinged open on its top edge, the die inside: a frame, a proof mass with comb fingers on four zigzag springs);
+   * `swing` −1 → 1 moves the mass along the phone's width (+x). Neutral metals, never orange. Default none (the shield).
+   */
+  motion?: {lid: number; swing: number};
 };
 
 /**
@@ -153,7 +168,7 @@ export type PhoneTeardownProps = {
  * modules, black flex ribbons, the speaker and haptic engine. Contact shadows are baked into the
  * board and floor textures. Mount inside a `RealPhone` (its local units).
  */
-export const PhoneTeardown: React.FC<PhoneTeardownProps> = ({chipLit = 0}) => {
+export const PhoneTeardown: React.FC<PhoneTeardownProps> = ({chipLit = 0, motion}) => {
   const ready = useFontsLoaded();
   const env = useStudioEnv();
   const envScale = useEnvStrength();
@@ -232,6 +247,10 @@ export const PhoneTeardown: React.FC<PhoneTeardownProps> = ({chipLit = 0}) => {
     for (const c of CHIPS) {
       mats.chipTop.set(c.key, new THREE.MeshStandardMaterial({map: chipTexture(c.legend, c.key), roughness: 0.5}));
     }
+    mats.chipTop.set(
+      'motion',
+      new THREE.MeshStandardMaterial({map: chipTexture(['MX-6A', '3-AXIS', '2640 Q'], 'motion'), roughness: 0.5}),
+    );
     mats.glow.map = glowTexture();
     mats.glow.needsUpdate = true;
   }
@@ -352,22 +371,27 @@ export const PhoneTeardown: React.FC<PhoneTeardownProps> = ({chipLit = 0}) => {
           <planeGeometry args={[0.26, 0.26]} />
         </mesh>
       </group>
-      {SHIELDS.map((s, i) => (
-        <group key={i} position={[s.c[0], s.c[1], bz]}>
-          <mesh
-            geometry={roundedSlab(s.s[0], s.s[1], s.h, 0.012, 0.003)}
-            material={mats.shield}
-            castShadow
-            receiveShadow
-          />
-          <mesh
-            geometry={roundedPlane(s.s[0] - 0.008, s.s[1] - 0.008, 0.008)}
-            material={mats.shieldTop}
-            position={[0, 0, s.h + 0.0003]}
-            receiveShadow
-          />
-        </group>
-      ))}
+      {motion ? (
+        <MotionSensor lid={motion.lid} swing={motion.swing} z={bz} top={mats.chipTop.get('motion')} body={mats.chip} />
+      ) : null}
+      {SHIELDS.map((s, i) =>
+        motion && i === 0 ? null : (
+          <group key={i} position={[s.c[0], s.c[1], bz]}>
+            <mesh
+              geometry={roundedSlab(s.s[0], s.s[1], s.h, 0.012, 0.003)}
+              material={mats.shield}
+              castShadow
+              receiveShadow
+            />
+            <mesh
+              geometry={roundedPlane(s.s[0] - 0.008, s.s[1] - 0.008, 0.008)}
+              material={mats.shieldTop}
+              position={[0, 0, s.h + 0.0003]}
+              receiveShadow
+            />
+          </group>
+        ),
+      )}
       {CONNECTORS.map((c, i) => (
         <mesh key={i} position={[c.c[0], c.c[1], bz + 0.004]} material={mats.conn} castShadow>
           <boxGeometry args={[c.s[0], c.s[1], 0.008]} />
@@ -460,6 +484,186 @@ export const PhoneTeardown: React.FC<PhoneTeardownProps> = ({chipLit = 0}) => {
       </group>
       <Screw p={[-0.39, -0.85, FLOOR + 0.04]} mat={mats.screw} slot={mats.slot} />
       <Screw p={[0.395, -0.86, FLOOR + 0.004]} mat={mats.screw} slot={mats.slot} />
+    </group>
+  );
+};
+
+/** A zigzag spring in the die's plane from `a` to `b` (x, y), `n` turns, `amp` wide, as flat bars. */
+const Zigzag: React.FC<{
+  a: [number, number];
+  b: [number, number];
+  n: number;
+  amp: number;
+  w: number;
+  z: number;
+  mat: THREE.Material;
+}> = ({a, b, n, amp, w, z, mat}) => {
+  const dx = b[0] - a[0];
+  const dy = b[1] - a[1];
+  const len = Math.hypot(dx, dy) || 1e-6;
+  const [tx, ty] = [dx / len, dy / len];
+  const pts: [number, number][] = [a];
+  for (let i = 1; i < 2 * n; i++) {
+    const k = i / (2 * n);
+    const s = i % 2 ? 1 : -1;
+    pts.push([a[0] + dx * k - ty * amp * s, a[1] + dy * k + tx * amp * s]);
+  }
+  pts.push(b);
+  return (
+    <>
+      {pts.slice(1).map((p, i) => {
+        const q = pts[i];
+        const l = Math.hypot(p[0] - q[0], p[1] - q[1]);
+        return (
+          <mesh
+            key={i}
+            position={[(p[0] + q[0]) / 2, (p[1] + q[1]) / 2, z]}
+            rotation={[0, 0, Math.atan2(p[1] - q[1], p[0] - q[0])]}
+            material={mat}
+          >
+            <boxGeometry args={[l + w * 0.6, w, w * 0.8]} />
+          </mesh>
+        );
+      })}
+    </>
+  );
+};
+
+/**
+ * No. 012: the motion sensor opened in place (see `PhoneTeardownProps.motion`): a dark package whose lid (the legend)
+ * hinges up on its top edge, showing a cavity with the silicon die: a fixed frame with comb teeth, a proof mass with its
+ * own teeth between them, held by four zigzag springs from anchors at its corners. The mass slides with `swing`.
+ */
+const MotionSensor: React.FC<{lid: number; swing: number; z: number; top?: THREE.Material; body: THREE.Material}> = ({
+  lid,
+  swing,
+  z,
+  top,
+  body,
+}) => {
+  const mats = useMemo(() => {
+    const std = (c: string, roughness: number, metalness = 0) =>
+      new THREE.MeshStandardMaterial({color: raw(c), roughness, metalness});
+    return {
+      cavity: std(REAL.tab, 0.8),
+      die: std(REAL.midframe, 0.35, 0.5),
+      mass: std(REAL.shield, 0.3, 0.7),
+      spring: std(REAL.screw, 0.3, 0.8),
+      anchor: std(REAL.chipInk, 0.5, 0.3),
+      lid: new THREE.MeshStandardMaterial({color: raw(REAL.chip), roughness: 0.45, transparent: true}),
+      lidTop: new THREE.MeshStandardMaterial({roughness: 0.5, transparent: true}),
+    };
+  }, []);
+  if (top instanceof THREE.MeshStandardMaterial && mats.lidTop.map !== top.map) {
+    mats.lidTop.map = top.map;
+    mats.lidTop.needsUpdate = true;
+  }
+  mats.lid.opacity = 1 - Math.max(0, Math.min(1, lid));
+  mats.lidTop.opacity = mats.lid.opacity;
+  const S = MOTION.s;
+  const H = MOTION.h;
+  const open = Math.max(0, Math.min(1, lid));
+  const sw = Math.max(-1.5, Math.min(1.5, swing)) * MASS_SWING;
+  // the die inside the package's walls
+  const inner = S * 0.84;
+  // the walls' thickness and their centres' offset
+  const wt = (S - inner) / 2;
+  const wc = inner / 2 + wt / 2;
+  const dz = z + H * 0.35;
+  const m = {w: inner * 0.46, h: inner * 0.5};
+  const teeth = 5;
+  return (
+    <group position={[MOTION.c[0], MOTION.c[1], 0]}>
+      {/* the package: four walls round the cavity */}
+      {(
+        [
+          [0, wc, S, wt],
+          [0, -wc, S, wt],
+          [wc, 0, wt, inner],
+          [-wc, 0, wt, inner],
+        ] as [number, number, number, number][]
+      ).map(([x, y, w, h], i) => (
+        <mesh key={i} position={[x, y, z + H / 2]} material={body} castShadow receiveShadow>
+          <boxGeometry args={[w, h, H]} />
+        </mesh>
+      ))}
+      <mesh position={[0, 0, z + 0.002]} material={mats.cavity} receiveShadow>
+        <boxGeometry args={[inner, inner, 0.004]} />
+      </mesh>
+      {/* the die: the fixed frame's two comb rails (left and right) and the four spring anchors */}
+      {[-1, 1].map((sx) => (
+        <group key={sx}>
+          <mesh position={[sx * inner * 0.42, 0, dz]} material={mats.die} receiveShadow>
+            <boxGeometry args={[inner * 0.08, inner * 0.8, 0.006]} />
+          </mesh>
+          {[...Array(teeth).keys()].map((i) => (
+            <mesh
+              key={i}
+              position={[
+                sx * (inner * 0.42 - inner * 0.07),
+                -m.h * 0.4 + (i * m.h * 0.8) / (teeth - 1) + m.h * 0.05,
+                dz,
+              ]}
+              material={mats.die}
+            >
+              <boxGeometry args={[inner * 0.1, inner * 0.022, 0.005]} />
+            </mesh>
+          ))}
+        </group>
+      ))}
+      {[-1, 1].flatMap((sx) =>
+        [-1, 1].map((sy) => (
+          <mesh key={`${sx}${sy}`} position={[sx * m.w * 0.45, sy * inner * 0.4, dz]} material={mats.anchor}>
+            <boxGeometry args={[inner * 0.07, inner * 0.07, 0.007]} />
+          </mesh>
+        )),
+      )}
+      {/* the proof mass and its teeth, sliding with the swing; the springs stretch from the anchors to its corners */}
+      <group position={[sw, 0, 0]}>
+        <mesh position={[0, 0, dz + 0.002]} material={mats.mass} castShadow receiveShadow>
+          <boxGeometry args={[m.w, m.h, 0.008]} />
+        </mesh>
+        {[-1, 1].flatMap((sx) =>
+          [...Array(teeth).keys()].map((i) => (
+            <mesh
+              key={`${sx}${i}`}
+              position={[
+                sx * (m.w / 2 + inner * 0.05),
+                -m.h * 0.4 + (i * m.h * 0.8) / (teeth - 1) - m.h * 0.05,
+                dz + 0.002,
+              ]}
+              material={mats.mass}
+            >
+              <boxGeometry args={[inner * 0.1, inner * 0.022, 0.006]} />
+            </mesh>
+          )),
+        )}
+      </group>
+      {[-1, 1].flatMap((sx) =>
+        [-1, 1].map((sy) => (
+          <Zigzag
+            key={`${sx}${sy}`}
+            a={[sx * m.w * 0.45, sy * inner * 0.4]}
+            b={[sw + sx * m.w * 0.3, sy * m.h * 0.5]}
+            n={3}
+            amp={inner * 0.05}
+            w={inner * 0.022}
+            z={dz + 0.002}
+            mat={mats.spring}
+          />
+        )),
+      )}
+      {/* the lid: it lifts toward the viewer and fades (seen edge-on, a hinged lid read as a stray line) */}
+      <group position={[0, 0, z + H + open * 0.16]} visible={open < 0.99}>
+        <mesh position={[0, 0, 0.002]} material={mats.lid} castShadow={open < 0.05} receiveShadow>
+          <boxGeometry args={[S, S, 0.004]} />
+        </mesh>
+        {top ? (
+          <mesh position={[0, 0, 0.0042]} material={mats.lidTop}>
+            <planeGeometry args={[S * 0.98, S * 0.98]} />
+          </mesh>
+        ) : null}
+      </group>
     </group>
   );
 };

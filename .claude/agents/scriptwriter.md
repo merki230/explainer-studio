@@ -39,6 +39,10 @@ The script is plain text: no stage directions, no markdown.
 - **Every line picks up the one before it.** A line that only states a fact next to the last fact is a
   jump. Give it a handle from the previous line ("Of those parts…", "Even so…", "Another part…") or move
   it. A change of place (China to the US) needs a bridge line, not a cut.
+- **Never leave the story to quote a source** (owner, 2026-10-29, No. 012). Fact-checker hedges and
+  attributions go inside the story sentence or in a trailing clause ("…a normal stop like yours can count,
+  Consumer Reports said"), never as a standalone line that drops the viewer's moment. When applying a
+  fact-check fix, re-read the lines around it: a correct fix that breaks the thread is not done.
 - **Name a study once, plainly.** "Analysts who took one apart" or "engineers", then "the analysts" and
   "the engineers". Never "the teardown / a different teardown / that first teardown": the viewer is not
   keeping books. When two cars or two studies exist, give each a plain handle the listener can hold ("the

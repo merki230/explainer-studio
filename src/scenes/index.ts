@@ -17,6 +17,7 @@ import {DriveUnitScene} from './DriveUnitScene';
 import {RaceSliceScene} from './RaceSliceScene';
 import {ChargeSliceScene} from './ChargeSliceScene';
 import {TeardownSliceScene} from './TeardownSliceScene';
+import {ReportSliceScene} from './ReportSliceScene';
 
 /**
  * Scene registry. To add a scene: write a component that takes
@@ -42,6 +43,7 @@ export const SCENES: Record<string, React.FC<any>> = {
   'race-slice': RaceSliceScene,
   'charge-slice': ChargeSliceScene,
   'teardown-slice': TeardownSliceScene,
+  'report-slice': ReportSliceScene,
 };
 
 export type SceneName =
@@ -62,4 +64,5 @@ export type SceneName =
   | 'drive-unit'
   | 'race-slice'
   | 'charge-slice'
-  | 'teardown-slice';
+  | 'teardown-slice'
+  | 'report-slice';

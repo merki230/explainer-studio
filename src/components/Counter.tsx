@@ -34,6 +34,12 @@ export type CounterProps = {
   /** Where the sub-line sits: 'below' (default, like the title block's line 2) or 'above' (reads first: "UP TO ABOUT / 10 years"). */
   subPlace?: 'above' | 'below';
   /**
+   * No. 012: a second Mono sub-line, same style, on the other side of the number from `sub` (`sub2Place`, default the
+   * side `sub` isn't on), e.g. "MANY PROGRAMS" above "6–8 MPH" / "LOST IN ONE SECOND". Single counters only (not `rows`).
+   */
+  sub2?: string;
+  sub2Place?: 'above' | 'below';
+  /**
    * A range (No. 006): the upper end, shown after the counted number with an en dash and one unit
    * ("64–95 %"). The first number counts `from` → `to`; then "–95" lands (fades in with a 6 px rise
    * over 8 frames) at `rangeAt`. Its room is kept from the start, so nothing shifts. Default none.
@@ -70,6 +76,8 @@ export const Counter: React.FC<CounterProps & {mood?: Mood}> = ({
   y = 0.55,
   duration = 1.6,
   subPlace = 'below',
+  sub2,
+  sub2Place,
   rangeTo,
   rangeAt,
   decimals = 0,
@@ -93,7 +101,7 @@ export const Counter: React.FC<CounterProps & {mood?: Mood}> = ({
     easing: Easing.inOut(Easing.cubic),
   });
 
-  const subLine = (
+  const line = (text: string | undefined, place: 'above' | 'below') => (
     <div
       style={{
         fontFamily: fonts.mono,
@@ -102,12 +110,15 @@ export const Counter: React.FC<CounterProps & {mood?: Mood}> = ({
         letterSpacing: '0.12em',
         textTransform: 'uppercase',
         color: inkSub,
-        margin: subPlace === 'above' ? '0 0 8px' : '6px 0 0',
+        margin: place === 'above' ? '0 0 8px' : '6px 0 0',
       }}
     >
-      {sub}
+      {text}
     </div>
   );
+  const subLine = line(sub, subPlace);
+  const place2 = sub2Place ?? (subPlace === 'above' ? 'below' : 'above');
+  const sub2Line = line(sub2, place2);
 
   return (
     <div
@@ -123,6 +134,7 @@ export const Counter: React.FC<CounterProps & {mood?: Mood}> = ({
         padding: '13px 24px 15px',
       }}
     >
+      {sub2 && place2 === 'above' ? sub2Line : null}
       {sub && subPlace === 'above' ? subLine : null}
       <div style={{display: 'flex', alignItems: 'baseline', gap: 14}}>
         <span
@@ -163,6 +175,7 @@ export const Counter: React.FC<CounterProps & {mood?: Mood}> = ({
         <span style={{fontFamily: fonts.sans, fontWeight: 600, fontSize: 34, color: ink}}>{label}</span>
       </div>
       {sub && subPlace === 'below' ? subLine : null}
+      {sub2 && place2 === 'below' ? sub2Line : null}
     </div>
   );
 };

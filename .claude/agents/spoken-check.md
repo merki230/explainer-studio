@@ -27,6 +27,11 @@ Read the whole script aloud, start to finish, at a calm narrator's pace. Then go
 - **Hand-off.** What does this line pick up from the one before? If the answer is "nothing", it is a jump,
   even if the facts are in the right order. Flag it and say which word or phrase would link it. A change of
   place or topic (China to the US, cost to price) needs a bridge, not a cut.
+- **Source detours (owner, 2026-10-29, No. 012: a checker-passed script was still "so many jumps").** A line
+  that leaves the person or moment the story follows to quote a source ("In 2021, Consumer Reports found…",
+  four "The FTC said / alleged" lines in a row) is a JUMP, even when each line is correct. Attribution belongs
+  inside a story sentence or in a trailing clause. Also read the script once as a whole, start to finish,
+  and ask: does it stay with one person in one moment? Report every place it wanders.
 - **Order.** Does the belief come before the answer, the question before the mechanism, the limit after
   the finding it limits? Flag any line that would land better one or two lines earlier or later.
 - **Pronouns and handles.** "It", "that", "the car", "this": when heard, each points at the nearest noun.

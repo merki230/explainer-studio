@@ -5,10 +5,16 @@ import {MOODS, type CastName} from '../theme';
 import {EV} from '../three/real/EvDrive';
 import {GAS} from '../three/real/GasDrive';
 import {
+  cupholderOf,
+  cupPhoneChipWorld,
+  cupPhoneWorld,
+  eventPinState,
   isBay,
   isGas,
   isLeft,
   layoutOf,
+  PIN,
+  plugPortOf,
   simRevs,
   wheelTurnRevs,
   SlicedCar,
@@ -23,6 +29,8 @@ import {projectToFrame, SectionCamera, sectionCameraAt, type Framing} from '../t
 import {SectionLights, SectionStage} from '../three/section/SectionStage';
 import {skyTexture} from '../three/section/textures';
 import {wheelMode} from '../three/real/wheelMotion';
+import {MOTION_CHIP} from '../three/real/PhoneTeardown';
+import {seatRise} from '../three/real/RealCar';
 import {framingAtKeys, type CameraKey} from './keyframes';
 
 // the car rig lives in `three/real/SlicedCar` (N0, No. 007); its types and speeds stay importable from here
@@ -60,7 +68,10 @@ export type CarFraming =
   | 'signal'
   | 'throttle'
   | 'evBay'
-  | 'call';
+  | 'call'
+  | 'cupholder'
+  | 'mount'
+  | 'chip';
 
 export const CAR_FRAMINGS: Record<
   Exclude<
@@ -80,6 +91,9 @@ export const CAR_FRAMINGS: Record<
     | 'throttle'
     | 'evBay'
     | 'call'
+    | 'cupholder'
+    | 'mount'
+    | 'chip'
   >,
   Framing
 > = {
@@ -174,9 +188,24 @@ export type CarSliceSceneProps = SlicedCarOptions & {
   cameraGlide?: number;
 };
 
+/**
+ * No. 012 (R1): the framings on the cupholder phone, from wherever its cupholder is: 'cupholder' (the phone ≈ 24 % of
+ * the frame's height, the console and the driver's hand round it) and 'chip' (close on the motion sensor, for the
+ * object cut-away).
+ */
+export const CUP_FRAMINGS = {cupholder: {distance: 2.1, lift: 0.02}, chip: {distance: 0.6, lift: 0}};
+
 /** A framing preset for these props (EV and mirrored versions when the car faces left). */
 const framingFor = (p: Partial<CarSliceSceneProps>): Framing => {
   const name = p.framing ?? 'wide';
+  if (name === 'cupholder' || name === 'mount' || name === 'chip') {
+    const at =
+      name === 'chip'
+        ? cupPhoneChipWorld(p, 0, MOTION_CHIP)
+        : cupPhoneWorld({...p, cupPhone: {...p.cupPhone, pickAt: null}}, 0);
+    const f = CUP_FRAMINGS[name === 'mount' ? 'cupholder' : name];
+    return {look: [at[0], at[1] + f.lift, at[2]], distance: f.distance};
+  }
   if (!isLeft(p)) return CAR_FRAMINGS[name as keyof typeof CAR_FRAMINGS] ?? CAR_FRAMINGS.wide;
   const gas = isGas(p) ? GAS_FRAMINGS[name] : undefined;
   if (gas) return gas;
@@ -292,15 +321,39 @@ export const clusterOnScreen = (
 
 /**
  * A named point of the car slice on screen (px), following the camera (No. 009): 'phone' (the driver's call
- * phone, `call`), 'cluster' (the instrument cluster), 'head' or 'youSpot' (the top of the driver's head).
- * Undefined for an unknown name.
+ * phone, `call`; No. 012: the cupholder phone, `cupPhone`, wherever it is), 'cluster' (the instrument cluster), 'head'
+ * or 'youSpot' (the top of the driver's head). No. 012: 'chip' (the cupholder phone's motion sensor), 'cupholder',
+ * 'plugBox' (the ghost plug-in box), 'face' (the driver's face, where a screen's light falls), 'pin:<i>' (an event
+ * pin's head, once it has popped out). Undefined for an unknown name.
  */
 export const carAnchorOnScreen = (
   p: Partial<CarSliceSceneProps>,
   anchor: string,
   o: {frame: number; fps: number; durationInFrames: number},
 ): [number, number] | undefined => {
-  if (anchor === 'phone') return projectToFrame(cameraAtFrame(p, o), slicedCarPhone(p, o.frame / o.fps));
+  const t = o.frame / o.fps;
+  if (anchor === 'phone')
+    return projectToFrame(cameraAtFrame(p, o), p.cupPhone ? cupPhoneWorld(p, t) : slicedCarPhone(p, t));
+  // No. 012: the motion sensor (the cut-away), the cupholder, the plug-in box's ghost, the driver's face (the screen light)
+  if (anchor === 'chip' && p.cupPhone) return projectToFrame(cameraAtFrame(p, o), cupPhoneChipWorld(p, t, MOTION_CHIP));
+  if (anchor === 'cupholder' || anchor === 'mount') {
+    const c = cupholderOf(p);
+    return projectToFrame(cameraAtFrame(p, o), toWorld(p, c));
+  }
+  if (anchor === 'plugBox') {
+    const q = plugPortOf(p);
+    return projectToFrame(cameraAtFrame(p, o), toWorld(p, [q[0] - 0.03, q[1] - 0.06, q[2] + 0.04]));
+  }
+  if (anchor === 'face') {
+    const [x, y, z] = layoutOf(p).driver;
+    return projectToFrame(cameraAtFrame(p, o), toWorld(p, [x + 0.1, y + seatRise(p.shape) + 1.16, z]));
+  }
+  // No. 012: an event pin's head ('pin:0', 'pin:1', …), once it has popped out
+  if (anchor.startsWith('pin:')) {
+    const cam = cameraAtFrame(p, o);
+    const st = eventPinState(p, Number(anchor.slice(4)), t, cam.position.distanceTo(cam.look), o.fps);
+    return st ? projectToFrame(cam, [st.head[0], st.head[1] + PIN.head * st.k, st.head[2]]) : undefined;
+  }
   if (anchor === 'cluster') return clusterOnScreen(p, o);
   if (anchor === 'head' || anchor === 'youSpot') return carHeadTopOnScreen(p, p.driver ?? 'you', o);
   return undefined;

@@ -1,0 +1,19 @@
+An insurance app on your phone can tell how you drive, and it doesn't need your car to do it.
+How does the phone on your dash know?
+It has its own motion sensors and GPS, so it feels every stop and tracks every mile.
+You start driving home, and the app notices the trip has started without you tapping anything.
+Some programs look at the time of day, like this drive home at 5:40.
+At a red light, you slow down the way you always do.
+Many programs call it hard braking when your car loses 6 to 8 miles an hour in one second.
+So a normal stop like yours can count, Consumer Reports said in 2021.
+When the light turns green, the phone notices if you pick it up while the car is moving.
+One insurer's app counts that as distraction when the phone is moving and the screen is on.
+The same insurer's app also flags any time you're over the speed limit by 8 miles an hour or more.
+Each trip is recorded, and the app turns it into scores.
+Those scores help set your price, and it can go either way.
+One insurer says drivers can save up to 30 percent, but another says about 2 in 10 see their rate go up.
+And some drivers never installed an app at all.
+The FTC alleged that General Motors collected braking and speeding data straight from their connected cars.
+The agency said GM sold that data to companies that make reports for insurers, who then used those reports to set rates.
+GM settled, but at least one of those companies still advertises driving data from carmakers to insurers.
+Would a cheaper rate be worth having every trip scored?

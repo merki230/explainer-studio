@@ -159,7 +159,7 @@ export const screenKey = (s: ScreenState) =>
   ].join('|');
 
 /** Night: dark UI; Day: light UI (§ 8 kit). Neutral accents only. */
-const palette = (mood: Mood) =>
+export const palette = (mood: Mood) =>
   mood === 'night'
     ? {
         bg: '#121318',

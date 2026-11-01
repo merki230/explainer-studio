@@ -35,6 +35,12 @@ export type RealPhoneProps = {
   display?: THREE.Material;
   /** 0: closed; 1: the front (glass and display) has slid off toward the viewer and gone. */
   open?: number;
+  /**
+   * Which face comes off when opening: 'front' (default: the glass and display slide toward the viewer) or 'back' (No.
+   * 012: the back glass and the camera strip slide off the other way, for a phone whose back faces the camera; the
+   * teardown is turned to face out of the back, the cut rim drawn on the back).
+   */
+  openSide?: 'front' | 'back';
   /** When open, the frame's front rim shows as a cut face: hatched, with ink on both edges (default true). */
   section?: boolean;
   /**
@@ -64,6 +70,7 @@ export const RealPhone: React.FC<RealPhoneProps> = ({
   scale = 1,
   display,
   open = 0,
+  openSide = 'front',
   section: showCut = true,
   shadows = true,
   shutter,
@@ -136,21 +143,29 @@ export const RealPhone: React.FC<RealPhoneProps> = ({
     Object.entries(mats).flatMap(([k, v]) => (k === 'cut' || k === 'ink' || k === 'sheen' ? [] : [v])),
     albedo,
   );
-  const fade = 1 - open;
+  const backOpen = openSide === 'back';
+  const fade = backOpen ? 1 : 1 - open;
   mats.glass.opacity = fade;
   mats.panel.opacity = fade;
   // the screen goes dark first (the first third of the move), then the glass lifts away
-  const screenFade = Math.max(0, 1 - open * 3);
+  const screenFade = backOpen ? 1 : Math.max(0, 1 - open * 3);
   mats.streak.opacity = 0.4 * fade;
   if (display) {
     display.transparent = true;
     display.opacity = screenFade;
   }
+  // No. 012: opening from the back fades the back glass and the camera strip instead
+  const backFade = backOpen ? 1 - open : 1;
+  for (const m of [mats.back, mats.bump, mats.lens, mats.lensRing, mats.flash]) {
+    m.transparent = backOpen && open > 0;
+    m.opacity = backFade;
+  }
 
   const cs = shadows;
   const half = {x: P.w / 2, y: P.h / 2, z: P.d / 2};
   const flat = P.d - 0.03; // the frame's flat side band (between the bevels)
-  const lift = open * 0.6;
+  const lift = backOpen ? 0 : open * 0.6;
+  const backLift = backOpen ? -open * 0.6 : 0;
 
   // antenna bands: thin plastic breaks across the frame (two on each long side, one on each end)
   const bands: {p: V3; s: V3}[] = [
@@ -235,49 +250,54 @@ export const RealPhone: React.FC<RealPhoneProps> = ({
         </group>
       ) : null}
 
-      {/* the back: frosted glass, flush with the frame */}
-      <mesh
-        geometry={roundedSlab(P.w - 0.02, P.h - 0.02, 0.008, P.r - 0.01, 0.003)}
-        material={mats.back}
-        position={[0, 0, -half.z + 0.002]}
-        castShadow={cs}
-        receiveShadow={cs}
-      />
-      {/* the camera bump: glossy glass plateau, three lenses (metal ring, glass, inner rings), flash, mic */}
-      <group position={[BUMP.x, BUMP.y, -half.z + 0.002]} rotation={[0, Math.PI, 0]}>
-        <mesh geometry={roundedSlab(BUMP.w, BUMP.h, 0.018, BUMP.r, 0.007)} material={mats.bump} castShadow={cs} />
-        {lenses.map(([lx, ly], i) => (
-          <group key={i} position={[lx, ly, 0.018]}>
-            <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 0, 0.007]} material={mats.frame} castShadow={cs}>
-              <cylinderGeometry args={[0.07, 0.072, 0.014, 40]} />
-            </mesh>
-            <mesh position={[0, 0, 0.0145]} material={mats.lens}>
-              <circleGeometry args={[0.06, 40]} />
-            </mesh>
-            {[0.052, 0.036, 0.02].map((rr, j) => (
-              <mesh key={j} position={[0, 0, 0.0148 + j * 0.0002]} material={mats.lensRing}>
-                <ringGeometry args={[rr - 0.0035, rr, 40]} />
+      {/* the back: frosted glass, flush with the frame (and the camera strip): slides off backwards when opening from the back */}
+      <group position={[0, 0, backLift]} visible={!(backOpen && open >= 0.99)}>
+        <mesh
+          geometry={roundedSlab(P.w - 0.02, P.h - 0.02, 0.008, P.r - 0.01, 0.003)}
+          material={mats.back}
+          position={[0, 0, -half.z + 0.002]}
+          castShadow={cs}
+          receiveShadow={cs}
+        />
+        {/* the camera bump: glossy glass plateau, three lenses (metal ring, glass, inner rings), flash, mic */}
+        <group position={[BUMP.x, BUMP.y, -half.z + 0.002]} rotation={[0, Math.PI, 0]}>
+          <mesh geometry={roundedSlab(BUMP.w, BUMP.h, 0.018, BUMP.r, 0.007)} material={mats.bump} castShadow={cs} />
+          {lenses.map(([lx, ly], i) => (
+            <group key={i} position={[lx, ly, 0.018]}>
+              <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 0, 0.007]} material={mats.frame} castShadow={cs}>
+                <cylinderGeometry args={[0.07, 0.072, 0.014, 40]} />
               </mesh>
-            ))}
-            <mesh position={[0, 0, 0.0152]} material={mats.lens}>
-              <circleGeometry args={[0.012, 24]} />
-            </mesh>
-          </group>
-        ))}
-        <mesh position={[0, -0.16, 0.0185]} material={mats.flash}>
-          <circleGeometry args={[0.03, 28]} />
-        </mesh>
-        <mesh position={[0.17, 0.18, 0.0008]} material={mats.hole}>
-          <circleGeometry args={[0.007, 12]} />
-        </mesh>
+              <mesh position={[0, 0, 0.0145]} material={mats.lens}>
+                <circleGeometry args={[0.06, 40]} />
+              </mesh>
+              {[0.052, 0.036, 0.02].map((rr, j) => (
+                <mesh key={j} position={[0, 0, 0.0148 + j * 0.0002]} material={mats.lensRing}>
+                  <ringGeometry args={[rr - 0.0035, rr, 40]} />
+                </mesh>
+              ))}
+              <mesh position={[0, 0, 0.0152]} material={mats.lens}>
+                <circleGeometry args={[0.012, 24]} />
+              </mesh>
+            </group>
+          ))}
+          <mesh position={[0, -0.16, 0.0185]} material={mats.flash}>
+            <circleGeometry args={[0.03, 28]} />
+          </mesh>
+          <mesh position={[0.17, 0.18, 0.0008]} material={mats.hole}>
+            <circleGeometry args={[0.007, 12]} />
+          </mesh>
+        </group>
       </group>
 
-      {/* inside (the teardown) */}
-      {children}
+      {/* inside (the teardown); turned to face out of the back when that is the side opened */}
+      {backOpen ? <group rotation={[0, Math.PI, 0]}>{children}</group> : children}
 
-      {/* the cut: the frame's front rim, hatched, ink on its outer and inner edges (only once open) */}
+      {/* the cut: the frame's opened rim, hatched, ink on its outer and inner edges (only once open) */}
       {showCut && open > 0.02 ? (
-        <group position={[0, 0, REAL_FRONT + 0.0006]}>
+        <group
+          position={[0, 0, backOpen ? -(REAL_FRONT + 0.0006) : REAL_FRONT + 0.0006]}
+          rotation={backOpen ? [0, Math.PI, 0] : undefined}
+        >
           <mesh geometry={roundedRingPlane(P.w, P.h, P.r, P.t)} material={mats.cut} receiveShadow={cs} />
           <mesh
             geometry={roundedRingPlane(P.w + INK / 2, P.h + INK / 2, P.r + INK / 4, INK)}
