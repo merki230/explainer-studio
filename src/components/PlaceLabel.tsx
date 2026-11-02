@@ -2,9 +2,10 @@ import React from 'react';
 import {interpolate, useCurrentFrame, useVideoConfig} from 'remotion';
 import {fonts} from '../fonts';
 import type {Mood} from '../theme';
-import {anchorOnScreen, type AnchorScene} from './anchors';
+import {anchorOnScreen, withFormat, type AnchorScene} from './anchors';
 import {ease} from './card';
-import {LEFT, overlayInk, paperHalo, RIGHT} from './sectionStyle';
+import {useLayout} from './layout';
+import {overlayInk, paperHalo} from './sectionStyle';
 
 export type PlaceLabelProps = {
   /** The place, one or two words, shown uppercase ("CHINA", "THE US"). ≤ 12 characters. */
@@ -20,7 +21,7 @@ export type PlaceLabelProps = {
    * reads as lettering laid on the ground or the cut face. Clamped inside x 120–888.
    */
   anchor?: string;
-  /** Type size in px (default 30; keep 26–30). */
+  /** Type size in px (default 30; keep 26–30; wide frame default 32, sub 26, at x 144, top y 120). */
   size?: number;
   /** The ink rule under the word, drawing left to right (default true), like a title on a section drawing. */
   rule?: boolean;
@@ -39,23 +40,26 @@ export const PLACE_FADE = 10;
 export const PlaceLabel: React.FC<PlaceLabelProps & {mood?: Mood; scene?: AnchorScene}> = ({
   text,
   sub,
-  left = LEFT,
-  top = 300,
+  left,
+  top,
   anchor,
   scene,
-  size = 30,
+  size: sizeIn,
   rule = true,
   mood = 'day',
 }) => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
+  const L = useLayout();
+  const size = sizeIn ?? L.place.size;
   const {ink, inkSub} = overlayInk(mood);
-  const at = anchor && scene ? anchorOnScreen(scene, anchor, frame, fps) : undefined;
+  const at =
+    anchor && scene ? anchorOnScreen({...scene, props: withFormat(scene.props, L.format)}, anchor, frame, fps) : undefined;
   // Inter 700 uppercase with 0.14em tracking: ≈ 0.72 em a letter plus the tracking
   const w = Math.ceil(text.length * size * (0.72 + 0.14));
-  const x = Math.max(LEFT, Math.min(at ? at[0] : left, RIGHT - w));
+  const x = Math.max(L.left, Math.min(at ? at[0] : (left ?? L.left), L.right - w));
   // anchored: the rule sits on the point (the word stands on it)
-  const y = at ? at[1] - size * 1.1 - 10 : top;
+  const y = at ? at[1] - size * 1.1 - 10 : (top ?? L.place.top);
   const word = ease(frame, 0, PLACE_FADE);
   const line = ease(frame, 2, PLACE_FADE + 6);
   const rise = interpolate(word, [0, 1], [6, 0]);
@@ -94,7 +98,7 @@ export const PlaceLabel: React.FC<PlaceLabelProps & {mood?: Mood; scene?: Anchor
             marginTop: 8,
             fontFamily: fonts.sans,
             fontWeight: 600,
-            fontSize: 20,
+            fontSize: L.place.sub,
             letterSpacing: '0.08em',
             textTransform: 'uppercase',
             color: inkSub,

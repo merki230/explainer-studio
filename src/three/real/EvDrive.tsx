@@ -779,6 +779,26 @@ export type BatteryPackProps = {
   modules?: (V3 | null)[];
   /** No. 011: the blade-cell pack instead of the modules (see `BladeState`). Default none. */
   blade?: BladeState | null;
+  /**
+   * No. 014: a pack of another size and place (the hybrid's small pack under the rear seat), car frame: the casing
+   * (x0, x1, y0, y1), its section plane `z` and back `back`, the module count and the modules' (y0, y1). Default the
+   * electric car's (`EV.pack`).
+   */
+  layout?: PackLayout;
+};
+
+/** A battery pack's box and modules (car frame, m; `BatteryPack` `layout`). */
+export type PackLayout = {pack: [number, number, number, number]; z: number; back: number; modules: number; moduleY: [number, number]};
+
+/** The electric car's pack (No. 006) as a `PackLayout`. */
+export const EV_PACK: PackLayout = {pack: EV.pack, z: EV.packZ, back: EV.packBack, modules: EV.modules, moduleY: MODULE_Y};
+
+/** A module's box (x0, x1) in a pack of any layout, front (k = 0) to back. */
+export const layoutModuleSpan = (L: PackLayout, k: number): [number, number] => {
+  const [x0, x1] = L.pack;
+  const w = (x1 - x0 - 0.06) / L.modules;
+  const hi = x1 - 0.03 - k * w;
+  return [hi - w + 0.012, hi - 0.012];
 };
 
 /**
@@ -912,7 +932,10 @@ const bladeTexture = (() => {
 })();
 
 /** The battery pack cut open (see the file comment). */
-export const BatteryPack: React.FC<BatteryPackProps> = ({mood, fill, glow = 1, inkScale = 1, heat, sweep, frontWidth = 0.035, modules, blade}) => {
+export const BatteryPack: React.FC<BatteryPackProps> = ({mood, fill, glow = 1, inkScale = 1, heat, sweep, frontWidth = 0.035, modules, blade, layout = EV_PACK}) => {
+  const moduleSpan = (k: number) => layoutModuleSpan(layout, k);
+  const MODULE_Y = layout.moduleY;
+  const nMod = layout.modules;
   const {env, envScale, albedo} = usePhys();
   const mats = useMemo(
     () => ({
@@ -922,7 +945,7 @@ export const BatteryPack: React.FC<BatteryPackProps> = ({mood, fill, glow = 1, i
       module: phys('#ffffff', {roughness: 0.6, map: cellTexture()}),
       moduleSide: phys(REAL.module, {roughness: 0.55}),
       dark: phys(REAL.labDark, {roughness: 0.7}),
-      levels: [...Array(EV.modules).keys()].map(() => glowMat()),
+      levels: [...Array(Math.max(EV.modules, 12)).keys()].map(() => glowMat()),
       heat: new THREE.MeshBasicMaterial({
         color: raw(section.orange),
         map: heatTexture(),
@@ -946,7 +969,7 @@ export const BatteryPack: React.FC<BatteryPackProps> = ({mood, fill, glow = 1, i
   );
   // the sweep's front (car frame x): from the rear module's back wall to the front one's
   const sw = sweep === undefined ? null : Math.max(0, Math.min(1, sweep));
-  const sweepX = sw === null ? 0 : moduleSpan(EV.modules - 1)[0] + sw * (moduleSpan(0)[1] - moduleSpan(EV.modules - 1)[0]);
+  const sweepX = sw === null ? 0 : moduleSpan(nMod - 1)[0] + sw * (moduleSpan(0)[1] - moduleSpan(nMod - 1)[0]);
   const heatK = Math.max(0, Math.min(1, heat ?? 0));
   mats.heat.opacity = 0.85 * heatK;
   applyEnv(
@@ -964,9 +987,9 @@ export const BatteryPack: React.FC<BatteryPackProps> = ({mood, fill, glow = 1, i
   }
   void mood;
   if (blade) return <BladePack blade={blade} mats={mats} inkScale={inkScale} />;
-  const [x0, x1, y0, y1] = EV.pack;
-  const z = EV.packZ;
-  const zb = EV.packBack;
+  const [x0, x1, y0, y1] = layout.pack;
+  const z = layout.z;
+  const zb = layout.back;
   const t = 0.014;
   const ink = INK * inkScale;
   // the casing's section: tray (floor), lid, the two end walls
@@ -1014,7 +1037,7 @@ export const BatteryPack: React.FC<BatteryPackProps> = ({mood, fill, glow = 1, i
       <mesh position={[(x0 + x1) / 2, y0 + t + 0.009, (z + zb) / 2]} material={mats.plate} receiveShadow>
         <boxGeometry args={[x1 - x0 - 2 * t, 0.018, z - zb - 0.03]} />
       </mesh>
-      {[...Array(EV.modules).keys()].map((k) => {
+      {[...Array(nMod).keys()].map((k) => {
         const [a, b] = moduleSpan(k);
         const place: V3 | null | undefined = modules ? modules[k] : [0, 0, 0];
         if (place === null || place === undefined) return null;

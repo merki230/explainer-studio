@@ -13,7 +13,15 @@ import {CutOutline, cutMaterial, INK, type Rect} from '../three/section/cutLook'
 import {Figure} from '../three/section/Figure';
 import type {Gesture} from '../three/rig';
 import {GlowNode, GlowSegment, NODE_SCALE, pointAlong, polylineLength} from '../three/section/GlowLines';
-import {projectToFrame, SectionCamera, sectionCameraAt, type Framing} from '../three/section/SectionCamera';
+import {
+  formatOf,
+  projectToFrame,
+  SectionCamera,
+  sectionCameraAt,
+  useFormatProps,
+  widenFraming,
+  type Framing,
+} from '../three/section/SectionCamera';
 import {SectionLights, SectionStage} from '../three/section/SectionStage';
 import {skyTexture} from '../three/section/textures';
 import {ease, framingAtKeys, type CameraKey} from './keyframes';
@@ -123,7 +131,7 @@ export type ReportSliceSceneProps = {
   camera?: {from: Framing; to?: Framing};
   /** Camera keyframes: override `camera`, `push` and the glide in. */
   cameraKeys?: CameraKey[];
-  /** Push toward the subject, units/s (default 0.04). */
+  /** Push toward the subject, units/s (default 0.04; wide frame 0.03, § 11.6). */
   push?: number;
   /** Idle sideways drift, ± units (default 0.08). */
   drift?: number;
@@ -312,14 +320,31 @@ export const reportFramings = (p: Partial<ReportSliceSceneProps> = {}): Record<R
   };
 };
 
+/**
+ * The wide frame (§ 11.6, `format: 'horizontal'`): each preset stands back by this factor (same look-at), so its
+ * subject keeps the frame's height; the stacked sheet (three floors) needs the most. Set on test stills.
+ */
+export const REPORT_WIDE: Record<ReportFraming, number> = {
+  car: 1.35,
+  cabin: 1.3,
+  report: 1.35,
+  company: 1.35,
+  printer: 1.3,
+  insurer: 1.35,
+  desk: 1.3,
+  stack: 1.6,
+  chain: 1.6,
+};
+
 const reportCameraMove = (p: Partial<ReportSliceSceneProps>, durationInFrames: number, fps: number, frame?: number) => {
-  const preset = reportFramings(p)[p.framing ?? 'car'];
+  const name = p.framing ?? 'car';
+  const preset = widenFraming(reportFramings(p)[name], formatOf(p), REPORT_WIDE[name]);
   if (p.cameraKeys && p.cameraKeys.length) {
     const base = p.camera?.from ?? preset;
     const f = framingAtKeys(p.cameraKeys, base, frame === undefined ? Infinity : frame / fps);
     return {from: f, to: f, pre: undefined};
   }
-  const push = p.push ?? 0.04;
+  const push = p.push ?? (formatOf(p) === 'horizontal' ? 0.03 : 0.04);
   const pre =
     p.cameraGlide && p.cameraFrom
       ? {from: p.cameraFrom, hold: 0, move: Math.max(1, Math.round(p.cameraGlide * fps)), ease: 'cubic' as const}
@@ -348,6 +373,7 @@ const reportCameraAt = (p: Partial<ReportSliceSceneProps>, o: {frame: number; fp
     durationInFrames: o.durationInFrames,
     drift: p.drift ?? 0.08,
     clockOffset: (p.startFrame ?? 0) / o.fps,
+    format: formatOf(p),
   });
 };
 
@@ -831,7 +857,8 @@ export const reportAnchorOnScreen = (
  * R, the data chain: a generic connected sedan on its street (bottom), a report company's office (middle) and an
  * insurer's office (top), stacked on one sheet; an orange path carries the car's data up the chain and fades.
  */
-export const ReportSliceScene: React.FC<ReportSliceSceneProps> = (props) => {
+export const ReportSliceScene: React.FC<ReportSliceSceneProps> = (propsIn) => {
+  const props = useFormatProps(propsIn);
   const {durationInFrames, mood = 'day', startFrame = 0} = props;
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();

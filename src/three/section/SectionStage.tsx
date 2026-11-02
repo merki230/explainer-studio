@@ -2,17 +2,19 @@ import {ThreeCanvas} from '@remotion/three';
 import React, {useMemo} from 'react';
 import {useVideoConfig} from 'remotion';
 import * as THREE from 'three';
+import {useFormat} from '../../format';
 import {MOODS, type Mood} from '../../theme';
 import {MuseumPost, type PostSettings} from '../MuseumPost';
 import {raw} from '../plaster';
 import {MoodLook} from '../real/useStudioEnv';
 import type {MoodPalette} from './moods';
+import {sectionFov} from './SectionCamera';
 
 type V3 = [number, number, number];
 
 /**
  * Full-frame canvas for a Section slice (style guide v0.8 § 2): the mood's `bg` behind
- * everything, no fog (the slice floats like a section drawing), soft PCF shadows, fov 26°,
+ * everything, no fog (the slice floats like a section drawing), soft PCF shadows, fov 26° (16:9: `FOV_H`, § 11.6),
  * and the shared post pass (selective bloom, light soft focus, vignette, grain).
  */
 export const SectionStage: React.FC<{
@@ -26,8 +28,10 @@ export const SectionStage: React.FC<{
   ao?: boolean;
   /** Far clipping plane (default 80); a whole building framed from far back needs more. */
   far?: number;
-}> = ({mood, palette, children, fov = 26, post, ao = false, far = 80}) => {
+}> = ({mood, palette, children, fov: fovIn, post, ao = false, far = 80}) => {
   const {width, height} = useVideoConfig();
+  const {format} = useFormat();
+  const fov = fovIn ?? sectionFov(format);
   const m = palette ?? MOODS[mood];
   const bg = useMemo(() => new THREE.Color(), []);
   bg.copy(raw(m.bg));

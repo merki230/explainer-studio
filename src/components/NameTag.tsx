@@ -4,9 +4,10 @@ import {fonts} from '../fonts';
 import {headTopOnScreen, type SectionRoomSceneProps} from '../scenes/SectionRoomScene';
 import {carHeadTopOnScreen, type CarSliceSceneProps} from '../scenes/CarSliceScene';
 import {CAST, type CastName, type Mood} from '../theme';
-import {ANCHOR_SCENES, anchorOnScreen} from './anchors';
+import {ANCHOR_SCENES, anchorOnScreen, withFormat} from './anchors';
 import {ease} from './card';
-import {LEFT, overlayInk, paperHalo, RIGHT} from './sectionStyle';
+import {useLayout} from './layout';
+import {overlayInk, paperHalo} from './sectionStyle';
 
 export type NameTagProps = {
   /** Who it labels (their seat and colour come from the scene). */
@@ -37,23 +38,21 @@ export type NameTagProps = {
   below?: string;
   /** The shortest rise when `below` pushes the tag down, px (default 60). */
   minRise?: number;
-  /** The highest the tag's centre may sit, px (default 470; v0.13 car tags under a 2-line title: 486). */
+  /** The highest the tag's centre may sit, px (default 470; v0.13 car tags under a 2-line title: 486; wide frame 174: its top at y 160). */
   ceiling?: number;
 };
 
 /** Frames the tag fades in (and out, see Explainer). */
 export const TAG_FADE = 10;
-const SQUARE = 26;
 const GAP = 12;
-const SIZE = 26;
-/** Inter 700 uppercase at 26 px with 0.08em tracking: ≈ 0.72 em a letter plus the tracking. */
-const textWidth = (s: string) => s.length * SIZE * (0.72 + 0.08);
+/** Inter 700 uppercase with 0.08em tracking: ≈ 0.72 em a letter plus the tracking. */
+const textWidth = (s: string, size: number) => s.length * size * (0.72 + 0.08);
 
 /**
  * Name tag as a drawing label (v0.8 § 6): a 26 px square in the person's top colour (3 px `paper`
  * outline), the role in Inter 700 26 px uppercase, `ink`, no fill; a 2 px `ink` leader from the top
  * of the head straight up, then across (one right angle) to the tag in the margin (left tags start
- * at x 120, right tags end at x 888). It follows the head as the camera moves (it reads the scene's camera
+ * at x 120, right tags end at x 888; wide frame: 28 px, x 144 / 1776, § 11.5). It follows the head as the camera moves (it reads the scene's camera
  * from `scene`). With `anchor`, it names a thing instead (v0.13 § 6 car tags: the leader from the roof, the
  * square in the paint with `outline: 'ink'`), following that scene anchor.
  */
@@ -73,17 +72,21 @@ export const NameTag: React.FC<
   anchor,
   below,
   minRise = 60,
-  ceiling = 470,
+  ceiling,
   mood = 'day',
   scene,
 }) => {
   const frame = useCurrentFrame();
   const {fps, width, height} = useVideoConfig();
+  const L = useLayout();
+  const SQUARE = L.tag.square;
+  const SIZE = L.tag.size;
+  const top0 = ceiling ?? L.tag.ceiling;
   const when = {frame: frame + scene.offset, fps, durationInFrames: scene.durationInFrames};
   const car = scene.name === 'car-slice';
   // the tower and the hotel: YOU's head (`youSpot`); others aren't tagged there
   const anchored = ANCHOR_SCENES.includes(scene.name ?? '');
-  const at = (a: string) => anchorOnScreen({...scene, props: scene.props as Record<string, unknown>}, a, frame, fps);
+  const at = (a: string) => anchorOnScreen({...scene, props: withFormat(scene.props as Record<string, unknown>, L.format)}, a, frame, fps);
   const head = anchor
     ? at(anchor)
     : anchored
@@ -91,20 +94,20 @@ export const NameTag: React.FC<
       ? at('youSpot')
       : undefined
     : car
-      ? carHeadTopOnScreen(scene.props as Partial<CarSliceSceneProps>, who, when)
-      : headTopOnScreen(scene.props, who, when);
+      ? carHeadTopOnScreen(withFormat(scene.props, L.format) as Partial<CarSliceSceneProps>, who, when)
+      : headTopOnScreen(withFormat(scene.props, L.format), who, when);
   if (!head) return null;
   const {ink, paper} = overlayInk(mood);
   const text = (label ?? who).toUpperCase();
   const cast = scene.props.cast ?? ['friend', 'you'];
-  const onLeft = (side ?? (car || anchored || anchor ? (head[0] < 540 ? 'left' : 'right') : cast.indexOf(who) === 0 ? 'left' : 'right')) === 'left';
-  const w = SQUARE + GAP + textWidth(text);
-  const tagLeft = onLeft ? LEFT : RIGHT - w;
+  const onLeft = (side ?? (car || anchored || anchor ? (head[0] < width / 2 ? 'left' : 'right') : cast.indexOf(who) === 0 ? 'left' : 'right')) === 'left';
+  const w = SQUARE + GAP + textWidth(text, SIZE);
+  const tagLeft = onLeft ? L.left : L.right - w;
   const [hx, hy] = head;
   // under `below`: as high as `rise` allows, but its bottom ≥ 16 px under that point, never under `minRise`
   const lid = anchor && below ? at(below) : undefined;
   const lift = lid ? Math.max(Math.min(rise, minRise), Math.min(rise, hy - (lid[1] + 16 + SIZE / 2))) : rise;
-  const ty = Math.max(ceiling, hy - lift);
+  const ty = Math.max(top0, hy - lift);
   // The leader runs up from the head, then across to 10 px short of the tag. When the head is
   // right under the tag, it just runs straight up to 10 px below it.
   const under = hx >= tagLeft - 14 && hx <= tagLeft + w + 14;

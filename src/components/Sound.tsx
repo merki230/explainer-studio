@@ -1,6 +1,7 @@
 import React, {useMemo} from 'react';
 import {Audio, getRemotionEnvironment, Sequence} from 'remotion';
 import {audioUrl} from '../audioAssets';
+import type {ChapterCardFrames} from '../timeline';
 import type {MusicSpec, SfxOverlay, Word} from '../types';
 import {auditionWarning, duckEnvelope, MUSIC_DEFAULTS, musicBeds, musicGain, sfxGain, sfxSrc} from './soundMix';
 
@@ -20,7 +21,9 @@ export const MusicBed: React.FC<{
   fps: number;
   /** Audition only: take name → on/off. A take missing from the map plays. */
   takes?: Record<string, boolean>;
-}> = ({slug, music, words, durationInFrames, fps, takes}) => {
+  /** Long-form chapter cards: the bed swells +4 dB under each (style guide § 11.7). Omit for none. */
+  cards?: Pick<ChapterCardFrames, 'q' | 'outStart'>[];
+}> = ({slug, music, words, durationInFrames, fps, takes, cards}) => {
   const duck = useMemo(() => duckEnvelope(words, durationInFrames, fps), [words, durationInFrames, fps]);
   const rendering = getRemotionEnvironment().isRendering;
   const warning = auditionWarning(music);
@@ -49,7 +52,7 @@ export const MusicBed: React.FC<{
               muted={!rendering && takes?.[b.key] === false}
               trimBefore={Math.round((music.trim ?? 0) * fps) || undefined}
               // `f` counts from the sequence start; the gain is a pure function of the absolute frame
-              volume={(f) => musicGain(f + from, durationInFrames, fps, music, duck)}
+              volume={(f) => musicGain(f + from, durationInFrames, fps, music, duck, cards)}
             />
           </Sequence>
         );

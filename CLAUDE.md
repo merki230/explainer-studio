@@ -1,30 +1,36 @@
 # Explainer Studio
 
 Vertical (1080×1920, 30 fps) 3D explainer videos in the "how it secretly works" style, built with
-Remotion 4 + React Three Fiber. Every video shares one visual system; a new video is mostly a new
-script and a new `spec.ts`.
+Remotion 4 + React Three Fiber, plus horizontal (1920×1080) long-form YouTube videos with vertical Shorts cut
+from their chapters. Every video shares one visual system; a new video is mostly a new script and a new `spec.ts`.
 
 ## Layout
 
 ```
 src/
   videos/<slug>/        one folder per video
-    script.txt          voiceover text (source of truth for words)
+    script.txt          voiceover text (source of truth for words); long-form: "## chapter question" and
+                        "> Short hook: ..." lines are not spoken
     performance.txt     optional: same words + [audio tags] and ellipses, sent to TTS
     voice.json          optional: {voiceId, modelId?, stability?, similarityBoost?}
     spec.ts             scene + overlay layout, keyed to cues in the script
-    transcript.json     word timings, GENERATED, never hand-edit
+    transcript.json     word timings, GENERATED, never hand-edit (long-form also: chapters, hooks)
+    av-script.md        the A/V script: each line → what's on screen (director)
     sources.md          every claim in the script, with its source and status
     publish.md          titles, description with sources, hashtags, pinned comment, poll (made by the publisher)
     music.txt           optional: ElevenLabs music prompt (mood, instruments, tempo; no artist names)
     audio-log.md        generation record for every ElevenLabs music/SFX file, GENERATED, never hand-edit
-    audio/              voiceover.mp3, music.mp3, sfx/<name>.mp3 (in git; bundled through src/audioAssets.ts)
-    release/            cover.png, youtube-frame.png (in git); <slug>.mp4, the final render (git-ignored)
+    audio/              voiceover.mp3, short-<n>-hook.mp3, music.mp3, sfx/<name>.mp3 (in git; bundled through src/audioAssets.ts)
+    footage/            optional, long-form only: opening.mp4 (trimmed, graded, no audio); git-ignored, because the repo
+                        is public and stock licences ban redistributing the file; licence record in sources.md § Footage
+    release/            cover.png, youtube-frame.png, chapters.txt (in git); <slug>.mp4, <slug>-short-<n>.mp4 (git-ignored)
   videos/index.ts       registry: every video, one Remotion composition each
   scenes/               full-frame scenes (registered in scenes/index.ts)
   three/                reusable 3D parts (Stage, CameraRig, Mannequin, Arc, ...)
   components/           2D overlays (Callout, SearchBar, AdCard, Counter, Chip, Captions)
-  theme.ts              palette, frame size, FPS, FADE (pure, safe to import from Node)
+  theme.ts              palette, frame size, FPS, FADE, horizontal frame/safe zones (*_H), CHAPTER_BREAK_FRAMES
+                        (pure, safe to import from Node)
+  format.ts             useFormat(): 'vertical' | 'horizontal'
   fonts.ts              font loading (browser only)
   timeline.ts           cue → frame resolution
 public/assets/          shared CC0 HDRI and textures (not per-video)
@@ -34,12 +40,21 @@ out/<slug>/raw/         scratch only: raw mix, music/sfx/voice takes, stills, re
 
 ## Commands (yarn 4, Node 24)
 
-- `yarn new <slug>`: scaffold a video folder (with `audio/` and `release/`) and register it
+- `yarn new <slug> [--horizontal]`: scaffold a video folder (with `audio/` and `release/`) and register it;
+  `--horizontal` = long-form (1920×1080, chapter script)
 - `yarn timings <slug>`: estimated word timings from script.txt (no audio)
 - `yarn voiceover <slug> [--take <name>]`: ElevenLabs v4 TTS + timings (costs money; needs `.env`, ask first).
   Uses `performance.txt` (script words + `[tags]`/ellipses) when present, and `voice.json` for the voice.
-  `--take` writes to `out/<slug>/raw/voices/` instead of the live files
-- `yarn voiceover:use <slug> <name>`: copy a saved take into place (free)
+  `--take` writes to `out/<slug>/raw/voices/` instead of the live files. `--hook <n>` voices chapter n's `> Short hook:`
+  line to `audio/short-<n>-hook.mp3`; `--dry-run` prints the text and spends nothing
+- `yarn voiceover <slug> --by-chapter [--chapter <n>] [--gap <s>] [--join] [--take <name>] [--dry-run]`: long-form: one
+  ElevenLabs request per chapter with request stitching (costs money, ask first). Takes go to `out/<slug>/raw/voices/chapters/`
+  and are joined with a 3.9 s word-to-word break (`CHAPTER_BREAK_FRAMES`, the chapter card). `--chapter n` re-records one
+  chapter and re-joins; `--join` re-joins the saved chapters (free)
+- `yarn voiceover:pace <slug> --take <name> [--marked <s>] [--sentence <s>] [--chapter-sentence n=<s>] [--out <name>] [--dry-run]`:
+  free local post-step on a `--by-chapter` take: adds silence at "..." marks and sentence ends (never shortens) and writes
+  `<name>-paced` (or `--out`). Put it in place with `yarn voiceover:use`
+- `yarn voiceover:use <slug> <name> [--hook <n>]`: copy a saved take into place (free)
 - `yarn music <slug> --take <name> [--prompt "..."] [--seconds N] [--dry-run]`: ElevenLabs instrumental bed into
   `out/<slug>/raw/music/<name>.mp3` (costs money, ask first). Prompt from `music.txt`; length defaults to the video's rendered
   duration, rounded up
@@ -63,10 +78,10 @@ out/<slug>/raw/         scratch only: raw mix, music/sfx/voice takes, stills, re
 - `yarn voices [--search x]`: list ElevenLabs voices (free)
 - `yarn from-whisper <slug> <whisper.json>`: legacy local-Whisper timings
 - `yarn check [slug]`: resolve all cues, flag stale transcripts and too-short scenes
-- `yarn stills <slug>`: one PNG per scene in `out/<slug>/raw/stills/` (read them to review layout)
-- `yarn render <slug> [--no-normalize] [--post-only] [--force]`: renders `out/<slug>/raw/<slug>.raw.mp4`, then loudness-normalises (-14 LUFS, -1.5 dBTP) to the final `src/videos/<slug>/release/<slug>.mp4` (git-ignored); `yarn normalize <slug>` runs only that step
-- `yarn cover <slug>`: render the cover still to `src/videos/<slug>/release/cover.png` (only if `spec.cover`; else says so, exit 0)
-- `yarn package <slug>`: render `release/youtube-frame.png` (frame from the `<!-- youtube-frame: N -->` marker in publish.md); prints a checklist of the posting files and warns if publish.md has no Poll section
+- `yarn stills <slug> [--short <n>]`: one PNG per scene in `out/<slug>/raw/stills/` (read them to review layout)
+- `yarn render <slug> [--short <n>] [--no-normalize] [--post-only] [--force]`: renders `out/<slug>/raw/<slug>.raw.mp4`, then loudness-normalises (-14 LUFS, -1.5 dBTP) to the final `src/videos/<slug>/release/<slug>.mp4` (git-ignored); `yarn normalize <slug> [--short <n>]` runs only that step. `--short <n>` renders the vertical Short cut from chapter n (`spec.shorts`) to `release/<slug>-short-<n>.mp4`
+- `yarn cover <slug> [--short <n>]`: render the cover still to `src/videos/<slug>/release/cover.png` (only if `spec.cover`; else says so, exit 0). A horizontal video's cover is 1920×1080; a Short's is vertical, `release/short-<n>-cover.png`
+- `yarn package <slug> [--short <n>]`: render `release/youtube-frame.png` (frame from the `<!-- youtube-frame: N -->` marker in publish.md); prints a checklist of the posting files and warns if publish.md has no Poll section. For long-form it also prints the YouTube chapter timestamps and writes `release/chapters.txt`
 - `yarn verify`: typecheck + lint + check. Run before calling any change done.
 
 ## Rules
@@ -79,9 +94,12 @@ out/<slug>/raw/         scratch only: raw mix, music/sfx/voice takes, stills, re
 - After editing `script.txt`, regenerate timings (`yarn timings <slug>`) or `yarn check` will warn.
 - Overlay `x`/`y` are fractions of the frame (0.5, 0.5 = centre). Keep text inside the safe zone and clear of
   the captions and the first-scene title block (`brand/style-guide.md` § 6–7).
-- The look is "The Section" (`brand/style-guide.md` v0.8): every location is a cut-open slice seen from
-  outside, phones face their owners, and screens are read through the detail box. Orange is reserved for the
-  hidden system.
+- The look is "The Section" (`brand/style-guide.md`): every location is a cut-open slice seen from outside,
+  phones face their owners, and screens are read through the detail box. Orange is reserved for the hidden system.
+  One exception: a long-form video may open on up to 4 s of licensed real footage that turns into the Section
+  (`brand/style-guide.md` § 11.6.1); Shorts are 100% 3D.
+- **Format.** `spec.format` is 'vertical' (default) or 'horizontal'; scenes and overlays read it with `useFormat()`.
+  Shorts are `spec.shorts` entries, re-rendered with each scene's `vertical` staging, never cropped.
 - Colours come from `theme`, fonts from `fonts`. Don't hard-code new colours in a video; add them to the
   theme if they're truly needed, since the shared look is the brand.
 - New scene: `src/scenes/XScene.tsx` taking `{durationInFrames, ...props}`, register in

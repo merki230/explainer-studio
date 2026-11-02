@@ -41,7 +41,7 @@ import {
   type TeardownGroup,
   type TeardownPart,
 } from '../three/real/Teardown';
-import {projectToFrame, SectionCamera, sectionCameraAt, type Framing} from '../three/section/SectionCamera';
+import {formatOf, projectToFrame, SectionCamera, sectionCameraAt, type Framing} from '../three/section/SectionCamera';
 import {SectionLights, SectionStage} from '../three/section/SectionStage';
 import {ease, framingAtKeys, type CameraKey} from './keyframes';
 
@@ -356,7 +356,7 @@ export const teardownCameraEnd = (p: Partial<TeardownSliceSceneProps>, d: number
 
 const teardownCameraAt = (p: Partial<TeardownSliceSceneProps>, o: {frame: number; fps: number; durationInFrames: number}) => {
   const {from, to, pre} = teardownCameraMove(p, o.durationInFrames, o.fps, o.frame);
-  return sectionCameraAt({from, to, pre, frame: o.frame, fps: o.fps, durationInFrames: o.durationInFrames, drift: p.drift ?? 0, clockOffset: (p.startFrame ?? 0) / o.fps});
+  return sectionCameraAt({from, to, pre, frame: o.frame, fps: o.fps, durationInFrames: o.durationInFrames, drift: p.drift ?? 0, clockOffset: (p.startFrame ?? 0) / o.fps, format: formatOf(p)});
 };
 
 const ALL_MADE: TeardownGroup[] = ['body', 'lamps', 'trim', 'pack', 'drive', 'electronics', 'harness'];

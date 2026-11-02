@@ -10,6 +10,7 @@ import {CUT_EDGES, CUT_RECTS, SLICE} from './LivingRoomSlice';
 import {skyTexture} from './textures';
 import {useFontsLoaded} from './useFontsLoaded';
 import {TireBay, type TireBayProps} from './TireBay';
+import {HeatBench, type HeatBenchProps} from './HeatBench';
 import {
   RealBench,
   RealConveyor,
@@ -88,8 +89,10 @@ export type LabSliceProps = {
    * the meter as wall devices behind glass). Same layout and motion. Default false.
    */
   realism?: boolean;
-  /** What the Lab is dressed as: 'apps' (default: the phone bench, arms, counter, meter) or 'tire-bay'. */
-  dressing?: 'apps' | 'tire-bay';
+  /** What the Lab is dressed as: 'apps' (default: the phone bench, arms, counter, meter), 'tire-bay' or 'heat-bench' (No. 013). */
+  dressing?: 'apps' | 'tire-bay' | 'heat-bench';
+  /** The heat bench's state (see `HeatBenchProps`; `mood`, `t` and `clock` come from the slice). */
+  heatBench?: Omit<HeatBenchProps, 'mood' | 't' | 'clock'>;
   /** The tire bay's rows, low tires and gauges (see `TireBayProps`). */
   tireBay?: Partial<TireBayProps>;
 };
@@ -113,6 +116,7 @@ export const LabSlice: React.FC<LabSliceProps> = ({
   clock: clockIn,
   dressing = 'apps',
   tireBay,
+  heatBench,
 }) => {
   const bay = dressing === 'tire-bay';
   const clock = clockIn ?? t;
@@ -284,6 +288,20 @@ export const LabSlice: React.FC<LabSliceProps> = ({
 
       {bay ? (
         <TireBay mood={mood} t={t} {...(tireBay ?? {})} />
+      ) : dressing === 'heat-bench' ? (
+        <>
+          {/* the bench (steel top on legs) and the heat bench on it */}
+          <mesh geometry={roundedBox(2.9, 0.04, 0.55, 0.01)} material={mats.bench} position={[0, LAB_LAYOUT.bench.y + 0.01, LAB_LAYOUT.bench.z]} castShadow receiveShadow />
+          {[-1.38, 1.38].flatMap((x) =>
+            [-0.22, 0.22].map((dz) => (
+              <mesh key={`${x}${dz}`} material={mats.leg} position={[x, LAB_LAYOUT.bench.y / 2, LAB_LAYOUT.bench.z + dz]} castShadow>
+                <boxGeometry args={[0.04, LAB_LAYOUT.bench.y, 0.04]} />
+              </mesh>
+            )),
+          )}
+          <BlobShadow position={[0, 0.004, LAB_LAYOUT.bench.z]} size={[3.1, 0.9]} opacity={0.3} />
+          <HeatBench mood={mood} t={t} clock={clock} {...(heatBench ?? {})} />
+        </>
       ) : (
         <>
       {/* the counter built into the back wall */}

@@ -9,7 +9,7 @@ import {DriveUnit, EV, EV2, evDriveRoute, twoSpeedPoint, type TwoSpeedPoint} fro
 import {RealWheel} from '../three/real/RealWheel';
 import {capRevs, wheelMode, wheelSmear, type WheelMode} from '../three/real/wheelMotion';
 import {cutMaterial, CutOutline, type Rect} from '../three/section/cutLook';
-import {projectToFrame, SECTION_ANGLE, SectionCamera, sectionCameraAt, type Framing} from '../three/section/SectionCamera';
+import {formatOf, projectToFrame, SECTION_ANGLE, SectionCamera, sectionCameraAt, type Framing} from '../three/section/SectionCamera';
 import {SectionLights, SectionStage} from '../three/section/SectionStage';
 import {skyTexture} from '../three/section/textures';
 import {ease, framingAtKeys, speedAt, type CameraKey, type SpeedKey} from './keyframes';
@@ -148,7 +148,7 @@ export const driveUnitCameraEnd = (p: Partial<DriveUnitSceneProps>, d: number, f
 
 const cameraAtFrame = (p: Partial<DriveUnitSceneProps>, frame: number, fps: number, durationInFrames: number) => {
   const {from, to, pre} = unitCameraMove(p, durationInFrames, fps, frame);
-  return sectionCameraAt({from, to, pre, frame, fps, durationInFrames, drift: p.drift ?? 0, clockOffset: (p.startFrame ?? 0) / fps});
+  return sectionCameraAt({from, to, pre, frame, fps, durationInFrames, drift: p.drift ?? 0, clockOffset: (p.startFrame ?? 0) / fps, format: formatOf(p)});
 };
 
 /** The shift at t: 0 = first engaged → 1 = second, each gear key eased (cubic) over `shiftFor`. */

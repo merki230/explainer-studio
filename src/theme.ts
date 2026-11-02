@@ -787,6 +787,33 @@ export const CHARGE = {
 };
 
 /**
+ * No. 014 `hybrid-city` (scene-builder values, 🧪 until the brand-director's review; N6 asks for its check):
+ *  - `WINTER`, the same corner on a very cold day: `snow` (fresh snow on banks, roofs and awnings: a cool white a step
+ *    under white, ≈ 210°, 14%), `snowShade` (its shaded sides, ≈ 212°, 12%), `packed` (packed snow and slush at the road's
+ *    edges, a grey-white), `slush` (the wet tire tracks, darker than the asphalt's dry grey), `frost` (frost on car glass,
+ *    a pale blue-white), `bark` (bare street trees, a cool grey-brown, ≈ 25° at 12%: far under the reserved band's
+ *    saturation), `flake` (falling snow) and `skyTint` (multiplied on the Day sky: paler, greyer). All under 15% saturation.
+ *  - `TWINS`: the hybrid keeps YOU's car colour (`CAR.day.bodies.you`, a pale blue-grey); the gas twin is `gasPaint`, a
+ *    mid graphite (#6b7078, brand-director v0.18.3: the first value sat near FRIEND's car and the asphalt): on the stills `CHARGE.teslaPaint` (the director's first choice) read as the same pale
+ *    car as YOU's, so the twins now differ in value. The lead cars are `CITY.carBodies` (dark sage over the hybrid, warm
+ *    taupe over the gas twin). Nothing here is the system.
+ */
+export const TWINS = {
+  gasPaint: '#6b7078',
+};
+
+export const WINTER = {
+  snow: '#e4e8ec',
+  snowShade: '#c9d0d8',
+  packed: '#c4c7cb',
+  slush: HIGHWAY.wheelPathWet,
+  frost: '#e3ebf2',
+  bark: '#5b5550',
+  flake: '#eef1f4',
+  skyTint: '#eef0f2',
+};
+
+/**
  * No. 010 draft 2: the second grey extra (the owner: "two different-looking extras"): the extras' slate
  * clothes with another skin and hair from the cast's range (style guide § 8), so the two drivers read as
  * two people. The first extra is `CAST.extra` as it is.
@@ -824,9 +851,56 @@ export const WIDTH = 1080;
 export const HEIGHT = 1920;
 // Frames of crossfade between scenes (style guide § 8: 12 frames, cubic in-out).
 export const FADE = 12;
+/**
+ * Frames of silent voice at each chapter break of a long-form video (style-guide § 11.5.1): from the last word of a
+ * chapter to the first word of the next; the chapter card runs in it. `yarn voiceover --by-chapter` reads it.
+ */
+export const CHAPTER_BREAK_FRAMES = 117;
 
 /**
  * Area no platform UI (TikTok, Shorts, Reels) covers, in px of the 1080x1920 frame.
  * Keep every piece of text inside it.
  */
 export const SAFE = {left: 120, right: 888, top: 288, bottom: 1248};
+
+// ---- Horizontal format (style guide v0.16 § 11: long-form YouTube, 1920 x 1080, 30 fps) ----
+// Everything below is data for the wide frame; the vertical constants above are unchanged. Components pick the
+// set for the frame they render in with `useFormat()` (src/format.ts); this file stays free of React.
+export type Format = 'vertical' | 'horizontal';
+export const WIDTH_H = 1920;
+export const HEIGHT_H = 1080;
+/** Everything readable stays in this rectangle (§ 11.2 "house readable rectangle"): x 144–1776, y 120–960. */
+export const SAFE_H = {left: 144, right: 1776, top: 120, bottom: 960};
+/** Nothing that matters to the story outside it (SMPTE 93%). */
+export const ACTION_SAFE_H = {left: 67, right: 1853, top: 38, bottom: 1042};
+/** The floor for any readable text (SMPTE 90%). */
+export const TITLE_SAFE_H = {left: 96, right: 1824, top: 54, bottom: 1026};
+/** The YouTube watermark / end-screen corner: no readable overlay at x >= left and y >= top. */
+export const WATERMARK_CORNER_H = {left: 1560, top: 780};
+/** A subject's key moment stays within this (§ 11.2). */
+export const SUBJECT_H = {left: 240, right: 1680, top: 160, bottom: 900};
+/** Captions in the wide frame (§ 11.4): Inter 700 52 px / 1.2, left x 144, bottom edge y 960, right edge <= x 1344. */
+export const CAPTIONS_H = {
+  fontSize: 52,
+  lineHeight: 1.2,
+  left: 144,
+  bottom: 960,
+  maxRight: 1344,
+  maxChars: 42,
+  maxLines: 2,
+  padding: {top: 14, right: 28, bottom: 16, left: 30},
+} as const;
+/** Smallest readable text in the wide frame, px (the inline portrait player shows it at about 0.2 scale). */
+export const MIN_TEXT_H = 26;
+/** R3F (vertical) fov that keeps the 26 degree long-lens look across the wide frame (§ 11.6): 2*atan(tan 13deg * 1080/1920). */
+export const FOV_H = 14.8;
+/** Seconds the last wide shot holds after the last spoken line (§ 11.6 end-screen hold). */
+export const END_SCREEN_HOLD = 12;
+
+/** Frame size and safe rectangle per format. */
+export const FRAMES = {
+  vertical: {width: WIDTH, height: HEIGHT, safe: SAFE},
+  horizontal: {width: WIDTH_H, height: HEIGHT_H, safe: SAFE_H},
+} as const;
+/** The format of a frame of `width` x `height` (wider than tall = horizontal). */
+export const formatOfSize = (width: number, height: number): Format => (width > height ? 'horizontal' : 'vertical');

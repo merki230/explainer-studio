@@ -1,17 +1,18 @@
 import React, {useLayoutEffect, useState} from 'react';
-import {continueRender, delayRender} from 'remotion';
+import {continueRender, delayRender, useVideoConfig} from 'remotion';
 import {fonts, fontsReady} from '../fonts';
 import type {Mood} from '../theme';
-import {LEFT, overlayInk, paperHalo} from './sectionStyle';
+import {useLayout} from './layout';
+import {overlayInk, paperHalo} from './sectionStyle';
 
 export type CoverTextProps = {
   /** The hook; `\n` forces the break, else the most even break into ≤ 2 lines. */
   text: string;
   /** Largest size in px (default 150). */
   size?: number;
-  /** Top edge in px (default 288). */
+  /** Top edge in px (default 288; wide frame 120). */
   top?: number;
-  /** Width the lines may fill from x 120 (default 768, to x 888). */
+  /** Width the lines may fill from x 120 (default 768, to x 888; wide frame: from x 144, default 960, the left half). */
   width?: number;
   mood?: Mood;
 };
@@ -57,7 +58,10 @@ const fit = (text: string, max: number, width: number): {lines: string[]; size: 
  * −0.03em, `ink` with the stacked `paper` halo, no box, left-aligned at x 120), set as large as the
  * width allows so it reads at thumbnail size. Static (covers are stills).
  */
-export const CoverText: React.FC<CoverTextProps> = ({text, size = 150, top = 288, width = 768, mood = 'day'}) => {
+export const CoverText: React.FC<CoverTextProps> = ({text, size = 150, top: topIn, width: widthIn, mood = 'day'}) => {
+  const L = useLayout();
+  const top = topIn ?? L.cover.top;
+  const width = widthIn ?? L.cover.width;
   const [handle] = useState(() => delayRender('Fitting the cover text'));
   const [layout, setLayout] = useState<{lines: string[]; size: number} | null>(null);
   useLayoutEffect(() => {
@@ -71,7 +75,7 @@ export const CoverText: React.FC<CoverTextProps> = ({text, size = 150, top = 288
     <div
       style={{
         position: 'absolute',
-        left: LEFT,
+        left: L.left,
         top,
         width,
         fontFamily: fonts.display,
@@ -86,6 +90,63 @@ export const CoverText: React.FC<CoverTextProps> = ({text, size = 150, top = 288
       }}
     >
       {layout.lines.map((l, i) => (
+        <div key={i}>{l}</div>
+      ))}
+    </div>
+  );
+};
+
+/** The long-form thumbnail's text block, in the 1280 × 720 design grid (style guide § 11.9.1). */
+export const THUMB_TEXT = {left: 64, right: 470, centreY: 330, size: 108, halo: 40, maxLines: 3};
+
+export type ThumbTextProps = {
+  /** The lines as the owner picked them (`\n` between lines, ≤ 3). */
+  text: string;
+  mood?: Mood;
+};
+
+/**
+ * The horizontal (YouTube thumbnail) variant of the cover text (§ 11.9.1): Archivo 800 at 108 units, 0.95 leading,
+ * −0.03em, `ink` with the stacked `paper` halo (40 + 20 units), left-aligned at x 64, the block centred on y 330, the
+ * lines exactly as given (≤ 3). The design grid is 1280 × 720 units, scaled to the composition's width, so the same
+ * layout renders at 1280, 1920 or 3840. If the widest line would pass x 470, the size comes down until it fits.
+ */
+export const ThumbText: React.FC<ThumbTextProps> = ({text, mood = 'day'}) => {
+  const {width} = useVideoConfig();
+  const u = width / 1280;
+  const T = THUMB_TEXT;
+  const lines = text.split('\n').slice(0, T.maxLines);
+  const [handle] = useState(() => delayRender('Fitting the thumbnail text'));
+  const [size, setSize] = useState<number | null>(null);
+  useLayoutEffect(() => {
+    fontsReady().then(() => {
+      const cx = document.createElement('canvas').getContext('2d')!;
+      const widest = Math.max(...lines.map((l) => measure(cx, l)));
+      setSize(Math.min(T.size, (100 * (T.right - T.left)) / widest));
+      continueRender(handle);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [text, handle]);
+  if (size === null) return null;
+  const blockH = lines.length * size * LINE;
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        left: T.left * u,
+        top: (T.centreY - blockH / 2) * u,
+        fontFamily: fonts.display,
+        fontWeight: 800,
+        fontSize: size * u,
+        lineHeight: LINE,
+        letterSpacing: `${TRACK}em`,
+        color: overlayInk(mood).ink,
+        textShadow: paperHalo(mood, T.halo * u),
+        textAlign: 'left',
+        whiteSpace: 'nowrap',
+      }}
+    >
+      {lines.map((l, i) => (
         <div key={i}>{l}</div>
       ))}
     </div>

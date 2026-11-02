@@ -3,7 +3,8 @@ import {useCurrentFrame} from 'remotion';
 import {fonts} from '../fonts';
 import type {Mood} from '../theme';
 import {ease} from './card';
-import {LEFT, overlayInk, paperHalo, RIGHT} from './sectionStyle';
+import {useLayout} from './layout';
+import {overlayInk, paperHalo} from './sectionStyle';
 
 export type AttributionProps = {
   /** Who + year, as in sources.md: "FTC staff report, 2017" (shown uppercase). One line, ≤ 36 characters, no URL. */
@@ -44,14 +45,16 @@ export const Attribution: React.FC<AttributionProps & {mood?: Mood; delay?: numb
   delay = 0,
 }) => {
   const frame = useCurrentFrame();
+  const L = useLayout();
+  const A = L.attribution;
   const o = ease(frame, delay, delay + ATTRIBUTION_FADE);
   return (
     <div
       style={{
         position: 'absolute',
-        left: LEFT,
-        maxWidth: RIGHT - LEFT,
-        top: place === 'low' ? 1024 : place === 'high' ? 500 : 300,
+        left: L.left,
+        maxWidth: L.right - L.left,
+        top: place === 'low' ? A.lowBottom : place === 'high' ? A.highTop : A.skyTop,
         transform: place === 'low' ? 'translateY(-100%)' : undefined,
         opacity: o,
       }}

@@ -1,0 +1,1065 @@
+{
+  "audio": "audio/voiceover.mp3",
+  "words": [
+    {
+      "text": "Most",
+      "start": 0.08,
+      "end": 0.32
+    },
+    {
+      "text": "gas",
+      "start": 0.4,
+      "end": 0.64
+    },
+    {
+      "text": "cars",
+      "start": 0.72,
+      "end": 1.04
+    },
+    {
+      "text": "get",
+      "start": 1.12,
+      "end": 1.2
+    },
+    {
+      "text": "their",
+      "start": 1.32,
+      "end": 1.44
+    },
+    {
+      "text": "worst",
+      "start": 1.52,
+      "end": 1.76
+    },
+    {
+      "text": "mileage",
+      "start": 1.84,
+      "end": 2.24
+    },
+    {
+      "text": "in",
+      "start": 2.32,
+      "end": 2.4
+    },
+    {
+      "text": "stop-and-go",
+      "start": 2.52,
+      "end": 2.96
+    },
+    {
+      "text": "traffic,",
+      "start": 3.04,
+      "end": 3.92
+    },
+    {
+      "text": "but",
+      "start": 4.04,
+      "end": 4.16
+    },
+    {
+      "text": "many",
+      "start": 4.24,
+      "end": 4.4
+    },
+    {
+      "text": "hybrids",
+      "start": 4.48,
+      "end": 4.96
+    },
+    {
+      "text": "get",
+      "start": 5.04,
+      "end": 5.12
+    },
+    {
+      "text": "their",
+      "start": 5.28,
+      "end": 5.44
+    },
+    {
+      "text": "best",
+      "start": 5.56,
+      "end": 5.68
+    },
+    {
+      "text": "mileage",
+      "start": 5.76,
+      "end": 6.24
+    },
+    {
+      "text": "right",
+      "start": 6.36,
+      "end": 6.48
+    },
+    {
+      "text": "there.",
+      "start": 6.64,
+      "end": 7.36
+    },
+    {
+      "text": "Look",
+      "start": 7.44,
+      "end": 7.52
+    },
+    {
+      "text": "at",
+      "start": 7.56,
+      "end": 7.6
+    },
+    {
+      "text": "the",
+      "start": 7.64,
+      "end": 7.68
+    },
+    {
+      "text": "window",
+      "start": 7.84,
+      "end": 8
+    },
+    {
+      "text": "sticker.",
+      "start": 8.08,
+      "end": 8.88
+    },
+    {
+      "text": "On",
+      "start": 8.96,
+      "end": 9.04
+    },
+    {
+      "text": "a",
+      "start": 9.08,
+      "end": 9.12
+    },
+    {
+      "text": "gas",
+      "start": 9.2,
+      "end": 9.44
+    },
+    {
+      "text": "car,",
+      "start": 9.52,
+      "end": 9.92
+    },
+    {
+      "text": "the",
+      "start": 10,
+      "end": 10.08
+    },
+    {
+      "text": "highway",
+      "start": 10.2,
+      "end": 10.4
+    },
+    {
+      "text": "number",
+      "start": 10.48,
+      "end": 10.72
+    },
+    {
+      "text": "is",
+      "start": 10.8,
+      "end": 11.04
+    },
+    {
+      "text": "bigger,",
+      "start": 11.147,
+      "end": 11.76
+    },
+    {
+      "text": "but",
+      "start": 11.84,
+      "end": 12
+    },
+    {
+      "text": "on",
+      "start": 12.08,
+      "end": 12.16
+    },
+    {
+      "text": "the",
+      "start": 12.24,
+      "end": 12.32
+    },
+    {
+      "text": "hybrid",
+      "start": 12.4,
+      "end": 12.64
+    },
+    {
+      "text": "version",
+      "start": 12.72,
+      "end": 12.96
+    },
+    {
+      "text": "of",
+      "start": 13.04,
+      "end": 13.12
+    },
+    {
+      "text": "the",
+      "start": 13.2,
+      "end": 13.28
+    },
+    {
+      "text": "same",
+      "start": 13.4,
+      "end": 13.52
+    },
+    {
+      "text": "car,",
+      "start": 13.6,
+      "end": 14.133
+    },
+    {
+      "text": "the",
+      "start": 14.187,
+      "end": 14.24
+    },
+    {
+      "text": "city",
+      "start": 14.32,
+      "end": 14.48
+    },
+    {
+      "text": "number",
+      "start": 14.56,
+      "end": 14.8
+    },
+    {
+      "text": "is",
+      "start": 14.88,
+      "end": 14.96
+    },
+    {
+      "text": "bigger.",
+      "start": 15.04,
+      "end": 15.84
+    },
+    {
+      "text": "So",
+      "start": 15.92,
+      "end": 16.24
+    },
+    {
+      "text": "why",
+      "start": 16.32,
+      "end": 16.48
+    },
+    {
+      "text": "does",
+      "start": 16.56,
+      "end": 16.64
+    },
+    {
+      "text": "a",
+      "start": 16.68,
+      "end": 16.72
+    },
+    {
+      "text": "hybrid",
+      "start": 16.8,
+      "end": 17.2
+    },
+    {
+      "text": "do",
+      "start": 17.28,
+      "end": 17.36
+    },
+    {
+      "text": "better",
+      "start": 17.44,
+      "end": 17.52
+    },
+    {
+      "text": "in",
+      "start": 17.6,
+      "end": 17.76
+    },
+    {
+      "text": "town?",
+      "start": 18.2,
+      "end": 18.693
+    },
+    {
+      "text": "It",
+      "start": 18.747,
+      "end": 18.8
+    },
+    {
+      "text": "wastes",
+      "start": 18.88,
+      "end": 19.28
+    },
+    {
+      "text": "less",
+      "start": 19.36,
+      "end": 19.6
+    },
+    {
+      "text": "energy",
+      "start": 19.68,
+      "end": 20.08
+    },
+    {
+      "text": "every",
+      "start": 20.16,
+      "end": 20.4
+    },
+    {
+      "text": "time",
+      "start": 20.48,
+      "end": 20.64
+    },
+    {
+      "text": "it",
+      "start": 20.72,
+      "end": 20.8
+    },
+    {
+      "text": "stops.",
+      "start": 21.24,
+      "end": 21.707
+    },
+    {
+      "text": "At",
+      "start": 21.733,
+      "end": 21.76
+    },
+    {
+      "text": "a",
+      "start": 21.84,
+      "end": 21.88
+    },
+    {
+      "text": "red",
+      "start": 21.92,
+      "end": 22.08
+    },
+    {
+      "text": "light,",
+      "start": 22.16,
+      "end": 22.52
+    },
+    {
+      "text": "the",
+      "start": 22.56,
+      "end": 22.72
+    },
+    {
+      "text": "engine",
+      "start": 22.92,
+      "end": 23.12
+    },
+    {
+      "text": "switches",
+      "start": 23.24,
+      "end": 23.52
+    },
+    {
+      "text": "off.",
+      "start": 23.6,
+      "end": 24.293
+    },
+    {
+      "text": "When",
+      "start": 24.347,
+      "end": 24.4
+    },
+    {
+      "text": "the",
+      "start": 24.44,
+      "end": 24.48
+    },
+    {
+      "text": "light",
+      "start": 24.56,
+      "end": 24.64
+    },
+    {
+      "text": "turns",
+      "start": 24.72,
+      "end": 25
+    },
+    {
+      "text": "green,",
+      "start": 25.04,
+      "end": 25.653
+    },
+    {
+      "text": "the",
+      "start": 25.707,
+      "end": 25.76
+    },
+    {
+      "text": "hybrid",
+      "start": 25.84,
+      "end": 26.16
+    },
+    {
+      "text": "can",
+      "start": 26.24,
+      "end": 26.32
+    },
+    {
+      "text": "pull",
+      "start": 26.4,
+      "end": 26.56
+    },
+    {
+      "text": "away",
+      "start": 26.72,
+      "end": 26.88
+    },
+    {
+      "text": "on",
+      "start": 26.96,
+      "end": 27.04
+    },
+    {
+      "text": "the",
+      "start": 27.08,
+      "end": 27.12
+    },
+    {
+      "text": "electric",
+      "start": 27.36,
+      "end": 27.6
+    },
+    {
+      "text": "motor.",
+      "start": 28.04,
+      "end": 28.56
+    },
+    {
+      "text": "When",
+      "start": 28.6,
+      "end": 28.64
+    },
+    {
+      "text": "you",
+      "start": 28.72,
+      "end": 28.8
+    },
+    {
+      "text": "brake",
+      "start": 28.84,
+      "end": 29.12
+    },
+    {
+      "text": "gently,",
+      "start": 29.16,
+      "end": 29.8
+    },
+    {
+      "text": "the",
+      "start": 29.84,
+      "end": 29.92
+    },
+    {
+      "text": "motor",
+      "start": 30.08,
+      "end": 30.24
+    },
+    {
+      "text": "turns",
+      "start": 30.4,
+      "end": 30.6
+    },
+    {
+      "text": "some",
+      "start": 30.64,
+      "end": 30.72
+    },
+    {
+      "text": "of",
+      "start": 30.8,
+      "end": 30.88
+    },
+    {
+      "text": "the",
+      "start": 30.92,
+      "end": 30.96
+    },
+    {
+      "text": "car's",
+      "start": 31.04,
+      "end": 31.36
+    },
+    {
+      "text": "motion",
+      "start": 31.56,
+      "end": 31.76
+    },
+    {
+      "text": "into",
+      "start": 31.88,
+      "end": 32
+    },
+    {
+      "text": "electricity.",
+      "start": 32.24,
+      "end": 33.173
+    },
+    {
+      "text": "When",
+      "start": 33.227,
+      "end": 33.28
+    },
+    {
+      "text": "you",
+      "start": 33.32,
+      "end": 33.36
+    },
+    {
+      "text": "brake",
+      "start": 33.4,
+      "end": 33.68
+    },
+    {
+      "text": "hard,",
+      "start": 34,
+      "end": 34.36
+    },
+    {
+      "text": "the",
+      "start": 34.4,
+      "end": 34.48
+    },
+    {
+      "text": "regular",
+      "start": 34.68,
+      "end": 34.88
+    },
+    {
+      "text": "brakes",
+      "start": 34.92,
+      "end": 35.2
+    },
+    {
+      "text": "take",
+      "start": 35.32,
+      "end": 35.44
+    },
+    {
+      "text": "over",
+      "start": 35.6,
+      "end": 35.76
+    },
+    {
+      "text": "and",
+      "start": 35.84,
+      "end": 35.92
+    },
+    {
+      "text": "turn",
+      "start": 36,
+      "end": 36.16
+    },
+    {
+      "text": "that",
+      "start": 36.24,
+      "end": 36.32
+    },
+    {
+      "text": "motion",
+      "start": 36.4,
+      "end": 36.72
+    },
+    {
+      "text": "into",
+      "start": 36.88,
+      "end": 37.04
+    },
+    {
+      "text": "heat,",
+      "start": 37.28,
+      "end": 37.56
+    },
+    {
+      "text": "as",
+      "start": 37.6,
+      "end": 37.68
+    },
+    {
+      "text": "in",
+      "start": 37.72,
+      "end": 37.76
+    },
+    {
+      "text": "a",
+      "start": 37.84,
+      "end": 37.88
+    },
+    {
+      "text": "gas",
+      "start": 37.92,
+      "end": 38.16
+    },
+    {
+      "text": "car.",
+      "start": 38.6,
+      "end": 39.08
+    },
+    {
+      "text": "Out",
+      "start": 39.12,
+      "end": 39.2
+    },
+    {
+      "text": "on",
+      "start": 39.28,
+      "end": 39.36
+    },
+    {
+      "text": "the",
+      "start": 39.4,
+      "end": 39.44
+    },
+    {
+      "text": "highway,",
+      "start": 39.56,
+      "end": 39.96
+    },
+    {
+      "text": "there's",
+      "start": 40,
+      "end": 40.16
+    },
+    {
+      "text": "almost",
+      "start": 40.24,
+      "end": 40.56
+    },
+    {
+      "text": "no",
+      "start": 40.64,
+      "end": 40.88
+    },
+    {
+      "text": "idling",
+      "start": 41.04,
+      "end": 41.36
+    },
+    {
+      "text": "or",
+      "start": 41.44,
+      "end": 41.52
+    },
+    {
+      "text": "braking,",
+      "start": 41.6,
+      "end": 42.32
+    },
+    {
+      "text": "so",
+      "start": 42.4,
+      "end": 42.48
+    },
+    {
+      "text": "the",
+      "start": 42.52,
+      "end": 42.56
+    },
+    {
+      "text": "hybrid",
+      "start": 42.64,
+      "end": 42.96
+    },
+    {
+      "text": "has",
+      "start": 43.04,
+      "end": 43.2
+    },
+    {
+      "text": "little",
+      "start": 43.32,
+      "end": 43.44
+    },
+    {
+      "text": "to",
+      "start": 43.52,
+      "end": 43.6
+    },
+    {
+      "text": "save.",
+      "start": 44.04,
+      "end": 44.533
+    },
+    {
+      "text": "What's",
+      "start": 44.587,
+      "end": 44.72
+    },
+    {
+      "text": "left",
+      "start": 44.8,
+      "end": 45.2
+    },
+    {
+      "text": "is",
+      "start": 45.28,
+      "end": 45.44
+    },
+    {
+      "text": "air",
+      "start": 45.52,
+      "end": 45.6
+    },
+    {
+      "text": "resistance,",
+      "start": 45.68,
+      "end": 46.667
+    },
+    {
+      "text": "and",
+      "start": 46.693,
+      "end": 46.72
+    },
+    {
+      "text": "it",
+      "start": 46.8,
+      "end": 46.88
+    },
+    {
+      "text": "grows",
+      "start": 46.96,
+      "end": 47.36
+    },
+    {
+      "text": "with",
+      "start": 47.44,
+      "end": 47.52
+    },
+    {
+      "text": "the",
+      "start": 47.6,
+      "end": 47.68
+    },
+    {
+      "text": "square",
+      "start": 47.76,
+      "end": 48.08
+    },
+    {
+      "text": "of",
+      "start": 48.16,
+      "end": 48.24
+    },
+    {
+      "text": "your",
+      "start": 48.32,
+      "end": 48.4
+    },
+    {
+      "text": "speed.",
+      "start": 48.48,
+      "end": 49.28
+    },
+    {
+      "text": "So",
+      "start": 49.4,
+      "end": 49.52
+    },
+    {
+      "text": "the",
+      "start": 49.6,
+      "end": 49.68
+    },
+    {
+      "text": "faster",
+      "start": 49.76,
+      "end": 50.08
+    },
+    {
+      "text": "you",
+      "start": 50.16,
+      "end": 50.24
+    },
+    {
+      "text": "go,",
+      "start": 50.32,
+      "end": 50.773
+    },
+    {
+      "text": "the",
+      "start": 50.827,
+      "end": 50.88
+    },
+    {
+      "text": "harder",
+      "start": 51,
+      "end": 51.2
+    },
+    {
+      "text": "the",
+      "start": 51.28,
+      "end": 51.36
+    },
+    {
+      "text": "engine",
+      "start": 51.52,
+      "end": 51.68
+    },
+    {
+      "text": "works.",
+      "start": 51.76,
+      "end": 52.64
+    },
+    {
+      "text": "Even",
+      "start": 52.76,
+      "end": 52.88
+    },
+    {
+      "text": "so,",
+      "start": 52.96,
+      "end": 53.4
+    },
+    {
+      "text": "the",
+      "start": 53.44,
+      "end": 53.52
+    },
+    {
+      "text": "hybrid",
+      "start": 53.6,
+      "end": 54
+    },
+    {
+      "text": "still",
+      "start": 54.16,
+      "end": 54.32
+    },
+    {
+      "text": "beats",
+      "start": 54.36,
+      "end": 54.56
+    },
+    {
+      "text": "its",
+      "start": 54.64,
+      "end": 54.72
+    },
+    {
+      "text": "gas",
+      "start": 54.8,
+      "end": 55.04
+    },
+    {
+      "text": "version",
+      "start": 55.2,
+      "end": 55.36
+    },
+    {
+      "text": "on",
+      "start": 55.4,
+      "end": 55.44
+    },
+    {
+      "text": "the",
+      "start": 55.52,
+      "end": 55.6
+    },
+    {
+      "text": "highway,",
+      "start": 55.72,
+      "end": 56.293
+    },
+    {
+      "text": "by",
+      "start": 56.347,
+      "end": 56.4
+    },
+    {
+      "text": "a",
+      "start": 56.48,
+      "end": 56.56
+    },
+    {
+      "text": "smaller",
+      "start": 56.68,
+      "end": 56.88
+    },
+    {
+      "text": "margin.",
+      "start": 56.96,
+      "end": 57.92
+    },
+    {
+      "text": "Back",
+      "start": 58,
+      "end": 58.08
+    },
+    {
+      "text": "in",
+      "start": 58.16,
+      "end": 58.24
+    },
+    {
+      "text": "town,",
+      "start": 58.32,
+      "end": 58.92
+    },
+    {
+      "text": "government",
+      "start": 58.96,
+      "end": 59.36
+    },
+    {
+      "text": "figures",
+      "start": 59.56,
+      "end": 59.76
+    },
+    {
+      "text": "show",
+      "start": 59.88,
+      "end": 60
+    },
+    {
+      "text": "a",
+      "start": 60.24,
+      "end": 60.347
+    },
+    {
+      "text": "very",
+      "start": 60.453,
+      "end": 60.56
+    },
+    {
+      "text": "cold",
+      "start": 60.64,
+      "end": 60.88
+    },
+    {
+      "text": "day",
+      "start": 61.04,
+      "end": 61.2
+    },
+    {
+      "text": "can",
+      "start": 61.28,
+      "end": 61.36
+    },
+    {
+      "text": "cut",
+      "start": 61.44,
+      "end": 61.52
+    },
+    {
+      "text": "a",
+      "start": 61.6,
+      "end": 61.68
+    },
+    {
+      "text": "hybrid's",
+      "start": 61.76,
+      "end": 62.16
+    },
+    {
+      "text": "city",
+      "start": 62.28,
+      "end": 62.4
+    },
+    {
+      "text": "mileage",
+      "start": 62.52,
+      "end": 62.88
+    },
+    {
+      "text": "by",
+      "start": 62.92,
+      "end": 62.96
+    },
+    {
+      "text": "about",
+      "start": 63.04,
+      "end": 63.28
+    },
+    {
+      "text": "a",
+      "start": 63.36,
+      "end": 63.44
+    },
+    {
+      "text": "third.",
+      "start": 63.52,
+      "end": 64.32
+    },
+    {
+      "text": "If",
+      "start": 64.453,
+      "end": 64.48
+    },
+    {
+      "text": "you",
+      "start": 64.56,
+      "end": 64.64
+    },
+    {
+      "text": "drive",
+      "start": 64.76,
+      "end": 64.88
+    },
+    {
+      "text": "a",
+      "start": 64.96,
+      "end": 65.04
+    },
+    {
+      "text": "hybrid,",
+      "start": 65.16,
+      "end": 65.72
+    },
+    {
+      "text": "is",
+      "start": 65.76,
+      "end": 65.84
+    },
+    {
+      "text": "your",
+      "start": 65.92,
+      "end": 66.08
+    },
+    {
+      "text": "mileage",
+      "start": 66.2,
+      "end": 66.56
+    },
+    {
+      "text": "really",
+      "start": 66.64,
+      "end": 66.88
+    },
+    {
+      "text": "better",
+      "start": 66.96,
+      "end": 67.12
+    },
+    {
+      "text": "in",
+      "start": 67.2,
+      "end": 67.36
+    },
+    {
+      "text": "town,",
+      "start": 67.64,
+      "end": 68
+    },
+    {
+      "text": "even",
+      "start": 68.08,
+      "end": 68.16
+    },
+    {
+      "text": "in",
+      "start": 68.24,
+      "end": 68.32
+    },
+    {
+      "text": "winter?",
+      "start": 68.48,
+      "end": 68.96
+    }
+  ]
+}

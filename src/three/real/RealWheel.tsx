@@ -433,6 +433,12 @@ export type RealWheelProps = {
    * it (a drive unit) reads through in a close framing. Default none (as before); 1 restores it.
    */
   ghost?: number;
+  /**
+   * No. 014 (N2): heat in the brake rotor, 0 → 1 (with `axle`): its friction face glows `orange` (the energy lost as heat,
+   * the system), seen through the spokes of a whole wheel, with the § 5 halo at 25 %, both bloomed. The caliper keeps
+   * its colour. Default 0.
+   */
+  heat?: number;
 };
 
 /** Ghost a material set (`ghost`): × opacity, transparent, no depth writes; restores each once back at 1. */
@@ -730,6 +736,27 @@ const GHOSTS = [-0.5, -0.25, 0.25, 0.5].map((f) => ({f, k: 1 - Math.abs(f)}));
  * The wheel (see the file comment). Turning parts are clipped by the cut plane; their sections show
  * flat in the cut colour (their back faces through the opening).
  */
+/** No. 014 (N2): the rotor's friction face glowing with heat (`heat`): an orange ring and its 25 % halo, bloomed. */
+const RotorHeat: React.FC<{heat: number; low: boolean}> = ({heat, low}) => {
+  const mats = useMemo(
+    () => ({
+      core: new THREE.MeshBasicMaterial({color: raw(section.orange), transparent: true, depthWrite: false}),
+      halo: new THREE.MeshBasicMaterial({color: raw(section.orange), transparent: true, depthWrite: false}),
+    }),
+    [],
+  );
+  const k = Math.max(0, Math.min(1, heat));
+  mats.core.opacity = 0.92 * k;
+  mats.halo.opacity = 0.25 * k;
+  const n = low ? 64 : 128;
+  return (
+    <>
+      <mesh geometry={polarRing(-0.026, ROTOR.r0 + 0.02, ROTOR.r1 - 0.015, n, 1)} material={mats.core} userData={{glow: true}} renderOrder={3} />
+      <mesh geometry={polarRing(-0.028, ROTOR.r0 - 0.04, ROTOR.r1 + 0.05, n, 1)} material={mats.halo} userData={{glow: true}} renderOrder={2} />
+    </>
+  );
+};
+
 export const RealWheel: React.FC<RealWheelProps> = ({
   mood,
   position = [0, 0, 0],
@@ -754,6 +781,7 @@ export const RealWheel: React.FC<RealWheelProps> = ({
   sport: sportIn,
   design = 'alloy',
   ghost,
+  heat = 0,
 }) => {
   const gl = useThree((s) => s.gl);
   gl.localClippingEnabled = true;
@@ -1110,6 +1138,7 @@ export const RealWheel: React.FC<RealWheelProps> = ({
             <mesh geometry={polarRing(-0.03, ROTOR.r0, ROTOR.r1, low ? 64 : 128, 1)} material={mats.rotor} receiveShadow />
             <mesh geometry={polarRing(-0.11, ROTOR.r0, ROTOR.r1, low ? 64 : 128, -1)} material={mats.rotorEdge} />
             <Axial a0={-0.11} a1={-0.03} r={ROTOR.r1} mats={[mats.rotorEdge]} low={low} />
+            {heat > 0.004 ? <RotorHeat heat={heat} low={low} /> : null}
           </>
         ) : null}
         {sportMats && sport?.spokes === 'turbine' ? (

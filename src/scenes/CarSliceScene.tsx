@@ -8,7 +8,10 @@ import {
   cupholderOf,
   cupPhoneChipWorld,
   cupPhoneWorld,
+  engineCrank,
+  engineTurns,
   eventPinState,
+  isHybrid,
   isBay,
   isGas,
   isLeft,
@@ -20,14 +23,16 @@ import {
   SlicedCar,
   slicedCarCrank,
   slicedCarPhone,
+  slicedCarPoint,
   slicedCarShake,
   toWorld,
   type SlicedCarOptions,
   type V3,
 } from '../three/real/SlicedCar';
-import {projectToFrame, SectionCamera, sectionCameraAt, type Framing} from '../three/section/SectionCamera';
+import {formatOf, projectToFrame, SectionCamera, sectionCameraAt, type Framing} from '../three/section/SectionCamera';
 import {SectionLights, SectionStage} from '../three/section/SectionStage';
 import {skyTexture} from '../three/section/textures';
+import {raw} from '../three/plaster';
 import {wheelMode} from '../three/real/wheelMotion';
 import {MOTION_CHIP} from '../three/real/PhoneTeardown';
 import {seatRise} from '../three/real/RealCar';
@@ -71,7 +76,9 @@ export type CarFraming =
   | 'call'
   | 'cupholder'
   | 'mount'
-  | 'chip';
+  | 'chip'
+  | 'hybrid'
+  | 'hybridFront';
 
 export const CAR_FRAMINGS: Record<
   Exclude<
@@ -94,6 +101,8 @@ export const CAR_FRAMINGS: Record<
     | 'cupholder'
     | 'mount'
     | 'chip'
+    | 'hybrid'
+    | 'hybridFront'
   >,
   Framing
 > = {
@@ -158,6 +167,20 @@ export const GAS_FRAMINGS: Partial<Record<CarFraming, Framing>> = {
   },
 };
 
+/**
+ * No. 014: the hybrid's framings (`variant: 'hybrid'`, facing −x, world metres; set on test stills). `hybrid`: the whole
+ * car (the motor and inverter at the front, the pack under the rear seat), room above for a card; `wide`: the whole car
+ * with room ahead of the nose for the drag arrow; `hybridFront`: the near front wheel whole and the bay above it; `bay`:
+ * the engine and the motor-generator; `battery`: the pack under the rear seat.
+ */
+export const HYBRID_FRAMINGS: Partial<Record<CarFraming, Framing>> = {
+  hybrid: {look: [0.1, 0.6, 0.3], distance: 18},
+  wide: {look: [-1.0, -0.3, 0.3], distance: 29},
+  hybridFront: {look: [-1.35, 0.55, 0.55], distance: 5.2},
+  bay: {look: [-1.4, 0.55, 0.4], distance: 4.4},
+  battery: {look: [0.62, 0.3, 0.6], distance: 3.4},
+};
+
 export type CarSliceSceneProps = SlicedCarOptions & {
   durationInFrames: number;
   /** Realistic objects (accepted for consistency; the car is always realistic). */
@@ -207,6 +230,8 @@ const framingFor = (p: Partial<CarSliceSceneProps>): Framing => {
     return {look: [at[0], at[1] + f.lift, at[2]], distance: f.distance};
   }
   if (!isLeft(p)) return CAR_FRAMINGS[name as keyof typeof CAR_FRAMINGS] ?? CAR_FRAMINGS.wide;
+  const hyb = isHybrid(p) ? HYBRID_FRAMINGS[name] : undefined;
+  if (hyb) return hyb;
   const gas = isGas(p) ? GAS_FRAMINGS[name] : undefined;
   if (gas) return gas;
   const ev = EV_FRAMINGS[name];
@@ -249,13 +274,15 @@ export const carCarry = (
   durationInFrames: number,
   fps: number,
 ): Record<string, unknown> =>
-  p.variant === 'ev' || p.variant === 'gas'
+  p.variant === 'ev' || p.variant === 'gas' || p.variant === 'hybrid'
     ? {
         revsFrom: simRevs(p, durationInFrames / fps, fps),
         // 'forward': the drawn turn runs on across the cut too (it falls behind `revsFrom` above the cap)
         ...(wheelMode(p.wheels) === 'forward' ? {wheelFrom: wheelTurnRevs(p, durationInFrames / fps, fps)} : {}),
         // the V8's crank runs on across the cut too (No. 007)
         ...(p.variant === 'gas' && p.engine === 'v8' ? {crankFrom: slicedCarCrank(p, durationInFrames / fps)} : {}),
+        // No. 014: the four-cylinder's crank too (gas when it runs, the hybrid always)
+        ...(engineTurns(p) ? {crankFrom: engineCrank(p, durationInFrames / fps)} : {}),
       }
     : {};
 
@@ -275,6 +302,7 @@ const cameraAtFrame = (p: Partial<CarSliceSceneProps>, o: {frame: number; fps: n
     durationInFrames: o.durationInFrames,
     drift: p.drift ?? 0.08,
     clockOffset: (p.startFrame ?? 0) / o.fps,
+    format: formatOf(p),
   });
 };
 
@@ -355,6 +383,9 @@ export const carAnchorOnScreen = (
     return st ? projectToFrame(cam, [st.head[0], st.head[1] + PIN.head * st.k, st.head[2]]) : undefined;
   }
   if (anchor === 'cluster') return clusterOnScreen(p, o);
+  // No. 014: the hybrid's parts and the car's own points ('engine', 'motor', 'battery', 'inverter', 'nose', 'tail', 'roof', ...)
+  const pt = slicedCarPoint(p, anchor);
+  if (pt) return projectToFrame(cameraAtFrame(p, o), pt);
   if (anchor === 'head' || anchor === 'youSpot') return carHeadTopOnScreen(p, p.driver ?? 'you', o);
   return undefined;
 };
@@ -378,6 +409,8 @@ export const CarSliceScene: React.FC<CarSliceSceneProps> = (props) => {
   const {from, to, pre} = carCameraMove(props, durationInFrames, fps, frame);
   const sky = useMemo(() => new THREE.MeshBasicMaterial({map: skyTexture(mood), fog: false}), [mood]);
   sky.color.setScalar(1 / m.exposure);
+  const skyFoot = useMemo(() => new THREE.MeshBasicMaterial({fog: false}), []);
+  skyFoot.color.copy(raw(m.sky[2])).multiplyScalar(1 / m.exposure);
   const camNow = cameraAtFrame(props, {frame, fps, durationInFrames});
   const camD = camNow.position.distanceTo(camNow.look);
   const shakeAmt = slicedCarShake(props, t);
@@ -411,6 +444,12 @@ export const CarSliceScene: React.FC<CarSliceSceneProps> = (props) => {
         <mesh position={[0, 8, -14]} material={sky}>
           <planeGeometry args={[80, 50]} />
         </mesh>
+        {/* No. 014: the hybrid's far framings ('wide', room for the drag arrow) look under the sky's foot: the horizon's colour on down */}
+        {isHybrid(props) ? (
+          <mesh position={[0, -42, -14]} material={skyFoot}>
+            <planeGeometry args={[80, 50]} />
+          </mesh>
+        ) : null}
         <SlicedCar {...props} wedge={wedge} cameraDistance={camD} />
       </SectionStage>
     </AbsoluteFill>

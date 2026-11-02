@@ -33,6 +33,10 @@ import {spec as bydPrice} from './byd-price/spec';
 import bydPriceTranscript from './byd-price/transcript.json';
 import {spec as insuranceApp} from './insurance-app/spec';
 import insuranceAppTranscript from './insurance-app/transcript.json';
+import {spec as datacenterWater} from './datacenter-water/spec';
+import datacenterWaterTranscript from './datacenter-water/transcript.json';
+import {spec as hybridCity} from './hybrid-city/spec';
+import hybridCityTranscript from './hybrid-city/transcript.json';
 // </imports>
 
 export type VideoEntry = {spec: VideoSpec; transcript: Transcript};
@@ -59,5 +63,7 @@ export const VIDEOS: Record<string, VideoEntry> = {
   'ev-charging': {spec: evCharging, transcript: evChargingTranscript as Transcript},
   'byd-price': {spec: bydPrice, transcript: bydPriceTranscript as Transcript},
   'insurance-app': {spec: insuranceApp, transcript: insuranceAppTranscript as Transcript},
+  'datacenter-water': {spec: datacenterWater, transcript: datacenterWaterTranscript as Transcript},
+  'hybrid-city': {spec: hybridCity, transcript: hybridCityTranscript as Transcript},
   // </entries>
 };

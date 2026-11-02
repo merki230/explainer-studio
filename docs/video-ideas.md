@@ -115,6 +115,55 @@ one into the other. Nostalgia for older viewers, discovery for younger ones.
 
 All unverified until researched.
 
+## Shortlist: data center series, long-form YouTube + Shorts (owner, 2026-11-01)
+
+First long-form test: a YouTube video of **at least 5 minutes**, plus Shorts cut from its chapters for TikTok,
+Instagram and Shorts. Planned as a **two-part series**, water first, electricity second. **Part 1 in research** (2026-11-01,
+slug `datacenter-water`): owner chose **horizontal** for the long video (TV viewers), four Shorts cut from the
+chapters, long video built first. All facts below are unverified until researched.
+
+**Part 1: data center water.** One story: one data center on a hot afternoon, following the heat out of a rack
+to the roof. The surprise: the cooling towers get rid of heat by evaporating water, so the water use isn't a
+leak, it's how the building stays cool. Chapters (each also a Short):
+1. Why does a data center drink water? (heat → air → water → cooling tower → evaporation)
+2. Why don't they just reuse the water? (they recirculate most of it; evaporation concentrates minerals, so some
+   must be flushed and replaced)
+3. Why not release it back into a river? (the evaporated part is already in the air; the flushed part is warm and
+   mineral-heavy, usually sent to the sewer under permit)
+4. The fix that uses no water, and why it costs more power (dry or closed-loop cooling; power plants use water
+   too). This ending hands off to Part 2.
+
+Working hook: "A data center can evaporate millions of gallons of water a year, and that's not a leak, it's how
+it stays cool." (to verify)
+
+**Part 2: data center electricity.** Picks up from Part 1's trade-off. Hidden system: where the power goes
+inside the building (chips, cooling, conversion and backup losses), then the grid and the plants behind it;
+the news angle: AI demand, new or restarted plants, household bills. Angle and hook to settle with the owner.
+
+**Open decisions (owner):** vertical or horizontal for the long video (recommendation: vertical for the first
+one, reusing every scene and making the Shorts direct cuts); chapter order; hooks; number of Shorts (proposal:
+four per part). **New builds expected:** a cut-open data hall, a roof with cooling towers, the water
+treatment / sewer side, a substation and a power plant for Part 2; the report-slice server racks help a little.
+
+## Paused: why many hybrids get better mileage in the city (owner, 2026-11-02)
+
+**Short only** (owner, 2026-11-02), `src/videos/hybrid-city/`. Hook B: "Most gas cars get their worst mileage in
+stop-and-go traffic. Many hybrids get their best mileage there." Research done (sources.md: EPA sticker pairs, e.g.
+Corolla 32/41 vs Hybrid 53/46; about a quarter of hybrids flip; the hybrid still wins on the highway; cold costs a
+hybrid about a third in the city). First script draft written (209 words, about 80 s), not yet checked. **Paused by
+the owner to finish the data center video.** On resume: the owner picks the length (recommendation: cut the
+"carmakers say" engine line and shorten the air line, about 70 s), then fact-checker + ai-tell-checker + spoken-check.
+The gear set ("no gearbox") stays out (owner finds it too mechanical).
+
+## Parked: how can a plane crash leave almost nothing but a crater? (owner, 2026-11-02)
+
+The owner's question after a news report of a plane crash in Florida that left a crater. Evergreen physics
+explainer, not news: impact speed and angle, how a thin aluminum airframe breaks up, how soft ground absorbs
+the energy, and how investigators still reconstruct what happened from fragments. Rules: never name or depict
+the Florida crash or any recent one, no victims, no blame or policy (see no-politics); wait until the news has
+passed; NTSB and other primary sources only. Status: **parked** until the data center series is done; angle and
+hook to settle with the owner before research.
+
 ## Parked: self-checkout bagging scale (owner, 2026-10-24)
 
 Chosen because topics viewers argue about draw the most comments, but the video is an explanation of how it works above

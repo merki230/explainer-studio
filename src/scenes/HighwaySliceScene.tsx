@@ -16,6 +16,7 @@ import {groundAt, HIGHWAY_LAYOUT, HighwaySlice, SIGN_SPOTS} from '../three/secti
 import {bendPoint, type RoadBend} from '../three/section/roadBend';
 import {TireSpray, type SprayEmitter} from '../three/real/TireSpray';
 import {
+  formatOf,
   projectToFrame,
   SECTION_ANGLE,
   sectionCameraAt,
@@ -490,6 +491,7 @@ export const highwayCameraAt = (
     durationInFrames: o.durationInFrames,
     drift: p.drift ?? 0.08,
     clockOffset: (p.startFrame ?? 0) / o.fps,
+    format: formatOf(p),
   });
 };
 

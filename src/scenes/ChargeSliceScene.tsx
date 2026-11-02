@@ -41,7 +41,16 @@ import {chargePortAt} from '../three/real/RealCar';
 import {bladeTipAt, layoutOf, SlicedCar, type SlicedCarOptions} from '../three/real/SlicedCar';
 import {isRealShape, REAL_CUT} from '../three/real/realModels';
 import {capRevs} from '../three/real/wheelMotion';
-import {projectToFrame, SECTION_ANGLE, SectionCamera, sectionCameraAt, type Framing} from '../three/section/SectionCamera';
+import {
+  formatOf,
+  projectToFrame,
+  SECTION_ANGLE,
+  SectionCamera,
+  sectionCameraAt,
+  useFormatProps,
+  widenFraming,
+  type Framing,
+} from '../three/section/SectionCamera';
 import {SectionLights, SectionStage} from '../three/section/SectionStage';
 import {skyTexture} from '../three/section/textures';
 import {ease, framingAtKeys, keyedValue, type CameraKey, type Keyed} from './keyframes';
@@ -903,6 +912,25 @@ const hvRoute = (shape: ShellProfile = 'crossover'): V3[] => {
 
 // ---------------------------------------------------------------- camera
 
+/**
+ * The wide frame (§ 11.6, `format: 'horizontal'`): each preset stands back by this factor (same look-at) so its subject
+ * keeps the frame's height; the stacked twin (two bays one above the other) needs the most. The twin turned sideways
+ * (§ 11.6 two-shot) is a new set. Set on test stills.
+ */
+export const CHARGE_WIDE: Record<ChargeFraming, number> = {
+  twin: 1.55,
+  stack: 1.55,
+  cables: 1.45,
+  teslaCharge: 1.3,
+  byd: 1.3,
+  wide: 1.4,
+  emptyBay: 1.4,
+  usCharger: 1.3,
+  cableClose: 1.3,
+  bottomPack: 1.3,
+  topPack: 1.3,
+};
+
 const chargeCameraMove = (
   p: Partial<ChargeSliceSceneProps>,
   durationInFrames: number,
@@ -911,7 +939,7 @@ const chargeCameraMove = (
 ): {from: Framing; to: Framing; pre?: {from: Framing; hold: number; move: number; ease: 'cubic'}} => {
   const name = p.framing ?? 'twin';
   const F = chargeFramings(gapOf(p));
-  const preset = name === 'cableClose' ? cableCloseFraming(p) : F[name];
+  const preset = widenFraming(name === 'cableClose' ? cableCloseFraming(p) : F[name], formatOf(p), CHARGE_WIDE[name]);
   if (p.cameraKeys && p.cameraKeys.length) {
     const base = p.camera?.from ?? preset;
     const f = framingAtKeys(p.cameraKeys, base, frame === undefined ? Infinity : frame / fps);
@@ -946,6 +974,7 @@ const chargeCameraAt = (p: Partial<ChargeSliceSceneProps>, o: {frame: number; fp
     durationInFrames: o.durationInFrames,
     drift: p.drift ?? 0,
     clockOffset: (p.startFrame ?? 0) / o.fps,
+    format: formatOf(p),
   });
 };
 
@@ -1033,7 +1062,8 @@ export const chargeAnchorOnScreen = (
  * a time-lapse swinging the sun, drifting the clouds and spinning the station clock. The camera frames it at the
  * fixed angle.
  */
-export const ChargeSliceScene: React.FC<ChargeSliceSceneProps> = (props) => {
+export const ChargeSliceScene: React.FC<ChargeSliceSceneProps> = (propsIn) => {
+  const props = useFormatProps(propsIn);
   const {durationInFrames, mood = 'day', startFrame = 0} = props;
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();

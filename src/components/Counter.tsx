@@ -3,6 +3,7 @@ import {Easing, interpolate, useCurrentFrame, useVideoConfig} from 'remotion';
 import {fonts} from '../fonts';
 import type {Mood} from '../theme';
 import {ease} from './card';
+import {useLayout} from './layout';
 import {overlayInk} from './sectionStyle';
 
 /** One row of a stopwatch compare (No. 007): a label, and the value its clock stops at. */
@@ -26,7 +27,7 @@ export type CounterProps = {
   label: string;
   /** A Mono line under it ("up to about"). */
   sub?: string;
-  /** Top-left corner, as fractions of the frame (0.111 = the safe area's left edge, 120 px). */
+  /** Top-left corner, as fractions of the frame (0.111 = the safe area's left edge, 120 px). Default 0.111, 0.55; wide frame x 144, top y 120 (§ 11.5). */
   x?: number;
   y?: number;
   /** Seconds to count. */
@@ -65,15 +66,16 @@ export type CounterProps = {
  * A number counting up, in The Section's look (v0.8 § 6): the title block's frame (a `paper` box,
  * 3 px `ink` border, square corners, padding 13 / 24 / 15), Archivo 800 digits at 80 px, the unit in
  * Inter 600 34 px, the sub-line in JetBrains Mono 600 20 px `inkSub`. In over 10 frames (opacity, 8 px
- * rise). Counts as the frame's one card. Mood colours from the scene.
+ * rise). Counts as the frame's one card. Mood colours from the scene. Wide frame (§ 11.5): digits 88 px, unit 36 px,
+ * sub-line 26 px, at x 144, top y 120 by default.
  */
 export const Counter: React.FC<CounterProps & {mood?: Mood}> = ({
   from = 0,
   to,
   label,
   sub,
-  x = 0.111,
-  y = 0.55,
+  x: xIn,
+  y: yIn,
   duration = 1.6,
   subPlace = 'below',
   sub2,
@@ -87,6 +89,9 @@ export const Counter: React.FC<CounterProps & {mood?: Mood}> = ({
 }) => {
   const frame = useCurrentFrame();
   const {fps, width, height} = useVideoConfig();
+  const L = useLayout();
+  const x = xIn ?? L.counter.x;
+  const y = yIn ?? L.counter.y;
   const {ink, paper, inkSub} = overlayInk(mood);
   const enter = ease(frame, 0, 10);
   if (rows?.length)
@@ -106,7 +111,7 @@ export const Counter: React.FC<CounterProps & {mood?: Mood}> = ({
       style={{
         fontFamily: fonts.mono,
         fontWeight: 600,
-        fontSize: 20,
+        fontSize: L.counter.sub,
         letterSpacing: '0.12em',
         textTransform: 'uppercase',
         color: inkSub,
@@ -141,7 +146,7 @@ export const Counter: React.FC<CounterProps & {mood?: Mood}> = ({
           style={{
             fontFamily: fonts.display,
             fontWeight: 800,
-            fontSize: 80,
+            fontSize: L.counter.digits,
             lineHeight: 1,
             letterSpacing: '-0.02em',
             color: ink,
@@ -172,7 +177,7 @@ export const Counter: React.FC<CounterProps & {mood?: Mood}> = ({
             </>
           )}
         </span>
-        <span style={{fontFamily: fonts.sans, fontWeight: 600, fontSize: 34, color: ink}}>{label}</span>
+        <span style={{fontFamily: fonts.sans, fontWeight: 600, fontSize: L.counter.unit, color: ink}}>{label}</span>
       </div>
       {sub && subPlace === 'below' ? subLine : null}
       {sub2 && place2 === 'below' ? sub2Line : null}
@@ -192,6 +197,7 @@ const CounterRows: React.FC<
 > = ({from, label, sub, x, y, subPlace, decimals, rows, start, mood}) => {
   const frame = useCurrentFrame();
   const {fps, width, height} = useVideoConfig();
+  const L = useLayout();
   const {ink, paper, inkSub} = overlayInk(mood);
   const enter = ease(frame, 0, 10);
   // the clock's keys: `from` at `start`, then each row's `to` at its stop time (sorted, never running back)
@@ -218,7 +224,7 @@ const CounterRows: React.FC<
       style={{
         fontFamily: fonts.mono,
         fontWeight: 600,
-        fontSize: 20,
+        fontSize: L.counter.sub,
         letterSpacing: '0.12em',
         textTransform: 'uppercase',
         color: inkSub,
@@ -254,7 +260,7 @@ const CounterRows: React.FC<
               style={{
                 fontFamily: fonts.sans,
                 fontWeight: 700,
-                fontSize: 30,
+                fontSize: L.counter.rowLabel,
                 letterSpacing: '0.04em',
                 textTransform: 'uppercase',
                 color: ink,
@@ -268,7 +274,7 @@ const CounterRows: React.FC<
                 justifySelf: 'end',
                 fontFamily: fonts.display,
                 fontWeight: 800,
-                fontSize: 80,
+                fontSize: L.counter.digits,
                 lineHeight: 1,
                 letterSpacing: '-0.02em',
                 color: ink,
@@ -284,7 +290,7 @@ const CounterRows: React.FC<
                 fmt(Math.min(clock, r.to))
               )}
             </span>
-            <span style={{fontFamily: fonts.sans, fontWeight: 600, fontSize: 34, color: ink}}>{label}</span>
+            <span style={{fontFamily: fonts.sans, fontWeight: 600, fontSize: L.counter.unit, color: ink}}>{label}</span>
           </React.Fragment>
         ))}
       </div>

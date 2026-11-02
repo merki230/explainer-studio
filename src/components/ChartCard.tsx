@@ -3,7 +3,8 @@ import {interpolate, useCurrentFrame, useVideoConfig} from 'remotion';
 import {fonts} from '../fonts';
 import {section, type Mood} from '../theme';
 import {ease} from './card';
-import {LEFT, overlayInk} from './sectionStyle';
+import {useLayout} from './layout';
+import {overlayInk} from './sectionStyle';
 
 /** Progress keys: `{at, value}`, seconds after the card enters, value 0 (not drawn) → 1 (drawn), eased between keys. */
 export type DrawKeys = {at: number; value: number}[];
@@ -78,10 +79,13 @@ export type ChartCardProps = {
   dip?: number;
   /** Each hump this much wider than the one before (default 1.06: low gears short, high gears long). */
   growth?: number;
-  /** Outer size in px, border included (default 696 × 560; capped at the detail box's 696 × 620). */
+  /**
+   * Outer size in px, border included (default 696 × 560; capped at the detail box's 696 × 620). Wide frame (§ 11.5):
+   * default 900 × 640, capped at 900 × 700 (bars: 640, with a footnote 700).
+   */
   width?: number;
   height?: number;
-  /** Left and top edges in px (default x 120, y 330). */
+  /** Left and top edges in px (default x 120, y 330; wide frame x 144, y 150: the left half, the slice composed right). */
   left?: number;
   top?: number;
   /**
@@ -164,8 +168,8 @@ const monotonePath = (pts: [number, number][]) => {
   return d;
 };
 
-/** Rough rendered width of an Inter 700 26 px label with 0.04em tracking (≈ 0.68 em a letter). */
-const labelWidth = (s: string) => s.length * 26 * 0.72;
+/** Rough rendered width of an Inter 700 label with 0.04em tracking (≈ 0.68 em a letter). */
+const labelWidth = (s: string, size = 26) => s.length * size * 0.72;
 
 /** An axis-label arrow (Inter's latin subset has no →), drawn as a shape at the label's weight. */
 const Arrow: React.FC<{dir: 'right' | 'up'; color: string}> = ({dir, color}) => (
@@ -203,10 +207,10 @@ export const ChartCard: React.FC<ChartCardProps & {mood?: Mood}> = ({
   humpCount = 10,
   dip = 0.8,
   growth = 1.06,
-  width = 696,
-  height = 560,
-  left = LEFT,
-  top = 330,
+  width: widthIn,
+  height: heightIn,
+  left: leftIn,
+  top: topIn,
   curves,
   xMax,
   yMax,
@@ -218,13 +222,19 @@ export const ChartCard: React.FC<ChartCardProps & {mood?: Mood}> = ({
 }) => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
+  const Lay = useLayout();
+  const K = Lay.chart;
+  const width = widthIn ?? K.width;
+  const height = heightIn ?? K.height;
+  const left = leftIn ?? K.left;
+  const top = topIn ?? K.top;
   const t = frame / fps;
   const {ink, paper} = overlayInk(mood);
   const enter = ease(frame, 0, CHART_FADE);
   const rise = interpolate(enter, [0, 1], [8, 0]);
   const barsMode = !!bars?.length;
-  const W = Math.min(696, width) - 2 * BORDER;
-  const H = Math.min(620, barsMode ? (footnote?.length ? 620 : 560) : height) - 2 * BORDER;
+  const W = Math.min(K.maxW, width) - 2 * BORDER;
+  const H = Math.min(K.maxH, barsMode ? (footnote?.length ? K.barsFootH : K.barsH) : height) - 2 * BORDER;
   // the plot: y axis at x0, x axis at y1; arrowheads past the ends
   const x0 = 64;
   const x1 = W - 40;
@@ -261,15 +271,15 @@ export const ChartCard: React.FC<ChartCardProps & {mood?: Mood}> = ({
   const py = (v: number) => y1 - ((y1 - y0) * v) / dataY;
   const cTicks = cv ? (ticks ?? [{at: dataX * tickAt, label: tick}]) : [];
   // the axis label moves down a row when a tick's label would run into it
-  const xLabelLeft = x1 + 26 - labelWidth(xLabel) - 32;
-  const xLabelLow = cTicks.some((k) => px(k.at) + labelWidth(k.label) / 2 > xLabelLeft - 16);
+  const xLabelLeft = x1 + 26 - labelWidth(xLabel, K.label) - 32;
+  const xLabelLow = cTicks.some((k) => px(k.at) + labelWidth(k.label, K.label) / 2 > xLabelLeft - 16);
   const label: React.CSSProperties = {
     position: 'absolute',
     display: 'flex',
     alignItems: 'center',
     fontFamily: fonts.sans,
     fontWeight: 700,
-    fontSize: 26,
+    fontSize: K.label,
     letterSpacing: '0.04em',
     lineHeight: 1,
     color: ink,
@@ -286,7 +296,7 @@ export const ChartCard: React.FC<ChartCardProps & {mood?: Mood}> = ({
           color: paper,
           fontFamily: fonts.mono,
           fontWeight: 700,
-          fontSize: 17,
+          fontSize: K.tab,
           letterSpacing: '0.16em',
           padding: '4px 10px 3px',
           lineHeight: 1.2,
@@ -424,7 +434,7 @@ export const ChartCard: React.FC<ChartCardProps & {mood?: Mood}> = ({
 
 // ---------------------------------------------------------------- bars mode (v0.14 § 6, No. 011)
 
-/** The bars mode's layout (px inside the border, style guide § 6). */
+/** The bars mode's layout (px inside the border, style guide § 6). Wide frame: `BARS_H`. */
 export const BARS = {
   pad: 40,
   /** The names' right edge, the bars' left edge (zero rule), the reference length. */
@@ -449,6 +459,25 @@ export const BARS = {
   fadeF: 6,
   bracketF: 12,
   labelF: 10,
+  /** Type: row label, names and bracket label; the bar label; the footnote. */
+  label: 26,
+  barLabel: 22,
+  foot: 24,
+};
+
+/** The bars mode in the wide card (§ 11.5: 900 wide, the reference bar 640 px, type +2 px). */
+export const BARS_H: typeof BARS = {
+  ...BARS,
+  nameRight: 160,
+  x0: 176,
+  ref: 640,
+  labelH: 28,
+  rowTop: [40, 264, 488],
+  ruleY: 560,
+  footY: 578,
+  label: 28,
+  barLabel: 26,
+  foot: 26,
 };
 
 /** Rough width of an Inter 700 uppercase label with 0.08em tracking (≈ 0.74 em a letter). */
@@ -464,7 +493,7 @@ const BarsBody: React.FC<{
 }> = ({rows, names, footnote, t, W, mood}) => {
   const {fps} = useVideoConfig();
   const {ink, paper, inkSub} = overlayInk(mood);
-  const B = BARS;
+  const B = useLayout().format === 'horizontal' ? BARS_H : BARS;
   const f = t * fps;
   const shown = rows.slice(0, footnote?.length ? 2 : 3);
   // each row's times (s after the card enters), defaults chained: a row draws after the one before
@@ -579,7 +608,7 @@ const BarsBody: React.FC<{
           return {opacity: k, transform: `translateY(${(1 - k) * 6}px)`};
         };
         const bl = r.barLabel;
-        const blFits = bl ? xRef - xe >= capsWidth(bl, 22) + 24 : false;
+        const blFits = bl ? xRef - xe >= capsWidth(bl, B.barLabel) + 24 : false;
         const measured = r.bracket?.measured ?? true;
         let bEnd = xRef;
         if (r.bracket && !measured) {
@@ -593,20 +622,20 @@ const BarsBody: React.FC<{
         const bRight = Math.min(bEnd, W - B.pad);
         return (
           <React.Fragment key={i}>
-            <div style={{...caps(26), left: B.pad, top, width: W - 2 * B.pad, overflow: 'hidden', opacity: fadeRef}}>{r.label}</div>
-            <div style={{...caps(26), right: W - B.nameRight, top: y1 + B.barH / 2, transform: 'translateY(-50%)', opacity: fadeRef}}>
+            <div style={{...caps(B.label), left: B.pad, top, width: W - 2 * B.pad, overflow: 'hidden', opacity: fadeRef}}>{r.label}</div>
+            <div style={{...caps(B.label), right: W - B.nameRight, top: y1 + B.barH / 2, transform: 'translateY(-50%)', opacity: fadeRef}}>
               {names[0]}
             </div>
-            <div style={{...caps(26), right: W - B.nameRight, top: y2 + B.barH / 2, transform: 'translateY(-50%)', opacity: fadeVal}}>
+            <div style={{...caps(B.label), right: W - B.nameRight, top: y2 + B.barH / 2, transform: 'translateY(-50%)', opacity: fadeVal}}>
               {names[1]}
             </div>
             {bl && blFits ? (
-              <div style={{...caps(22), left: xe + 12, top: y2 + B.barH / 2 - 11, ...labelIn(r.barLabelAt ?? landed)}}>{bl}</div>
+              <div style={{...caps(B.barLabel), left: xe + 12, top: y2 + B.barH / 2 - B.barLabel / 2, ...labelIn(r.barLabelAt ?? landed)}}>{bl}</div>
             ) : null}
             {r.bracket ? (
               <div
                 style={{
-                  ...caps(26),
+                  ...caps(B.label),
                   right: W - bRight,
                   top: bLabelTop,
                   ...labelIn(r.bracket.labelAt ?? bracketAt + B.bracketF / fps),
@@ -627,7 +656,7 @@ const BarsBody: React.FC<{
             width: W - 2 * B.pad,
             fontFamily: fonts.sans,
             fontWeight: 600,
-            fontSize: 24,
+            fontSize: B.foot,
             lineHeight: 1.25,
             color: inkSub,
           }}

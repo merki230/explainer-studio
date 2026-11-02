@@ -47,14 +47,26 @@ const basis = (dir: V3, normal: V3) => {
   return new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(x, y, z));
 };
 
-const useOrangeMats = () => {
+const useOrangeMats = (neutral = false, mood: Mood = 'day') => {
   const mats = useMemo(
-    () => ({
-      core: new THREE.MeshBasicMaterial({color: raw(section.orange), transparent: true}),
-      halo: new THREE.MeshBasicMaterial({color: raw(section.orange), transparent: true, depthWrite: false}),
-      node: new THREE.MeshBasicMaterial({color: raw(section.orange), transparent: true}),
-    }),
-    [],
+    () =>
+      neutral
+        ? {
+            // CurveArrow's 'ink' look: unlit ink on a paper outline, so it reads on steel, water and air; never bloomed
+            core: new THREE.MeshBasicMaterial({color: raw(section.cutLine), transparent: true}),
+            halo: new THREE.MeshBasicMaterial({
+              color: raw(section.cut).multiplyScalar(0.95 / MOODS[mood].exposure),
+              transparent: true,
+              depthWrite: false,
+            }),
+            node: new THREE.MeshBasicMaterial({color: raw(section.cutLine), transparent: true}),
+          }
+        : {
+            core: new THREE.MeshBasicMaterial({color: raw(section.orange), transparent: true}),
+            halo: new THREE.MeshBasicMaterial({color: raw(section.orange), transparent: true, depthWrite: false}),
+            node: new THREE.MeshBasicMaterial({color: raw(section.orange), transparent: true}),
+          },
+    [neutral, mood],
   );
   useEffect(() => () => Object.values(mats).forEach((m) => m.dispose()), [mats]);
   return mats;
@@ -96,6 +108,13 @@ export type PushArrowProps = {
   node?: boolean;
   /** Draw over the set (no depth test, late render order): an arrow lying across a cabin (No. 012's feel arrow). Default false. */
   onTop?: boolean;
+  /**
+   * 'orange' (default: the system, core + halo, bloomed) or 'neutral' (No. 013: cold air, fresh water, anything that
+   * is not the system): `CurveArrow`'s 'ink' look, an unlit `cutLine` core on a paper outline, never bloomed, no brighten tint.
+   */
+  kind?: 'orange' | 'neutral';
+  /** The mood (the neutral arrow's paper outline follows its exposure). Default 'day'. */
+  mood?: Mood;
 };
 
 /** The push at a contact patch (see the file comment). */
@@ -109,8 +128,11 @@ export const PushArrow: React.FC<PushArrowProps> = ({
   glow = 1,
   node = true,
   onTop = false,
+  kind = 'orange',
+  mood = 'day',
 }) => {
-  const mats = useOrangeMats();
+  const neutral = kind === 'neutral';
+  const mats = useOrangeMats(neutral, mood);
   mats.core.depthTest = !onTop;
   mats.halo.depthTest = !onTop;
   mats.node.depthTest = !onTop;
@@ -134,41 +156,45 @@ export const PushArrow: React.FC<PushArrowProps> = ({
   const headL = Math.min(r * 5.5, L);
   const headW = r * 2.6 * (headL / (r * 5.5));
   const shaftL = Math.max(0, L - headL * 0.9);
-  mats.core.color.copy(raw(section.orange)).lerp(raw(section.orangeDot), 0.55 * b);
+  if (!neutral) mats.core.color.copy(raw(section.orange)).lerp(raw(section.orangeDot), 0.55 * b);
   mats.core.opacity = g;
-  mats.halo.opacity = (HALO.opacity + 0.15 * b) * g;
+  mats.halo.opacity = neutral ? 0.9 * g : (HALO.opacity + 0.15 * b) * g;
+  const glowTag = neutral ? undefined : {glow: true};
   mats.node.opacity = g;
   const show = g > 0.01;
-  const hs = HALO.scale;
+  // the neutral outline is a thin paper rim (CurveArrow 'ink': 2.1 ×), drawn under the ink; orange: core, then the halo
+  const hs = neutral ? 2.1 : HALO.scale;
+  const roCore = ro + (neutral ? 6 : 2);
+  const roHalo = ro + (neutral ? 5 : 3);
 
   return (
     <group position={position} quaternion={q} visible={show}>
       {node ? (
-        <mesh geometry={geo.dot} material={mats.node} scale={radius * NODE_K * (1 + 0.2 * b)} userData={{glow: true}} renderOrder={onTop ? ro + 2 : 0} />
+        <mesh geometry={geo.dot} material={mats.node} scale={radius * NODE_K * (1 + 0.2 * b)} userData={glowTag} renderOrder={onTop ? ro + 2 : 0} />
       ) : null}
       {L > 0.002 ? (
         <>
           {shaftL > 0.001 ? (
             <>
-              <mesh geometry={geo.shaft} material={mats.core} scale={[shaftL, r, r]} userData={{glow: true}} renderOrder={ro + 2} />
+              <mesh geometry={geo.shaft} material={mats.core} scale={[shaftL, r, r]} userData={glowTag} renderOrder={roCore} />
               <mesh
                 geometry={geo.shaft}
                 material={mats.halo}
                 scale={[shaftL, r * hs, r * hs]}
-                userData={{glow: true}}
-                renderOrder={ro + 3}
+                userData={glowTag}
+                renderOrder={roHalo}
               />
             </>
           ) : null}
           <group position={[L - headL, 0, 0]}>
-            <mesh geometry={geo.head} material={mats.core} scale={[headL, headW, r * 1.6]} userData={{glow: true}} renderOrder={ro + 2} />
+            <mesh geometry={geo.head} material={mats.core} scale={[headL, headW, r * 1.6]} userData={glowTag} renderOrder={roCore} />
             <mesh
               geometry={geo.head}
               material={mats.halo}
               position={[-r * (hs - 1) * 0.6, 0, 0]}
               scale={[headL + r * (hs - 1) * 1.6, headW + r * (hs - 1), r * hs]}
-              userData={{glow: true}}
-              renderOrder={ro + 3}
+              userData={glowTag}
+              renderOrder={roHalo}
             />
           </group>
         </>

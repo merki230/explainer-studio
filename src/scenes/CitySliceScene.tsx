@@ -9,6 +9,7 @@ import type {RoadSignKind} from '../three/real/RoadSigns';
 import {SIGN_SIZE} from '../three/real/RoadSigns';
 import {CITY_LAYOUT, CITY_SIGN_SPOTS, CitySlice, cityIntersection, type SignalState} from '../three/section/CitySlice';
 import {
+  formatOf,
   projectToFrame,
   SECTION_ANGLE,
   sectionCameraAt,
@@ -213,6 +214,7 @@ export const cityCameraAt = (
     durationInFrames: o.durationInFrames,
     drift: p.drift ?? 0.08,
     clockOffset: (p.startFrame ?? 0) / o.fps,
+    format: formatOf(p),
   });
 };
 

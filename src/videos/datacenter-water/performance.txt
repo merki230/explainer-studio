@@ -1,0 +1,73 @@
+## Where does a data center's water go?
+> Short hook: One big data center can use up tens of millions of gallons of water a year. Where does it all go?
+Towns across the US are pushing back on new data centers, and one of the biggest complaints is water.
+A big data center can use up tens of millions of gallons a year.
+So where does all that water go?
+Most of it leaves through the roof, as vapor.
+To see why, we'll follow the heat from one server rack on a hot afternoon, all the way up to that roof.
+That heat starts with power, and these buildings use a lot more power than they did a few years ago.
+A data center used to need a few megawatts, and Virginia's state auditors say a typical one now needs more than a hundred.
+Inside, the average server rack still draws under eight kilowatts... an industry survey finds.
+But some racks of today's AI chips draw around 120 kilowatts...
+Nearly all that electricity turns into heat, so more power means more heat to get rid of.
+At many data centers, including this one, water carries that heat away.
+Look at the back of this rack, where the fans blow the heat out as hot air.
+The hot air passes over coils of cold water, and the water carries the heat out of the room.
+Pipes take the warmed water up to a cooling tower on the roof.
+Inside the tower, the water rains down while big fans pull outside air through.
+On each trip down, a small part of the water evaporates, and as it does, it takes heat away from the water that's left.
+Each gallon that evaporates carries off about as much heat as a space heater puts out in an hour and forty minutes...
+Warm that gallon by ten degrees instead, and it carries off only about a hundredth as much...
+That's why towers let the water evaporate.
+Data centers use the most water in hot weather, the Pacific Institute says, so this afternoon the towers are working their hardest.
+Over a whole year, a typical site run by a big tech company in the institute's study pulled in about 44 million gallons...
+That's about what 400 American families use at home...
+And most of the water those sites pulled in was drinking water.
+Back in the tower, only part of that water evaporates, and the rest drops back down for another trip around the loop.
+[curious] So why can't the tower keep sending that same water around forever?... [pause]
+
+## Why don't they just reuse the water?
+> Short hook: A data center's cooling tower reuses its water several times, so why does it still drain some away?
+[pause] The cooling tower on this data center's roof already reuses its water, sending the same water around the loop several times.
+Every time some of that water evaporates, only the water itself leaves, and the calcium, magnesium and silica stay in the loop.
+The loop water holds more and more minerals, and engineers measure that in what they call cycles of concentration.
+Many towers run at two to four cycles... the E-P-A says, which means up to four times the minerals of the fresh water.
+If the cycles go too high, the minerals form scale, like the crust inside a kettle.
+The minerals also speed up corrosion in the pipes.
+And the warm, wet tower is an easy place for bacteria to grow, so pumps add chemicals to the loop.
+To keep the minerals in check, a valve drains off some of the loop water, which engineers call blowdown.
+Fresh water replaces what's drained and what evaporated, so the tower keeps drawing water all afternoon.
+In all, at four cycles, about three quarters of the water coming in leaves as vapor... and the other quarter is drained.
+Going from three cycles to six cuts the drained water by about half, the E-P-A says, but some always has to go.
+That drained water carries the minerals and chemicals, [curious] so why not let it run into the nearest river?... [pause]
+
+## Why not release it into a river?
+> Short hook: When a data center drains water from its cooling towers, why not just pipe it into the nearest river?
+[pause] At a data center like this one, most of the cooling water has already gone up from the roof as vapor.
+What's left is the drained water, and it usually goes down the sewer to the city's wastewater plant, under local rules.
+Piping that water straight into a river takes a federal permit, with limits on what the water carries.
+When Ohio proposed a permit for data centers, the draft set limits on the water's dissolved minerals, its chlorine and its acidity.
+The Clean Water Act behind those permits even lists heat as a pollutant, next to things like sand and rock.
+Instead of a sewer or a river, one town in Washington State found a third place for the drained water.
+In Kwinzee, the city cleans the drained water from a Microsoft data center and pipes it back for the towers to use again.
+The minerals the city removes end up as solid salt in lined ponds, instead of in a river.
+Microsoft agreed to cover the system's $31 million cost...
+The E-P-A's case study puts the water saving at an estimated 138 million gallons a year...
+Even in Kwinzee, the towers still send water into the air.
+[curious] Could a data center be cooled without evaporating any water at all?... [pause]
+
+## Why not cool it without water?
+> Short hook: A data center can be cooled with no cooling water at all, so why doesn't every data center do that?
+[pause] This data center could skip evaporation by swapping its towers for air-cooled machines.
+They work like a car's radiator, with fans and no water.
+Microsoft's newest design works this way, filling its cooling loop once during construction and circulating that water from then on.
+The company says each data center built this way will avoid more than 125 million liters of water a year... about 33 million gallons.
+But while air-cooled machines use no cooling water, they use more energy, Berkeley Lab says.
+For its new design, Microsoft says the extra energy is nominal, meaning small.
+Either way, that extra electricity still has to be made, and making electricity uses water too.
+Across the US in 2023, Berkeley Lab found, making data centers' electricity took about twelve times... the water they used up on site.
+Back on the roof this afternoon, most of the water goes up as vapor, and the rest usually goes down the city drain.
+This data center can keep that water out of the air, but only by using more electricity.
+And part of the water this data center saves can then get used up at a power plant instead.
+The next time your town argues about a data center's water, ask about its electricity too.
+Part 2 follows that electricity back to where it's made.

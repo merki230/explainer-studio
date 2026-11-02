@@ -8,8 +8,21 @@ import {raceAnchorOnScreen, type RaceSliceSceneProps} from '../scenes/RaceSliceS
 import {chargeAnchorOnScreen, type ChargeSliceSceneProps} from '../scenes/ChargeSliceScene';
 import {teardownAnchorOnScreen, type TeardownSliceSceneProps} from '../scenes/TeardownSliceScene';
 import {reportAnchorOnScreen, type ReportSliceSceneProps} from '../scenes/ReportSliceScene';
+import {dcAnchorOnScreen, type DatacenterSliceSceneProps} from '../scenes/DatacenterSliceScene';
+import {labAnchorOnScreen, type SectionLabSceneProps} from '../scenes/SectionLabScene';
+import {townAnchorOnScreen, type TownSliceSceneProps} from '../scenes/TownSliceScene';
+import {cityTwinAnchorOnScreen, type CityTwinSceneProps} from '../scenes/CityTwinScene';
 import {streetAnchorOnScreen, type StreetSliceSceneProps} from '../scenes/StreetSliceScene';
 import {towerAnchorOnScreen, type TowerSliceSceneProps} from '../scenes/TowerSliceScene';
+import type {Format} from '../theme';
+
+/**
+ * A scene's props with the frame format the overlay renders in (only added in the wide frame, so vertical props stay
+ * exactly as the spec gave them): the scenes' anchor maths project with the format's size and lens. The Explainer
+ * already hands horizontal scenes `format`; this covers a cover still or any caller that doesn't.
+ */
+export const withFormat = <T extends object>(props: T, format: Format): T =>
+  format === 'horizontal' && (props as {format?: Format}).format === undefined ? {...props, format} : props;
 
 /** The scene an overlay sits on (set by Explainer). */
 export type AnchorScene = {props: Record<string, unknown>; durationInFrames: number; offset: number; name?: string};
@@ -27,6 +40,10 @@ export const ANCHOR_SCENES = [
   'charge-slice',
   'teardown-slice',
   'report-slice',
+  'datacenter-slice',
+  'town-slice',
+  'section-lab',
+  'city-twin',
 ];
 
 /**
@@ -42,7 +59,13 @@ export const ANCHOR_SCENES = [
  * 'patch', 'inverter'. `car-slice`: 'phone', 'cluster', 'head' (= 'youSpot'). `charge-slice`: 'top:top' | 'top:bottom'
  * (above a bay's roof), 'pack:*', 'port:*', 'cable:*', 'cabinet:*', 'lane:*', 'under:*', 'ghost', 'crate:*' (No. 011: the
  * standing supplier crate), 'blade:*' (the slid-out blade's tip). `teardown-slice`: 'pack', 'roof', 'grid', 'part:<id>'. `report-slice`: 'module', 'phone', 'top', 'company', 'rack',
- * 'printer', 'insurer', 'insurer:screen', 'tray', 'head'. Undefined elsewhere
+ * 'printer', 'insurer', 'insurer:screen', 'tray', 'head'. `datacenter-slice`: 'fins', 'stream', 'valve', 'fill', 'basin', 'minerals', 'hose',
+ * 'pipe', 'pipeClean' (= 'corrosion'), 'controller', 'jars', 'aiRack', 'racks', 'riser', 'tower', 'plume', 'drycooler', 'meter',
+ * 'elecMeter', 'yard', 'drain'. `town-slice`: 'youSpot', 'gate', 'riverPlume', 'sampler', 'gauges', 'junction', 'plant',
+ * 'ponds', 'house', 'field', 'fence', 'dcRoof', 'plantTower', 'meter'. `section-lab` (heat bench): 'clock', 'bar:jug1' |
+ * 'bar:jug2' | 'bar:heater', 'jug1', 'jug2', 'heater'. `city-twin` (No. 014): '<part>:top|bottom' for 'engine', 'motor', 'battery',
+ * 'inverter', 'nose', 'tail', 'top' (= 'roof', car tags), 'frontWheel', 'rearWheel', 'cluster', 'head'; 'lead:*', 'signal:*', 'lane:*'.
+ * `car-slice` also: 'engine', 'motor', 'battery', 'inverter', 'nose', 'tail', 'roof', 'frontWheel', 'rearWheel'. Undefined elsewhere
  * or for an unknown name.
  */
 export const anchorOnScreen = (
@@ -71,5 +94,11 @@ export const anchorOnScreen = (
     return teardownAnchorOnScreen(scene.props as Partial<TeardownSliceSceneProps>, anchor, o);
   if (scene.name === 'report-slice')
     return reportAnchorOnScreen(scene.props as Partial<ReportSliceSceneProps>, anchor, o);
+  if (scene.name === 'datacenter-slice')
+    return dcAnchorOnScreen(scene.props as Partial<DatacenterSliceSceneProps>, anchor, o);
+  if (scene.name === 'town-slice')
+    return townAnchorOnScreen(scene.props as Partial<TownSliceSceneProps>, anchor, o);
+  if (scene.name === 'section-lab') return labAnchorOnScreen(scene.props as Partial<SectionLabSceneProps>, anchor, o);
+  if (scene.name === 'city-twin') return cityTwinAnchorOnScreen(scene.props as Partial<CityTwinSceneProps>, anchor, o);
   return undefined;
 };

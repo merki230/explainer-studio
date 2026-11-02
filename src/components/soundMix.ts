@@ -1,6 +1,7 @@
 // Pure sound-mix maths (no React, no browser APIs): safe to import from Node scripts.
 // Levels are in dB relative to the voiceover, which plays at gain 1 (0 dB).
 import type {MusicSpec, SfxOverlay, VideoSpec} from '../types';
+import {CARD_FRAMES, type ChapterCardFrames} from '../timeline';
 
 /** Music bed defaults (style guide § 9: enters after the hook, 16–20 dB under the voice). */
 export const MUSIC_DEFAULTS = {
@@ -76,6 +77,9 @@ export const soundFiles = (spec: VideoSpec): {src: string; from: string}[] => {
       if (o.type === 'sfx') out.push({src: sfxSrc(o.name), from: `scene ${i + 1} sfx "${o.name}"`});
     }),
   );
+  spec.chapters?.forEach((c) => {
+    if (c.sound) out.push({src: sfxSrc(c.sound), from: `chapter ${c.chapter} card sound "${c.sound}"`});
+  });
   return out;
 };
 
@@ -125,6 +129,7 @@ export const musicGain = (
   fps: number,
   music: MusicSpec,
   duck: Float32Array,
+  cards: Pick<ChapterCardFrames, 'q' | 'outStart'>[] = [],
 ): number => {
   const startAt = music.startAt ?? MUSIC_DEFAULTS.startAt;
   const fadeIn = Math.max(1 / fps, music.fadeIn ?? MUSIC_DEFAULTS.fadeIn);
@@ -136,7 +141,28 @@ export const musicGain = (
   const outP = clamp01((lastFrame - frame) / (fadeOut * fps));
   const fade = Math.sin((inP * Math.PI) / 2) * Math.sin((outP * Math.PI) / 2);
   const d = duck[Math.min(duck.length - 1, Math.max(0, frame))] ?? 0;
-  return fade * dbToGain(level - duckDb * d - dipDbAt(music.dips, frame / fps));
+  return fade * dbToGain(level - duckDb * d - dipDbAt(music.dips, frame / fps) + swellDbAt(cards, frame));
+};
+
+/** The bed's rise under a chapter card (style guide § 11.7), dB. */
+export const SWELL_DB = 4;
+/** Frames the swell takes to come back down, from the card's `outStart` (Q + 99 → Q + 117 by default). */
+export const SWELL_RETURN = 18;
+
+/**
+ * dB the music bed rises under chapter cards at `frame` (0 with no cards, so vertical videos and Shorts are
+ * unchanged): 0 → +SWELL_DB over Q + 6 → Q + 24 (sine), held, then back to 0 over `outStart` → `outStart` + 18.
+ * Pure function of the absolute frame.
+ */
+export const swellDbAt = (cards: Pick<ChapterCardFrames, 'q' | 'outStart'>[], frame: number): number => {
+  let up = 0;
+  for (const c of cards) {
+    const inK = clamp01((frame - (c.q + CARD_FRAMES.rampIn)) / (CARD_FRAMES.musicStep - CARD_FRAMES.rampIn));
+    const outK = clamp01((c.outStart + SWELL_RETURN - frame) / SWELL_RETURN);
+    const k = Math.min(inK, outK);
+    up = Math.max(up, SWELL_DB * Math.sin((k * Math.PI) / 2));
+  }
+  return up;
 };
 
 /** dB down from the music's timed `dips` at t seconds (0 with none): the deepest dip, sine-eased at its edges. */

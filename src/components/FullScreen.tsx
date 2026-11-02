@@ -5,6 +5,7 @@ import {screenFor, type SectionRoomSceneProps} from '../scenes/SectionRoomScene'
 import type {CastName, Mood} from '../theme';
 import {ease} from './card';
 import {drawScreen, screenKey, SCREEN_H, SCREEN_W, screenStateAt, type ScreenStep} from './screenKit';
+import {useLayout} from './layout';
 import {overlayInk} from './sectionStyle';
 
 export type FullScreenProps = {
@@ -19,10 +20,11 @@ export type FullScreenProps = {
 /** Frames it fades in (and out, see Explainer). */
 export const FULLSCREEN_FADE = 10;
 const BORDER = 4;
-const TAB = 28;
-/** The box fills the safe area from its top (y 288) down to just above the caption band (captions continue under a full-frame screen). */
-const TOP = 288;
-const BOTTOM = 1030;
+/**
+ * The box (its tab included) fills the safe area from its top (y 288) down to just above the caption band (captions
+ * continue under a full-frame screen). Wide frame (§ 11.5): right of centre (centre x 1300), y 120 to 940, the
+ * captions pulled in to x 1040 on the left (Explainer).
+ */
 
 /**
  * Full-frame screen (v0.8 § 6): the detail box enlarged to the whole safe area, holding a whole
@@ -37,6 +39,10 @@ export const FullScreen: React.FC<
 > = ({who, ui, clock, mood = 'day', scene}) => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
+  const L = useLayout();
+  const {top: TOP, bottom: BOTTOM, centerX, tab: tabSize} = L.screen;
+  // the tab's height: its type at 1.2 plus 4 + 3 px padding (28 px at the vertical 17 px)
+  const TAB = L.format === 'horizontal' ? Math.round(tabSize * 1.2 + 7) : 28;
   const ref = useRef<HTMLCanvasElement>(null);
   const t = (frame + scene.offset) / fps;
   const state = who
@@ -74,7 +80,7 @@ export const FullScreen: React.FC<
   if (!state) return null;
   const {ink, paper} = overlayInk(mood);
   const enter = ease(frame, 0, FULLSCREEN_FADE);
-  const left = Math.round(540 - outerW / 2);
+  const left = Math.round(centerX - outerW / 2);
   return (
     <div style={{position: 'absolute', inset: 0, opacity: enter}}>
       <div style={{position: 'absolute', inset: 0, background: paper, opacity: 0.94}} />
@@ -95,7 +101,7 @@ export const FullScreen: React.FC<
             color: paper,
             fontFamily: fonts.mono,
             fontWeight: 700,
-            fontSize: 17,
+            fontSize: tabSize,
             letterSpacing: '0.16em',
             padding: '4px 10px 3px',
             lineHeight: 1.2,

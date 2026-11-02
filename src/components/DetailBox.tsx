@@ -11,10 +11,11 @@ import {
 import type {CastName, Mood} from '../theme';
 import {ease} from './card';
 import {drawScreen, focusRect, screenKey, SCREEN_H, SCREEN_W} from './screenKit';
-import {LEFT, overlayInk, RIGHT} from './sectionStyle';
+import {clearCorner, useLayout, type OverlayLayout} from './layout';
+import {overlayInk} from './sectionStyle';
 import {drawCluster, drawDispatchMap, drawEvCluster, drawGasCluster} from './dashboardKit';
 import {carHeadBoxOnScreen, clusterOnScreen, type CarSliceSceneProps} from '../scenes/CarSliceScene';
-import {anchorOnScreen} from './anchors';
+import {anchorOnScreen, withFormat} from './anchors';
 import {MOODS} from '../theme';
 import {StreetBox} from './streetBoxes';
 import {drawTripApp} from './tripAppKit';
@@ -120,13 +121,17 @@ export type DetailBoxProps = {
   tireLight?: boolean;
   /** 'auto' (default): the part of the screen that matters (the field, the ad); 'full': the whole screen. */
   crop?: 'auto' | 'full';
-  /** Inner width in px (default 336; the box is 344 wide with its border, inside the guide's 324–360). */
+  /**
+   * Inner width in px (default 336; the box is 344 wide with its border, inside the guide's 324–360; dashboards, maps
+   * and the trip app 360). Wide frame (§ 11.5): default 460, and the box is kept within 900 × 760 (on the right, its
+   * bottom ≤ y 780, the watermark corner) by narrowing it.
+   */
   size?: number;
   /** Which margin (default: the holder's side). */
   side?: 'left' | 'right';
-  /** Top edge in px (default: 60 px above the holder's head, kept inside y 300–1248). */
+  /** Top edge in px (default: 60 px above the holder's head, kept inside y 300–1248; wide frame: y 180, in the side margin). */
   top?: number;
-  /** Left edge in px, overriding `side` (default: x 120 or right edge x 888). Covers only; videos keep the margins. */
+  /** Left edge in px, overriding `side` (default: x 120 or right edge x 888; wide frame x 144 / 1776). Covers only; videos keep the margins. */
   left?: number;
   /** Draw the 2 px leader to the phone (default true). */
   leader?: boolean;
@@ -135,6 +140,23 @@ export type DetailBoxProps = {
 /** Frames the box takes to fade in (and out, see Explainer). */
 export const DETAIL_FADE = 10;
 const BORDER = 4;
+
+/**
+ * The wide frame (§ 11.5): the inner width narrowed so the box (inner height `aspect` × width, plus the border) stays
+ * within 900 × 760 from its top, never below y 960, and on the right never into the watermark corner. The vertical
+ * frame: `w` unchanged.
+ */
+const fitWidth = (L: OverlayLayout, w: number, aspect: number, onLeft: boolean, top?: number) => {
+  if (L.format !== 'horizontal') return w;
+  const boxTop = top ?? L.detail.top;
+  const maxOuterH = Math.min(L.detail.maxH, L.bottom - boxTop, !onLeft && L.corner ? L.corner.top - boxTop : Infinity);
+  const byH = Math.floor((maxOuterH - 2 * BORDER) / aspect);
+  return Math.max(120, Math.min(w, L.detail.maxW - 2 * BORDER, byH));
+};
+
+/** The box's top: the vertical rule (`vertical`, inside y 328–1248), or the wide frame's y 180 clear of the corner. */
+const boxTopFor = (L: OverlayLayout, left: number, outerW: number, outerH: number, vertical: () => number) =>
+  L.format === 'horizontal' ? clearCorner(L, left, L.detail.top, outerW, outerH) : vertical();
 
 /**
  * The detail box (v0.8 § 6): how screens are read. A square-cornered frame (4 px `ink` border,
@@ -168,16 +190,20 @@ const PhoneBox: React.FC<
     mood?: Mood;
     scene: SceneCtx;
   }
-> = ({who = 'you', crop = 'auto', size = 336, side, top, left: leftAt, leader = true, mood = 'day', scene}) => {
+> = ({who = 'you', crop = 'auto', size, side, top, left: leftAt, leader = true, mood = 'day', scene: sceneIn}) => {
   const frame = useCurrentFrame();
   const {fps, width, height} = useVideoConfig();
+  const L = useLayout();
+  const scene = {...sceneIn, props: withFormat(sceneIn.props, L.format)};
   const ref = useRef<HTMLCanvasElement>(null);
   const sceneFrame = frame + scene.offset;
   const state = screenFor(scene.props, who, sceneFrame / fps);
   const rect: [number, number, number, number] =
     !state || crop === 'full' ? [0, 0, SCREEN_W, SCREEN_H] : focusRect(state);
-  const innerW = size;
-  const innerH = Math.round((size * rect[3]) / rect[2]);
+  const cast = scene.props.cast ?? ['friend', 'you'];
+  const onLeft = (side ?? (cast.indexOf(who) === 0 ? 'left' : 'right')) === 'left';
+  const innerW = fitWidth(L, size ?? L.detail.size, rect[3] / rect[2], onLeft, top);
+  const innerH = Math.round((innerW * rect[3]) / rect[2]);
   const key = state ? `${screenKey(state)}|${rect.join(',')}|${innerW}` : '';
 
   useLayoutEffect(() => {
@@ -206,13 +232,11 @@ const PhoneBox: React.FC<
   if (!state || !phone || !head || !headBox) return null;
 
   const {ink, paper} = overlayInk(mood);
-  const cast = scene.props.cast ?? ['friend', 'you'];
-  const onLeft = (side ?? (cast.indexOf(who) === 0 ? 'left' : 'right')) === 'left';
   const outerW = innerW + 2 * BORDER;
   const outerH = innerH + 2 * BORDER;
-  const left = leftAt ?? (onLeft ? LEFT : RIGHT - outerW);
-  // above the head, inside the safe zone (the tab needs ≈ 28 px above the box)
-  const boxTop = top ?? Math.max(328, Math.min(1248 - outerH, head[1] - 60 - outerH));
+  const left = leftAt ?? (onLeft ? L.left : L.right - outerW);
+  // above the head, inside the safe zone (the tab needs ≈ 28 px above the box); wide frame: y 180 in the margin
+  const boxTop = top ?? boxTopFor(L, left, outerW, outerH, () => Math.max(328, Math.min(1248 - outerH, head[1] - 60 - outerH)));
   const enter = ease(frame, 0, DETAIL_FADE);
   const rise = interpolate(enter, [0, 1], [8, 0]);
   // Leader. When the phone is under the box, it drops straight down from the box at the phone's x
@@ -266,7 +290,7 @@ const PhoneBox: React.FC<
             color: paper,
             fontFamily: fonts.mono,
             fontWeight: 700,
-            fontSize: 17,
+            fontSize: L.detail.tab,
             letterSpacing: '0.16em',
             padding: '4px 10px 3px',
             lineHeight: 1.2,
@@ -303,7 +327,9 @@ const Frame: React.FC<{
   paper: string;
   rise: number;
   children: React.ReactNode;
-}> = ({left, top, w, h, ink, paper, rise, children}) => (
+}> = ({left, top, w, h, ink, paper, rise, children}) => {
+  const tab = useLayout().detail.tab;
+  return (
   <div style={{position: 'absolute', left, top, transform: `translateY(${rise}px)`}}>
     <div
       style={{
@@ -314,7 +340,7 @@ const Frame: React.FC<{
         color: paper,
         fontFamily: fonts.mono,
         fontWeight: 700,
-        fontSize: 17,
+        fontSize: tab,
         letterSpacing: '0.16em',
         padding: '4px 10px 3px',
         lineHeight: 1.2,
@@ -336,7 +362,8 @@ const Frame: React.FC<{
       {children}
     </div>
   </div>
-);
+  );
+};
 
 /**
  * The dashboard detail box (No. 002): the car's instrument cluster as a flat 2D crop (the same drawing
@@ -345,7 +372,7 @@ const Frame: React.FC<{
  */
 const DashboardBox: React.FC<DetailBoxProps & {mood?: Mood; scene: SceneCtx}> = ({
   who = 'you',
-  size = 360,
+  size: sizeIn,
   side,
   top,
   left: leftAt,
@@ -368,6 +395,10 @@ const DashboardBox: React.FC<DetailBoxProps & {mood?: Mood; scene: SceneCtx}> = 
 }) => {
   const frame = useCurrentFrame();
   const {fps, width, height} = useVideoConfig();
+  const L = useLayout();
+  scene = {...scene, props: withFormat(scene.props, L.format)};
+  // the box's side is known only from the target (below); the width fit assumes the tighter right margin
+  const size = fitWidth(L, sizeIn ?? L.detail.dashSize, 0.58, side === 'left', top);
   const ref = useRef<HTMLCanvasElement>(null);
   const ev = content === 'ev-dashboard';
   const gas = content === 'gas-dashboard';
@@ -431,10 +462,10 @@ const DashboardBox: React.FC<DetailBoxProps & {mood?: Mood; scene: SceneCtx}> = 
   const outerW = innerW + 2 * BORDER;
   const outerH = innerH + 2 * BORDER;
   const onLeft = (side ?? (target[0] > width / 2 ? 'left' : 'right')) === 'left';
-  const left = leftAt ?? (onLeft ? LEFT : RIGHT - outerW);
+  const left = leftAt ?? (onLeft ? L.left : L.right - outerW);
   // above the head (or the cluster), inside the safe zone
   const above = Math.min(target[1], headBox ? headBox[2] : target[1]);
-  const boxTop = top ?? Math.max(328, Math.min(1248 - outerH, above - 70 - outerH));
+  const boxTop = top ?? boxTopFor(L, left, outerW, outerH, () => Math.max(328, Math.min(1248 - outerH, above - 70 - outerH)));
   const enter = ease(frame, 0, DETAIL_FADE);
   const rise = interpolate(enter, [0, 1], [8, 0]);
   const by = boxTop + outerH;
@@ -540,7 +571,7 @@ export const drawKeypad = (
 };
 
 const KeypadBox: React.FC<DetailBoxProps & {mood?: Mood; scene: SceneCtx}> = ({
-  size = 336,
+  size: sizeIn,
   side,
   top,
   left: leftAt,
@@ -553,6 +584,9 @@ const KeypadBox: React.FC<DetailBoxProps & {mood?: Mood; scene: SceneCtx}> = ({
 }) => {
   const frame = useCurrentFrame();
   const {fps, width, height} = useVideoConfig();
+  const L = useLayout();
+  scene = {...scene, props: withFormat(scene.props, L.format)};
+  const size = fitWidth(L, sizeIn ?? L.detail.size, 1.18, side === 'left', top);
   const ref = useRef<HTMLCanvasElement>(null);
   const answer = frame / fps >= answerAt;
   const innerW = size;
@@ -577,8 +611,8 @@ const KeypadBox: React.FC<DetailBoxProps & {mood?: Mood; scene: SceneCtx}> = ({
   const outerW = innerW + 2 * BORDER;
   const outerH = innerH + 2 * BORDER;
   const onLeft = (side ?? (target[0] > width / 2 ? 'left' : 'right')) === 'left';
-  const left = leftAt ?? (onLeft ? LEFT : RIGHT - outerW);
-  const boxTop = top ?? Math.max(328, Math.min(1248 - outerH, target[1] - 160 - outerH));
+  const left = leftAt ?? (onLeft ? L.left : L.right - outerW);
+  const boxTop = top ?? boxTopFor(L, left, outerW, outerH, () => Math.max(328, Math.min(1248 - outerH, target[1] - 160 - outerH)));
   const enter = ease(frame, 0, DETAIL_FADE);
   const rise = interpolate(enter, [0, 1], [8, 0]);
   const by = boxTop + outerH;
@@ -608,7 +642,7 @@ const KeypadBox: React.FC<DetailBoxProps & {mood?: Mood; scene: SceneCtx}> = ({
  * alone (no leader).
  */
 const DispatchBox: React.FC<DetailBoxProps & {mood?: Mood; scene: SceneCtx}> = ({
-  size = 360,
+  size: sizeIn,
   side,
   top,
   left: leftAt,
@@ -622,6 +656,9 @@ const DispatchBox: React.FC<DetailBoxProps & {mood?: Mood; scene: SceneCtx}> = (
 }) => {
   const frame = useCurrentFrame();
   const {fps, width, height} = useVideoConfig();
+  const L = useLayout();
+  scene = {...scene, props: withFormat(scene.props, L.format)};
+  const size = fitWidth(L, sizeIn ?? L.detail.dashSize, 0.86, side === 'left', top);
   const ref = useRef<HTMLCanvasElement>(null);
   const t = frame / fps;
   const COLLAPSE = 0.6;
@@ -653,8 +690,9 @@ const DispatchBox: React.FC<DetailBoxProps & {mood?: Mood; scene: SceneCtx}> = (
   const outerW = innerW + 2 * BORDER;
   const outerH = innerH + 2 * BORDER;
   const onLeft = (side ?? (target && target[0] > width / 2 ? 'left' : 'right')) === 'left';
-  const left = leftAt ?? (onLeft ? LEFT : RIGHT - outerW);
-  const boxTop = top ?? Math.max(328, Math.min(1248 - outerH, (target ? target[1] : height / 2) - 70 - outerH));
+  const left = leftAt ?? (onLeft ? L.left : L.right - outerW);
+  const boxTop =
+    top ?? boxTopFor(L, left, outerW, outerH, () => Math.max(328, Math.min(1248 - outerH, (target ? target[1] : height / 2) - 70 - outerH)));
   const enter = ease(frame, 0, DETAIL_FADE);
   const rise = interpolate(enter, [0, 1], [8, 0]);
   const by = boxTop + outerH;
@@ -703,7 +741,7 @@ const DispatchBox: React.FC<DetailBoxProps & {mood?: Mood; scene: SceneCtx}> = (
  * `car-slice`). Sits on the side away from the anchor.
  */
 const TripBox: React.FC<DetailBoxProps & {mood?: Mood; scene: SceneCtx}> = ({
-  size = 360,
+  size: sizeIn,
   side,
   top,
   left: leftAt,
@@ -729,6 +767,9 @@ const TripBox: React.FC<DetailBoxProps & {mood?: Mood; scene: SceneCtx}> = ({
 }) => {
   const frame = useCurrentFrame();
   const {fps, width, height} = useVideoConfig();
+  const L = useLayout();
+  scene = {...scene, props: withFormat(scene.props, L.format)};
+  const size = fitWidth(L, sizeIn ?? L.detail.dashSize, 1.24, side === 'left', top);
   const ref = useRef<HTMLCanvasElement>(null);
   const t = frame / fps;
   const q3 = (v: number) => Math.round(v * 1000) / 1000;
@@ -801,8 +842,9 @@ const TripBox: React.FC<DetailBoxProps & {mood?: Mood; scene: SceneCtx}> = ({
   const outerW = innerW + 2 * BORDER;
   const outerH = innerH + 2 * BORDER;
   const onLeft = (side ?? (target && target[0] > width / 2 ? 'left' : 'right')) === 'left';
-  const left = leftAt ?? (onLeft ? LEFT : RIGHT - outerW);
-  const boxTop = top ?? Math.max(328, Math.min(1248 - outerH, (target ? target[1] : height / 2) - 70 - outerH));
+  const left = leftAt ?? (onLeft ? L.left : L.right - outerW);
+  const boxTop =
+    top ?? boxTopFor(L, left, outerW, outerH, () => Math.max(328, Math.min(1248 - outerH, (target ? target[1] : height / 2) - 70 - outerH)));
   const enter = ease(frame, 0, DETAIL_FADE);
   const rise = interpolate(enter, [0, 1], [8, 0]);
   const by = boxTop + outerH;

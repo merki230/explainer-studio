@@ -17,6 +17,7 @@ import {
   type GrooveGroup,
 } from '../three/section/MusicalRoad';
 import {
+  formatOf,
   projectToFrame,
   SECTION_ANGLE,
   sectionCameraAt,
@@ -258,6 +259,7 @@ export const musicalCameraAt = (
     durationInFrames: o.durationInFrames,
     drift: p.drift ?? 0.08,
     clockOffset: (p.startFrame ?? 0) / o.fps,
+    format: formatOf(p),
   });
 };
 

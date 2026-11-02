@@ -1,12 +1,9 @@
 import React, {useLayoutEffect, useRef} from 'react';
-import {continueRender, delayRender} from 'remotion';
+import {continueRender, delayRender, useVideoConfig} from 'remotion';
 import {fontsReady} from '../fonts';
 import {drawScreen, screenKey, SCREEN_H, SCREEN_W, type ScreenState} from './screenKit';
 
-/** The screen drawn to the frame's full height (1008 × 1920, centred, black at the sides): nothing cropped. */
-const K = 1920 / SCREEN_H;
-const W0 = Math.round(SCREEN_W * K);
-const H0 = 1920;
+/** The screen drawn to the frame's full height (1008 × 1920 in the vertical frame, centred, black at the sides): nothing cropped. */
 
 /**
  * The bookends' phone screen (owner decision, the loop): a full-frame phone screen from the screen
@@ -22,6 +19,10 @@ export const ScreenBookend: React.FC<{
   phone: [number, number];
   phoneH: number;
 }> = ({state, e, bright, phone, phoneH}) => {
+  const {width, height} = useVideoConfig();
+  const K = height / SCREEN_H;
+  const W0 = Math.round(SCREEN_W * K);
+  const H0 = height;
   const ref = useRef<HTMLCanvasElement>(null);
   // the full-frame layout (nothing readable above y 520, text at x ≤ 888) while the screen fills
   // the frame; it eases back to the phone's own layout as the screen shrinks (e 0.3 → 0.7), so the
@@ -51,8 +52,8 @@ export const ScreenBookend: React.FC<{
   // a steady dolly: the size changes on a log scale
   const h = Math.exp(Math.log(H0) + (Math.log(Math.max(4, phoneH)) - Math.log(H0)) * e);
   const scale = h / H0;
-  const cx = 540 + (phone[0] - 540) * e;
-  const cy = 960 + (phone[1] - 960) * e;
+  const cx = width / 2 + (phone[0] - width / 2) * e;
+  const cy = height / 2 + (phone[1] - height / 2) * e;
   // it hands over to the slice's own phone at the very end of the pull
   const fade = e < 0.7 ? 1 : Math.max(0, 1 - (e - 0.7) / 0.3);
   // black round the screen while it fills the frame (frame 0 and the last frame are all black)

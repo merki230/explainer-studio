@@ -4,9 +4,9 @@
 // usage: yarn transcribe <slug> [audio-file]
 // Default audio: src/videos/<slug>/audio/voiceover.mp3. Writes src/videos/<slug>/transcript.json.
 // Words are Scribe's own spelling; replaced by script.txt's text when word counts match; otherwise "yarn check" will warn.
-import {existsSync, readFileSync, writeFileSync} from 'node:fs';
+import {existsSync, readFileSync} from 'node:fs';
 import {basename} from 'node:path';
-import {apiKey, videoPaths, withScriptText} from './lib.mjs';
+import {apiKey, videoPaths, withScriptText, writeTranscript} from './lib.mjs';
 
 const paths = videoPaths(process.argv[2], 'yarn transcribe <slug> [audio-file]');
 const file = process.argv[3] ?? paths.audioFile;
@@ -35,5 +35,5 @@ let words = (data.words ?? [])
 // Same spelling/punctuation as script.txt when the word counts match (timings stay Scribe's).
 if (existsSync(paths.script)) words = withScriptText(words, readFileSync(paths.script, 'utf8')).words;
 
-writeFileSync(paths.transcript, JSON.stringify({audio: paths.audio, words}, null, 2));
+writeTranscript(paths, {audio: paths.audio, words});
 console.log(`Wrote ${paths.transcript} (${words.length} words, ${words.at(-1)?.end}s) from ${file}.`);

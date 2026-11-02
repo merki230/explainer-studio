@@ -103,6 +103,72 @@ Platform mechanics: **TikTok poll at posting or afterwards on the posted video**
 
 ---
 
+## Owner decision · real opening shot on long videos, Shorts 100% 3D (2026-11-02)
+
+- **Decided:** 2026-11-02, owner, relayed by the main session.
+- **Applies to:** long-form (horizontal) videos from Part 1 (`datacenter-water`) on. Shorts: 100% 3D, unchanged.
+
+**Context.** The owner asked about mixing free stock footage into the 3D renders. The main session recommended against mixing it through the story, for four reasons:
+- it breaks the brand look;
+- stock can't show hidden systems;
+- Content ID, logo and identifiable-company risks;
+- protest or meeting footage that looks political.
+
+It suggested one exception: a real aerial establishing shot that "cuts open" into our 3D version.
+
+**Owner's decision:** approved for long videos only. "the first 3-4 second can be very good." First use is `datacenter-water`: a real aerial of a data center with a white plume rising off its roof cooling towers, which then becomes the cut-open 3D data center from the same angle.
+
+**What we're changing** (✅ owner decision for the scope; 🧪 for the values):
+
+| Rule (file § name) | Change |
+|---|---|
+| style-guide § 11.6.1 (new), "The real opening" | Long-form first shot only. No real pixel after F96, hard cap F120. Also: clip criteria, licence tiers (CC0; Pexels / Pixabay licences; CC BY 4.0), licence record in `sources.md` § Footage, Content ID checks, storage proposal, documented grade (theme targets, reserved-band clamp), camera match, the F0 to F138 reveal, title block, sound, disclosure |
+| style-guide § 3 The Section, § 8 Angle, intro line | Named exceptions pointing to § 11.6.1 |
+| style-guide § 3 Assets, § 10 Description, § 11.6 Opening, § 11.8, § 11.9, checklist 1 and new 17 | Footage record, credit line, no footage in Shorts, Private-first upload, review items |
+| brand.md § Promise (difference 3), § Long-form (new row "Real opening shot"), § Shorts cut from chapters (Picture), § Sourcing policy, § What we never do | The exception and its limits; footage credit and illustrative clause; stock footage anywhere else stays banned |
+
+**Needs, outside `brand/`:**
+- CLAUDE.md line (owner).
+- `docs/sources-format.md` § Footage (tooling or main session).
+- Footage folder and bundling (tooling).
+- Reveal build (scene-builder).
+- A/V script shot 1 (director).
+- Candidate clips (researcher).
+
+**To measure on Part 1:**
+- Retention over the first 30 s, against later long videos that open in 3D.
+- Comments that take the aerial for a real named site, or ask "which data center is this?" (if several do, the illustrative clause needs to move up the description).
+- Any Content ID claim, and how its dispute goes.
+- The owner's read in Studio: does the reveal read as "the real place, cut open", or as two styles glued together?
+
+---
+
+## Owner decision · full-frame chapter card on long videos (2026-11-02)
+
+- **Decided:** 2026-11-02, owner, relayed by the main session · **Applies to:** long-form (horizontal) videos from Part 1 (`datacenter-water`) on; Shorts unaffected
+
+**Owner's decision:** at the start of chapters 2, 3 and 4, a **full-frame chapter card** shows the chapter's question (the `##` heading, also the YouTube chapter title), with no voice over it. The narrator **still asks the question** at the end of the previous chapter; the card shows it again as the new chapter opens. **Chapter 1 has no card** (the title block carries the first question). Staging: after the spoken question the scene dims and blurs but keeps moving; the card fades in with a small "CHAPTER 2" label and the question large in the house type; it holds ≈ 2.5 s, no voice, under a soft swell in the music (an optional subtle sound cue at the music step); it fades out into the new chapter's first shot, then the narrator resumes. It **replaces** the small corner chapter card (x 144, y 120, held 3 s). **Shorts** keep their spoken hook and title block, no silent card.
+
+**What we're changing:** style-guide v0.17 (§ 11.5.1 new; § 11.5, § 11.6, § 11.7, § 11.8, checklist 16), brand.md v0.14.1 (§ Long-form, Chapters; § Voice, Answer straight). CHANGELOG 2026-11-02. The `datacenter-water` A/V script and spec still describe the corner card (director to update).
+
+**To measure on Part 1:** the retention curve across each card (a dip at the card = the silence costs viewers; flat or a bump = it works), comments about pauses or chapters, and the owner's read on the Studio playback (does the 3.9 s without voice feel calm or slow?). Fallbacks if it drags: hold 2.0 s, then a shorter beat before the dim.
+
+---
+
+## Owner decision · long-form, horizontal, Shorts from chapters (2026-11-01)
+
+- **Decided:** 2026-11-01, owner, relayed by the main session · **Applies to:** long-form videos from the data center series on; Shorts unchanged except those cut from a long video
+
+**Owner's decisions:** the channel adds **long-form YouTube videos of at least 5 minutes**, made **horizontal** (viewers on TV and desktop), with **vertical Shorts cut from their chapters** for TikTok, Instagram and YouTube Shorts. The first is a **two-part data center series** (water, then electricity; `docs/video-ideas.md`, "Shortlist: data center series"). Script direction from the owner: a guided investigation with one thread, a hook in the first 20 to 30 s (question, stakes, payoff picture; never "in this video I'll…"), chapters that each answer one question and end on the next, a re-hook every 60 to 90 s, the common belief named then corrected, the opening question paid off, an honest trade-off and a tease of the next part with no long outro, ≈ 150 wpm (5 min ≈ 750 words, 6 to 7 min fine), the same voice rules; Shorts with their own hook line, 45 to 60 s, vertical, linked to the long video.
+
+**What we're changing:** brand.md v0.14 (§ Structure, Long-form; § Naming; § What we never do; Open decisions 9 and 10), style-guide v0.16 (§ 11 Horizontal format). CHANGELOG 2026-11-01.
+
+**Settled the same day (owner, 2026-11-01):** Open decision 9, YouTube watermark **on for the whole video**, long videos only; Open decision 10, burned-in house captions **on** for long videos, no YouTube caption file, for Part 1, compare later (measure: comments about captions, retention vs later videos with YouTube captions). Note: our narrator measures 150 to 168 wpm, so 750 words may land under 5:00; brand.md plans 800 to 900 words.
+
+**To measure on Part 1** (per long video, 72 h and 14 days): average view duration and % viewed, the retention curve at 0:30 and at each chapter boundary (do re-hooks hold?), click-through on the end screen to Part 2, traffic from the Shorts' related-video link, and per-Short numbers as in § Platform numbers. Add a "Format" column value `long` / `short from No. NNN` when these rows arrive.
+
+---
+
 ## Owner decision · whole wheels on cut-open cars (2026-10-29)
 
 - **Decided:** 2026-10-29, owner, relayed by the main session · **Applies to:** new car videos (posted videos unchanged)

@@ -1,8 +1,36 @@
 import {useThree} from '@react-three/fiber';
 import {Easing, interpolate, random, useCurrentFrame, useVideoConfig} from 'remotion';
 import * as THREE from 'three';
+import {useFormat} from '../../format';
+import {FOV_H, FRAMES, type Format} from '../../theme';
 
 type V3 = [number, number, number];
+
+/**
+ * The Section lens per frame format (style guide § 8, § 11.6): 26° vertical in the 9:16 frame; in 16:9 the long side
+ * keeps 26°, so the (vertical) fov is `FOV_H` ≈ 14.8°.
+ */
+export const sectionFov = (format: Format = 'vertical') => (format === 'horizontal' ? FOV_H : 26);
+
+/** A scene's frame format from its props (`format`, set by the Explainer on horizontal videos; absent = vertical). */
+export const formatOf = (p: object): Format | undefined => (p as {format?: Format}).format;
+
+/**
+ * A scene's props with the frame format it renders in: the Explainer hands horizontal scenes `format`; a cover still
+ * (or any other caller) gets it from the composition's size here. Vertical props come back unchanged.
+ */
+export const useFormatProps = <T extends object>(props: T): T => {
+  const {format} = useFormat();
+  return format === 'horizontal' && formatOf(props) === undefined ? {...props, format} : props;
+};
+
+/**
+ * A framing for the wide frame (§ 11.6): the same look-at, `k` × the distance (the 16:9 frame shows 0.56 × the 9:16
+ * frame's height at the same distance, so a framing made for 9:16 needs ≈ 1.3–1.8 × the distance to keep its subject
+ * in the frame's height). Vertical: unchanged.
+ */
+export const widenFraming = (f: Framing, format: Format | undefined, k: number): Framing =>
+  format === 'horizontal' ? {look: f.look, distance: f.distance * k} : f;
 
 /** What the camera frames: the point it looks at and how far back it stands along the fixed angle. */
 export type Framing = {look: V3; distance: number};
@@ -40,7 +68,9 @@ export const sectionCameraAt = (o: {
   pre?: {from: Framing; hold: number; move: number; ease?: 'sine' | 'cubic'};
   /** After the main move: from frame `at`, move to `post.to` over `move` frames, then hold. */
   post?: {to: Framing; at: number; move: number};
-}): {position: THREE.Vector3; look: THREE.Vector3} => {
+  /** The frame format, carried on the result so `projectToFrame` uses that frame's size and lens (default vertical). */
+  format?: Format;
+}): {position: THREE.Vector3; look: THREE.Vector3; format?: Format} => {
   const sine = Easing.inOut(Easing.sin);
   const q = (x: number) =>
     interpolate(x, [0, 1], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: sine});
@@ -85,15 +115,19 @@ export const sectionCameraAt = (o: {
   return {
     position: new THREE.Vector3(...cameraAt({look: [lookV.x, lookV.y, lookV.z], distance: f.distance})),
     look: lookV,
+    ...(o.format === 'horizontal' ? {format: o.format} : {}),
   };
 };
 
-/** Project a world point to frame pixels for a Section camera state (fov 26°, 1080 × 1920). */
+/**
+ * Project a world point to frame pixels for a Section camera state: fov 26°, 1080 × 1920, or, for a camera state made
+ * with `format: 'horizontal'`, `FOV_H` and 1920 × 1080.
+ */
 export const projectToFrame = (
-  cam: {position: THREE.Vector3; look: THREE.Vector3},
+  cam: {position: THREE.Vector3; look: THREE.Vector3; format?: Format},
   point: V3,
-  size: [number, number] = [1080, 1920],
-  fov = 26,
+  size: [number, number] = [FRAMES[cam.format ?? 'vertical'].width, FRAMES[cam.format ?? 'vertical'].height],
+  fov = sectionFov(cam.format),
 ): [number, number] => {
   const c = new THREE.PerspectiveCamera(fov, size[0] / size[1], 0.1, 80);
   c.position.copy(cam.position);

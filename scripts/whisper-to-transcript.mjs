@@ -4,8 +4,8 @@
 //   2. pip install -U openai-whisper
 //      whisper src/videos/<slug>/audio/voiceover.mp3 --model small --word_timestamps True --output_format json --output_dir out
 //   3. yarn from-whisper <slug> out/voiceover.json
-import {readFileSync, writeFileSync} from 'node:fs';
-import {videoPaths} from './lib.mjs';
+import {readFileSync} from 'node:fs';
+import {videoPaths, writeTranscript} from './lib.mjs';
 
 const usage = 'yarn from-whisper <slug> <whisper.json>';
 const paths = videoPaths(process.argv[2], usage);
@@ -20,5 +20,5 @@ const words = (json.segments ?? [])
   .map((w) => ({text: w.word.trim(), start: +w.start.toFixed(3), end: +w.end.toFixed(3)}))
   .filter((w) => w.text.length > 0);
 
-writeFileSync(paths.transcript, JSON.stringify({audio: paths.audio, words}, null, 2));
+writeTranscript(paths, {audio: paths.audio, words});
 console.log(`Wrote ${paths.transcript} (${words.length} words).`);

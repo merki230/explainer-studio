@@ -1,7 +1,7 @@
 import React, {useMemo} from 'react';
 import * as THREE from 'three';
 import {fonts} from '../../fonts';
-import {CAR, HIGHWAY, MOODS, REAL, section, STREET, type Mood} from '../../theme';
+import {CAR, HIGHWAY, MOODS, REAL, section, STREET, WINTER, type Mood} from '../../theme';
 import {BlobShadow} from '../MuseumStage';
 import {raw, roundedBox} from '../plaster';
 import {CutOutline, cutMaterial, InkLine} from '../section/cutLook';
@@ -298,6 +298,16 @@ const SILL_GAS: P2[] = [
   [0.9, 0.35],
   [-0.9, 0.35],
 ];
+/** The sill from `from` (x) forward (No. 014, the hybrid: behind it the small pack sits under the rear seat). */
+const sillOf = (from?: number): P2[] =>
+  from === undefined
+    ? SILL_GAS
+    : [
+        [from, 0.24],
+        [0.91, 0.24],
+        [0.9, 0.35],
+        [from, 0.35],
+      ];
 /** The gas car's lower dashboard is sectioned on its own plane (a step in the cut), so the column and pedals show. */
 export const GAS_DASH_Z = 0.28;
 const WINDOWS: P2[][] = [
@@ -820,7 +830,9 @@ export const cutCarOutlines = (o: {
   tunnel?: boolean;
   rearBay?: boolean;
   coupeStyle?: CoupeStyle;
+  sillFrom?: number;
 }): V3[][] => {
+  const SILL_GAS = sillOf(o.sillFrom);
   const shape = o.shape ?? 'crossover';
   const bay = !!(o.ev || o.gas);
   const coupe = shape === 'coupe';
@@ -986,6 +998,12 @@ export type RealCarProps = {
   carpet?: boolean;
   /** No. 011: the seats and the rear bench raised this much (m; the cell-to-body beat settles them 2 cm). Default 0. */
   seatLift?: number;
+  /** No. 014 (`gas`, the hybrid): the sill starts at this x (m) instead of under the rear seat's front, leaving room for a pack. Default none. */
+  sillFrom?: number;
+  /** No. 014 (cut sedan and real models): the rear bench moved forward this far (m), over a pack under it. Default 0. */
+  benchShift?: number;
+  /** No. 014 (N6): frost on the glass, 0 → 1: the windows whiten and close up (a cold morning). Default 0. */
+  frost?: number;
 };
 
 const TAIL_RED = raw(HIGHWAY.tailLight);
@@ -1022,6 +1040,9 @@ export const RealCar: React.FC<RealCarProps> = ({
   strip = false,
   carpet = true,
   seatLift = 0,
+  sillFrom,
+  benchShift = 0,
+  frost = 0,
 }) => {
   const split = gas || splitDash;
   // the gas car's body is the EV's (open bay) plus a sill
@@ -1199,6 +1220,14 @@ export const RealCar: React.FC<RealCarProps> = ({
     envScale,
   );
   applyAlbedo([mats.paint, mats.trim, mats.seat, mats.carpet, mats.receiver, mats.gloss, mats.bumper], albedo);
+  // No. 014 (N6): frost whitens the glass and closes it up (each pane's own colour and opacity kept to come back to)
+  for (const g of [mats.glass, mats.tint, mats.glassTint, mats.rakedGlass]) {
+    const u = g.userData as {base?: {c: THREE.Color; o: number}};
+    u.base ??= {c: g.color.clone(), o: g.opacity};
+    const k = Math.max(0, Math.min(1, frost));
+    g.color.copy(u.base.c).lerp(raw(WINTER.frost), k);
+    g.opacity = u.base.o + (0.9 - u.base.o) * k;
+  }
   if (style) applyAlbedo([mats.grille, mats.gloss2, mats.bolster], albedo);
 
   const geo = useMemo(
@@ -1206,11 +1235,11 @@ export const RealCar: React.FC<RealCarProps> = ({
       body: extrude(shapeOf(BODY), -0.87, CAR_LAYOUT.cutZ),
       evFront: extrude(shapeOf(BODY_EV_FRONT), -0.87, EV_FIREWALL_Z),
       evRear: extrude(shapeOf(BODY_EV_REAR), -0.87, CAR_LAYOUT.cutZ),
-      sill: extrude(shapeOf(SILL_GAS), -0.87, CAR_LAYOUT.cutZ),
+      sill: extrude(shapeOf(sillOf(sillFrom)), -0.87, CAR_LAYOUT.cutZ),
       far: extrude(shapeOf(FAR, WINDOWS), CAR_LAYOUT.farZ, -0.87),
       glass: WINDOWS.map((w) => new THREE.ShapeGeometry(shapeOf(w))),
     }),
-    [],
+    [sillFrom],
   );
   // the cut coupe's pieces, for its style (No. 010: the cut sedan's, from its own outlines)
   const cg = useMemo(() => {
@@ -1245,8 +1274,8 @@ export const RealCar: React.FC<RealCarProps> = ({
   }, [coupe, whole, style, cs]);
   const zRear = rearBay ? REAR_BAY_Z : CAR_LAYOUT.cutZ;
   const bodyInk = useMemo(
-    () => cutCarOutlines({shape: cs ? shape : coupe ? 'coupe' : 'crossover', ev, gas, tunnel, rearBay, coupeStyle: style}),
-    [ev, gas, coupe, rearBay, tunnel, style, cs, shape],
+    () => cutCarOutlines({shape: cs ? shape : coupe ? 'coupe' : 'crossover', ev, gas, tunnel, rearBay, coupeStyle: style, sillFrom}),
+    [ev, gas, coupe, rearBay, tunnel, style, cs, shape, sillFrom],
   );
   const inkT = 0.011 * inkScale;
   const ws = cs
@@ -1627,14 +1656,14 @@ export const RealCar: React.FC<RealCarProps> = ({
             <mesh
               geometry={roundedBox(0.55, 0.14, 1.5, 0.05, 4)}
               material={mats.seat}
-              position={[cs.bench.cushion[0], cs.bench.cushion[1], -0.05]}
+              position={[cs.bench.cushion[0] + benchShift, cs.bench.cushion[1], -0.05]}
               castShadow
               receiveShadow
             />
             <mesh
               geometry={roundedBox(0.14, cs.bench.backH, 1.5, 0.05, 4)}
               material={mats.seat}
-              position={[cs.bench.back[0], cs.bench.back[1], -0.05]}
+              position={[cs.bench.back[0] + benchShift, cs.bench.back[1], -0.05]}
               rotation={[0, 0, cs.bench.lean]}
               castShadow
               receiveShadow

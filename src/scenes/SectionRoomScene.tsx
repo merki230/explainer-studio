@@ -9,10 +9,10 @@ import {Figure} from '../three/section/Figure';
 import {blendMood} from '../three/section/moods';
 import {CordCorner} from '../three/section/CordCorner';
 import {LivingRoomSlice, SLICE} from '../three/section/LivingRoomSlice';
-import {projectToFrame, SectionCamera, sectionCameraAt, type Framing} from '../three/section/SectionCamera';
+import {formatOf, projectToFrame, SectionCamera, sectionCameraAt, useFormatProps, type Framing} from '../three/section/SectionCamera';
 import {SectionLights, SectionStage} from '../three/section/SectionStage';
 import {PHONE_PITCH_TO_FACE, phoneLocalAt, poseAt, type Gesture} from '../three/rig';
-import {MOODS, section, type CastName, type Mood} from '../theme';
+import {MOODS, section, type CastName, type Format, type Mood} from '../theme';
 
 type V3 = [number, number, number];
 
@@ -29,6 +29,18 @@ export const SECTION_FRAMINGS: Record<'wide' | 'couch' | 'cord', Framing> = {
   wide: {look: [-0.2, 1.36, 0], distance: 12.75},
   couch: {look: [0.0, 0.92, -0.45], distance: 8.0},
   cord: {look: [1.5, -0.04, -0.86], distance: 3.0},
+};
+
+/**
+ * The same framings in the wide frame (style guide § 11.6, `format: 'horizontal'`, fov `FOV_H`): the 16:9 frame is
+ * 0.56 × as tall, so each stands further back to keep the room's height (wall tops to the cut ground) in frame: 'wide'
+ * the whole slice with a sky band over the wall tops (the title block's) and the cut ground at the bottom, the room
+ * ≈ 45% of the width (it is 3.4 wide; § 11.6's 5.6-wide block is a new set); 'couch' the two people; 'cord' the corner.
+ */
+export const SECTION_FRAMINGS_H: Record<keyof typeof SECTION_FRAMINGS, Framing> = {
+  wide: {look: [-0.2, 1.44, 0], distance: 20.5},
+  couch: {look: [0.0, 0.92, -0.45], distance: 14},
+  cord: {look: [1.5, -0.04, -0.86], distance: 5.3},
 };
 
 /** Keys `{at, value}` (seconds into the scene, value 0 → 1), eased between (cubic in-out). */
@@ -94,7 +106,7 @@ export type SectionRoomSceneProps = {
    * The angle never changes (§ 8).
    */
   camera?: keyof typeof SECTION_FRAMINGS | SectionMove;
-  /** Push speed for a preset framing, units/s toward the subject (≤ 0.06; 0 = hold). */
+  /** Push speed for a preset framing, units/s toward the subject (≤ 0.06; 0 = hold). Default 0.04; wide frame 0.03 (§ 11.6). */
   push?: number;
   /** Idle truck drift, ± units (≤ 0.15; 0 = none). */
   drift?: number;
@@ -146,6 +158,8 @@ export type SectionRoomSceneProps = {
   life?: boolean;
   /** Focus line of the post pass, fraction of the frame from the top (default 0.5: the look-at). */
   focusY?: number;
+  /** The frame format (set by Explainer on horizontal videos): the wide framings and lens (§ 11.6). Default vertical. */
+  format?: Format;
   /** The scene's first frame in the video (set by Explainer): keeps idle motion continuous across cuts. */
   startFrame?: number;
   /**
@@ -222,7 +236,8 @@ export const LOOP_LOCK_FRAMES = 6;
 /** The scene's camera move (framings and drift) from its props. */
 const cameraMove = (p: Partial<SectionRoomSceneProps>, durationInFrames: number, fps: number) => {
   const camera = p.camera ?? 'wide';
-  const push = p.push ?? 0.04;
+  const wide = formatOf(p) === 'horizontal';
+  const push = p.push ?? (wide ? 0.03 : 0.04);
   // the bookends: a pull out of a phone before the main move, a push into one after it
   const wake = p.wake;
   const sleep = p.sleep;
@@ -255,7 +270,8 @@ const cameraMove = (p: Partial<SectionRoomSceneProps>, durationInFrames: number,
   let from: Framing;
   let to: Framing;
   if (typeof camera === 'string') {
-    const preset = SECTION_FRAMINGS[camera] ?? SECTION_FRAMINGS.wide;
+    const presets = wide ? SECTION_FRAMINGS_H : SECTION_FRAMINGS;
+    const preset = presets[camera] ?? presets.wide;
     const c = glide ? undefined : p.cameraFrom;
     if (c) {
       const same = c.look.every((v, i) => Math.abs(v - preset.look[i]) < 1e-6);
@@ -334,6 +350,7 @@ const cameraAtFrame = (
     durationInFrames: end,
     drift: p.drift ?? 0.08,
     clockOffset: (p.startFrame ?? 0) / o.fps,
+    format: formatOf(p),
   });
 };
 
@@ -522,7 +539,8 @@ const tellLevel = (t: number, at: number) => {
 };
 
 /** A living room cut open and seen from outside at the fixed 3/4 angle, with two of the cast on the couch. */
-export const SectionRoomScene: React.FC<SectionRoomSceneProps> = (props) => {
+export const SectionRoomScene: React.FC<SectionRoomSceneProps> = (propsIn) => {
+  const props = useFormatProps(propsIn);
   const {
     durationInFrames,
     mood = 'day',

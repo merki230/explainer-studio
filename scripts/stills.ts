@@ -2,19 +2,28 @@
 // the layout of a whole video in seconds without scrubbing the Studio.
 // Each still is taken just after the scene's last overlay appears.
 //
-// usage: yarn stills <slug> [--scale=0.5] [--frames=120,300]
+// usage: yarn stills <slug> [--short <n>] [--scale=0.5] [--frames=120,300]
+// --short <n>: stills of the Short cut from chapter n (composition <slug>-short-<n>), into out/<slug>/raw/stills-short-<n>/.
 import {mkdirSync, rmSync} from 'node:fs';
 import path from 'node:path';
 import {bundle} from '@remotion/bundler';
 import {renderStill, selectComposition} from '@remotion/renderer';
 import {FADE, FPS} from '../src/theme';
+import {deriveShort, resolveShortTimeline} from '../src/shorts';
 import {resolveTimeline} from '../src/timeline';
 import {VIDEOS} from '../src/videos';
 import {videoPaths} from './lib.mjs';
 
 const args = process.argv.slice(2);
+const shortAt = args.indexOf('--short');
+const short = shortAt < 0 ? null : Number(args[shortAt + 1]);
+if (shortAt >= 0) args.splice(shortAt, 2);
+if (short !== null && !(Number.isInteger(short) && short >= 1)) {
+  console.error('--short needs a chapter number (1, 2, ...).');
+  process.exit(1);
+}
 const slug = args.find((a) => !a.startsWith('--'));
-videoPaths(slug, 'yarn stills <slug> [--scale=0.5] [--frames=120,300]');
+videoPaths(slug, 'yarn stills <slug> [--short <n>] [--scale=0.5] [--frames=120,300]');
 const flag = (name: string) => args.find((a) => a.startsWith(`--${name}=`))?.split('=')[1];
 const scale = Number(flag('scale') ?? 0.5);
 
@@ -27,7 +36,7 @@ if (!entry) {
 // A broken video still renders (as an error card), so a timeline error is not fatal here.
 let tl: ReturnType<typeof resolveTimeline> | undefined;
 try {
-  tl = resolveTimeline(entry.spec, entry.transcript.words, FPS);
+  tl = short === null ? resolveTimeline(entry.spec, entry.transcript.words, FPS, {chapters: entry.transcript.chapters}) : resolveShortTimeline(deriveShort(entry, short, FPS), FPS);
 } catch (e) {
   console.warn(`Timeline error (rendering the error card): ${e instanceof Error ? e.message : e}`);
 }
@@ -43,7 +52,7 @@ const shots: {name: string; frame: number}[] = !tl
         return {name: `${String(i + 1).padStart(2, '0')}-${s.scene}`, frame};
       });
 
-const outDir = `out/${slug}/raw/stills`;
+const outDir = `out/${slug}/raw/stills${short === null ? '' : `-short-${short}`}`;
 rmSync(outDir, {recursive: true, force: true});
 mkdirSync(outDir, {recursive: true});
 
@@ -51,7 +60,7 @@ console.log('Bundling...');
 const serveUrl = await bundle({entryPoint: path.resolve('src/index.ts')});
 // Must match remotion.config.ts, which bundle() does not read.
 const chromiumOptions = {gl: 'angle' as const};
-const composition = await selectComposition({serveUrl, id: slug!, chromiumOptions});
+const composition = await selectComposition({serveUrl, id: short === null ? slug! : `${slug}-short-${short}`, chromiumOptions});
 
 for (const shot of shots) {
   const output = `${outDir}/${shot.name}.png`;

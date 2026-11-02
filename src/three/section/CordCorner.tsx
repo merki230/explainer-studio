@@ -174,7 +174,6 @@ export const CordCorner: React.FC<CordCornerProps> = ({palette, heater = 0, run 
   };
 
   const [hx, , hz] = CORD_CORNER.heater;
-  const spin = run * Math.PI * 2 * 1.9; // forward, ≈ 23° a frame: never strobes backward (5 blades)
 
   return (
     <group>
@@ -284,49 +283,78 @@ export const CordCorner: React.FC<CordCornerProps> = ({palette, heater = 0, run 
 
       {/* the heater: a small ceramic fan heater, front toward the room; no visible element */}
       <group position={[hx, 0, hz]} rotation={[0, CORD_CORNER.heaterYaw, 0]}>
-        <mesh geometry={roundedBox(HW + 0.02, 0.02, HD + 0.02, 0.006, 4)} material={mats.dark} position={[0, 0.01, 0]} castShadow receiveShadow />
-        <mesh geometry={roundedBox(HW, HH, HD, 0.022, 5)} material={mats.plastic} position={[0, 0.02 + HH / 2, 0]} castShadow receiveShadow />
-        {/* the grille: a dark opening, the fan behind it, horizontal slats in front */}
-        <group position={[0, 0.02 + HH * 0.58, HD / 2]}>
-          <mesh position={[0, 0, 0.0008]} material={mats.dark}>
-            <planeGeometry args={[HW * 0.78, HH * 0.6]} />
-          </mesh>
-          <group position={[0, 0, 0.003]} rotation={[0, 0, -spin]}>
-            <mesh material={mats.fan}>
-              <circleGeometry args={[0.012, 16]} />
-            </mesh>
-            {[0, 1, 2, 3, 4].map((k) => (
-              <mesh key={k} rotation={[0, 0, (k * Math.PI * 2) / 5]} position={[0, 0, -0.0002]} material={mats.fan}>
-                <shapeGeometry args={[bladeShape, 6]} />
-              </mesh>
-            ))}
-          </group>
-          {Array.from({length: 9}, (_, k) => (
-            <mesh
-              key={k}
-              geometry={roundedBox(HW * 0.8, 0.0045, 0.008, 0.0015, 2)}
-              material={mats.plastic}
-              position={[0, -HH * 0.3 + (k + 0.5) * ((HH * 0.6) / 9), 0.007]}
-              castShadow
-            />
-          ))}
-        </group>
-        {/* the pilot lamp, under the grille: dark until the heater runs, then flat `warning` (never glows) */}
-        <mesh position={[LAMP[0], LAMP[1], LAMP[2] + 0.0008]} material={mats.lampOff}>
-          <circleGeometry args={[0.0055, 16]} />
-        </mesh>
-        <mesh position={[LAMP[0], LAMP[1], LAMP[2] + 0.0012]} material={mats.lampOn} visible={h > 0.01}>
-          <circleGeometry args={[0.0055, 16]} />
-        </mesh>
-        {/* the knob, on top toward the front, and the carry slot */}
-        <mesh position={[HW * 0.22, 0.02 + HH + 0.008, HD * 0.18]} material={mats.dark} castShadow>
-          <cylinderGeometry args={[0.016, 0.017, 0.016, 20]} />
-        </mesh>
-        <mesh position={[-HW * 0.12, 0.02 + HH + 0.0008, -HD * 0.1]} rotation={[-Math.PI / 2, 0, 0]} material={mats.dark}>
-          <planeGeometry args={[HW * 0.42, 0.022]} />
-        </mesh>
+        <SpaceHeater palette={palette} heater={heater} run={run} />
       </group>
     </group>
   );
 };
 
+/**
+ * The small ceramic fan heater (CordCorner's, extracted for No. 013's heat bench): a light plastic body on a dark base, a
+ * slatted grille with its fan behind, a knob, a pilot lamp (flat `warning` when on, never glowing). Origin on the floor
+ * under its centre, front toward +z; 0.2 × 0.29 × 0.15 m (scale the group for a bigger unit).
+ */
+export const SpaceHeater: React.FC<{palette: MoodPalette; heater?: number; run?: number}> = ({palette, heater = 0, run = 0}) => {
+  const mats = useMemo(() => {
+    const std = (roughness: number, color?: string) =>
+      new THREE.MeshStandardMaterial({roughness, metalness: 0, ...(color ? {color: raw(color)} : {})});
+    return {
+      plastic: std(0.45),
+      dark: std(0.5),
+      fan: std(0.6),
+      lampOff: new THREE.MeshBasicMaterial({color: raw(section.ledOff)}),
+      lampOn: new THREE.MeshBasicMaterial({color: raw(section.warning), transparent: true}),
+    };
+  }, []);
+  mats.plastic.color.copy(raw(palette.appliance));
+  mats.dark.color.copy(raw(palette.device));
+  mats.fan.color.copy(raw(palette.device)).multiplyScalar(1.6);
+  const h = Math.max(0, Math.min(1, heater));
+  mats.lampOn.opacity = h;
+  const spin = run * Math.PI * 2 * 1.9; // forward, ≈ 23° a frame: never strobes backward (5 blades)
+  return (
+    <group>
+        <mesh geometry={roundedBox(HW + 0.02, 0.02, HD + 0.02, 0.006, 4)} material={mats.dark} position={[0, 0.01, 0]} castShadow receiveShadow />
+      <mesh geometry={roundedBox(HW, HH, HD, 0.022, 5)} material={mats.plastic} position={[0, 0.02 + HH / 2, 0]} castShadow receiveShadow />
+      {/* the grille: a dark opening, the fan behind it, horizontal slats in front */}
+      <group position={[0, 0.02 + HH * 0.58, HD / 2]}>
+        <mesh position={[0, 0, 0.0008]} material={mats.dark}>
+          <planeGeometry args={[HW * 0.78, HH * 0.6]} />
+        </mesh>
+        <group position={[0, 0, 0.003]} rotation={[0, 0, -spin]}>
+          <mesh material={mats.fan}>
+            <circleGeometry args={[0.012, 16]} />
+          </mesh>
+          {[0, 1, 2, 3, 4].map((k) => (
+            <mesh key={k} rotation={[0, 0, (k * Math.PI * 2) / 5]} position={[0, 0, -0.0002]} material={mats.fan}>
+              <shapeGeometry args={[bladeShape, 6]} />
+            </mesh>
+          ))}
+        </group>
+        {Array.from({length: 9}, (_, k) => (
+          <mesh
+            key={k}
+            geometry={roundedBox(HW * 0.8, 0.0045, 0.008, 0.0015, 2)}
+            material={mats.plastic}
+            position={[0, -HH * 0.3 + (k + 0.5) * ((HH * 0.6) / 9), 0.007]}
+            castShadow
+          />
+        ))}
+      </group>
+      {/* the pilot lamp, under the grille: dark until the heater runs, then flat `warning` (never glows) */}
+      <mesh position={[LAMP[0], LAMP[1], LAMP[2] + 0.0008]} material={mats.lampOff}>
+        <circleGeometry args={[0.0055, 16]} />
+      </mesh>
+      <mesh position={[LAMP[0], LAMP[1], LAMP[2] + 0.0012]} material={mats.lampOn} visible={h > 0.01}>
+        <circleGeometry args={[0.0055, 16]} />
+      </mesh>
+      {/* the knob, on top toward the front, and the carry slot */}
+      <mesh position={[HW * 0.22, 0.02 + HH + 0.008, HD * 0.18]} material={mats.dark} castShadow>
+        <cylinderGeometry args={[0.016, 0.017, 0.016, 20]} />
+      </mesh>
+      <mesh position={[-HW * 0.12, 0.02 + HH + 0.0008, -HD * 0.1]} rotation={[-Math.PI / 2, 0, 0]} material={mats.dark}>
+        <planeGeometry args={[HW * 0.42, 0.022]} />
+      </mesh>
+    </group>
+  );
+};

@@ -2,9 +2,10 @@ import React from 'react';
 import {useCurrentFrame, useVideoConfig} from 'remotion';
 import {fonts} from '../fonts';
 import type {Mood} from '../theme';
-import {anchorOnScreen, type AnchorScene} from './anchors';
+import {anchorOnScreen, withFormat, type AnchorScene} from './anchors';
 import {ease} from './card';
-import {LEFT, overlayInk, paperHalo, RIGHT} from './sectionStyle';
+import {useLayout} from './layout';
+import {overlayInk, paperHalo} from './sectionStyle';
 
 export type CalloutProps = {
   /** Anchor point (the thing being labelled), as fractions of the frame (ignored with `anchor`). */
@@ -39,15 +40,13 @@ export type CalloutProps = {
    */
   subInk?: 'ink' | 'inkSub';
   /**
-   * Type size × this (default 1: Inter 700 26 px, sub 600 20 px). From 1.15 up the title goes to 800
+   * Type size × this (default 1: Inter 700 26 px, sub 600 20 px; wide frame 28 / 26 px). From 1.15 up the title goes to 800
    * and the sub-line to 700, and the leader to 2.5 px (No. 005 visual review: 1.2 reads at phone size
    * over a busy close-up).
    */
   size?: number;
 };
 
-const BASE_TITLE = 26;
-const BASE_SUB = 20;
 /** Inter 700 uppercase with 0.08em tracking: ≈ 0.72 em a letter plus the tracking. */
 const width = (s: string, size: number, spacing: number) => s.length * size * (0.72 + spacing);
 
@@ -55,7 +54,7 @@ const width = (s: string, size: number, spacing: number) => s.length * size * (0
  * Object callout as a drawing label (v0.8 § 6: "same as a tag without the square"): a 2 px `ink`
  * elbow leader from the thing (straight up or down, then across) to the label, Inter 700 26 px
  * uppercase `ink` with a `paper` halo, no card; an optional sub-line in Inter 600 20 px `inkSub`.
- * Same props as before. Kept inside x 120–888.
+ * Same props as before. Kept inside x 120–888 (wide frame: x 144–1776, y 120–960, § 11.5).
  */
 export const Callout: React.FC<CalloutProps & {mood?: Mood; scene?: AnchorScene}> = ({
   x = 0.5,
@@ -72,13 +71,15 @@ export const Callout: React.FC<CalloutProps & {mood?: Mood; scene?: AnchorScene}
   size = 1,
   mood = 'day',
 }) => {
-  const TITLE = BASE_TITLE * size;
-  const SUB = BASE_SUB * size;
+  const L = useLayout();
+  const TITLE = L.callout.title * size;
+  const SUB = L.callout.sub * size;
   const bold = size >= 1.15;
   const frame = useCurrentFrame();
   const {width: W, height: H, fps} = useVideoConfig();
   const {ink, inkSub} = overlayInk(mood);
-  const at = anchor && scene ? anchorOnScreen(scene, anchor, frame, fps) : undefined;
+  const at =
+    anchor && scene ? anchorOnScreen({...scene, props: withFormat(scene.props, L.format)}, anchor, frame, fps) : undefined;
   const ax = at ? at[0] : x * W;
   const ay = at ? at[1] : y * H;
   const above = place === 'above';
@@ -86,8 +87,15 @@ export const Callout: React.FC<CalloutProps & {mood?: Mood; scene?: AnchorScene}
   const w = Math.ceil(Math.max(width(title, TITLE, 0.08), sub ? width(sub, SUB, 0.04) : 0)) + 8;
   const vx = above && via !== undefined ? via * W : undefined;
   const want = above ? (vx ?? ax) + dx - w / 2 : labelLeft ? ax + dx : ax + dx - w;
-  const left = Math.max(LEFT, Math.min(want, RIGHT - w));
-  const ly = ay + dy;
+  const left = Math.max(L.left, Math.min(want, L.right - w));
+  // the wide frame also clamps the label's height inside y 120–960 (the vertical frame never did)
+  const blockH = TITLE * 1.1 + (sub ? SUB * 1.2 + 4 : 0);
+  const ly =
+    L.format === 'horizontal'
+      ? above
+        ? Math.max(L.top + blockH, Math.min(ay + dy, L.bottom))
+        : Math.max(L.top + blockH / 2, Math.min(ay + dy, L.bottom - blockH / 2))
+      : ay + dy;
   // elbow: up or down from the thing to the label's height, then across to its near edge
   const lx = above ? left + w / 2 : labelLeft ? left - 10 : left + w + 10;
   const points =

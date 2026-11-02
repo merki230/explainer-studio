@@ -1,7 +1,8 @@
 import {useThree} from '@react-three/fiber';
 import React, {useLayoutEffect, useMemo, useRef} from 'react';
 import * as THREE from 'three';
-import {CITY, HIGHWAY, MOODS, section, STREET, type Mood} from '../../theme';
+import {random} from 'remotion';
+import {CITY, HIGHWAY, MOODS, section, STREET, WINTER, type Mood} from '../../theme';
 import {raw, roundedBox} from '../plaster';
 import {RoadSign, type RoadSignKind} from '../real/RoadSigns';
 import {CutOutline, cutMaterial, INK} from './cutLook';
@@ -69,9 +70,60 @@ export type CarCityRoadProps = {
    */
   from?: number;
   to?: number;
+  /**
+   * No. 014 (N6): the same street on a very cold day: snowbanks along the curb, packed snow at the road's edge, slush in
+   * the wheel paths, snow on the sidewalk, the awnings and the roofs, bare street trees on the sidewalk (all riding the
+   * road). Colours `WINTER`. Default false.
+   */
+  winter?: boolean;
 };
 
 const R = CITY_ROAD;
+
+/** No. 014: things that repeat along the street and ride the road (snowbank lumps, trees): their x now and a stable id. */
+const riding = (scroll: number, period: number, from: number, to: number, pad: number) => {
+  const out: {x: number; id: number}[] = [];
+  const n0 = Math.floor((from - pad - scroll) / period);
+  const n1 = Math.ceil((to + pad - scroll) / period);
+  for (let n = n0; n <= n1; n++) out.push({x: scroll + n * period, id: n});
+  return out;
+};
+
+/** A bare street tree (its foot at the origin): a trunk and a few forked branches, seeded. */
+const BareTree: React.FC<{id: number; mat: THREE.Material; snow: THREE.Material}> = ({id, mat, snow}) => {
+  const rnd = (k: string) => random(`tree-${id}-${k}`);
+  const h = 2.5 + 0.5 * rnd('h');
+  const branches = [...Array(6).keys()].map((i) => {
+    const a = (i / 6) * Math.PI * 2 + rnd(`a${i}`) * 0.8;
+    const y = h * (0.55 + 0.4 * rnd(`y${i}`));
+    const len = 0.7 + 0.6 * rnd(`l${i}`);
+    const tilt = 0.55 + 0.35 * rnd(`t${i}`);
+    return {a, y, len, tilt};
+  });
+  return (
+    <group>
+      <mesh material={mat} position={[0, h / 2, 0]} castShadow>
+        <cylinderGeometry args={[0.06, 0.1, h, 10]} />
+      </mesh>
+      {branches.map((b, i) => (
+        <group key={i} position={[0, b.y, 0]} rotation={[0, b.a, b.tilt]}>
+          <mesh material={mat} position={[0, b.len / 2, 0]} castShadow>
+            <cylinderGeometry args={[0.018, 0.04, b.len, 6]} />
+          </mesh>
+          <group position={[0, b.len * 0.6, 0]} rotation={[0, 0, -0.6]}>
+            <mesh material={mat} position={[0, 0.25, 0]}>
+              <cylinderGeometry args={[0.01, 0.02, 0.5, 5]} />
+            </mesh>
+          </group>
+        </group>
+      ))}
+      {/* a little snow caught in the crotch of the trunk */}
+      <mesh material={snow} position={[0, h * 0.55, 0]} scale={[0.12, 0.05, 0.12]}>
+        <sphereGeometry args={[1, 10, 6]} />
+      </mesh>
+    </group>
+  );
+};
 
 /** The lane's paint on city asphalt: grain, the double yellow by the cut (u along x, v across). */
 const laneTexture = () => {
@@ -97,7 +149,10 @@ const laneTexture = () => {
   const t = new THREE.DataTexture(data, W, H, THREE.RGBAFormat);
   t.wrapS = THREE.RepeatWrapping;
   t.magFilter = THREE.LinearFilter;
-  t.minFilter = THREE.LinearFilter;
+  // No. 014: mipmapped and anisotropic, so the double yellow holds still at the far framings (it shimmered)
+  t.minFilter = THREE.LinearMipmapLinearFilter;
+  t.generateMipmaps = true;
+  t.anisotropy = 8;
   t.colorSpace = THREE.SRGBColorSpace;
   t.needsUpdate = true;
   return t;
@@ -213,6 +268,7 @@ export const CarCityRoad: React.FC<CarCityRoadProps> = ({
   inkScale = 1,
   from = -CITY_ROAD.x,
   to = CITY_ROAD.x,
+  winter = false,
 }) => {
   const cx = (from + to) / 2;
   const len = to - from;
@@ -241,8 +297,23 @@ export const CarCityRoad: React.FC<CarCityRoadProps> = ({
       awnings: CITY.awnings.map((c) => new THREE.MeshStandardMaterial({color: raw(c), roughness: 0.85, clippingPlanes: planes})),
       window: new THREE.MeshStandardMaterial({color: raw(CITY.window), roughness: 0.2, metalness: 0.3, clippingPlanes: planes}),
       roof: new THREE.MeshStandardMaterial({color: raw(CITY.roof), roughness: 0.9, clippingPlanes: planes}),
+      // No. 014: the winter dressing
+      snow: new THREE.MeshStandardMaterial({color: raw(WINTER.snow), roughness: 0.95, clippingPlanes: planes}),
+      snowShade: new THREE.MeshStandardMaterial({color: raw(WINTER.snowShade), roughness: 0.95, clippingPlanes: planes}),
+      packed: new THREE.MeshStandardMaterial({color: raw(WINTER.packed), roughness: 0.9, clippingPlanes: planes}),
+      slush: new THREE.MeshStandardMaterial({
+        color: raw(WINTER.slush),
+        roughness: 0.35,
+        transparent: true,
+        opacity: 0.55,
+        depthWrite: false,
+        clippingPlanes: planes,
+      }),
+      bark: new THREE.MeshStandardMaterial({color: raw(WINTER.bark), roughness: 0.9, clippingPlanes: planes}),
     };
   }, [m.earth, planes, len]);
+  // the sidewalk under a thin cover of packed snow
+  mats.walk.color.copy(raw(winter ? WINTER.packed : '#ffffff'));
   // the paint and the slabs move with the road (u along x)
   mats.lane.map!.offset.x = -scroll / 7.6;
   mats.walk.map!.offset.x = -scroll / 1.5;
@@ -317,6 +388,42 @@ export const CarCityRoad: React.FC<CarCityRoadProps> = ({
           </group>
         ))}
       </ClipToBlock>
+      {winter ? (
+        <>
+          {/* packed snow along the curb on the road, slush in the wheel paths (the road's length: no scroll to show) */}
+          <mesh material={mats.packed} position={[cx, 0.004, -R.z + 0.3]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+            <planeGeometry args={[len, 0.6]} />
+          </mesh>
+          {[-0.8, 0.8].map((zz) => (
+            <mesh key={zz} material={mats.slush} position={[cx, 0.005, zz]} rotation={[-Math.PI / 2, 0, 0]}>
+              <planeGeometry args={[len, 0.32]} />
+            </mesh>
+          ))}
+          {/* the snowbank: lumps along the curb, riding the road */}
+          {riding(scroll, 1.3, from, to, 1).map(({x, id}) => {
+            const r = (k: string) => random(`bank-${id}-${k}`);
+            return (
+              <mesh
+                key={id}
+                material={r('s') > 0.5 ? mats.snow : mats.snowShade}
+                // against the curb, its road-side edge ≥ 0.4 m (more than a wheel's width) clear of a car in the lane
+                position={[x, 0.05, -R.z + 0.02 + 0.04 * r('z')]}
+                scale={[0.85 + 0.5 * r('l'), 0.3 + 0.22 * r('h'), 0.28 + 0.06 * r('w')]}
+                castShadow
+                receiveShadow
+              >
+                <sphereGeometry args={[1, 16, 10]} />
+              </mesh>
+            );
+          })}
+          {/* bare street trees on the sidewalk, riding the road */}
+          {riding(scroll, 9, from, to, 2).map(({x, id}) => (
+            <group key={`t${id}`} position={[x, R.curb, -2.85]}>
+              <BareTree id={id} mat={mats.bark} snow={mats.snow} />
+            </group>
+          ))}
+        </>
+      ) : null}
       {/* storefronts at the back of the sidewalk: facade, shop window, blank awning, parapet */}
       {visibleShops.map((s, i) => {
         const h = 3.3 + 0.35 * s.k;
@@ -325,10 +432,11 @@ export const CarCityRoad: React.FC<CarCityRoadProps> = ({
             <mesh material={mats.facades[s.k % mats.facades.length]} position={[0, h / 2, 0]} castShadow receiveShadow>
               <boxGeometry args={[SHOP - 0.04, h, 1.0]} />
             </mesh>
-            <mesh material={mats.window} position={[0.15, 1.25, 0.505]}>
+            {/* the glass 2 cm proud of the facade (5 mm z-fought at the twin section's far framings) */}
+            <mesh material={mats.window} position={[0.15, 1.25, 0.52]}>
               <planeGeometry args={[SHOP - 1.6, 1.7]} />
             </mesh>
-            <mesh material={mats.window} position={[-SHOP / 2 + 0.55, 1.05, 0.505]}>
+            <mesh material={mats.window} position={[-SHOP / 2 + 0.55, 1.05, 0.52]}>
               <planeGeometry args={[0.8, 2.1]} />
             </mesh>
             <mesh
@@ -342,6 +450,17 @@ export const CarCityRoad: React.FC<CarCityRoadProps> = ({
             <mesh material={mats.roof} position={[0, h + 0.03, 0]}>
               <boxGeometry args={[SHOP - 0.04, 0.06, 1.0]} />
             </mesh>
+            {winter ? (
+              <>
+                {/* snow on the roof and the awning */}
+                <mesh material={mats.snow} position={[0, h + 0.1, 0]}>
+                  <boxGeometry args={[SHOP - 0.1, 0.09, 0.96]} />
+                </mesh>
+                <mesh material={mats.snow} position={[0, 2.6, 0.84]} rotation={[0.35, 0, 0]}>
+                  <boxGeometry args={[SHOP - 0.36, 0.06, 0.7]} />
+                </mesh>
+              </>
+            ) : null}
           </group>
         );
       })}

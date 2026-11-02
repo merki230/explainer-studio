@@ -13,6 +13,7 @@
     "voiceover": "node scripts/voiceover.mjs",
     "voice:room": "node scripts/voice-room.mjs",
     "voiceover:use": "node scripts/use-take.mjs",
+    "voiceover:pace": "node scripts/voiceover-pace.mjs",
     "music": "tsx scripts/music.ts",
     "music:use": "node scripts/music-use.mjs",
     "sfx": "node scripts/sfx.mjs",

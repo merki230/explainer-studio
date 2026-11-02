@@ -1,4 +1,4 @@
-import {FADE} from '../theme';
+import {FADE, type Format} from '../theme';
 
 /**
  * How one scene hands over to the next (style guide § 8).
@@ -8,12 +8,14 @@ import {FADE} from '../theme';
  *    camera move (cubic in-out, `glide` seconds) from where the last scene ended (no overlap).
  *  - 'cut': a plain cut (no overlap). Rare.
  *  - 'slide': a new, unlinked slice slides in from below as this one leaves at the top (18 frames).
+ *    Horizontal videos (§ 11.6): from the right as this one leaves to the left (24 frames).
  *  - 'follow': the camera moves along the orange route to a linked slice (24 frames), the route
- *    crossing the seam.
+ *    crossing the seam (default direction 'down'; horizontal videos: 'right', the camera trucking sideways).
  */
 export type TransitionKind = 'dissolve' | 'continue' | 'glide' | 'cut' | 'slide' | 'follow';
 export type FollowDirection = 'down' | 'up' | 'left' | 'right';
-export type Transition = {kind: TransitionKind; frames: number; direction: FollowDirection; at: number};
+/** `sideways` (horizontal videos): a `slide` enters from the right instead of from below. */
+export type Transition = {kind: TransitionKind; frames: number; direction: FollowDirection; at: number; sideways?: boolean};
 
 export const TRANSITION_FRAMES: Record<TransitionKind, number> = {
   dissolve: FADE,
@@ -43,10 +45,19 @@ const SECTION_DEFAULT_LOCATION: Record<string, string> = {
   'teardown-slice': 'teardown-sedan',
   // No. 012: the data chain (the second car, the report company, the insurer on one sheet)
   'report-slice': 'report-chain',
+  // No. 013: the data centre (hall, plant room, roof, yard and cut ground on one sheet)
+  'datacenter-slice': 'datacenter',
+  // No. 013: the town sheet round the data centre; Quincy's dressing is its own location (re-dressing slides)
+  'town-slice': 'town',
+  // No. 014: the corner as a twin section; the winter dressing is its own location (re-dressing slides)
+  'city-twin': 'city-twin',
 };
 
-/** The transition into `cur` from `prev` (its `transition` prop, or the 'auto' rules). */
-export const transitionInto = (prev: SceneLike, cur: SceneLike): Transition => {
+/** Frames of a horizontal video's `slide` (§ 11.6: 24, cubic in-out). */
+export const SLIDE_FRAMES_H = 24;
+
+/** The transition into `cur` from `prev` (its `transition` prop, or the 'auto' rules), in a frame of `format`. */
+export const transitionInto = (prev: SceneLike, cur: SceneLike, format: Format = 'vertical'): Transition => {
   const p = cur.props ?? {};
   const follow = (p.follow ?? undefined) as {direction?: FollowDirection; at?: number} | undefined;
   const asked = (p.transition as TransitionKind | 'auto' | undefined) ?? 'auto';
@@ -56,17 +67,25 @@ export const transitionInto = (prev: SceneLike, cur: SceneLike): Transition => {
   else {
     const loc = (s: SceneLike) =>
       (s.props?.location as string | undefined) ??
-      (s.scene === 'teardown-slice' ? `teardown-${(s.props?.dressing as string | undefined) ?? 'sedan'}` : SECTION_DEFAULT_LOCATION[s.scene]);
+      (s.scene === 'teardown-slice'
+        ? `teardown-${(s.props?.dressing as string | undefined) ?? 'sedan'}`
+        : s.scene === 'town-slice'
+          ? `town-${(s.props?.dressing as string | undefined) ?? 'main'}`
+          : s.scene === 'city-twin'
+            ? `city-twin-${(s.props?.dressing as string | undefined) ?? 'mild'}`
+            : SECTION_DEFAULT_LOCATION[s.scene]);
     const mood = (s: SceneLike) => (s.props?.mood as string | undefined) ?? 'day';
     // a scene that opens in another mood (`moodFrom`, the time-passes blend) continues from it
     const opening = (s: SceneLike) => (s.props?.moodFrom as string | undefined) ?? mood(s);
     if (loc(prev) === loc(cur)) kind = mood(prev) === opening(cur) ? 'continue' : 'dissolve';
     else kind = follow ? 'follow' : 'slide';
   }
+  const wide = format === 'horizontal';
   return {
     kind,
-    frames: TRANSITION_FRAMES[kind],
-    direction: follow?.direction ?? (kind === 'slide' ? 'up' : 'down'),
+    frames: wide && kind === 'slide' ? SLIDE_FRAMES_H : TRANSITION_FRAMES[kind],
+    direction: follow?.direction ?? (kind === 'slide' ? 'up' : wide ? 'right' : 'down'),
     at: follow?.at ?? 0.3,
+    ...(wide && kind === 'slide' ? {sideways: true} : {}),
   };
 };

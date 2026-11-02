@@ -2,6 +2,122 @@
 
 Every change to `brand.md` or `style-guide.md` gets a line here: date, what changed, why (pointing to a `feedback.md` entry or a research section). Nothing changes silently.
 
+## style-guide v0.18.4 · 2026-11-02 · Long-form thumbnail
+
+Brand-director spec on the main session's request. It fills § 11.9's "not specced yet". No owner decision involved; the owner picks the text and approves the render. Values 🧪.
+
+- **New § 11.9.1, Thumbnail (long-form):**
+  - **Basis:** YouTube Help `answer/72431`, read 2026-11-02 (3840 × 2160 recommended, ≥ 640 wide, JPG/PNG, ≤ 2 MB mobile / 50 MB desktop, verified account).
+  - **Grid and output:** 1280 × 720 design units, rendered at 3840 × 2160 PNG, plus a 1280 JPG ≤ 2 MB.
+  - **Picture:** one moment from the video, 100% 3D (never the stock opening), at the house angle, with the orange system visible. No overlays from the video.
+  - **Layout:** text in the left third, subject at x 470 to 1220; keep-outs bottom-right x ≥ 1060, y ≥ 610 (duration badge) and top-right x ≥ 1140, y ≤ 140 (hover icons).
+  - **Small-size reading:** key elements ≥ 30 units; `routeScale` ×2.5 and cut ink ×1.5 for the still only; checked at 168 × 94 and 320 × 180.
+  - **Text:** ≤ 4 words, true and hedged as the video is; Archivo 800 108 units, `ink` with the paper halo, x 64, ≤ 3 lines, right edge ≤ 470.
+  - **Never:** logos, number, "Part 1", arrows, circles, emoji, faces, red or yellow highlights, borders, non-theme colours.
+- **Also changed:**
+  - **§ 10 Cover:** long-form gets a custom thumbnail.
+  - **§ 11.9:** points to § 11.9.1.
+- **`datacenter-water/publish.md` § Thumbnail filled:**
+  - the `THUMB` framing and state from frame 2711;
+  - text options: A "Mostly, it goes up." (recommended), B "Where does it go?"; "Where does the water go?" is rejected (5 words);
+  - the production steps per role.
+
+## style-guide v0.18.3 · 2026-11-02 · No. 014 theme tokens reviewed (`TWINS`, `WINTER`)
+
+Brand-director review of the scene-builder's new `theme.ts` tokens for `hybrid-city`. No owner decision involved; values 🧪. The brand-director doesn't edit code, so the scene-builder applies the changes. New rows in § 1 Location palettes.
+
+- **`TWINS.gasPaint`: adjusted, `#5d6168` → `#6b7078`** (217°, 6%, 45%). The old value was a near-twin of FRIEND's car `#575c64` and only ≈ 4 points of lightness above `CITY.asphalt`. The new one is ≈ 25 points under YOU's car, so the twins still differ by value. Fallback: `#5d6168`, aliased to FRIEND's token. The scene-builder's stills still showed both twins pale, so a re-still is needed.
+- **`WINTER`: approved, with conditions.** Every token is ≤ 30% saturation. `bark` (27°, 6%) is far under the band's saturation floor, so nothing reads as orange.
+  - Lit `snow` and `frost` must pass the § 2 whites check (≤ 244, no 255). If they fail, set `snow` to `#e4e8ec`.
+  - **`flake` aliased to `snow`** (`#f4f6f8` is over 244).
+  - `slush` may alias `HIGHWAY.wheelPathWet`.
+  - Keep the snowbanks out of the pale hybrid's silhouette.
+  - `skyTint` is allowed (a multiply on the existing `sky`).
+
+## style-guide v0.18.2 · 2026-11-02 · Sticker card (`hybrid-city` F3 / N7)
+
+Brand-director spec on the director's F3 request, relayed by the main session. No owner decision involved; values 🧪.
+
+**§ 6, new row "Sticker card" (`StickerCard`):** two cars' city and highway MPG, built from the house parts.
+- **Layout:** detail-box frame, 696 × 440 at x 120, top y 330; an `MPG` tab; `GAS` / `HYBRID` columns with paint squares; `CITY` / `HWY` rows; Archivo 800 120 px digits; one `inkSub` rule.
+- **Not the EPA label:** no logos, seals, header wording, colour bands, icons, combined figure or fine print. No model, maker, trim, year or price.
+- **Colour:** ink, paper, inkSub and the paint tokens only. No orange.
+- **Emphasis:** ink boxes (≤ 2, draw 12 frames, may move 12 frames), a row dim to `inkSub` (10 frames), and an unlabelled bars-mode bracket.
+- **Motion:** in with an 8 px rise over 10 frames; numbers land on their column's spoken word (CITY, then HWY 4 frames later); out over 10 frames.
+- **Its two uses in No. 014:** (A) the flip, boxes on 37 then 51; (B) the card returns in A's end state, CITY dims, the 51 box moves to 44, and a bracket joins 37 and 44.
+- **Rules:** it is the frame's one card; captions continue (≥ 270 px clear); it never shares the frame with the title block (if the owner keeps the title block up, the card drops under it). ≤ 2 appearances per video.
+
+**Also:** One idea per frame list and checklist 8 updated.
+
+## style-guide v0.18.1 · 2026-11-02 · Footage never committed; chapter-card hold range (main session corrections)
+
+Corrections relayed by the main session; no new owner decision. Values 🧪.
+
+- **§ 11.6.1 Storage:** the GitHub repo is public (`merki230/explainer-studio`), and the Pexels and Pixabay licences ban redistributing the file on its own. So stock footage is **never committed**. The working clip lives in `src/videos/<slug>/footage/`, git-ignored (the main session added the ignore rule and updated CLAUDE.md). The evidence PDFs are git-ignored too. Only the licence record in `sources.md` § Footage is in git, and the clip is rebuilt from it (URL, timecodes, SHA-256, grade). This replaces v0.18's "in git while the repo is private".
+- **§ 11.5.1 Chapter card hold:** the range is **2.0 to 2.7 s** (was 2.0 to 3.0); the default stays 2.5. Tooling found that with the frame timings, a 3.0 s hold fades out after the narrator resumes at Q + 117. At 2.7 s the fade ends exactly at Q + 117. The `ChapterCardSpec.hold` comment is updated to match.
+- **§ 11.5.1, tooling's deviation recorded:** the scene layer scales up +4% during the blur ramp (`CARD_BLUR_SCALE`) to hide the blur's edge band. It stays unless the owner vetoes it after seeing it.
+
+## style-guide v0.18, brand.md v0.15 · 2026-11-02 · Real opening shot on long videos; Shorts 100% 3D (owner decision)
+
+Owner decision of 2026-11-02, relayed by the main session (✅). Logged in `feedback.md` ("Owner decision · real opening shot on long videos"). Values by the brand-director (🧪). New research: `research/stock-footage.md` (SF§): Pexels and Pixabay licence terms read 2026-11-02, YouTube's Content ID eligibility, lens-match analysis, licences refused.
+
+**style-guide § 11.6.1, new "The real opening: real to section":**
+- **Scope:** long-form only, first shot only, no real pixel after F96, hard cap F120. Optional.
+- **Clip criteria:**
+  - truthful (a real data center with rooftop towers and a steam plume, nothing passed off as one);
+  - no logos, signage, names or plates;
+  - no identifiable operator or site;
+  - no faces, crowds, protest or meeting imagery;
+  - no text;
+  - ≥ 1920 × 1080 (4K preferred), 30 or 60 fps, ≥ 6 s of steady push or orbit;
+  - pitch 8 to 24°, building face at 15 to 45°;
+  - Day light, not golden hour;
+  - plume not blown;
+  - title zone quiet.
+- **Licences:** CC0; Pexels and Pixabay licences; CC BY 4.0 with credit. Refused: NC, ND, SA, editorial, unread sites.
+- **Licence record:** in `sources.md` § Footage.
+- **Content ID checks:** paid-stock search, reverse search, audio stripped, Private upload and Studio Checks before scheduling.
+- **Storage proposal:** original in `out/<slug>/raw/footage/`; the working clip, graded, 4.5 s and ≤ 20 MB, in `src/videos/<slug>/footage/` in git, moved out if the repo goes public. (Superseded by v0.18.1: never in git.)
+- **Grade:** whites ≤ 244, blacks ≥ `cutLine`, saturation −30%, reserved-band hues capped at 50% saturation, sky matched to Day `sky` within ΔE00 6, the live vignette and grain shared with the 3D.
+- **Camera match:** solved keyframes, 3D corners within 8 px.
+- **The reveal:** F0 to F54 real; F54 to F66 ink section line; F66 to F96 facade wipe, matched cross-fade and surroundings falling away; F84 to F102 orange dot tell; F96 to F138 dolly-zoom to 26° and the one glide to the house angle.
+- **Rules:** the camera never stops, no freeze frame, frame-accurate determinism.
+- **Title block:** unchanged from F0.
+- **Sound:** none from the clip.
+- **Disclosure:** footage credit always; illustrative clause.
+
+**Exceptions noted elsewhere:**
+- style-guide: intro line, § 3 The Section, § 3 Assets, § 8 Angle, § 10 Description, § 11.6 Opening, § 11.8 (no footage in Shorts), § 11.9 upload, checklist 1, new checklist 17.
+- brand.md: § Promise difference 3, § Long-form (new "Real opening shot" row), § Shorts (Picture: 100% 3D), § Sourcing policy (footage bullet), § What we never do (new footage row; camera and asset rows point to it).
+
+## style-guide v0.17, brand.md v0.14.1 · 2026-11-02 · Full-frame chapter card on long videos (owner decision)
+
+Owner decision of 2026-11-02, relayed by the main session (✅); `feedback.md` ("Owner decision · full-frame chapter card"). Values by the brand-director, 🧪.
+
+- **style-guide § 11.5.1, new "Chapter card (full frame, silent)":** chapters 2 and later; the narrator asks the question at the end of the previous chapter, then the scene dims (mood's `paper` scrim 72%) and blurs (16 px) while still moving; label `CHAPTER n` Mono 700 28 px, question = the `##` heading, Archivo 800 80 px / 1.0 (72 px min, ≤ 2 lines), left x 144, right edge ≤ 1536, centred on y 500; timings in frames from the question's end (Q + 6 dim, card in by Q + 24, hold 75 frames, out by Q + 111, voice back at Q + 117); chapter change (`slide`/`follow`) under the card; no place/time line (a place label may follow in the new chapter); captions off, nothing else on screen, no orange on the card; no new colour. Director field: `VideoSpec.chapters[]` narrowed (`chapter` ≥ 2, `question` for a manual break, `hold`, `sound`, `show: false`); `place`, `time`, `askedAt` dropped. Notes for tooling: a real voice gap at each `##`, YouTube chapter timestamps at the card.
+- **style-guide § 11.5:** the corner chapter card (x 144, y 120, held 3 s; "no chapter bumpers, no numbers on screen") **retired**, replaced by a pointer; name-tag and place-label rows no longer refer to it.
+- **style-guide § 11.6 Transitions:** chapter `slide`/`follow` runs under the card. **§ 11.7 Sound:** +4 dB swell under the card, the music step at Q + 24 (a per-chapter bed changes there), optional soft tone 18 to 20 dB under the voice as a named exception to § 9's "no stingers", no whoosh on the slide under a card. **§ 11.8:** Shorts get no card; their title block carries the chapter's question. **Checklist 16** updated.
+- **brand.md § Long-form, Chapters:** one sentence pointing to the card. **§ Voice, Answer straight:** clarified that the silent card is picture, not a tease; the new chapter answers in its first sentences.
+
+## style-guide v0.16.1 · 2026-11-01 · § 11 size floor wins (scene-builder question)
+
+Brand-director decision, no owner decision involved; values 🧪. § 11.5 had sizes under § 11.2's 26 px floor. **The floor wins** (TV and inline-portrait legibility, LF§2); hierarchy comes from weight and `inkSub`, not size. Raised to 26 px: title block / chapter card line 2 (Mono 600, tracking 0.18em → 0.12em, ≤ 46 characters; was 20 px), callout sub-line (was 22), place-label sub (was 22), counter sub (was 22), price-tag sub (was 24), chart bar labels (was 24). As built, recorded: DETAIL and chart tabs Mono 700 26 px; statement `high` top y 300; caption pages fill up to 2 lines.
+
+## brand.md v0.14, style-guide v0.16, channel-kit · 2026-11-01 · Open decisions 9 and 10 settled (owner decision)
+
+Owner answers of 2026-11-01, relayed by the main session (✅); `feedback.md` (long-form entry, update). **9:** YouTube branding watermark **on, entire video**, on long videos only (YouTube shows it only on landscape video): brand.md § Channel identity, channel-kit (watermark spec, assets table, setup checklist step 4), style-guide § 11.2 and § 11.9 upload checklist. **10:** burned-in house captions **on** for long videos, **no YouTube caption file**, for Part 1, compare later: brand.md § Structure, Long-form (new Captions row), style-guide § 11.4 and § 11.9. Both rows removed from brand.md Open decisions and noted as settled in its intro.
+
+## brand.md v0.14, style-guide v0.16 · 2026-11-01 · Long-form: horizontal YouTube videos, Shorts from chapters (owner decision)
+
+Owner decisions of 2026-11-01, relayed by the main session (✅): long-form YouTube videos of ≥ 5 min, **horizontal** (TV and desktop), vertical Shorts cut from their chapters for TikTok, Instagram and Shorts; the first is the two-part data center series (water, then electricity). Logged in `feedback.md` ("Owner decision · long-form, horizontal, Shorts from chapters"). New research: `research/long-form.md` (SMPTE safe areas, YouTube chapters and end screens, Shorts related-video link, Netflix/BBC caption rules, narration pace, crop vs re-render). Values by the brand-director, 🧪.
+
+- **brand.md § Promise, Platforms:** long-form on YouTube added (✅ owner decision).
+- **brand.md § Structure, new subsection "Long-form":** guided investigation on one thread; hook by ≈ 30 s (question by ≈ 20 s, stakes, payoff picture; never "in this video I'll…"); 3 to 5 chapters, one question each, each ending on the next question, = YouTube chapter markers, each standing alone as a Short; re-hook every 60 to 90 s; belief named then corrected, once; opening paid off; ending = honest trade-off + one-sentence tease, no outro, no loop; ≥ 5 min, ≈ 150 wpm, plan 800 to 900 words at our measured 150 to 168 wpm, length from story never padding; same voice rules; `## chapter` and `> Short hook:` lines in `script.txt`. **Shorts from chapters:** one chapter → one 45 to 60 s Short with its own hook line, chapter's next-question cut, loops to frame 0, vertical re-render, title block with the long video's number and chapter, link via YouTube's related video and one TikTok/Instagram caption line. The old "Long-form, later, uses the same steps with 2 or 3 questions" line replaced.
+- **brand.md § Naming:** long videos take the next number (+ `PART n`); their Shorts carry the long video's number and `CH. n`, no own number.
+- **brand.md § What we never do:** horizontal readable rectangle x 144 to 1776, y 120 to 960; no intro, sting, "in this video", subscribe request, recap or "thanks for watching" on long videos.
+- **brand.md Open decisions:** new 9 (YouTube watermark on long videos; stays off, recommendation on) and 10 (burned-in captions on long videos; default on). Channel identity's watermark row points to 9.
+- **style-guide § 11, new "Horizontal format":** 1920 × 1080, 30 fps; action-, title-safe and the house readable rectangle; watermark corner; sizes ×1.0 to ×1.1 (angle per pixel); captions 52 px, x 144, bottom y 960, ≤ 42 characters, ≤ 2 lines; every overlay positioned; **chapter card** = the title block reused, no full-screen card; fov ≈ 14.8 vertical (26° across), angle unchanged; wider slices (≈ 5.6 × 2.6, 70 to 80% of width), two-shot staging, pushes ≈ 0.75×, glides 0.8 to 1.2 s, scenes 4 to 8 s, slides from the right; ≈ 12 s end-screen hold, right half clear; sound unchanged, own music only; **Shorts re-rendered vertical, never cropped**, every scene with a vertical staging; export; checklist item 16. § 10 Frame row and the header point to it.
+
 ## style-guide v0.15 · 2026-10-29 · Whole near-side wheels on cut-open cars (owner decision)
 
 Owner decision of 2026-10-29, relayed by the main session (✅). Logged in `feedback.md` ("Owner decision · whole wheels on cut-open cars"). § 3 new row: near-side wheels stay whole (full tire and rim in front of the cut face); a wheel is cut only when the hidden system is in it (e.g. the tire-pressure sensor). Default for new car videos; posted videos unchanged.

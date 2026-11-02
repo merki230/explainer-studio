@@ -32,7 +32,7 @@ export const DEFAULT_WHEELS: WheelMode = 'forward';
 export const wheelMode = (m?: WheelMode | null): WheelMode => m ?? DEFAULT_WHEELS;
 
 /** The scenes that take `wheels` (Explainer passes a video's `wheels` down to these only). */
-export const WHEEL_SCENES = ['highway-slice', 'city-slice', 'street-slice', 'musical-road', 'car-slice', 'race-slice', 'drive-unit', 'wheel-slice'];
+export const WHEEL_SCENES = ['highway-slice', 'city-slice', 'street-slice', 'musical-road', 'car-slice', 'race-slice', 'drive-unit', 'wheel-slice', 'city-twin'];
 
 /** The largest visual turn a frame (rad) of a 5-spoke rim: 26°, well under half its period (36°). */
 export const SAFE_STEP = 0.45;

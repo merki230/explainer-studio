@@ -46,7 +46,7 @@ Desktop also overlays link icons in the strip's bottom-right corner; we have no 
 | When shown | Last 15 s, from a custom start time, or the whole video | [official] same |
 | Where | Landscape view on computers and mobile; not clickable on mobile; not on made-for-kids videos | [official] same |
 
-It is a player overlay, not part of our master, and it shows only in landscape view, so our vertical Shorts would not carry it. **✅ Owner decision (2026-10-16): make the file (`watermark-300.png`, § 4) but leave it switched off on YouTube until long-form exists** (CLAUDE.md says "No on-screen watermark").
+It is a player overlay, not part of our master, and it shows only in landscape view, so our vertical Shorts would not carry it. **✅ Owner decision (2026-10-16): make the file (`watermark-300.png`, § 4) but leave it switched off on YouTube until long-form exists** (CLAUDE.md says "No on-screen watermark"). **✅ Owner decision (2026-11-01): switch it on, "Entire video", now that long videos exist.** It is a player overlay (not in our master) and YouTube shows it only on landscape video, so Shorts stay clean; style-guide § 11.2 keeps the bottom-right corner clear.
 
 ### Names, handles, bios
 
@@ -177,7 +177,7 @@ All in `brand/assets/`, made from the spec above. Colours from `src/theme.ts` (s
 | `profile-check-110.png` | 110 × 110 | PNG | Review only, not uploaded | Same, Instagram's mobile size |
 | `banner-2560x1440.png` | 2560 × 1440 | PNG, ≤ 6 MB | YouTube banner | Lockup, with the tagline "How everyday things secretly work" (Inter 600) under the wordmark, centred inside x 507 to 2053, y 508 to 931; no other text; nothing readable outside that box; background fills the whole canvas (TV shows all of it); no shadows, borders or frames. If over 6 MB, export `banner-2560x1440.jpg` at quality ≥ 90 instead |
 | `banner-check-overlay.png` | 2560 × 1440 | PNG, transparent | Review only | Outlines of the TV, desktop, tablet and mobile crops (§ 1) to lay over the banner |
-| `watermark-300.png` | 300 × 300 | PNG, transparent, < 1 MB | YouTube branding image: **made, but switched off on YouTube until long-form exists** (✅ owner decision, 2026-10-16) | Symbol only, one colour; 2× the 150 px minimum so it stays sharp |
+| `watermark-300.png` | 300 × 300 | PNG, transparent, < 1 MB | YouTube branding image: **on, entire video** (✅ owner decision, 2026-11-01; off from 2026-10-16 until long-form existed); shows only on landscape (long) videos | Symbol only, one colour; 2× the 150 px minimum so it stays sharp |
 | `lockup-dark-1600x400.png` | 1600 × 400 | PNG, transparent | Lockup on dark backgrounds (other uses) | Light ink (`cut` `#efe9df`) |
 | `lockup-light-1600x400.png` | 1600 × 400 | PNG, transparent | Lockup on light backgrounds | Dark ink (`ink` Day `#1b1d22`) |
 | `symbol-1024.png` | 1024 × 1024 | PNG, transparent | General use | Symbol only |
@@ -197,7 +197,7 @@ Where an account already exists (brand.md § Name: an Instagram account and a Yo
 1. Create the channel as a **Brand Account** under that email (lets you add managers later; the channel name is independent of your Google name). Skip if it exists.
 2. YouTube Studio → Customization → Profile: **Name** `Secretly Works`; **Handle** `@thesecretlyworks`. Both can change only twice in 14 days, so paste carefully.
 3. Same page: paste **Description** (variant chosen). **Links: none. Contact email:** optional.
-4. Upload **picture** `profile-800.png` and **banner** `banner-2560x1440.png`; check the device previews. **Video watermark: leave it off.** `watermark-300.png` is made and kept in `brand/assets/`, but it stays switched off on YouTube until long-form exists (✅ owner decision, 2026-10-16; it only shows in landscape view, so Shorts wouldn't carry it).
+4. Upload **picture** `profile-800.png` and **banner** `banner-2560x1440.png`; check the device previews. **Video watermark: switch it on** (✅ owner decision, 2026-11-01): YouTube Studio › Customization › Branding › Video watermark, upload `brand/assets/watermark-300.png`, display time **Entire video**. It shows only on landscape (long) videos; Shorts don't carry it. **Long videos: upload no caption file** (house captions are burned in, ✅ owner decision 2026-11-01, Part 1).
 5. Settings → Channel → Basic info: paste the **keywords**.
 6. Settings → Channel → Advanced settings: **Audience: "No, set this channel as not made for kids."**
 7. Settings → Upload defaults → Advanced settings: **Category: Education**.

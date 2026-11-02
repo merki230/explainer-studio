@@ -2,9 +2,10 @@ import React from 'react';
 import {useCurrentFrame, useVideoConfig} from 'remotion';
 import {fonts} from '../fonts';
 import type {Mood} from '../theme';
-import {anchorOnScreen, type AnchorScene} from './anchors';
+import {anchorOnScreen, withFormat, type AnchorScene} from './anchors';
 import {ease} from './card';
-import {LEFT, overlayInk, paperHalo, RIGHT} from './sectionStyle';
+import {useLayout, type OverlayLayout} from './layout';
+import {overlayInk, paperHalo} from './sectionStyle';
 
 export type PriceTagProps = {
   /**
@@ -36,23 +37,25 @@ export type PriceTagProps = {
   below?: string;
   /** The shortest rise when `below` pushes the block down, px (default 40). */
   minRise?: number;
-  /** The highest the block's top may sit, px (default 470; set it ≥ 24 px under the title block's bottom edge). */
+  /** The highest the block's top may sit, px (default 470, wide frame 160; set it ≥ 24 px under the title block's bottom edge). */
   ceiling?: number;
 };
 
 /** Frames the leader draws, the block fades in (and out, see Explainer). */
 export const PRICE_TAG_FADE = 10;
-const SQUARE = 26;
 const GAP = 12;
 const LINE_GAP = 4;
 const RISE_PX = 6;
-const L1 = {size: 26, weight: 700, spacing: 0.08, lh: 1, em: 0.72} as const;
-const L2 = {size: 32, weight: 800, spacing: 0.02, lh: 1.1, em: 0.66} as const;
-const L3 = {size: 22, weight: 600, spacing: 0.04, lh: 1, em: 0.68} as const;
-const STYLES = [L1, L2, L3];
-const heightOf = (s: (typeof STYLES)[number]) => Math.round(s.size * s.lh);
+type LineStyle = {size: number; weight: 600 | 700 | 800; spacing: number; lh: number; em: number};
+/** The three lines' styles for a frame (vertical 26 / 32 / 22 px, wide 28 / 34 / 26 px, § 11.5 v0.16.1). */
+const stylesFor = (L: OverlayLayout): [LineStyle, LineStyle, LineStyle] => [
+  {size: L.price.name, weight: 700, spacing: 0.08, lh: 1, em: 0.72},
+  {size: L.price.price, weight: 800, spacing: 0.02, lh: 1.1, em: 0.66},
+  {size: L.price.sub, weight: 600, spacing: 0.04, lh: 1, em: 0.68},
+];
+const heightOf = (s: LineStyle) => Math.round(s.size * s.lh);
 /** Rough rendered width of an uppercase Inter line (advance ≈ `em` per letter plus the tracking). */
-const widthOf = (text: string, s: (typeof STYLES)[number]) => text.length * s.size * (s.em + s.spacing);
+const widthOf = (text: string, s: LineStyle) => text.length * s.size * (s.em + s.spacing);
 
 /**
  * Car price tag (style guide v0.14.2 § 6, No. 011 N9): a car name tag that grows. A 2 px `ink` leader from the
@@ -69,13 +72,19 @@ export const PriceTag: React.FC<PriceTagProps & {mood?: Mood; scene: AnchorScene
   rise = 60,
   below,
   minRise = 40,
-  ceiling = 470,
+  ceiling: ceilingIn,
   mood = 'day',
   scene,
 }) => {
   const frame = useCurrentFrame();
   const {fps, width, height} = useVideoConfig();
-  const at = (a: string, f = frame) => anchorOnScreen(scene, a, f, fps);
+  const L = useLayout();
+  const STYLES = stylesFor(L);
+  const [L1, L2, L3] = STYLES;
+  const SQUARE = L.price.square;
+  const ceiling = ceilingIn ?? L.price.ceiling;
+  const sc = {...scene, props: withFormat(scene.props, L.format)};
+  const at = (a: string, f = frame) => anchorOnScreen(sc, a, f, fps);
   const join = linesAt === undefined ? 0 : Math.round(linesAt * fps) - scene.offset;
   const roof = at(anchor);
   if (!roof) return null;
@@ -102,7 +111,7 @@ export const PriceTag: React.FC<PriceTagProps & {mood?: Mood; scene: AnchorScene
 
   const textW = Math.max(...text.map((t, i) => widthOf(t, STYLES[i])));
   const w = SQUARE + GAP + textW;
-  const left = side === 'left' ? LEFT : RIGHT - w;
+  const left = side === 'left' ? L.left : L.right - w;
   const lineY = top + SQUARE / 2; // line 1's centre: the leader's level
 
   // The leader: up from the roof, then across to 10 px short of the block. When the roof is right under the block,
@@ -128,7 +137,7 @@ export const PriceTag: React.FC<PriceTagProps & {mood?: Mood; scene: AnchorScene
   const e1 = ease(frame, 0, PRICE_TAG_FADE);
   const e2 = ease(frame, join, join + PRICE_TAG_FADE);
   const halo = paperHalo(mood, 10);
-  const lineStyle = (s: (typeof STYLES)[number], c: string): React.CSSProperties => ({
+  const lineStyle = (s: LineStyle, c: string): React.CSSProperties => ({
     fontFamily: fonts.sans,
     fontWeight: s.weight,
     fontSize: s.size,

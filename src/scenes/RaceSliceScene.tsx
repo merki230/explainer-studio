@@ -34,7 +34,7 @@ import {
   type TreeKey,
 } from '../three/real/StripProps';
 import {cutMaterial, CutOutline, INK, type Rect} from '../three/section/cutLook';
-import {projectToFrame, SectionCamera, sectionCameraAt, type Framing} from '../three/section/SectionCamera';
+import {formatOf, projectToFrame, SectionCamera, sectionCameraAt, type Framing} from '../three/section/SectionCamera';
 import {SectionLights, SectionStage} from '../three/section/SectionStage';
 import {skyTexture} from '../three/section/textures';
 import {framingAtKeys, keyedValue, speedAt, type CameraKey, type Keyed, type SpeedKey} from './keyframes';
@@ -648,6 +648,7 @@ const raceCameraAt = (p: Partial<RaceSliceSceneProps>, o: {frame: number; fps: n
     durationInFrames: o.durationInFrames,
     drift: p.drift ?? 0,
     clockOffset: (p.startFrame ?? 0) / o.fps,
+    format: formatOf(p),
   });
 };
 

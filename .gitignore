@@ -22,3 +22,6 @@ build
 
 # Claude Code personal overrides
 .claude/settings.local.json
+
+# Stock footage: licences ban redistributing the file, and the repo is public
+src/videos/*/footage/

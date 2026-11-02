@@ -1,9 +1,10 @@
 // Loudness-normalise a rendered video to the platform target (two-pass loudnorm), copying the video
 // stream untouched. Called by `yarn render`; also usable alone on an existing render.
 //
-// usage: yarn normalize <slug>      (or: node scripts/normalize.mjs <slug>)
+// usage: yarn normalize <slug> [--short <n>]      (or: node scripts/normalize.mjs <slug>)
 //   Input is out/<slug>/raw/<slug>.raw.mp4 (the raw Remotion mix). If only the release mp4 exists, it is
 //   treated as the raw render and moved to the raw path first. Output: src/videos/<slug>/release/<slug>.mp4 (git-ignored).
+//   With --short <n> (a Short cut from chapter n) the files are named <slug>-short-<n> instead of <slug>.
 //
 // Target: -14 LUFS integrated, -1.5 dBTP, LRA 11 (edit TARGET to change). loudnorm itself runs with a
 // tighter TP (INTERNAL_TP, -2.5) because its dynamic mode overshoots; the result is checked against -1.5.
@@ -16,6 +17,7 @@ import {execFileSync, spawnSync} from 'node:child_process';
 import {existsSync, mkdirSync, renameSync, rmSync} from 'node:fs';
 import {dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {compId, takeShort} from './lib.mjs';
 
 const TARGET = {I: -14, TP: -1.5, LRA: 11};
 // loudnorm in dynamic mode overshoots the TP it is given (and the AAC encode adds a little), so it is
@@ -57,9 +59,10 @@ const probe = (file) => {
 
 const fmt = (j, p) => `${Number(j[p + 'i']).toFixed(1)} LUFS, ${Number(j[p + 'tp']).toFixed(1)} dBTP, LRA ${Number(j[p + 'lra']).toFixed(1)}`;
 
-export const normalize = (slug) => {
-  const raw = `out/${slug}/raw/${slug}.raw.mp4`;
-  const final = `src/videos/${slug}/release/${slug}.mp4`;
+export const normalize = (slug, short = null) => {
+  const name = compId(slug, short);
+  const raw = `out/${slug}/raw/${name}.raw.mp4`;
+  const final = `src/videos/${slug}/release/${name}.mp4`;
   if (!existsSync(raw)) {
     if (!existsSync(final)) throw new Error(`Nothing to normalise: ${raw} and ${final} are missing.`);
     mkdirSync(`out/${slug}/raw`, {recursive: true});
@@ -78,7 +81,7 @@ export const normalize = (slug) => {
     `measured_I=${m.input_i}:measured_TP=${m.input_tp}:measured_LRA=${m.input_lra}:` +
     `measured_thresh=${m.input_thresh}:offset=${m.target_offset}`;
 
-  const tmp = `out/${slug}/raw/${slug}.normalizing.mp4`;
+  const tmp = `out/${slug}/raw/${name}.normalizing.mp4`;
   const args = [
     '-y', '-i', raw, '-map', '0:v', '-map', '0:a', '-c:v', 'copy',
     '-af', `loudnorm=${target}:${measured}:linear=true:print_format=json`,
@@ -109,10 +112,12 @@ export const normalize = (slug) => {
 };
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const slug = process.argv[2];
+  const args = process.argv.slice(2);
+  const short = takeShort(args);
+  const slug = args[0];
   if (!slug) {
-    console.error('usage: yarn normalize <slug>');
+    console.error('usage: yarn normalize <slug> [--short <n>]');
     process.exit(1);
   }
-  normalize(slug);
+  normalize(slug, short);
 }

@@ -5,7 +5,7 @@ import {fonts} from '../fonts';
 import {MOODS, section, type Mood} from '../theme';
 import {OrangePath} from '../three/OrangePath';
 import {raw} from '../three/plaster';
-import {projectToFrame, SectionCamera, sectionCameraAt, type Framing} from '../three/section/SectionCamera';
+import {formatOf, projectToFrame, SectionCamera, sectionCameraAt, type Framing} from '../three/section/SectionCamera';
 import {SectionLights, SectionStage} from '../three/section/SectionStage';
 import {skyTexture} from '../three/section/textures';
 import {
@@ -324,7 +324,7 @@ export const towerCameraAt = (
   dflt = 'tower',
 ) => {
   const {from, to, pre} = towerCameraMove(p, o.durationInFrames, o.fps, o.frame, presets, dflt);
-  return sectionCameraAt({from, to, pre, frame: o.frame, fps: o.fps, durationInFrames: o.durationInFrames, drift: p.drift ?? 0, clockOffset: (p.startFrame ?? 0) / o.fps});
+  return sectionCameraAt({from, to, pre, frame: o.frame, fps: o.fps, durationInFrames: o.durationInFrames, drift: p.drift ?? 0, clockOffset: (p.startFrame ?? 0) / o.fps, format: formatOf(p)});
 };
 
 /** YOU as a person (at the call panel), then everyone else. */

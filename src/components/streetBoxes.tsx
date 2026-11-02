@@ -3,10 +3,11 @@ import {continueRender, delayRender, interpolate, useCurrentFrame, useVideoConfi
 import {fonts, fontsReady} from '../fonts';
 import {streetDialAt, truckReads, type StreetSliceSceneProps} from '../scenes/StreetSliceScene';
 import {MOODS, section, STREET, type Mood} from '../theme';
-import {anchorOnScreen} from './anchors';
+import {anchorOnScreen, withFormat} from './anchors';
 import {ease} from './card';
 import {drawScreen, screenStateAt, type ScreenStep} from './screenKit';
-import {LEFT, overlayInk, RIGHT} from './sectionStyle';
+import {clearCorner, useLayout} from './layout';
+import {overlayInk} from './sectionStyle';
 
 /*
  * The detail-box contents of the street slice (No. 004), each a flat 2D crop read like a phone screen
@@ -198,10 +199,12 @@ export const StreetBox: React.FC<StreetBoxProps & {mood?: Mood; scene: SceneCtx}
   barsFor = 1.2,
   reading = '01462',
   mood = 'day',
-  scene,
+  scene: sceneIn,
 }) => {
   const frame = useCurrentFrame();
   const {fps, width, height} = useVideoConfig();
+  const L = useLayout();
+  const scene = {...sceneIn, props: withFormat(sceneIn.props, L.format)};
   const ref = useRef<HTMLCanvasElement>(null);
   const local = frame / fps;
   const sceneT = (frame + scene.offset) / fps;
@@ -269,8 +272,12 @@ export const StreetBox: React.FC<StreetBoxProps & {mood?: Mood; scene: SceneCtx}
   const tx = target?.[0] ?? width / 2;
   const ty = target?.[1] ?? height / 2;
   const onLeft = (side ?? (tx > width / 2 ? 'left' : 'right')) === 'left';
-  const left = leftAt ?? (onLeft ? LEFT : RIGHT - outerW);
-  const boxTop = top ?? Math.max(328, Math.min(1248 - outerH, ty - 90 - outerH));
+  const left = leftAt ?? (onLeft ? L.left : L.right - outerW);
+  const boxTop =
+    top ??
+    (L.format === 'horizontal'
+      ? clearCorner(L, left, L.detail.top, outerW, outerH)
+      : Math.max(328, Math.min(1248 - outerH, ty - 90 - outerH)));
   const enter = ease(frame, 0, FADE);
   const rise = interpolate(enter, [0, 1], [8, 0]);
   // a 2 px elbow leader from the box to the thing (down from the box's bottom, then across), when it's on screen
@@ -300,7 +307,7 @@ export const StreetBox: React.FC<StreetBoxProps & {mood?: Mood; scene: SceneCtx}
             color: paper,
             fontFamily: fonts.mono,
             fontWeight: 700,
-            fontSize: 17,
+            fontSize: L.detail.tab,
             letterSpacing: '0.16em',
             padding: '4px 10px 3px',
             lineHeight: 1.2,

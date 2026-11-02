@@ -3,6 +3,7 @@ import {interpolate, spring, useCurrentFrame, useVideoConfig} from 'remotion';
 import {fonts} from '../fonts';
 import {FADE, theme} from '../theme';
 import {cardStyle, ease} from './card';
+import {useLayout} from './layout';
 
 /** What a label shows. Two labels with the same text, title and dot are the same label. */
 export type ChipText = {text: string; title?: string; color?: string};
@@ -92,7 +93,7 @@ export const Chip: React.FC<ChipProps> = ({
   text,
   title,
   color,
-  top = 340,
+  top,
   delay = 0,
   animate = true,
   previous,
@@ -100,7 +101,8 @@ export const Chip: React.FC<ChipProps> = ({
   exitFrames = FADE,
 }) => {
   const frame = useCurrentFrame();
-  const {fps} = useVideoConfig();
+  const {fps, width} = useVideoConfig();
+  const L = useLayout();
   const start = Math.round(delay * fps);
   const enter = previous || !animate ? 1 : spring({frame: frame - 4 - start, fps, config: {damping: 20}});
   const exit = exitAt === undefined ? 1 : 1 - ease(frame, exitAt, exitAt + exitFrames);
@@ -114,9 +116,9 @@ export const Chip: React.FC<ChipProps> = ({
     <div
       style={{
         position: 'absolute',
-        top,
-        left: 120,
-        right: 1080 - 888,
+        top: top ?? L.chip.top,
+        left: L.left,
+        right: width - L.right,
         display: 'flex',
         justifyContent: 'center',
         opacity: enter * exit,

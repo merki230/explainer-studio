@@ -1,10 +1,11 @@
 import React from 'react';
-import {interpolate, useCurrentFrame} from 'remotion';
+import {interpolate, useCurrentFrame, useVideoConfig} from 'remotion';
 import {fonts} from '../fonts';
 import type {Mood} from '../theme';
 import {ATTRIBUTION_FADE, attributionStyle} from './Attribution';
 import {ease} from './card';
-import {LEFT, overlayInk, paperHalo, RIGHT} from './sectionStyle';
+import {useLayout} from './layout';
+import {overlayInk, paperHalo} from './sectionStyle';
 
 export type StatementProps = {
   /** The key phrase exactly as said, sentence case, with a full stop: "One household." ≤ 4 words, ≤ 2 lines. */
@@ -12,7 +13,8 @@ export type StatementProps = {
   /**
    * 'sky' (default): in the sky band above the cut wall tops, top edge at y 300 (inside the safe
    * zone). 'low': bottom edge at y 1000, growing upward, for frames without sky (close framings).
-   * 'high': top edge at y 500.
+   * 'high': top edge at y 500. Wide frame (§ 11.5): 'sky' top y 120 (one line), 'low' bottom edge y 840 (two lines),
+   * 'high' top y 300.
    */
   place?: 'sky' | 'low' | 'high';
   /** Optional attribution line under the card (who + year, e.g. "FTC staff report, 2017"). */
@@ -33,7 +35,8 @@ export const STATEMENT_FADE = 12;
  * Statement card (v0.8 § 6, placed in the sky band by default): the key phrase set large over the scene, Archivo 800 88 px / 0.95,
  * −0.03em, `ink` with a 32 px `paper` halo, no box, left-aligned at x 120. Calm: opacity over
  * 12 frames with a 6 px rise. The attribution line sits 24 px under its last line and enters
- * 6 frames later. Captions are off while it is up (Explainer).
+ * 6 frames later. Captions are off while it is up (Explainer). Wide frame: 96 px / 0.95, left x 144 (≤ 22 characters a
+ * line, ≤ 2 lines: the director's job).
  */
 export const Statement: React.FC<StatementProps & {mood?: Mood}> = ({
   text,
@@ -42,6 +45,9 @@ export const Statement: React.FC<StatementProps & {mood?: Mood}> = ({
   mood = 'day',
 }) => {
   const frame = useCurrentFrame();
+  const {height} = useVideoConfig();
+  const L = useLayout();
+  const S = L.statement;
   const enter = ease(frame, 0, STATEMENT_FADE);
   const rise = interpolate(enter, [0, 1], [6, 0]);
   const low = place === 'low';
@@ -50,7 +56,7 @@ export const Statement: React.FC<StatementProps & {mood?: Mood}> = ({
       style={{
         fontFamily: fonts.display,
         fontWeight: 800,
-        fontSize: 88,
+        fontSize: S.size,
         lineHeight: 0.95,
         letterSpacing: '-0.03em',
         color: overlayInk(mood).ink,
@@ -71,9 +77,9 @@ export const Statement: React.FC<StatementProps & {mood?: Mood}> = ({
       <div
         style={{
           position: 'absolute',
-          left: LEFT,
-          maxWidth: RIGHT - LEFT,
-          ...(low ? {bottom: 1920 - 1000} : {top: place === 'sky' ? SKY_TOP : 500}),
+          left: L.left,
+          maxWidth: S.maxWidth,
+          ...(low ? {bottom: height - S.lowBottom} : {top: place === 'sky' ? S.skyTop : S.highTop}),
           opacity: enter,
           transform: `translateY(${rise}px)`,
         }}
@@ -81,7 +87,7 @@ export const Statement: React.FC<StatementProps & {mood?: Mood}> = ({
         {words}
         {!low && attr ? <div style={{marginTop: 24}}>{attr}</div> : null}
       </div>
-      {low && attr ? <div style={{position: 'absolute', left: LEFT, top: 1024}}>{attr}</div> : null}
+      {low && attr ? <div style={{position: 'absolute', left: L.left, top: S.lowBottom + 24}}>{attr}</div> : null}
     </>
   );
 };

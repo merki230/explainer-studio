@@ -10,6 +10,7 @@ import {capSpeed, cappedTravel, wheelMode, wheelSmear, type WheelMode} from '../
 import {METER, RADIO} from '../three/real/WaterMeter';
 import type {Gesture} from '../three/rig';
 import {
+  formatOf,
   projectToFrame,
   SECTION_ANGLE,
   sectionCameraAt,
@@ -211,6 +212,7 @@ export const streetCameraAt = (
     durationInFrames: o.durationInFrames,
     drift: p.drift ?? 0.08,
     clockOffset: (p.startFrame ?? 0) / o.fps,
+    format: formatOf(p),
   });
 };
 

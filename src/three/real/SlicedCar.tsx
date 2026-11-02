@@ -39,6 +39,8 @@ import {
   type GearKey,
 } from './GasDrive';
 import type {RoadSignKind} from './RoadSigns';
+import {HYBRID, hybridPoint, HybridSystems} from './HybridDrive';
+import {DragArrow, ExhaustPuffs} from './CarAir';
 import {CarCityRoad} from '../section/CarCityRoad';
 import {RealWheel, WHEEL} from './RealWheel';
 import {TireSensor} from './TireSensor';
@@ -119,6 +121,8 @@ export type RegenKeys = {
   brightAt?: number;
   fadeAt?: number;
   fadeFor?: number;
+  /** 'hybrid' (No. 014): 0 → 1, a constant or keys: a thinner core, a dimmer glow, slower dots, a smaller fill (the cold ≈ 0.4). Default 1. */
+  strength?: Keyed;
 };
 
 /**
@@ -165,6 +169,8 @@ export type DrivePathKeys = {
   pulses?: boolean;
   fadeAt?: number;
   fadeFor?: number;
+  /** 'hybrid' (No. 014): 0 → 1, a constant or keys: a thinner core, a dimmer glow, slower pulses (the cold ≈ 0.4). Default 1. */
+  strength?: Keyed;
 };
 
 /**
@@ -253,9 +259,12 @@ export type SlicedCarOptions = {
    * `regen` and `signal` paths), or 'gas' (No. 008: a gas car, the EV's layout with a transverse engine
    * and its throttle body cut open in the bay, a hanging accelerator with its sensor, the computer on the
    * firewall, the steering column; facing −x on the highway lane by default; orange only on `gasPath`,
-   * `brakeLead` and `steerByWire`).
+   * `brakeLead` and `steerByWire`), or 'hybrid' (No. 014: a generic full hybrid: the gas car's four-cylinder (intake left
+   * out) with the electric car's drive unit beside it as the motor-generator, a small HV pack under the rear seat, the HV run
+   * along the sill's cut face; the gas car's pedals and foot; facing −x on the city road by default; orange only on
+   * `drivePath`, `regen`, the pack's levels and `brakeHeat`; `three/real/HybridDrive.tsx`).
    */
-  variant?: 'sensors' | 'indirect' | 'ev' | 'gas';
+  variant?: 'sensors' | 'indirect' | 'ev' | 'gas' | 'hybrid';
   /** Which way the car faces: 'right' (+x, default) or 'left' (−x, default for 'ev'; its rear toward the camera). */
   facing?: 'right' | 'left';
   /** Who drives: 'you' (default) or 'mom'; the body colour follows (theme `CAR`). */
@@ -324,7 +333,9 @@ export type SlicedCarOptions = {
    */
   vibration?: {at: number; wheelAt?: number; seatAt?: number} | null;
   /** The speed on the cluster's face in the car (mph, default 38). The dashboard detail box has its own `speed`. */
-  clusterSpeed?: number;
+  clusterSpeed?: number | 'auto';
+  /** No. 014, 'highway': the road block's half-length (m; default 3.8), longer so lane dashes and posts stream past a far framing. */
+  roadHalf?: number;
   /**
    * Highway: the dips' depth and the tire's drop drawn this many times real (default 2.5, 🎭 an
    * illustrative scale, disclosed in the post: at 1 the ½ in dip read as a wavy line at phone size).
@@ -607,6 +618,45 @@ export type SlicedCarOptions = {
    * the driver's side: dashed ink, it draws on from `at` (0.8 s) and fades from `fadeAt` (0.7 s; default at + 2). Null: none.
    */
   plugBox?: {at: number; fadeAt?: number; port?: V3} | null;
+  /**
+   * No. 014 ('gas' four-cylinder and 'hybrid'): the engine running or not from each `at` (s): running, the piston, rod,
+   * crank and cams turn at `rpm` (🎭 × `CRANK_SCALE`, slowed so idle reads) and the block trembles ±1 mm; off, it spins
+   * down over 0.6 s and stands still (starting takes 0.4 s). Default: 'hybrid' off, 'gas' on. On a 'gas' four-cylinder
+   * the engine only turns when `engineRun`, `rpm` or `exhaust` is given (No. 008 and No. 012 as rendered).
+   */
+  engineRun?: {at: number; on: boolean}[];
+  /**
+   * No. 014 ('gas', 'hybrid'): grey exhaust puffs from the tailpipe (`RACE.haze`, never orange) at each `at` (s), `size`
+   * 0.5 → 2 (default 1; a rev: ≈ 1.6). Each lives ≈ 1.8 s, swelling, rising and drifting back with the road, then gone,
+   * so a loop's first and last frames can both be clear. Draws a tailpipe tip under the near rear bumper. Default none.
+   */
+  exhaust?: {at: number; size?: number}[];
+  /**
+   * No. 014 (N2): heat in the brake discs (the energy lost as heat, the system), 0 → 1 per axle, constants or keys: the
+   * disc's friction face glows `orange` behind the spokes of a whole wheel, with the § 5 halo, bloomed. Key it to rise
+   * with the press × speed and fade over ≈ 1.5 s after the stop. `rear` defaults to 0.6 × `front`. Default none.
+   */
+  brakeHeat?: {front?: Keyed; rear?: Keyed} | null;
+  /**
+   * No. 014 (N5), 'highway': the air resistance. From `at` an ink arrow (CurveArrow 'ink': paper outline, never bloomed)
+   * draws on over 0.6 s in front of the nose, pointing back into it, `length` m long at the reference speed `ref`
+   * (rev/s, default 35 mph) and growing with the square of the car's speed (🎭 illustrative scale); with `streamlines`
+   * (default true) three ink lines over the hood and roof, dashes flowing back with the road (capped, so they never
+   * strobe), thicker with speed. `fadeAt`: all fade (0.5 s). Null for none (default).
+   */
+  dragArrow?: {at: number; length?: number; ref?: number; streamlines?: boolean; fadeAt?: number; y?: number} | null;
+  /** No. 014 (N6), 'city': the street's dressing: 'mild' (default) or 'winter' (snowbanks, packed snow, bare trees, frost). */
+  dressing?: 'mild' | 'winter';
+  /** No. 014 (N6): frost on the car's glass, 0 → 1, a constant or keys. Default 0.55 with `dressing: 'winter'`, else 0. */
+  frost?: Keyed;
+  /** No. 014, 'hybrid': the pack's resting level (orange, the charge it holds), 0 → 1, a constant or keys. Default 0. */
+  packLevel?: Keyed;
+  /** No. 014, 'hybrid': weak pulses from the inverter toward the pack that die on the way (s). Default none. */
+  hvBlips?: number[];
+  /** No. 014, 'hybrid': a node dot where the HV run meets the pack, 0 (off) → 1, a constant or keys. Default 0. */
+  packNode?: Keyed;
+  /** No. 014: the driver's idle clock (breathing, blinks) at the scene's start, s. Default the scene's start in the video (a loop sets it). */
+  figureClock?: number;
 };
 
 /**
@@ -1080,8 +1130,10 @@ export const isEv = (p: Partial<SlicedCarOptions>) => p.variant === 'ev';
 export const nearWheelsWhole = (p: Partial<SlicedCarOptions>) =>
   (p.nearWheels ?? (p.wheelsWhole || isRealShape(p.shape) ? 'whole' : 'cut')) === 'whole';
 export const isGas = (p: Partial<SlicedCarOptions>) => p.variant === 'gas';
-/** The cars with the driver by the cut and the bay open (No. 006 'ev', No. 008 'gas'). */
-export const isBay = (p: Partial<SlicedCarOptions>) => isEv(p) || isGas(p);
+/** No. 014: the hybrid. */
+export const isHybrid = (p: Partial<SlicedCarOptions>) => p.variant === 'hybrid';
+/** The cars with the driver by the cut and the bay open (No. 006 'ev', No. 008 'gas', No. 014 'hybrid'). */
+export const isBay = (p: Partial<SlicedCarOptions>) => isEv(p) || isGas(p) || isHybrid(p);
 export const isLeft = (p: Partial<SlicedCarOptions>) => (p.facing ?? (isBay(p) ? 'left' : 'right')) === 'left';
 /** The car's own frame (x forward) → the world (mirrored in x when it faces left). */
 export const toWorld = (p: Partial<SlicedCarOptions>, v: V3): V3 => (isLeft(p) ? [-v[0], v[1], v[2]] : v);
@@ -1102,7 +1154,7 @@ export const drivingOf = (p: Partial<SlicedCarOptions>): SpeedKey[] =>
     {
       at: 0,
       speed:
-        p.variant === 'gas' || (p.variant === 'ev' && p.road === 'highway')
+        p.variant === 'gas' || ((p.variant === 'ev' || p.variant === 'hybrid') && p.road === 'highway')
           ? MPH45_REVS
           : p.road === 'highway'
             ? MPH60_REVS
@@ -1120,7 +1172,7 @@ export const simRevs = (p: Partial<SlicedCarOptions>, t: number, fps = 30) => {
   // at a steady speed join without the dips jumping (the street keeps No. 002's reset per scene)
   // the gas and electric cars carry their turn from the scene before (`revsFrom`), on any road
   const before =
-    p.variant === 'gas' || p.variant === 'ev'
+    p.variant === 'gas' || p.variant === 'ev' || p.variant === 'hybrid'
       ? (p.revsFrom ?? 0)
       : p.road === 'highway'
         ? speedAt(drv, 0, 0.8) * rateAt(p, 0) * ((p.startFrame ?? 0) / fps)
@@ -1150,6 +1202,119 @@ export const slicedCarCrank = (p: Partial<SlicedCarOptions>, t: number) => {
   return (p.crankFrom ?? 0) + turns * Math.PI * 2 * CRANK_SCALE;
 };
 
+/** No. 014: how much the engine runs at t (0 off → 1 running; `engineRun`, eased: 0.4 s to start, 0.6 s to spin down). */
+export const engineOnAt = (p: Partial<SlicedCarOptions>, t: number) => {
+  const ks = [...(p.engineRun ?? [])].sort((a, b) => a.at - b.at);
+  let v = ks.length && ks[0].at <= 0 ? (ks[0].on ? 1 : 0) : p.variant === 'hybrid' ? 0 : 1;
+  for (const k of ks) {
+    if (t < k.at) break;
+    const tgt = k.on ? 1 : 0;
+    v = v + (tgt - v) * ease(t, k.at, k.at + (tgt > v ? 0.4 : 0.6));
+  }
+  return v;
+};
+
+/** No. 014: whether this car's four-cylinder turns ('hybrid' always; 'gas' i4 only when asked, so posted videos hold). */
+export const engineTurns = (p: Partial<SlicedCarOptions>) =>
+  p.variant === 'hybrid' || (p.variant === 'gas' && p.engine !== 'v8' && (p.engineRun !== undefined || p.rpm !== undefined || p.exhaust !== undefined));
+
+/**
+ * No. 014: the four-cylinder's crank angle (rad) at t: ∫ rpm × running × the playback rate, × `CRANK_SCALE` (🎭), from
+ * `crankFrom` (a fixed-step sum, deterministic). Default rpm 800 (idle).
+ */
+export const engineCrank = (p: Partial<SlicedCarOptions>, t: number) => {
+  const STEP = 1 / 60;
+  let turns = 0;
+  for (let x = 0; x < t; x += STEP) {
+    const h = Math.min(STEP, t - x);
+    const m = x + h / 2;
+    turns += (keyedValue(p.rpm, m, 800) / 60) * engineOnAt(p, m) * rateAt(p, m) * h;
+  }
+  return (p.crankFrom ?? 0) + turns * Math.PI * 2 * CRANK_SCALE;
+};
+
+/** No. 014: a named point of the car (world, for anchors): 'engine', 'motor', 'battery', 'inverter' (the hybrid's), 'nose', 'tail', 'roof', 'frontWheel', 'rearWheel', 'cluster'. */
+export const slicedCarPoint = (p: Partial<SlicedCarOptions>, name: string): V3 | undefined => {
+  const lay = layoutOf(p);
+  const car: V3 | undefined =
+    name === 'engine' || name === 'motor' || name === 'battery' || name === 'inverter'
+      ? hybridPoint(name)
+      : name === 'nose'
+        ? [NOSE_X, 0.62, C.cutZ]
+        : name === 'tail'
+          ? [-2.4, 0.9, C.cutZ]
+          : name === 'roof'
+            ? [-0.2, 1.75, 0]
+            : name === 'frontWheel'
+              ? [C.axleX.front, R, C.cutZ + 0.12]
+              : name === 'rearWheel'
+                ? [C.axleX.rear, R, C.cutZ + 0.12]
+                : name === 'cluster'
+                  ? [lay.cluster[0] + 0.07, lay.cluster[1] + 0.06, lay.cluster[2]]
+                  : undefined;
+  return car ? toWorld(p, car) : undefined;
+};
+
+/**
+ * No. 014 (N5): how far the streamlines' dashes have flowed (route-lengths) at t: the road's speed capped at 6 m/s
+ * (🎭: at highway speed the real flow strobes), integrated (a fixed-step sum, deterministic).
+ */
+const streamFlow = (p: Partial<SlicedCarOptions>, t: number, fps = 30) => {
+  const STEP = 1 / fps;
+  let s = 0;
+  for (let x = 0; x < t; x += STEP) {
+    const h = Math.min(STEP, t - x);
+    const v = speedAt(drivingOf(p), x + h / 2, 0.8) * rateAt(p, x + h / 2) * 2 * Math.PI * R;
+    s += Math.min(6, 2 + 0.15 * v) * h;
+  }
+  return s / 8;
+};
+
+/** No. 014: the front of the cut sedan's nose (car frame x). */
+const NOSE_X = 2.42;
+/** No. 014: an exhaust puff's life (s). */
+const PUFF_LIFE = 1.8;
+
+/**
+ * No. 014 (N5): the streamlines over the car (car frame (x, y), a sedan's outline lifted clear of it), from ahead of the
+ * nose to behind the tail; three, each a step higher.
+ */
+const STREAM = [
+  [
+    [3.3, 0.72],
+    [2.55, 0.86],
+    [1.9, 1.06],
+    [1.05, 1.4],
+    [0.45, 1.86],
+    [-0.55, 1.98],
+    [-1.55, 1.7],
+    [-2.6, 1.24],
+    [-3.5, 1.08],
+  ],
+  [
+    [3.3, 1.0],
+    [2.4, 1.14],
+    [1.6, 1.38],
+    [0.8, 1.86],
+    [0.2, 2.2],
+    [-0.8, 2.28],
+    [-1.8, 2.02],
+    [-2.8, 1.62],
+    [-3.6, 1.48],
+  ],
+  [
+    [3.3, 1.32],
+    [2.3, 1.48],
+    [1.3, 1.82],
+    [0.5, 2.32],
+    [-0.1, 2.6],
+    [-1.0, 2.64],
+    [-2.0, 2.38],
+    [-3.0, 2.04],
+    [-3.7, 1.92],
+  ],
+] as [number, number][][];
+
 /** The styled coupe's performance wheels (No. 007 realism pass; `RealWheel` `sport`), or undefined. */
 export const sportWheelOf = (p: Partial<SlicedCarOptions>) => {
   const cstyle = p.shape === 'coupe' ? p.coupeStyle : undefined;
@@ -1174,7 +1339,7 @@ export const wheelTurnRevs = (p: Partial<SlicedCarOptions>, t: number, fps = 30)
   const cap = wheelCapRevs(p, fps);
   const v0 = speedAt(drv, 0, 0.8) * rateAt(p, 0);
   const before =
-    p.variant === 'gas' || p.variant === 'ev'
+    p.variant === 'gas' || p.variant === 'ev' || p.variant === 'hybrid'
       ? (p.wheelFrom ?? p.revsFrom ?? 0)
       : p.road === 'highway'
         ? Math.sign(v0) * Math.min(Math.abs(v0), cap) * ((p.startFrame ?? 0) / fps)
@@ -1710,8 +1875,8 @@ export type SlicedCarProps = SlicedCarOptions & {
 export const slicedCarShake = (p: Partial<SlicedCarOptions>, t: number) => {
   const variant = p.variant ?? 'sensors';
   const gas = variant === 'gas';
-  const hw = (p.road ?? (variant === 'ev' ? 'city' : gas ? 'highway' : 'street')) === 'highway';
-  const lane = hw && (p.highwayLane ?? (gas || variant === 'ev' ? 'lane' : 'shoulder')) === 'lane';
+  const hw = (p.road ?? (variant === 'ev' || variant === 'hybrid' ? 'city' : gas ? 'highway' : 'street')) === 'highway';
+  const lane = hw && (p.highwayLane ?? (gas || variant === 'ev' || variant === 'hybrid' ? 'lane' : 'shoulder')) === 'lane';
   const leaveK = hw && p.leaveAt != null ? ease(t, p.leaveAt, p.leaveAt + 0.8) : 0;
   const rowAt = -(0.45 * leaveK);
   const onRow = hw && !lane ? Math.max(0, Math.min(1, (GROOVE.half - Math.abs(rowAt)) / 0.03)) : 0;
@@ -1750,10 +1915,12 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
   const m = MOODS[mood];
   // No. 008: the gas car, on the highway by default
   const gas = variant === 'gas';
-  const roadKind = props.road ?? (variant === 'ev' ? 'city' : gas ? 'highway' : 'street');
+  // No. 014: the hybrid, on the city road by default
+  const hybrid = variant === 'hybrid';
+  const roadKind = props.road ?? (variant === 'ev' || hybrid ? 'city' : gas ? 'highway' : 'street');
   const hw = roadKind === 'highway';
   // the highway: on the shoulder's groove row (No. 005) or in the lane (no grooves under the car)
-  const lane = hw && (props.highwayLane ?? (gas || variant === 'ev' ? 'lane' : 'shoulder')) === 'lane';
+  const lane = hw && (props.highwayLane ?? (gas || variant === 'ev' || hybrid ? 'lane' : 'shoulder')) === 'lane';
   const wet = hw && (props.wet ?? false);
   // the highway's car has no tire sensors (no orange but the grooves, the drops and the path)
   const sensors = variant === 'sensors' && !hw;
@@ -1762,7 +1929,9 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
   const left = isLeft(props);
   const dir = left ? -1 : 1;
   const city = roadKind === 'city';
-  const bay = ev || gas;
+  const bay = ev || gas || hybrid;
+  // gas and hybrid share the pedals, the foot and the nose dip
+  const pedalsGas = gas || hybrid;
   const lay = layoutOf(props);
   // No. 007: the coupe (seats lower: the hands rise to the same wheel), the far-side driver (the pedals move
   // across with them), the V8 with its gearbox and rear drive, the AWD electric car's rear unit
@@ -2055,7 +2224,7 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
       ? // the real models' seats sit further back and lower still (`realModels.ts` cabin): the foot rests further forward
         {ankle: toFig(0.52 + realFootReach(props.shape), C.floor + 0.09), pitch: -0.3}
       : {ankle: toFig(0.35, C.floor + 0.18), pitch: -0.5};
-  const legs: [{ankle: V3; pitch?: number; side?: number}, {ankle: V3; pitch?: number; side?: number}] | undefined = gas
+  const legs: [{ankle: V3; pitch?: number; side?: number}, {ankle: V3; pitch?: number; side?: number}] | undefined = pedalsGas
     ? ([
         tuck,
         // the pedal foot (figure-local +x is the car's −z: across toward the cut is −side)
@@ -2132,7 +2301,7 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
   const strip = props.strip ?? false;
   const wheelsShown = props.wheelsShown ?? !strip;
   // ---- No. 008: the gas car's state
-  const gasFoot = gas ? gasFootAt(props.foot, t) : null;
+  const gasFoot = pedalsGas ? gasFootAt(props.foot, t) : null;
   // the signal path: the gas car's `gasPath`, or the electric car's `drive` (No. 008), on the same machinery
   const evDrive = ev && props.drive ? props.drive : null;
   const gp = gas && props.gasPath ? props.gasPath : evDrive;
@@ -2199,7 +2368,46 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
   const bl = gas && props.brakeLead ? props.brakeLead : null;
   const blK = bl ? ease(t, bl.at, bl.at + (bl.drawFor ?? 0.4)) : 0;
   const blGlow = bl ? (bl.fadeAt == null ? 1 : 1 - ease(t, bl.fadeAt, bl.fadeAt + 0.5)) : 0;
-  const dip = gas ? Math.max(0, keyedValue(props.noseDip, t, 0)) : 0;
+  const dip = pedalsGas ? Math.max(0, keyedValue(props.noseDip, t, 0)) : 0;
+  // ---- No. 014: the four-cylinder running (gas, hybrid), its tremor, the puffs, the brake heat, the drag arrow
+  const turns4 = engineTurns(props);
+  const crank4 = turns4 ? engineCrank(props, t) : undefined;
+  const on4 = turns4 ? engineOnAt(props, t) : 0;
+  const trem = on4 * 0.001 * Math.sqrt(Math.max(0.3, keyedValue(props.rpm, t, 800) / 800));
+  const tremor: V3 | undefined = turns4 && trem > 1e-5 ? [0, trem * Math.sin((crank4 ?? 0) * 2), 0.5 * trem * Math.cos((crank4 ?? 0) * 2)] : undefined;
+  const puffs = (props.exhaust ?? []).flatMap((q, i) => {
+    const age = t - q.at;
+    if (age < 0 || age > PUFF_LIFE) return [];
+    const size = Math.max(0.3, Math.min(2.5, q.size ?? 1));
+    // the puff stays with the air: it drifts back with the road (in the car's frame) and a little on its own
+    const back = distAt(t) - distAt(q.at) + 0.35 * age;
+    const u = age / PUFF_LIFE;
+    return [{i, age, size, back, u, op: 0.6 * Math.sqrt(size / 1.6) * ease(age, 0, 0.12) * (1 - ease(u, 0.3, 1))}];
+  });
+  const heatOf = (id: WheelId) => {
+    const bh = props.brakeHeat;
+    if (!bh) return 0;
+    const f = Math.max(0, Math.min(1, keyedValue(bh.front, t, 0)));
+    return WHEELS[id].x > 0 ? f : Math.max(0, Math.min(1, bh.rear === undefined ? 0.6 * f : keyedValue(bh.rear, t, 0)));
+  };
+  const frostK = Math.max(0, Math.min(1, keyedValue(props.frost, t, props.dressing === 'winter' ? 0.55 : 0)));
+  // the hybrid's cluster: its power needle to drive with the drive path, to charge with the regen
+  const hybPower = hybrid
+    ? props.power !== undefined
+      ? keyedValue(props.power, t, 0)
+      : (() => {
+          const fadeK = (k: {at: number; fadeAt?: number; fadeFor?: number} | null | undefined) =>
+            k && t >= k.at ? (k.fadeAt == null ? 1 : 1 - ease(t, k.fadeAt, k.fadeAt + (k.fadeFor ?? 0.7))) : 0;
+          const sK = (k: {strength?: Keyed} | null | undefined) => Math.max(0, Math.min(1, keyedValue(k?.strength, t, 1)));
+          return 0.5 * fadeK(props.drivePath) * sK(props.drivePath) - 0.6 * fadeK(props.regen) * sK(props.regen);
+        })()
+    : 0;
+  const da = hw && props.dragArrow ? props.dragArrow : null;
+  const daRef = da?.ref ?? (35 * 0.44704) / (2 * Math.PI * R);
+  const daV = speedAt(drivingOf(props), t, 0.8) / Math.max(1e-6, daRef);
+  const daGlow = da ? ease(t, da.at, da.at + 0.6) * (da.fadeAt == null ? 1 : 1 - ease(t, da.fadeAt, da.fadeAt + 0.5)) : 0;
+  const daLen = da ? (da.length ?? 0.6) * daV * daV : 0;
+  const daR = 0.03 * Math.max(0.5, Math.min(1.8, camD / 20));
   const steerNow = gas ? keyedValue(props.steer, t, 0) : 0;
   const steerRatio = props.steerRatio ?? 5;
   const sbw = gas && props.steerByWire ? props.steerByWire : null;
@@ -2413,6 +2621,7 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
         ].map((r) => ({...r, legs: gasDrivePath(Math.max(1, r.gear), gasHubZ, viewCar), neutral: r.gear < 1}))
       : [];
 
+  const hwX = props.roadHalf ?? HWY.x;
   const pak = bay && props.pushArrows ? props.pushArrows : null;
   const pushWheels: {id: WheelId; axle: 'front' | 'rear'}[] = pak
     ? ev
@@ -2430,6 +2639,7 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
         <>
           <mesh
             position={[0, -HWY.depth / 2, (HWY.front + HWY.back) / 2]}
+            scale={[hwX / HWY.x, 1, 1]}
             material={[mats.cut, mats.earth, mats.asphalt, mats.earth, mats.hidden, mats.earth]}
             receiveShadow
           >
@@ -2438,8 +2648,8 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
           <GrooveCut
             scroll={distance}
             amp={ampShow}
-            x0={-HWY.x}
-            x1={HWY.x}
+            x0={-hwX}
+            x1={hwX}
             depth={HWY.depth}
             z={HWY.front}
             ink={inkK}
@@ -2447,8 +2657,8 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
           <CutOutline
             rects={[
               [
-                [HWY.x, -HWY.depth, HWY.back],
-                [HWY.x, 0, HWY.front],
+                [hwX, -HWY.depth, HWY.back],
+                [hwX, 0, HWY.front],
               ],
             ]}
           />
@@ -2462,6 +2672,7 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
           corners={corners}
           signs={signs}
           storefronts={props.storefronts ?? false}
+          winter={props.dressing === 'winter'}
           from={dir < 0 ? -(props.roadAhead ?? (ev ? 14 : 5)) : -5}
           to={dir < 0 ? 5 : (props.roadAhead ?? (ev ? 14 : 5))}
           inkScale={inkK}
@@ -2510,7 +2721,7 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
 
       {/* the car and its driver, in the car's own frame (mirrored in x when it faces left) */}
       <group scale={left ? [-1, 1, 1] : undefined}>
-        <Dip on={gas} angle={-0.022 * dip} pivot={[C.axleX.rear, R, 0]}>
+        <Dip on={pedalsGas} angle={-0.022 * dip} pivot={[C.axleX.rear, R, 0]}>
           <group position={[bodyJ[0], bodyY + bodyJ[1], bodyJ[2]]}>
             <RealCar
               steeringJitter={shakeAmt > 0 ? [sj('sx', 0.004), sj('sy', 0.005), sj('sz', 0.004)] : undefined}
@@ -2518,11 +2729,27 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
               body={driver === 'mom' ? 'mom' : driver === 'friend' ? 'friend' : 'you'}
               warning={warn}
               tail={hw && night ? 1 : 0}
-              speed={props.clusterSpeed ?? (gas ? 45 : 38)}
+              speed={
+                (props.clusterSpeed ?? (hybrid ? 'auto' : undefined)) === 'auto'
+                  ? Math.round(vRoad / 0.44704)
+                  : ((props.clusterSpeed as number | undefined) ?? (gas ? 45 : 38))
+              }
               tireLight={bay ? false : (props.tireLight ?? true)}
               {...(ev ? {ev: true, driverSide: side, brake: brakeK, inkScale: inkK, evCluster: {power}} : {})}
               {...(ev && props.drive !== undefined ? {splitDash: true} : {})}
               {...(gas ? {gas: true, driverSide: side, brake: brakeK, inkScale: inkK, steer: steerNow} : {})}
+              {...(hybrid
+                ? {
+                    gas: true,
+                    sillFrom: HYBRID.sillFrom,
+                    benchShift: HYBRID.benchShift,
+                    driverSide: side,
+                    brake: brakeK,
+                    inkScale: inkK,
+                    evCluster: {power: hybPower},
+                  }
+                : {})}
+              frost={frostK}
               shape={props.shape}
               awd={props.awd}
               rearBay={rearBay}
@@ -2546,7 +2773,7 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
             gestures={gestures}
             phone={false}
             hands={hands}
-            clockOffset={startFrame / fps}
+            clockOffset={props.figureClock ?? startFrame / fps}
             legs={legs}
             footScale={bay ? [1, EV_FOOT] : undefined}
             shoe={bay ? section.sneaker : undefined}
@@ -2642,7 +2869,7 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
                   <RearDrive mood={mood} axle={gearSpin} inkScale={inkK} />
                 </>
               ) : (
-                <EngineBay mood={mood} open={plate} inkScale={inkK} />
+                <EngineBay mood={mood} open={plate} inkScale={inkK} crank={crank4} tremor={tremor} />
               )}
               {dz ? (
                 <group position={[0, 0, dz]}>
@@ -2758,6 +2985,36 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
               )}
             </>
           ) : null}
+          {hybrid && !strip ? (
+            <>
+              {/* No. 014: the hybrid's four-cylinder (no intake: the motor-generator sits there), its pedals, its systems */}
+              <EngineBay mood={mood} open={0} intake={false} crank={crank4} tremor={tremor} inkScale={inkK} />
+              {dz ? (
+                <group position={[0, 0, dz]}>
+                  <GasPedals mood={mood} accel={gasFoot ? gasFoot.accel : 0} brake={gasFoot ? gasFoot.brake : 0} />
+                </group>
+              ) : (
+                <GasPedals mood={mood} accel={gasFoot ? gasFoot.accel : 0} brake={gasFoot ? gasFoot.brake : 0} />
+              )}
+              <HybridSystems
+                mood={mood}
+                t={t}
+                wheelSpin={gearSpin}
+                rotorSpin={rotorSpin}
+                rotorBlur={rotorBlur}
+                inkScale={inkK}
+                pathR={pathR}
+                hubZ={hubZ}
+                drive={props.drivePath}
+                regen={props.regen}
+                packLevel={props.packLevel}
+                blips={props.hvBlips}
+                packNode={props.packNode}
+              />
+            </>
+          ) : null}
+          {/* No. 014 (N3): grey exhaust puffs at the tailpipe (gas, hybrid) */}
+          {(gas || hybrid) && props.exhaust && !strip ? <ExhaustPuffs puffs={puffs} tailpipe={HYBRID.tailpipe} mood={mood} /> : null}
           {ev && props.madeBy ? (
             <MadeByCar
               madeBy={props.madeBy}
@@ -3035,6 +3292,7 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
             sport={sportWheel}
             design={realWheelDesign(props.shape)}
             ghost={props.wheelGhost?.[id]}
+            heat={heatOf(id)}
             brake={
               ev && id === 'FR'
                 ? {
@@ -3056,6 +3314,23 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
         );
       })}
 
+      {/* No. 014 (N5): the air resistance at the nose (ink, never bloomed) and the streamlines over the car */}
+      {da && daGlow > 0.01 ? (
+        <DragArrow
+          mood={mood}
+          dir={dir}
+          noseX={NOSE_X}
+          y={da.y ?? 0.62}
+          z={C.cutZ + 0.06}
+          length={daLen * ease(t, da.at, da.at + 0.6)}
+          radius={daR}
+          opacity={daGlow}
+          streams={da.streamlines === false ? [] : STREAM}
+          streamZ={0.15}
+          flow={streamFlow(props, t, fps)}
+          streamRadius={daR * 0.42 * Math.max(0.7, Math.min(1.7, 0.6 + 0.4 * daV))}
+        />
+      ) : null}
       {/* No. 007 (N4): the push at each driven wheel's contact patch, on the road's cut face, pointing forward */}
       {pak
         ? pushWheels.map(({id, axle}) => {

@@ -7,7 +7,7 @@ import {capRevs, cappedTravel, wheelMode, wheelSmear, type WheelMode} from '../t
 import {raw} from '../three/plaster';
 import {RealWheel, WHEEL, wheelPoint} from '../three/real/RealWheel';
 import {sensorPartAt, TireSensor, type SensorPart} from '../three/real/TireSensor';
-import {projectToFrame, SectionCamera, sectionCameraAt, type Framing} from '../three/section/SectionCamera';
+import {formatOf, projectToFrame, SectionCamera, sectionCameraAt, type Framing} from '../three/section/SectionCamera';
 import {SectionLights, SectionStage} from '../three/section/SectionStage';
 import {skyTexture} from '../three/section/textures';
 import {AirChuck, PULSE_LIFE, RadioPulse, WireWind} from '../three/TirePieces';
@@ -209,6 +209,7 @@ const cameraAtFrame = (p: Partial<WheelSliceSceneProps>, frame: number, fps: num
     durationInFrames,
     drift: p.drift ?? 0,
     clockOffset: (p.startFrame ?? 0) / fps,
+    format: formatOf(p),
   });
 };
 
