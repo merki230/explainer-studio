@@ -321,13 +321,18 @@ export const CarCityRoad: React.FC<CarCityRoadProps> = ({
   // storefronts: three 4 m shops repeating every 12 m, sliding with the road
   const SHOP = 4;
   const PERIOD = 12;
+  // (the same shops at the same places as before, No. 014: generated over the whole block, however long, so a long
+  // street never runs out of shops inside the frame)
+  void PERIOD;
   const visibleShops = storefronts
-    ? [...Array(9).keys()]
-        .map((k) => {
-          const base = ((scroll % PERIOD) + PERIOD) % PERIOD;
-          return {x: -PERIOD + base + (k - 2) * SHOP, k: (((k - 2) % 3) + 3) % 3};
-        })
-        .filter((s) => s.x > from - SHOP && s.x < to + SHOP)
+    ? (() => {
+        const out: {x: number; k: number}[] = [];
+        for (let m = Math.floor((from - SHOP - scroll) / SHOP); m <= Math.ceil((to + SHOP - scroll) / SHOP); m++) {
+          const x = scroll + m * SHOP;
+          if (x > from - SHOP && x < to + SHOP) out.push({x, k: ((m % 3) + 3) % 3});
+        }
+        return out;
+      })()
     : [];
   const face = dir < 0 ? 1 : -1; // signals and signs face the oncoming traffic (+x when it drives toward −x)
   return (

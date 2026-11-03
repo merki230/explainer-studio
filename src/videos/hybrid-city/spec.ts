@@ -501,7 +501,7 @@ const PATH_A: PathKey[] = [
 
 const H_HYB = nudge(TF.hybrid, -0.6, -0.8, 18); // the hybrid above the captions, the bottom lane's car in view
 const H_AIR = nudge(TF.hybrid, -1.4, -0.3, 21); // room ahead of the nose for the drag arrow, under the counter
-const H_CARD: Framing = {look: [-3.3, 0.75, 0.3], distance: 100};
+const H_CARD: Framing = {look: [1.1, 2.3, 0.3], distance: 80}; // the pair centred under the card (reviewer)
 const PATH_H: PathKey[] = [
   ...push(H_HYB, W.out - 1, W.so10, 0.1),
   {t: W.so10 + G, f: TF.battery, ease: 'glide'},
@@ -514,11 +514,11 @@ const PATH_H: PathKey[] = [
   {t: W.back + 1, f: at(H_CARD, H_CARD.distance - 0.1 * (W.back + 1 - W.even - G))},
 ];
 
-const W_HYB = nudge(TF.hybrid, 0, -0.9, 19);
+const W_HYB = nudge(TF.hybrid, 0, -0.7, 19); // the car a little lower in frame (reviewer)
 const PATH_W: PathKey[] = [
   ...push(W_HYB, W.back - 1, W.can, 0.1),
-  {t: W.can + G, f: nudge(TF.hybrid, 0.3, -0.9, 15.5), ease: 'glide'},
-  {t: W.is + 1, f: nudge(TF.hybrid, 0.3, -0.9, 15.5 - 0.08 * (W.is + 1 - W.can - G))},
+  {t: W.can + G, f: nudge(TF.hybrid, 0.3, -0.7, 15.5), ease: 'glide'},
+  {t: W.is + 1, f: nudge(TF.hybrid, 0.3, -0.7, 15.5 - 0.08 * (W.is + 1 - W.can - G))},
 ];
 
 /** The loop: frame 0's framing and push, reached on the last frame. */
@@ -659,7 +659,84 @@ const scenes: SceneSpec[] = [
   {scene: 'city-twin', cue: 'is your mileage really', props: LOOP()},
 ];
 
+// ------------------------------------------------------------------ sound (datacenter-water's `BEDS` pattern)
+
+/**
+ * Measured with the bundled ffmpeg `loudnorm` (integrated LUFS): voice −21.99, music −16.17, idle −20.44, engine-work
+ * −20.44, highway −24.43, city −32.45. volume = (voice − dB under) − file. Beds sit 25 dB under (the owner found the
+ * datacenter beds too loud at 19–22); the engines 21 under, since the idle-versus-silence contrast is the point. At
+ * most two beds at once. Physical sounds only.
+ */
+const VOICE_LUFS = -21.99;
+const vol = (under: number, lufs: number) => r2(VOICE_LUFS - under - lufs);
+const BEDS = {
+  idle: {name: 'idle', volume: vol(21, -20.44)}, // −22.55: the gas twin's four-cylinder at 800 rpm, at the stops
+  work: {name: 'engine-work', volume: vol(21, -20.44)}, // −22.55: 2900 → 3700 rpm, "the harder the engine works"
+  highway: {name: 'highway', volume: vol(25, -24.43)}, // −22.56: tire roar, scenes 10–13
+  city: {name: 'city', volume: vol(25, -32.45)}, // −14.54: the outdoor bed, the city and winter scenes
+} as const;
+type Bed = keyof typeof BEDS;
+/** Music (owner-approved, 71 s): 12 dB under the voice from frame 0, no duck, fading to silence on the last frame. */
+const MUSIC = {level: vol(9, -16.17), duckDb: 0, startAt: 0, fadeIn: 1.5, fadeOut: 1.5} as const; // −14.82 (owner: music up a bit, 2026-11-02; was 12 dB under)
+
+/** One bed's span in a scene, in video seconds: [from, to] (to = null: until the scene's cut). */
+type Span = {bed: Bed; from?: number; to?: number | null; fade?: number};
+/** Beds per scene (1-based). The idle plays while the gas twin stands idling at a stop; silent while it drives. */
+const SOUND: Record<number, Span[]> = {
+  // frame 0: both beds fade in from silence (the loop scene fades them out to silence: the seam matches)
+  1: [{bed: 'city'}, {bed: 'idle'}],
+  2: [{bed: 'city'}, {bed: 'idle'}],
+  3: [{bed: 'city'}, {bed: 'idle'}],
+  4: [{bed: 'city'}, {bed: 'idle'}],
+  5: [{bed: 'city'}, {bed: 'idle', to: W.so4 + 0.8, fade: 0.5}], // out as they pull away
+  6: [{bed: 'city'}, {bed: 'idle', from: REST1 - 1.0}], // at the red, the hybrid silent
+  7: [{bed: 'city'}, {bed: 'idle', to: W.hybrid7 + 0.6, fade: 0.5}], // until the gas twin pulls away on green
+  8: [{bed: 'city'}],
+  9: [{bed: 'city'}, {bed: 'idle', from: REST2 - 0.3}], // after the hard stop
+  10: [{bed: 'highway'}],
+  11: [{bed: 'highway'}],
+  12: [{bed: 'highway'}, {bed: 'work', fade: 0.5}],
+  13: [{bed: 'highway'}],
+  14: [{bed: 'city'}],
+  15: [{bed: 'city'}],
+  16: [{bed: 'city'}, {bed: 'idle', from: S.s16 + 2.0}], // idling at frame 0's red; both out by the last frame
+};
+const sfxFor = (n: number): OverlaySpec[] => {
+  const s = STARTS[n - 1];
+  const len = r2(endOf(s) - s);
+  const nextBeds = new Set((SOUND[n + 1] ?? []).filter((x) => x.from === undefined).map((x) => x.bed));
+  return (SOUND[n] ?? []).map((sp) => {
+    const loopEnd = n === 16; // the seam: faded out exactly on the last frame
+    const carries = sp.to === undefined && nextBeds.has(sp.bed) && !loopEnd;
+    const until = sp.to != null ? rel(sp.to, s) : carries ? r2(len + 0.5) : len; // a continued bed's fades cross at the join
+    return {type: 'sfx', ...BEDS[sp.bed], loop: true, fade: sp.fade ?? 1.0, at: sp.from !== undefined ? rel(sp.from, s) : 0, until} as OverlaySpec;
+  });
+};
+scenes.forEach((sc, i) => {
+  const extra = sfxFor(i + 1);
+  if (extra.length) sc.overlays = [...(sc.overlays ?? []), ...extra];
+});
+
+/** Frame 0's props without its camera path (the cover holds one framing). */
+const COVER_PROPS = (() => {
+  const {cameraKeys: _k, transition: _t, ...rest} = A(0) as Record<string, unknown>;
+  void _k;
+  void _t;
+  return {...rest, drift: 0};
+})();
+
 export const spec: VideoSpec = {
+  // Cover still (`yarn cover hybrid-city`, publisher's text): frame 0, both twins at the red light (the gas twin
+  // idling, the hybrid silent), aimed a little higher so the cars sit under the two lines.
+  cover: {
+    text: 'Hybrid vs gas\nWhy the city wins',
+    size: 130,
+    scene: 'city-twin',
+    camera: nudge(A_STACK, 0, 1.6),
+    at: 0,
+    props: COVER_PROPS,
+  },
   tail: TAIL,
+  music: MUSIC,
   scenes,
 };

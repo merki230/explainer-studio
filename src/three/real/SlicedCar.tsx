@@ -334,8 +334,12 @@ export type SlicedCarOptions = {
   vibration?: {at: number; wheelAt?: number; seatAt?: number} | null;
   /** The speed on the cluster's face in the car (mph, default 38). The dashboard detail box has its own `speed`. */
   clusterSpeed?: number | 'auto';
+  /** No. 014, 'city': metres the road block runs behind the car's centre (default 5). */
+  roadBehind?: number;
   /** No. 014, 'highway': the road block's half-length (m; default 3.8), longer so lane dashes and posts stream past a far framing. */
   roadHalf?: number;
+  /** No. 014, 'highway': the road block's depth under the asphalt (m; default 0.7). Thinner over a lane stacked below, so its car's roof stays clear. */
+  roadDepth?: number;
   /**
    * Highway: the dips' depth and the tire's drop drawn this many times real (default 2.5, 🎭 an
    * illustrative scale, disclosed in the post: at 1 the ½ in dip read as a wavy line at phone size).
@@ -2022,7 +2026,9 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
   const dipScale = Math.max(0, Math.min(MAX_AMP, props.dipScale ?? 2.5));
   const ampShow = onRow * (1 - smear) * dipScale;
   const asphaltU = mats.asphalt.userData.uniforms as Record<string, {value: number}>;
-  asphaltU.uScroll.value = distance;
+  // No. 014: the asphalt's markings stream toward the tail of a car facing −x in the lane too (they ran with it, so a
+  // left-facing car seemed to back up against the lane dashes); posted videos (`wheels: 'legacy'`) keep No. 008's sign
+  asphaltU.uScroll.value = left && lane && wheelMode(props.wheels) === 'forward' ? -distance : distance;
   asphaltU.uBlur.value = blurM;
   asphaltU.uAcross.value = lane
     ? -HIGHWAY_LAYOUT.lanes.right
@@ -2622,6 +2628,7 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
       : [];
 
   const hwX = props.roadHalf ?? HWY.x;
+  const hwD = props.roadDepth ?? HWY.depth;
   const pak = bay && props.pushArrows ? props.pushArrows : null;
   const pushWheels: {id: WheelId; axle: 'front' | 'rear'}[] = pak
     ? ev
@@ -2638,8 +2645,8 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
         // the highway's ground block: asphalt on top, its front cut face down the groove row's centreline
         <>
           <mesh
-            position={[0, -HWY.depth / 2, (HWY.front + HWY.back) / 2]}
-            scale={[hwX / HWY.x, 1, 1]}
+            position={[0, -hwD / 2, (HWY.front + HWY.back) / 2]}
+            scale={[hwX / HWY.x, hwD / HWY.depth, 1]}
             material={[mats.cut, mats.earth, mats.asphalt, mats.earth, mats.hidden, mats.earth]}
             receiveShadow
           >
@@ -2650,14 +2657,14 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
             amp={ampShow}
             x0={-hwX}
             x1={hwX}
-            depth={HWY.depth}
+            depth={hwD}
             z={HWY.front}
             ink={inkK}
           />
           <CutOutline
             rects={[
               [
-                [hwX, -HWY.depth, HWY.back],
+                [hwX, -hwD, HWY.back],
                 [hwX, 0, HWY.front],
               ],
             ]}
@@ -2673,8 +2680,8 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
           signs={signs}
           storefronts={props.storefronts ?? false}
           winter={props.dressing === 'winter'}
-          from={dir < 0 ? -(props.roadAhead ?? (ev ? 14 : 5)) : -5}
-          to={dir < 0 ? 5 : (props.roadAhead ?? (ev ? 14 : 5))}
+          from={dir < 0 ? -(props.roadAhead ?? (ev ? 14 : 5)) : -(props.roadBehind ?? 5)}
+          to={dir < 0 ? (props.roadBehind ?? 5) : (props.roadAhead ?? (ev ? 14 : 5))}
           inkScale={inkK}
         />
       ) : (

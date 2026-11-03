@@ -197,6 +197,14 @@ export type CoverSpec = {
   at?: number;
   /** A detail box on a phone (section-room only), drawn fully in. Same props as the overlay. */
   detail?: DetailBoxProps;
+  /**
+   * Alternative covers for a thumbnail A/B test, by name (`yarn cover <slug> --variant <name>`, written to
+   * `out/<slug>/raw/thumbnail-<name>.png` and `-1280.jpg`, git-ignored). `footageFrame`: instead of the scene, that frame
+   * of the video's real opening (`spec.opening`: the clip through `FootageOpening` with its masks and grade, no reveal);
+   * the cover's text on top unless the variant sets its own. 🧪 `datacenter-water` only (owner, 2026-11-02), an exception
+   * to § 11.9.1's 3D-only rule.
+   */
+  variants?: Record<string, {footageFrame: number; text?: string}>;
 };
 
 /**

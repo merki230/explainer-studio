@@ -103,6 +103,31 @@ Platform mechanics: **TikTok poll at posting or afterwards on the posted video**
 
 ---
 
+## Owner decision · thumbnail A/B test on Part 1 (2026-11-02)
+
+- **Decided:** 2026-11-02, owner ("Let's test"), relayed by the main session.
+- **Applies to:** `datacenter-water` only. A one-time 🧪 exception to style-guide § 11.9.1.
+
+**Decision:** a YouTube **Test & compare** between two thumbnails, run on Part 1 only.
+- **A:** the 3D thumbnail as specced.
+- **B:** a frame of the real opening clip, with the brand masks, the same grade and the same text.
+
+B's files stay git-ignored in `out/datacenter-water/raw/`, because the repo is public and the stock licence bans redistributing the frame. Other videos stay 3D.
+
+**To measure** (log here when YouTube closes the test):
+- the **Test & compare result**: the winner, or "no clear winner";
+- each thumbnail's **watch-time share** (YouTube's metric for the test);
+- the test's duration and impressions;
+- the video's CTR during the test, for context.
+
+**What it decides:** the long-form thumbnail style from Part 2 on.
+- **B wins clearly:** propose a § 11.9.1 rule allowing real-opening frames (only for videos that have a real opening).
+- **A wins, or no clear winner:** stay 3D.
+
+The owner confirms either change.
+
+---
+
 ## Owner decision · real opening shot on long videos, Shorts 100% 3D (2026-11-02)
 
 - **Decided:** 2026-11-02, owner, relayed by the main session.

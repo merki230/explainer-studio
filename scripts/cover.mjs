@@ -5,7 +5,11 @@
 // (1280 x 720, the mobile fallback, kept <= 2 MB by lowering the JPEG quality step by step). A Short's cover
 // (`shorts[].cover`) is vertical and goes to release/short-<n>-cover.png.
 //
-// usage: yarn cover <slug> [--short <n>]
+// --variant <name>: a thumbnail A/B variant (`spec.cover.variants`, e.g. a frame of the real opening): rendered at the
+// composition's own 1920 x 1080 (a 1080p source is never upscaled) to out/<slug>/raw/thumbnail-<name>.png and
+// thumbnail-<name>-1280.jpg (<= 2 MB). Git-ignored on purpose: a footage frame must not enter the public repo (§ 11.6.1).
+//
+// usage: yarn cover <slug> [--short <n>] [--variant <name>]
 import {execFileSync, spawnSync} from 'node:child_process';
 import {mkdirSync, statSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
@@ -32,10 +36,12 @@ export const renderCover = (slug, short = null) => {
 const JPG_MAX = 2 * 1024 * 1024;
 
 /** The horizontal cover: release/thumbnail.png at 3840 x 2160 and release/thumbnail-1280.jpg <= 2 MB. Returns the PNG. */
-const renderThumbnail = (id, dir) => {
-  const png = `${dir}/thumbnail.png`;
-  const jpg = `${dir}/thumbnail-1280.jpg`;
-  execFileSync('npx', ['remotion', 'still', id, png, '--scale=2'], {stdio: 'inherit'});
+const renderThumbnail = (id, dir, variant = null, slug = null) => {
+  const name = variant ? `thumbnail-${variant}` : 'thumbnail';
+  const png = `${dir}/${name}.png`;
+  const jpg = `${dir}/${name}-1280.jpg`;
+  const extra = variant ? [`--props=${JSON.stringify({videoId: slug, variant})}`] : ['--scale=2'];
+  execFileSync('npx', ['remotion', 'still', id, png, ...extra], {stdio: 'inherit'});
   // mjpeg -q:v 2 is near-lossless; step down until it fits (it always does long before 31 at 1280 x 720)
   for (let q = 2; q <= 31; q++) {
     const r = spawnSync(
@@ -46,16 +52,27 @@ const renderThumbnail = (id, dir) => {
     if (r.status !== 0) throw new Error(`ffmpeg failed:\n${r.stderr.slice(-1500)}`);
     const size = statSync(jpg).size;
     if (size <= JPG_MAX) {
-      console.log(`${png}  (3840 x 2160)\n${jpg}  (1280 x 720, ${(size / 1024).toFixed(0)} KB, q ${q})`);
+      console.log(`${png}  (${variant ? '1920 x 1080' : '3840 x 2160'})\n${jpg}  (1280 x 720, ${(size / 1024).toFixed(0)} KB, q ${q})`);
       return png;
     }
   }
   throw new Error(`${jpg} stays over 2 MB at every quality step`);
 };
 
+/** A thumbnail A/B variant (`spec.cover.variants[name]`) to out/<slug>/raw/ (git-ignored). Returns the PNG. */
+export const renderVariant = (slug, variant) => {
+  videoPaths(slug, 'yarn cover <slug> --variant <name>');
+  const dir = `out/${slug}/raw`;
+  mkdirSync(dir, {recursive: true});
+  return renderThumbnail(`${slug}-cover`, dir, variant, slug);
+};
+
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const args = process.argv.slice(2);
   const short = takeShort(args);
-  videoPaths(args[0], 'yarn cover <slug> [--short <n>]');
-  renderCover(args[0], short);
+  const vi = args.indexOf('--variant');
+  const variant = vi < 0 ? null : args.splice(vi, 2)[1];
+  videoPaths(args[0], 'yarn cover <slug> [--short <n>] [--variant <name>]');
+  if (variant) renderVariant(args[0], variant);
+  else renderCover(args[0], short);
 }

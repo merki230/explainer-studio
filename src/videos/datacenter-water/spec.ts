@@ -1295,6 +1295,9 @@ export const spec: VideoSpec = {
   // plume at full billow, the route ×2.5 and the cut ink ×1.5 for the still. `yarn cover` → release/thumbnail.png.
   cover: {
     text: 'Mostly,\nit goes\nup.',
+    // 🧪 thumbnail A/B (owner, 2026-11-02; a one-time exception to § 11.9.1's 3D rule): B = one frame of the real opening,
+    // masks and grade as in the video. `yarn cover datacenter-water --variant b` → out/datacenter-water/raw/ (git-ignored)
+    variants: {b: {footageFrame: 0}},
     scene: 'datacenter-slice',
     // frame 2711 = shot 15 (starting at video frame 2634) + 2.57 s; `startFrame` puts the scene clock there too, so the
     // plume, the fans and the LEDs are as they were in the video, not 2.6 s old

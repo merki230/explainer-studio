@@ -102,12 +102,12 @@ export type CityTwinSceneProps = {
   dressing?: 'mild' | 'winter';
   /**
    * The top twin. Defaults: `{variant: 'hybrid', shape: 'sedan', nearWheels: 'whole', driver: 'you', storefronts: true,
-   * roadAhead: 14}` (YOU's car colour), a lead car.
+   * roadAhead: 34, roadBehind: 26}` (YOU's car colour), a lead car.
    */
   top?: TwinCar;
   /**
    * The bottom twin; false for none (the top lane alone, e.g. the winter beat). Defaults: `{variant: 'gas', shape:
-   * 'sedan', nearWheels: 'whole', driver: 'extra', paint: TWINS.gasPaint, roadAhead: 14, engineRun: running}`, a lead.
+   * 'sedan', nearWheels: 'whole', driver: 'extra', paint: TWINS.gasPaint, roadAhead: 34, roadBehind: 26, engineRun: running}`, a lead.
    */
   bottom?: TwinCar | false;
   /** Both twins' speed keys (rev/s; a car's own `driving` wins). Default: standing. Key on one clock across a run. */
@@ -204,18 +204,26 @@ const autoFoot = (drv: SpeedKey[]): FootKey[] => {
   return out;
 };
 
+/**
+ * How far each lane's street runs ahead of and behind the car (m), and the highway block's half-length: past every
+ * framing's frame edges (the widest, 'wide' at distance 70, sees ≈ x −22 to +12 at the storefronts' depth), so shops,
+ * trees, snowbanks, posts and lane paint enter and leave outside the frame, never at a block end in view.
+ */
+const STREET = {ahead: 34, behind: 26, half: 34};
+
 const DEFAULTS: Record<Which, Partial<SlicedCarOptions>> = {
-  top: {variant: 'hybrid', shape: 'sedan', nearWheels: 'whole', driver: 'you', storefronts: true, roadAhead: 14, clusterSpeed: 'auto', roadHalf: 14},
+  top: {variant: 'hybrid', shape: 'sedan', nearWheels: 'whole', driver: 'you', storefronts: true, roadAhead: STREET.ahead, roadBehind: STREET.behind, clusterSpeed: 'auto', roadHalf: STREET.half},
   bottom: {
     variant: 'gas',
     shape: 'sedan',
     nearWheels: 'whole',
     driver: 'extra',
     paint: TWINS.gasPaint,
-    roadAhead: 14,
+    roadAhead: STREET.ahead,
+    roadBehind: STREET.behind,
     storefronts: false,
     clusterSpeed: 'auto',
-    roadHalf: 14,
+    roadHalf: STREET.half,
     engineRun: [{at: -1, on: true}],
   },
 };
@@ -241,6 +249,9 @@ const carBase = (p: Partial<CityTwinSceneProps>, w: Which, fps: number): Partial
   }));
   const o: Partial<SlicedCarOptions> = {
     ...DEFAULTS[w],
+    // the highway's block (its front face nearer the cars than the city's) thinner on top, so the gas twin's roof under
+    // it stays whole at the far framings (owner: "the gas car seems to be cut")
+    ...(road === 'highway' && w === 'top' ? {roadDepth: 0.35} : {}),
     mood: p.mood ?? 'day',
     dressing: p.dressing,
     road,
@@ -532,7 +543,7 @@ export const CityTwinScene: React.FC<CityTwinSceneProps> = (props) => {
           <group key={w} position={[0, laneY(props, w), 0]}>
             <SlicedCar {...(car as SlicedCarOptions)} cameraDistance={camD} />
             {(props.road ?? 'city') === 'highway' ? (
-              <VergePosts scroll={simRevs(car as SlicedCarOptions, t, fps) * WHEEL_C} half={(car as SlicedCarOptions).roadHalf ?? 14} />
+              <VergePosts scroll={simRevs(car as SlicedCarOptions, t, fps) * WHEEL_C} half={(car as SlicedCarOptions).roadHalf ?? STREET.half} />
             ) : null}
             {lead ? (
               <DrivingCar

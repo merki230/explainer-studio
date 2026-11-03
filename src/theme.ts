@@ -799,7 +799,7 @@ export const CHARGE = {
  *    taupe over the gas twin). Nothing here is the system.
  */
 export const TWINS = {
-  gasPaint: '#6b7078',
+  gasPaint: '#6a5a4c',
 };
 
 export const WINTER = {

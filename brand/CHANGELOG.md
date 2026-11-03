@@ -2,6 +2,27 @@
 
 Every change to `brand.md` or `style-guide.md` gets a line here: date, what changed, why (pointing to a `feedback.md` entry or a research section). Nothing changes silently.
 
+## style-guide v0.18.6 · 2026-11-02 · Thumbnail A/B test on Part 1 (owner decision)
+
+Owner decision of 2026-11-02 ("Let's test"), relayed by the main session (✅). Logged in `feedback.md` ("Owner decision · thumbnail A/B test on Part 1").
+
+- **What changed:** § 11.9.1 now carries a one-time exception for `datacenter-water`. YouTube Test & compare runs A (3D, as specced) against B (a frame of the real opening, with the brand masks, grade, same text, layout and keep-outs).
+- **B's files:** git-ignored in `out/datacenter-water/raw/`, because the repo is public and the stock licence bans redistributing the frame.
+- **Other videos:** stay 3D.
+- **What decides next:** the result decides the long-form thumbnail style from Part 2 on. The owner confirms.
+
+## style-guide v0.18.5 · 2026-11-02 · `TWINS.gasPaint` final: `#6a5a4c`
+
+Visual-reviewer finding, relayed by the main session: with the tags hidden, the hybrid `#9fb0c4` and the gas twin `#6b7078` read only subtly apart at phone size, because the gas car is mostly pale cut face. Brand-director pick, value 🧪; the scene-builder applies it in `theme.ts`.
+
+- **§ 1, `TWINS.gasPaint` → `#6a5a4c`** (28°, 16%, 36%; L\* ≈ 39), a dark warm grey.
+  - **Against the hybrid:** ≈ 31 L\* apart and opposite temperature, so it reads by value even for colour-blind viewers.
+  - **Against FRIEND's car `#575c64`:** opposite hue, ΔE ≈ 14.
+  - **Reserved band:** inside the band's hue range but at 16% saturation, far under the 60% floor.
+  - **Near `WINTER.bark`** (ΔE ≈ 7): accepted, since they never share a scene.
+- **Fallback:** deep slate `#4a5d72`.
+- **Re-still:** `stack` and `twinBrakes` with the tags hidden.
+
 ## style-guide v0.18.4 · 2026-11-02 · Long-form thumbnail
 
 Brand-director spec on the main session's request. It fills § 11.9's "not specced yet". No owner decision involved; the owner picks the text and approves the render. Values 🧪.
