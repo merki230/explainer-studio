@@ -4,13 +4,14 @@ DRAFT. Handle: `@thesecretlyworks` on all three. Master: `release/flock-camera.m
 
 ## Titles (YouTube Shorts)
 
-1. **How does a plate camera know your car?** (39 characters, the on-screen title, the question people ask) **<- pick**
+1. **Flock cameras don't just read your plate** (40 characters, the video's first line and the cover text) **<- pick (owner, 2026-11-05)**
+1b. How does a plate camera know your car? (39, the on-screen title)
 2. A plate camera can find a car without its plate (48)
 3. The plate is the old part. What's the new one? (46)
 4. Color, make, roof rack: how a camera labels a car (49)
 5. Do you know how long a plate camera keeps photos? (50)
 
-Title 1 matches the title block in the video and claims nothing. Title 2 keeps "can" and is the company's own claim. TikTok and Instagram have no title field; they use the captions.
+Title 1 is the hook line, word for word, and names the product the story is about. Title 1b matches the title block in the video. Title 2 keeps "can" and is the company's own claim. TikTok and Instagram have no title field; they use the captions.
 
 ## Description (YouTube)
 
@@ -108,7 +109,7 @@ Follows the video's opening guess ("you'd guess the camera looks your plate up i
 
 ## Cover
 
-`spec.cover` does not exist in `src/videos/flock-camera/spec.ts`, so `yarn cover flock-camera` has nothing to render and `release/cover.png` is missing. Not added: `spec.ts` belongs to the director. Proposal for the director (same pattern as hybrid-city and insurance-app, a frozen frame with the hook line in the sky band): **frame 222 (7.4 s)**, the detail box up over the car with the chips MAKE, LIGHT BLUE, SUV, ROOF RACK, the roof rack and the plate 8KTR 214 in view, the camera at the lower right. It reads at thumbnail size as "a car with labels on it". Cover text (two lines, inside the 3:4 crop): `A plate camera` / `reads more than the plate`. Alternate: `The plate is the old part` / `What's the new one?`. Both keep to the script's own claims. Until then, upload nothing as cover on TikTok and Instagram, or pick a frame in the app. A still of frame 222 was rendered for checking to `out/flock-camera/raw/stills/frame-222.png` (scratch, git-ignored).
+`release/cover.png` (`yarn cover flock-camera`): frame 222's street framing, YOU's car with the roof rack at the red light, the plate outlined in orange, the plate-camera pole beside it. Text (owner's pick, 2026-11-05): `Flock cameras` / `don't just read your plate`, the video's first line. The detail box can't show on a `city-slice` cover yet, so the frame has none.
 
 <!-- youtube-frame: 222 -->
 - **YouTube Shorts frame:** **7.4 s (frame 222)**: the same frame as the cover proposal, the four chips fully landed under the photo and the voice on "rack" (7.2 s). The title block (`NO. 015`) is still on screen. It shows the idea with no extra words. Checked on a rendered still (1080x1920); after the final render exists, `yarn package flock-camera` writes `release/youtube-frame.png`.

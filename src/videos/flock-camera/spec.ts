@@ -661,7 +661,7 @@ const COVER_PROPS = (() => {
 
 export const spec: VideoSpec = {
   cover: {
-    text: 'A plate camera\nreads more than the plate',
+    text: 'Flock cameras\ndon\'t just read your plate',
     size: 130,
     scene: 'city-slice',
     camera: nudge(framingOnPath(PATH_A, COVER_F / 30), 0, -1.3, 0, 15),
