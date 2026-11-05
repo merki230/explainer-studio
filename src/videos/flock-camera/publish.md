@@ -15,11 +15,11 @@ Title 1 is the hook line, word for word, and names the product the story is abou
 
 ## Description (YouTube)
 
-How does a plate camera know your car?
+Flock cameras don't just read your plate.
 
 Reading the plate is the old part. The newer trick is something else.
 
-Before this video, what did you think a plate camera reads?
+Should drivers be able to see what a plate camera saved about their car?
 
 Illustrative: the street corner, the car, the plate 8KTR 214, the street and camera names, the search screen and the saved-record screens, the grid of training car photos and the time of day are an example, not a real camera, car or search. The pole and the camera are a generic design, not a real device. The orange boxes, the labels on the photo and the retention bar are drawings of how the data works, not what any one system's screen looks like.
 
