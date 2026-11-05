@@ -54,7 +54,7 @@ How does a plate camera know your car?
 
 Reading the plate is the old part. The newer trick is something else.
 
-Before this, what did you think a plate camera reads?
+Should drivers be able to see what a plate camera saved about their car?
 
 Illustrative scene. Sources: YouTube description.
 
@@ -64,7 +64,7 @@ How does a plate camera know your car, not just your plate?
 
 One photo of a car at a corner, and the plate is only part of what gets saved.
 
-Before this, what did you think a plate camera reads?
+Should drivers be able to see what a plate camera saved about their car?
 
 Illustrative scene. Sources: YouTube description.
 
@@ -76,36 +76,36 @@ Illustrative scene. Sources: YouTube description.
 
 ## Pinned comment
 
-Sources are in the description. Flock's own pages and letters are the source for what the company says its cameras label (make, color, body type, roof rack, "not car registration data") and for the seven-day default for new police customers since August 2026; the plate-reading and training steps come from a US Justice Department guide, a Homeland Security technical note, Google and Stanford Cars dataset pages, and one state's legal definition. The plate and scene are illustrative. If you've looked up a plate camera's retention number where you live, how many days did it say?
+Sources are in the description. Flock's own pages and letters are the source for what the company says its cameras label (make, color, body type, roof rack, "not car registration data") and for the seven-day default for new police customers since August 2026; the plate-reading and training steps come from a US Justice Department guide, a Homeland Security technical note, Google and Stanford Cars dataset pages, and one state's legal definition. The plate and scene are illustrative. Each sighting is saved with the plate, labels, time and place. Should drivers be able to see what a camera saved about their own car? Vote in the poll.
 
 ## Poll
 
-Follows the video's opening guess ("you'd guess the camera looks your plate up in registration records") and is about the mechanism, not about policing. Two opposite answers, no middle, no opt-out, same answers on every platform. Neither answer claims more than the sources: the video says the company describes both the plate and the car, and says each is read from the photo.
+Owner's pick (2026-11-05): a fair, grown-up question about transparency that follows from the video (each sighting is saved with the plate, labels, time and place). It asks about access to one's own record, not about policing, crime, police use or politics. Two opposite answers, no middle, no opt-out, same answers on every platform.
 
-**Question:** Before this, what did a plate camera read?
+**Question:** Should drivers be able to see what a plate camera saved about their car?
 
-**Answers:** Just the plate / The car too
+**Answers:** Yes / No
 
-**TikTok** (add to the posted video; paste as is):
+**TikTok** (add to the posted video; paste as is; short form in case the field cuts it):
 
-- Question: `Before this, what did a plate camera read?`
-- Option 1: `Just the plate`
-- Option 2: `The car too`
+- Question: `Should drivers be able to see what a plate camera saved about their car?` (short: `Should you see what a camera saved about your car?`)
+- Option 1: `Yes`
+- Option 2: `No`
 
 **Instagram** (2-option poll sticker on the Reel, or on a Story that shares the Reel; paste as is):
 
-- Sticker question: `Before this, what did a plate camera read?`
-- Options: `Just the plate` / `The car too`
+- Sticker question: `Should you see what a camera saved about your car?`
+- Options: `Yes` / `No`
 
 **YouTube** (Posts tab, poll post published right after the Short; paste as is):
 
-- Post text: `Before this, what did you think a plate camera reads? (Short: <paste the Short link>)`
-- Option 1: `Just the plate`
-- Option 2: `The car too`
+- Post text: `Should drivers be able to see what a plate camera saved about their car? (Short: <paste the Short link>)`
+- Option 1: `Yes`
+- Option 2: `No`
 
 **Emoji fallback** (separate comment, not an edit of the pinned one, on any platform where the sticker is missing):
 
-> Quick vote: before this video, what did you think a plate camera reads? Reply with the license plate emoji for just the plate, or the car emoji for the car too.
+> Quick vote: should drivers be able to see what a plate camera saved about their car? Reply with a thumbs up for yes, or a thumbs down for no.
 
 ## Cover
 
@@ -121,6 +121,6 @@ Follows the video's opening guess ("you'd guess the camera looks your plate up i
 - **TikTok:** More options, AI-generated content: **on**. Paste the TikTok caption plus hashtags (not the YouTube description). Add the poll after posting.
 - **Instagram:** Advanced settings, AI label: **on**. Paste the Instagram caption plus hashtags. Add the poll sticker.
 - No "Full sources: link in profile" line anywhere. No asset-credit line.
-- Paste the pinned comment right after posting and pin it. Keep replies to the mechanism and the sources; no police, crime or policy debate in the thread.
+- Paste the pinned comment right after posting and pin it. Keep replies to the mechanism, the sources and the transparency question; no police, crime or political debate in the thread.
 - Publish the YouTube poll post right after the Short.
 - Open `release/youtube-frame.png` and check the title-block number (No. 015) is still right: `blade-battery` was also in progress.
