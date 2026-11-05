@@ -19,8 +19,13 @@ import {anchorOnScreen, withFormat} from './anchors';
 import {MOODS} from '../theme';
 import {StreetBox} from './streetBoxes';
 import {drawTripApp} from './tripAppKit';
+import {CameraViewBox, SearchBox, SettingsBox, type CameraBoxProps} from './CameraBoxes';
 
-export type DetailBoxProps = {
+/**
+ * No. 015 contents ('camera-view', 'search', 'settings'; see `CameraBoxes.tsx`): what a plate camera captured (leader to
+ * the scene's 'lens' anchor by default) and the office monitor's search and settings screens (leader to 'monitor').
+ */
+export type DetailBoxProps = CameraBoxProps & {
   /** Whose phone it magnifies (the scene's `ui` script for them drives what it shows); for 'dashboard', the driver. Default 'you'. */
   who?: CastName;
   /**
@@ -39,7 +44,10 @@ export type DetailBoxProps = {
     | 'usage'
     | 'register'
     | 'dispatch-map'
-    | 'trip-app';
+    | 'trip-app'
+    | 'camera-view'
+    | 'search'
+    | 'settings';
   /**
    * 'dispatch-map' (No. 009, any scene with anchors): a generic dispatcher's map, read like a screen. A rough
    * orange circle over the highway (approximate: soft rim, breathing ±4%) collapses over 0.6 s to an orange
@@ -171,7 +179,13 @@ const boxTopFor = (L: OverlayLayout, left: number, outerW: number, outerH: numbe
 type SceneCtx = {props: Partial<SectionRoomSceneProps>; durationInFrames: number; offset: number; name?: string};
 
 export const DetailBox: React.FC<DetailBoxProps & {mood?: Mood; scene: SceneCtx}> = (p) =>
-  p.content === 'trip-app' ? (
+  p.content === 'camera-view' ? (
+    <CameraViewBox {...p} scene={{...p.scene, props: p.scene.props as Record<string, unknown>}} />
+  ) : p.content === 'search' ? (
+    <SearchBox {...p} scene={{...p.scene, props: p.scene.props as Record<string, unknown>}} />
+  ) : p.content === 'settings' ? (
+    <SettingsBox {...p} scene={{...p.scene, props: p.scene.props as Record<string, unknown>}} />
+  ) : p.content === 'trip-app' ? (
     <TripBox {...p} />
   ) : p.content === 'dispatch-map' ? (
     <DispatchBox {...p} />

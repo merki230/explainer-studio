@@ -2,6 +2,30 @@
 
 Every change to `brand.md` or `style-guide.md` gets a line here: date, what changed, why (pointing to a `feedback.md` entry or a research section). Nothing changes silently.
 
+## style-guide v0.18.8 · 2026-11-05 · `flock-camera`: camera-view photo is a 3D render
+
+The owner judged the hand-drawn 2D car photo in the No. 015 camera-view box too crude ("the car photo need to be improve"). It was replaced with renders of the scene's own 3D car, and the owner approved the result. Value 🧪.
+
+- **§ 6, "Detail box: what a camera captured", content:** was "a flat, crisp 2D drawing". Now the photo is a render of the scene's own 3D car (same paint, parts, plate), taken from the camera's position and baked as stills.
+  - **Covers:** the colour still, the IR close-up (neutral greys, plate the brightest at ≤ 244), the training grid (renders of our existing car shapes in theme paints) and the record thumbnail.
+  - **Marks:** the orange marks are the car's parts projected through the same camera.
+  - **Allowed:** a still may add a small blank make badge the scene car lacks, so the `MAKE` mark has something to frame.
+  - **Tool:** helper composition `zz-camera-snapshot` (`src/scenes/CameraSnapshotStill.tsx`) re-renders the stills.
+
+## style-guide v0.18.7 · 2026-11-03 · `flock-camera` rulings: camera-view box, IR in orange, roof rack
+
+Brand-director rulings on the director's F3, F12 and N2 (`flock-camera/av-script.md`), relayed by the main session. Values 🧪. The owner's decisions of 2026-11-03 (F1 title block faded at ≈ 9 s, F2 blank badge chip, F7 `7 DAYS` / "New police customers", F13 plain office extra) are video-level and recorded in the A/V script. No brand rule changes for them.
+
+- **§ 6, new row "Detail box: what a camera captured":** allowed.
+  - **Box:** tab `DETAIL`, leader to the lens.
+  - **Content:** a 2D view matching the 3D car; the IR still in neutral greys.
+  - **Colour:** orange only for the marks (outline boxes, scan band, saved edge). Chips are ink on paper, ≥ 28 px, with no real UI look.
+  - **Rules:** no readable face; illustrative, disclosed.
+- **§ 5, new row "Invisible light that is the system":** the IR flash is orange because the voice says it can't be seen.
+  - **Drawing:** a faint halo-only cone, ≤ 25%, pulses ≤ 0.6 s; the LED ring turns orange.
+  - **Limits:** no spill; the plate brightens neutrally; never across the cast. Ink outline is the fallback.
+- **§ 1, Roof rack:** reuses `CHARGE.cabinetDark` `#2a2d32` (matte powder coat). No new token.
+
 ## style-guide v0.18.6 · 2026-11-02 · Thumbnail A/B test on Part 1 (owner decision)
 
 Owner decision of 2026-11-02 ("Let's test"), relayed by the main session (✅). Logged in `feedback.md` ("Owner decision · thumbnail A/B test on Part 1").

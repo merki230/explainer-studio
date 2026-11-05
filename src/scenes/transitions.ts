@@ -51,6 +51,8 @@ const SECTION_DEFAULT_LOCATION: Record<string, string> = {
   'town-slice': 'town',
   // No. 014: the corner as a twin section; the winter dressing is its own location (re-dressing slides)
   'city-twin': 'city-twin',
+  // No. 015: the records sheet (server room and office on one sheet)
+  'records-slice': 'records',
 };
 
 /** Frames of a horizontal video's `slide` (§ 11.6: 24, cubic in-out). */

@@ -500,7 +500,7 @@ const insurerState = (p: Partial<ReportSliceSceneProps>, t: number) => {
 
 // ---------------------------------------------------------------- set pieces
 
-const useOfficeMats = (mood: Mood) =>
+export const useOfficeMats = (mood: Mood) =>
   useMemo(() => {
     const m = MOODS[mood];
     const std = (c: string, r = 0.85, metal = 0) => new THREE.MeshStandardMaterial({color: raw(c), roughness: r, metalness: metal});
@@ -536,10 +536,10 @@ const useOfficeMats = (mood: Mood) =>
       module: std(REAL.receiver, 0.5, 0.2),
     };
   }, [mood]);
-type OfficeMats = ReturnType<typeof useOfficeMats>;
+export type OfficeMats = ReturnType<typeof useOfficeMats>;
 
 /** A cut office block (§ 3): floor slab, back and left walls, cut on top and at the front, hatched and inked. */
-const OfficeBlock: React.FC<{w: number; d: number; floor: THREE.Material; mats: OfficeMats; ink: number}> = ({w, d, floor, mats, ink}) => {
+export const OfficeBlock: React.FC<{w: number; d: number; floor: THREE.Material; mats: OfficeMats; ink: number}> = ({w, d, floor, mats, ink}) => {
   const x0 = -w / 2;
   const x1 = w / 2;
   const z0 = -d / 2;
@@ -651,7 +651,7 @@ const Sheet: React.FC<{pos: V3; tilt?: number; yaw?: number; stamped?: boolean; 
   </group>
 );
 
-const Desk: React.FC<{size: [number, number, number]; mats: OfficeMats; top?: THREE.Material}> = ({size: [w, h, d], mats, top}) => (
+export const Desk: React.FC<{size: [number, number, number]; mats: OfficeMats; top?: THREE.Material}> = ({size: [w, h, d], mats, top}) => (
   <group>
     <mesh geometry={roundedBox(w, 0.035, d, 0.008)} material={top ?? mats.desk} position={[0, h - 0.0175, 0]} castShadow receiveShadow />
     {[-1, 1].map((sx) =>
@@ -665,7 +665,7 @@ const Desk: React.FC<{size: [number, number, number]; mats: OfficeMats; top?: TH
 );
 
 /** An office chair: five-star base, column, seat and back; its back toward `yaw` + π. */
-const Chair: React.FC<{mats: OfficeMats; yaw?: number}> = ({mats, yaw = 0}) => (
+export const Chair: React.FC<{mats: OfficeMats; yaw?: number}> = ({mats, yaw = 0}) => (
   <group rotation={[0, yaw, 0]}>
     {[0, 1, 2, 3, 4].map((i) => (
       <mesh key={i} material={mats.dark} position={[Math.sin((i * 2 * Math.PI) / 5) * 0.14, 0.05, Math.cos((i * 2 * Math.PI) / 5) * 0.14]} rotation={[0, (i * 2 * Math.PI) / 5, 0]}>
@@ -681,7 +681,7 @@ const Chair: React.FC<{mats: OfficeMats; yaw?: number}> = ({mats, yaw = 0}) => (
 );
 
 /** A monitor on a foot; its screen faces +z (dark, or `lit` blank). */
-const Monitor: React.FC<{mats: OfficeMats; lit?: boolean}> = ({mats, lit = false}) => (
+export const Monitor: React.FC<{mats: OfficeMats; lit?: boolean}> = ({mats, lit = false}) => (
   <group>
     <mesh material={mats.dark} position={[0, 0.008, 0]}>
       <boxGeometry args={[0.2, 0.016, 0.16]} />
@@ -779,7 +779,7 @@ const Printer: React.FC<{mats: OfficeMats; sheets: ReturnType<typeof useSheetMat
   );
 };
 
-const FilingCabinet: React.FC<{mats: OfficeMats}> = ({mats}) => (
+export const FilingCabinet: React.FC<{mats: OfficeMats}> = ({mats}) => (
   <group>
     <mesh geometry={roundedBox(0.46, 1.3, 0.6, 0.01)} material={mats.cabinet} position={[0, 0.65, 0]} castShadow receiveShadow />
     {[0, 1, 2, 3].map((i) => (
@@ -790,7 +790,7 @@ const FilingCabinet: React.FC<{mats: OfficeMats}> = ({mats}) => (
   </group>
 );
 
-const Plant: React.FC<{mats: OfficeMats}> = ({mats}) => (
+export const Plant: React.FC<{mats: OfficeMats}> = ({mats}) => (
   <group>
     <mesh material={mats.pot} position={[0, 0.2, 0]} castShadow>
       <cylinderGeometry args={[0.17, 0.13, 0.4, 20]} />

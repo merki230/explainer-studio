@@ -1,6 +1,7 @@
 import React from 'react';
 import {Composition} from 'remotion';
 import {Cover} from './Cover';
+import {CAMERA_SNAPSHOT_COMPOSITION, CameraSnapshotStill} from './scenes/CameraSnapshotStill';
 import {ERROR_CARD_FRAMES, Explainer, type ExplainerProps, safeTimelineFor} from './Explainer';
 import {FPS, FRAMES} from './theme';
 import {VIDEOS} from './videos';
@@ -15,6 +16,8 @@ const frameOf = (format?: 'vertical' | 'horizontal') => FRAMES[format ?? 'vertic
 
 export const Root: React.FC = () => (
   <>
+    {/* zz- helper (scene-builder, No. 015): the plate camera's stills, rendered once to src/videos/<slug>/snapshots/ */}
+    <Composition {...CAMERA_SNAPSHOT_COMPOSITION} component={CameraSnapshotStill} fps={FPS} />
     {Object.keys(VIDEOS).flatMap((id) => {
       const {spec} = VIDEOS[id];
       const covers: {key: string; short?: number; width: number; height: number}[] = [];

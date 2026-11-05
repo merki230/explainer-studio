@@ -1,0 +1,15 @@
+[calm] Flock cameras don't just read your plate.
+The company says they also pick out your car's make, color and even a roof rack.
+You'd guess the camera looks your plate up in registration records.
+But in its own letter, the company says those details come from analyzing the photo, not from car registration data.
+Reading the plate is the old part...
+A plate reader can light it with infrared you can't see, and software reads the letters by their shape.
+Telling the make and color is the newer trick...
+After training on large sets of labeled car photos, software can learn to do it.
+Each sighting is then saved with its plate text, its labels, and when and where the car passed.
+A search can ask for a color and make at a certain place and time, and get back the sightings whose labels match.
+The company says a paper, covered or missing plate doesn't stop the search from finding the car.
+The labels can match without the plate.
+Flock's default for keeping saved sightings used to be thirty days, and since August 2026 it's seven for new police customers.
+The company says whoever runs the camera can pick another number, within the law.
+[curious] If there's one near you, do you know which number it uses?

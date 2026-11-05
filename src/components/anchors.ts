@@ -12,6 +12,7 @@ import {dcAnchorOnScreen, type DatacenterSliceSceneProps} from '../scenes/Datace
 import {labAnchorOnScreen, type SectionLabSceneProps} from '../scenes/SectionLabScene';
 import {townAnchorOnScreen, type TownSliceSceneProps} from '../scenes/TownSliceScene';
 import {cityTwinAnchorOnScreen, type CityTwinSceneProps} from '../scenes/CityTwinScene';
+import {recordsAnchorOnScreen, type RecordsSliceSceneProps} from '../scenes/RecordsSliceScene';
 import {streetAnchorOnScreen, type StreetSliceSceneProps} from '../scenes/StreetSliceScene';
 import {towerAnchorOnScreen, type TowerSliceSceneProps} from '../scenes/TowerSliceScene';
 import type {Format} from '../theme';
@@ -44,6 +45,7 @@ export const ANCHOR_SCENES = [
   'town-slice',
   'section-lab',
   'city-twin',
+  'records-slice',
 ];
 
 /**
@@ -65,6 +67,8 @@ export const ANCHOR_SCENES = [
  * 'ponds', 'house', 'field', 'fence', 'dcRoof', 'plantTower', 'meter'. `section-lab` (heat bench): 'clock', 'bar:jug1' |
  * 'bar:jug2' | 'bar:heater', 'jug1', 'jug2', 'heater'. `city-twin` (No. 014): '<part>:top|bottom' for 'engine', 'motor', 'battery',
  * 'inverter', 'nose', 'tail', 'top' (= 'roof', car tags), 'frontWheel', 'rearWheel', 'cluster', 'head'; 'lead:*', 'signal:*', 'lane:*'.
+ * `records-slice` (No. 015): 'rack', 'monitor', 'desk', 'head', 'slab:n', 'tick:n', 'rulerEnd', 'ruler'. `city-slice` also (No. 015):
+ * 'plate[:k]', 'rack[:k]', 'tail[:k]', 'lens', 'ledRing', 'antenna', 'modem', 'battery', 'housing', 'pole', 'ghost'.
  * `car-slice` also: 'engine', 'motor', 'battery', 'inverter', 'nose', 'tail', 'roof', 'frontWheel', 'rearWheel'. Undefined elsewhere
  * or for an unknown name.
  */
@@ -100,5 +104,6 @@ export const anchorOnScreen = (
     return townAnchorOnScreen(scene.props as Partial<TownSliceSceneProps>, anchor, o);
   if (scene.name === 'section-lab') return labAnchorOnScreen(scene.props as Partial<SectionLabSceneProps>, anchor, o);
   if (scene.name === 'city-twin') return cityTwinAnchorOnScreen(scene.props as Partial<CityTwinSceneProps>, anchor, o);
+  if (scene.name === 'records-slice') return recordsAnchorOnScreen(scene.props as Partial<RecordsSliceSceneProps>, anchor, o);
   return undefined;
 };

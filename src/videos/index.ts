@@ -37,6 +37,10 @@ import {spec as datacenterWater} from './datacenter-water/spec';
 import datacenterWaterTranscript from './datacenter-water/transcript.json';
 import {spec as hybridCity} from './hybrid-city/spec';
 import hybridCityTranscript from './hybrid-city/transcript.json';
+import {spec as flockCamera} from './flock-camera/spec';
+import flockCameraTranscript from './flock-camera/transcript.json';
+import {spec as bladeBattery} from './blade-battery/spec';
+import bladeBatteryTranscript from './blade-battery/transcript.json';
 // </imports>
 
 export type VideoEntry = {spec: VideoSpec; transcript: Transcript};
@@ -65,5 +69,7 @@ export const VIDEOS: Record<string, VideoEntry> = {
   'insurance-app': {spec: insuranceApp, transcript: insuranceAppTranscript as Transcript},
   'datacenter-water': {spec: datacenterWater, transcript: datacenterWaterTranscript as Transcript},
   'hybrid-city': {spec: hybridCity, transcript: hybridCityTranscript as Transcript},
+  'flock-camera': {spec: flockCamera, transcript: flockCameraTranscript as Transcript},
+  'blade-battery': {spec: bladeBattery, transcript: bladeBatteryTranscript as Transcript},
   // </entries>
 };

@@ -6,6 +6,7 @@ import {Figure} from '../section/Figure';
 import {CAR_LAYOUT, RealCar, type CoupeStyle} from './RealCar';
 import {shellSink, type ShellProfile} from './CarShell';
 import {RealWheel} from './RealWheel';
+import {RoofRack} from './RoofRack';
 
 type V3 = [number, number, number];
 const C = CAR_LAYOUT;
@@ -67,6 +68,16 @@ export const DrivingCar: React.FC<{
    * as given: cap them with `cappedTravel` / `wheelSmear` for a car above `capSpeed`.
    */
   spinSign?: 1 | -1;
+  /** No. 015: a roof rack (`RoofRack`) on the roof. Default false. */
+  roofRack?: boolean;
+  /** No. 015: the plate brightens neutrally, 0 → 1 (`RealCar` `plateBright`: an IR flash reflected). Default 0. */
+  plateBright?: number;
+  /**
+   * No. 015: the driver's glances (seconds into the scene, on the figure's clock): the head turns toward `target`
+   * (car-local metres: x forward, y up, z right; default ahead and to the right, a signal on the far corner) for
+   * `hold` s (default 1.0). Default none.
+   */
+  glances?: {at: number; hold?: number; target?: V3}[];
 }> = ({
   mood,
   at,
@@ -86,6 +97,9 @@ export const DrivingCar: React.FC<{
   axles,
   frontLamps,
   spinSign = -1,
+  roofRack = false,
+  plateBright = 0,
+  glances = [],
 }) => {
   const lampMat = useMemo(
     () =>
@@ -119,10 +133,12 @@ export const DrivingCar: React.FC<{
           tail={tail}
           brake={brake}
           plate={plate}
+          plateBright={plateBright}
           paint={paint}
           shape={shape}
           coupeStyle={shape === 'coupe' ? coupeStyle : undefined}
         />
+        {roofRack ? <RoofRack shape={shape} /> : null}
         {frontLamps !== undefined
           ? [-1, 1].map((sd) => (
               <group key={sd}>
@@ -145,7 +161,12 @@ export const DrivingCar: React.FC<{
             // the whole car's interior sits lower, under its roof (RealCar `whole`)
             position={[C.driver[0], C.driver[1] - C.wholeSink - shellSink(shape), C.driver[2]]}
             rotationY={Math.PI / 2}
-            gestures={[{pose: 'drive', at: -1}]}
+            gestures={[
+              {pose: 'drive', at: -1},
+              ...glances.flatMap((g) => [
+                {pose: 'turn-to' as const, at: g.at, target: g.target ?? ([14, 3.5, 3] as V3), hold: g.hold ?? 1.0, blend: 0.4},
+              ]),
+            ]}
             phone={false}
             hands={[
               [-0.16, 1.02, 0.4],

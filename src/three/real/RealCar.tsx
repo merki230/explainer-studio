@@ -913,6 +913,12 @@ export type RealCarProps = {
   tail?: number;
   /** The plate's invented characters (whole car only; no state name, no logo). */
   plate?: string;
+  /**
+   * No. 015: the plate brightens neutrally, 0 → 1 (whole car only; a plate reflecting a camera's invisible IR flash,
+   * style guide § 5 "Invisible light that is the system": a lighter value of its own colour, never orange, no light
+   * source). Its letters stay dark (the plate's own texture drives the glow). Default 0.
+   */
+  plateBright?: number;
   /** The speed on the cluster's face (mph, default 38). */
   speed?: number;
   /** The tire-pressure symbol on the cluster (default true; false: not drawn). */
@@ -1017,6 +1023,7 @@ export const RealCar: React.FC<RealCarProps> = ({
   whole = false,
   tail = 0,
   plate = '8KTR 214',
+  plateBright = 0,
   speed = 38,
   tireLight = true,
   steeringJitter,
@@ -1199,6 +1206,17 @@ export const RealCar: React.FC<RealCarProps> = ({
     plateTex.key = plate;
     mats.plate.map = plateTex.t;
     mats.plate.needsUpdate = true;
+  }
+  // the IR brightening (No. 015): the plate's own picture as a neutral glow, so the letters stay dark (≤ 244, § 2)
+  {
+    const pm = mats.plate as THREE.MeshStandardMaterial;
+    const k = Math.max(0, Math.min(1, plateBright));
+    if (k > 0 && pm.emissiveMap !== plateTex.t) {
+      pm.emissiveMap = plateTex.t;
+      pm.emissive.setScalar(1);
+      pm.needsUpdate = true;
+    }
+    pm.emissiveIntensity = (0.55 * k) / m.exposure;
   }
   applyEnv(
     env,

@@ -145,7 +145,18 @@ one, reusing every scene and making the Shorts direct cuts); chapter order; hook
 four per part). **New builds expected:** a cut-open data hall, a roof with cooling towers, the water
 treatment / sewer side, a substation and a power plant for Part 2; the report-slice server racks help a little.
 
-## Paused: why many hybrids get better mileage in the city (owner, 2026-11-02)
+## Queue: car/EV focus for growth (owner, 2026-11-03)
+
+The owner wants to grow followers with the topics that work best (cars, EVs, EV vs gas, Tesla vs BYD) and
+diversify later. Picked, in this order unless the owner changes it; angle and hook to agree before research:
+1. BYD's Blade battery vs Tesla's: why one passed the nail-penetration test (Short).
+2. How your car guesses its range: why the "miles left" number keeps changing, EV and gas (Short).
+3. Is an EV really cheaper to own than a gas car? Careful sources, no opinion, no politics (Short).
+Also good, not picked yet: EV winter range loss, auto start-stop at red lights, EV tire wear, cameras vs lidar.
+
+## Ready to post: why many hybrids get better mileage in the city (No. 014, done 2026-11-02)
+
+## Paused (history): why many hybrids get better mileage in the city (owner, 2026-11-02)
 
 **Short only** (owner, 2026-11-02), `src/videos/hybrid-city/`. Hook B: "Most gas cars get their worst mileage in
 stop-and-go traffic. Many hybrids get their best mileage there." Research done (sources.md: EPA sticker pairs, e.g.
