@@ -643,7 +643,31 @@ scenes.forEach((sc, i) => {
   if (extra.length) sc.overlays = [...(sc.overlays ?? []), ...extra];
 });
 
+// ------------------------------------------------------------------ cover
+
+/**
+ * Cover still (`yarn cover flock-camera`, owner's text, option A): frame 222 (7.4 s, "roof rack"), YOU's car with its
+ * rack and the orange plate mark at the red, under the plate-camera pole. The cover draws a detail box only on
+ * `section-room` (`Cover.tsx`), so the video's camera-view box isn't on it; the scene alone carries the frame.
+ */
+const COVER_F = 222;
+const COVER_S2 = Math.round(S.s2 * 30); // scene 2's first rendered frame
+const COVER_PROPS = (() => {
+  const {cameraKeys: _k, transition: _t, ...rest} = A(S.s2);
+  void _k;
+  void _t;
+  return {...rest, drift: 0};
+})();
+
 export const spec: VideoSpec = {
+  cover: {
+    text: 'A plate camera\nreads more than the plate',
+    size: 130,
+    scene: 'city-slice',
+    camera: nudge(framingOnPath(PATH_A, COVER_F / 30), 0, -1.3, 0, 15),
+    at: (COVER_F - COVER_S2) / 30,
+    props: COVER_PROPS,
+  },
   tail: TAIL,
   music: MUSIC,
   scenes,
