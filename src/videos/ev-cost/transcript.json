@@ -1,0 +1,1170 @@
+{
+  "audio": "audio/voiceover.mp3",
+  "words": [
+    {
+      "text": "An",
+      "start": 0.133,
+      "end": 0.16
+    },
+    {
+      "text": "EV",
+      "start": 0.24,
+      "end": 0.56
+    },
+    {
+      "text": "can",
+      "start": 0.68,
+      "end": 0.8
+    },
+    {
+      "text": "cost",
+      "start": 0.96,
+      "end": 1.12
+    },
+    {
+      "text": "less",
+      "start": 1.28,
+      "end": 1.52
+    },
+    {
+      "text": "per",
+      "start": 1.6,
+      "end": 1.68
+    },
+    {
+      "text": "mile",
+      "start": 1.76,
+      "end": 2
+    },
+    {
+      "text": "than",
+      "start": 2.04,
+      "end": 2.08
+    },
+    {
+      "text": "a",
+      "start": 2.16,
+      "end": 2.24
+    },
+    {
+      "text": "gas",
+      "start": 2.4,
+      "end": 2.56
+    },
+    {
+      "text": "car,",
+      "start": 2.64,
+      "end": 3.2
+    },
+    {
+      "text": "or",
+      "start": 3.28,
+      "end": 3.36
+    },
+    {
+      "text": "more.",
+      "start": 3.44,
+      "end": 4.16
+    },
+    {
+      "text": "It",
+      "start": 4.24,
+      "end": 4.32
+    },
+    {
+      "text": "comes",
+      "start": 4.44,
+      "end": 4.56
+    },
+    {
+      "text": "down",
+      "start": 4.64,
+      "end": 4.72
+    },
+    {
+      "text": "to",
+      "start": 4.8,
+      "end": 4.88
+    },
+    {
+      "text": "which",
+      "start": 5,
+      "end": 5.12
+    },
+    {
+      "text": "plug",
+      "start": 5.24,
+      "end": 5.36
+    },
+    {
+      "text": "you",
+      "start": 5.44,
+      "end": 5.52
+    },
+    {
+      "text": "use.",
+      "start": 5.6,
+      "end": 6.32
+    },
+    {
+      "text": "Some",
+      "start": 6.4,
+      "end": 6.56
+    },
+    {
+      "text": "people",
+      "start": 6.72,
+      "end": 6.88
+    },
+    {
+      "text": "swear",
+      "start": 7.04,
+      "end": 7.44
+    },
+    {
+      "text": "an",
+      "start": 7.52,
+      "end": 7.6
+    },
+    {
+      "text": "EV",
+      "start": 7.68,
+      "end": 7.92
+    },
+    {
+      "text": "is",
+      "start": 8,
+      "end": 8.16
+    },
+    {
+      "text": "cheaper",
+      "start": 8.2,
+      "end": 8.4
+    },
+    {
+      "text": "to",
+      "start": 8.48,
+      "end": 8.56
+    },
+    {
+      "text": "run,",
+      "start": 8.72,
+      "end": 9.28
+    },
+    {
+      "text": "others",
+      "start": 9.48,
+      "end": 9.68
+    },
+    {
+      "text": "say",
+      "start": 9.76,
+      "end": 9.84
+    },
+    {
+      "text": "it",
+      "start": 9.92,
+      "end": 10
+    },
+    {
+      "text": "costs",
+      "start": 10.16,
+      "end": 10.4
+    },
+    {
+      "text": "more,",
+      "start": 10.48,
+      "end": 11.12
+    },
+    {
+      "text": "and",
+      "start": 11.2,
+      "end": 11.44
+    },
+    {
+      "text": "they",
+      "start": 11.48,
+      "end": 11.52
+    },
+    {
+      "text": "can",
+      "start": 11.6,
+      "end": 11.76
+    },
+    {
+      "text": "both",
+      "start": 11.88,
+      "end": 12
+    },
+    {
+      "text": "be",
+      "start": 12.08,
+      "end": 12.16
+    },
+    {
+      "text": "right.",
+      "start": 12.28,
+      "end": 13.04
+    },
+    {
+      "text": "Look",
+      "start": 13.12,
+      "end": 13.2
+    },
+    {
+      "text": "at",
+      "start": 13.24,
+      "end": 13.28
+    },
+    {
+      "text": "a",
+      "start": 13.36,
+      "end": 13.44
+    },
+    {
+      "text": "compact",
+      "start": 13.68,
+      "end": 13.92
+    },
+    {
+      "text": "SUV",
+      "start": 14,
+      "end": 14.56
+    },
+    {
+      "text": "that",
+      "start": 14.64,
+      "end": 14.72
+    },
+    {
+      "text": "comes",
+      "start": 14.84,
+      "end": 14.96
+    },
+    {
+      "text": "in",
+      "start": 15.04,
+      "end": 15.12
+    },
+    {
+      "text": "gas",
+      "start": 15.2,
+      "end": 15.6
+    },
+    {
+      "text": "and",
+      "start": 15.72,
+      "end": 15.84
+    },
+    {
+      "text": "electric",
+      "start": 16.08,
+      "end": 16.32
+    },
+    {
+      "text": "versions.",
+      "start": 16.8,
+      "end": 17.333
+    },
+    {
+      "text": "At",
+      "start": 17.387,
+      "end": 17.44
+    },
+    {
+      "text": "today's",
+      "start": 17.56,
+      "end": 17.76
+    },
+    {
+      "text": "prices,",
+      "start": 17.84,
+      "end": 18.693
+    },
+    {
+      "text": "the",
+      "start": 18.747,
+      "end": 18.8
+    },
+    {
+      "text": "gas",
+      "start": 18.96,
+      "end": 19.12
+    },
+    {
+      "text": "one",
+      "start": 19.24,
+      "end": 19.36
+    },
+    {
+      "text": "costs",
+      "start": 19.52,
+      "end": 19.76
+    },
+    {
+      "text": "about",
+      "start": 19.96,
+      "end": 20.16
+    },
+    {
+      "text": "fifteen",
+      "start": 20.2,
+      "end": 20.56
+    },
+    {
+      "text": "cents",
+      "start": 20.72,
+      "end": 20.96
+    },
+    {
+      "text": "a",
+      "start": 21,
+      "end": 21.04
+    },
+    {
+      "text": "mile.",
+      "start": 21.12,
+      "end": 21.84
+    },
+    {
+      "text": "The",
+      "start": 21.88,
+      "end": 21.92
+    },
+    {
+      "text": "electric",
+      "start": 22.16,
+      "end": 22.4
+    },
+    {
+      "text": "version",
+      "start": 22.6,
+      "end": 22.8
+    },
+    {
+      "text": "costs",
+      "start": 22.88,
+      "end": 23.2
+    },
+    {
+      "text": "about",
+      "start": 23.4,
+      "end": 23.6
+    },
+    {
+      "text": "six",
+      "start": 23.72,
+      "end": 23.84
+    },
+    {
+      "text": "cents,",
+      "start": 24,
+      "end": 24.4
+    },
+    {
+      "text": "if",
+      "start": 24.48,
+      "end": 24.56
+    },
+    {
+      "text": "you",
+      "start": 24.6,
+      "end": 24.64
+    },
+    {
+      "text": "charge",
+      "start": 24.72,
+      "end": 24.88
+    },
+    {
+      "text": "it",
+      "start": 24.96,
+      "end": 25
+    },
+    {
+      "text": "at",
+      "start": 25.04,
+      "end": 25.2
+    },
+    {
+      "text": "home",
+      "start": 25.32,
+      "end": 25.44
+    },
+    {
+      "text": "at",
+      "start": 25.52,
+      "end": 25.6
+    },
+    {
+      "text": "the",
+      "start": 25.64,
+      "end": 25.68
+    },
+    {
+      "text": "average",
+      "start": 25.76,
+      "end": 26.08
+    },
+    {
+      "text": "US",
+      "start": 26.16,
+      "end": 26.4
+    },
+    {
+      "text": "rate.",
+      "start": 26.48,
+      "end": 27.28
+    },
+    {
+      "text": "At",
+      "start": 27.36,
+      "end": 27.44
+    },
+    {
+      "text": "a",
+      "start": 27.48,
+      "end": 27.52
+    },
+    {
+      "text": "public",
+      "start": 27.6,
+      "end": 27.84
+    },
+    {
+      "text": "fast",
+      "start": 27.92,
+      "end": 28.16
+    },
+    {
+      "text": "charger,",
+      "start": 28.24,
+      "end": 28.88
+    },
+    {
+      "text": "that",
+      "start": 29,
+      "end": 29.12
+    },
+    {
+      "text": "same",
+      "start": 29.2,
+      "end": 29.44
+    },
+    {
+      "text": "mile",
+      "start": 29.52,
+      "end": 29.84
+    },
+    {
+      "text": "costs",
+      "start": 29.92,
+      "end": 30.24
+    },
+    {
+      "text": "about",
+      "start": 30.4,
+      "end": 30.56
+    },
+    {
+      "text": "seventeen",
+      "start": 30.64,
+      "end": 31.2
+    },
+    {
+      "text": "cents.",
+      "start": 31.36,
+      "end": 32.16
+    },
+    {
+      "text": "Why",
+      "start": 32.24,
+      "end": 32.32
+    },
+    {
+      "text": "do",
+      "start": 32.4,
+      "end": 32.56
+    },
+    {
+      "text": "fast",
+      "start": 32.64,
+      "end": 32.88
+    },
+    {
+      "text": "chargers",
+      "start": 32.96,
+      "end": 33.36
+    },
+    {
+      "text": "cost",
+      "start": 33.48,
+      "end": 33.6
+    },
+    {
+      "text": "so",
+      "start": 33.68,
+      "end": 33.76
+    },
+    {
+      "text": "much",
+      "start": 33.88,
+      "end": 34
+    },
+    {
+      "text": "more?",
+      "start": 34.16,
+      "end": 34.8
+    },
+    {
+      "text": "Many",
+      "start": 34.92,
+      "end": 35.04
+    },
+    {
+      "text": "fast",
+      "start": 35.12,
+      "end": 35.36
+    },
+    {
+      "text": "chargers",
+      "start": 35.44,
+      "end": 35.92
+    },
+    {
+      "text": "pay",
+      "start": 36,
+      "end": 36.08
+    },
+    {
+      "text": "the",
+      "start": 36.12,
+      "end": 36.16
+    },
+    {
+      "text": "utility",
+      "start": 36.24,
+      "end": 36.72
+    },
+    {
+      "text": "an",
+      "start": 36.84,
+      "end": 36.96
+    },
+    {
+      "text": "extra",
+      "start": 37.04,
+      "end": 37.44
+    },
+    {
+      "text": "fee",
+      "start": 37.52,
+      "end": 37.76
+    },
+    {
+      "text": "set",
+      "start": 37.84,
+      "end": 38
+    },
+    {
+      "text": "by",
+      "start": 38.08,
+      "end": 38.16
+    },
+    {
+      "text": "their",
+      "start": 38.28,
+      "end": 38.4
+    },
+    {
+      "text": "busiest",
+      "start": 38.48,
+      "end": 38.88
+    },
+    {
+      "text": "fifteen",
+      "start": 38.96,
+      "end": 39.36
+    },
+    {
+      "text": "minutes",
+      "start": 39.44,
+      "end": 39.68
+    },
+    {
+      "text": "of",
+      "start": 39.72,
+      "end": 39.76
+    },
+    {
+      "text": "the",
+      "start": 39.84,
+      "end": 39.92
+    },
+    {
+      "text": "month.",
+      "start": 40.28,
+      "end": 40.72
+    },
+    {
+      "text": "And",
+      "start": 40.76,
+      "end": 40.8
+    },
+    {
+      "text": "the",
+      "start": 40.88,
+      "end": 40.96
+    },
+    {
+      "text": "average",
+      "start": 41.04,
+      "end": 41.28
+    },
+    {
+      "text": "fast",
+      "start": 41.36,
+      "end": 41.6
+    },
+    {
+      "text": "charger",
+      "start": 41.68,
+      "end": 42.08
+    },
+    {
+      "text": "sits",
+      "start": 42.16,
+      "end": 42.32
+    },
+    {
+      "text": "idle",
+      "start": 42.4,
+      "end": 42.64
+    },
+    {
+      "text": "most",
+      "start": 42.72,
+      "end": 42.88
+    },
+    {
+      "text": "of",
+      "start": 42.96,
+      "end": 43
+    },
+    {
+      "text": "the",
+      "start": 43.04,
+      "end": 43.12
+    },
+    {
+      "text": "day,",
+      "start": 43.36,
+      "end": 43.707
+    },
+    {
+      "text": "so",
+      "start": 43.813,
+      "end": 43.92
+    },
+    {
+      "text": "fewer",
+      "start": 44,
+      "end": 44.24
+    },
+    {
+      "text": "drivers",
+      "start": 44.48,
+      "end": 44.72
+    },
+    {
+      "text": "share",
+      "start": 44.84,
+      "end": 44.96
+    },
+    {
+      "text": "that",
+      "start": 45.04,
+      "end": 45.2
+    },
+    {
+      "text": "fee.",
+      "start": 45.6,
+      "end": 46.107
+    },
+    {
+      "text": "Wherever",
+      "start": 46.213,
+      "end": 46.4
+    },
+    {
+      "text": "you",
+      "start": 46.48,
+      "end": 46.56
+    },
+    {
+      "text": "charge,",
+      "start": 46.64,
+      "end": 47.253
+    },
+    {
+      "text": "an",
+      "start": 47.307,
+      "end": 47.36
+    },
+    {
+      "text": "EV",
+      "start": 47.44,
+      "end": 47.76
+    },
+    {
+      "text": "needs",
+      "start": 47.84,
+      "end": 48.16
+    },
+    {
+      "text": "no",
+      "start": 48.24,
+      "end": 48.48
+    },
+    {
+      "text": "oil",
+      "start": 48.6,
+      "end": 48.72
+    },
+    {
+      "text": "changes,",
+      "start": 48.8,
+      "end": 49.4
+    },
+    {
+      "text": "and",
+      "start": 49.44,
+      "end": 49.52
+    },
+    {
+      "text": "its",
+      "start": 49.6,
+      "end": 49.68
+    },
+    {
+      "text": "brakes",
+      "start": 49.76,
+      "end": 50
+    },
+    {
+      "text": "last",
+      "start": 50.08,
+      "end": 50.32
+    },
+    {
+      "text": "longer",
+      "start": 50.4,
+      "end": 50.72
+    },
+    {
+      "text": "because",
+      "start": 50.8,
+      "end": 51.04
+    },
+    {
+      "text": "the",
+      "start": 51.12,
+      "end": 51.2
+    },
+    {
+      "text": "motor",
+      "start": 51.36,
+      "end": 51.52
+    },
+    {
+      "text": "does",
+      "start": 51.6,
+      "end": 51.76
+    },
+    {
+      "text": "much",
+      "start": 51.84,
+      "end": 51.92
+    },
+    {
+      "text": "of",
+      "start": 51.96,
+      "end": 52
+    },
+    {
+      "text": "the",
+      "start": 52.08,
+      "end": 52.16
+    },
+    {
+      "text": "slowing.",
+      "start": 52.24,
+      "end": 53.24
+    },
+    {
+      "text": "EVs",
+      "start": 53.28,
+      "end": 53.6
+    },
+    {
+      "text": "tend",
+      "start": 53.68,
+      "end": 53.84
+    },
+    {
+      "text": "to",
+      "start": 53.88,
+      "end": 53.92
+    },
+    {
+      "text": "be",
+      "start": 54,
+      "end": 54.16
+    },
+    {
+      "text": "heavier,",
+      "start": 54.2,
+      "end": 54.8
+    },
+    {
+      "text": "so",
+      "start": 54.88,
+      "end": 54.96
+    },
+    {
+      "text": "their",
+      "start": 55.04,
+      "end": 55.12
+    },
+    {
+      "text": "tires",
+      "start": 55.2,
+      "end": 55.52
+    },
+    {
+      "text": "can",
+      "start": 55.6,
+      "end": 55.68
+    },
+    {
+      "text": "wear",
+      "start": 55.76,
+      "end": 55.84
+    },
+    {
+      "text": "out",
+      "start": 55.92,
+      "end": 56.08
+    },
+    {
+      "text": "sooner.",
+      "start": 56.16,
+      "end": 57.08
+    },
+    {
+      "text": "And",
+      "start": 57.12,
+      "end": 57.36
+    },
+    {
+      "text": "the",
+      "start": 57.44,
+      "end": 57.52
+    },
+    {
+      "text": "electric",
+      "start": 57.72,
+      "end": 57.92
+    },
+    {
+      "text": "version",
+      "start": 58,
+      "end": 58.4
+    },
+    {
+      "text": "also",
+      "start": 58.48,
+      "end": 58.8
+    },
+    {
+      "text": "costs",
+      "start": 58.88,
+      "end": 59.2
+    },
+    {
+      "text": "about",
+      "start": 59.28,
+      "end": 59.6
+    },
+    {
+      "text": "six",
+      "start": 59.68,
+      "end": 59.92
+    },
+    {
+      "text": "thousand",
+      "start": 60,
+      "end": 60.32
+    },
+    {
+      "text": "dollars",
+      "start": 60.4,
+      "end": 60.72
+    },
+    {
+      "text": "more",
+      "start": 60.8,
+      "end": 60.96
+    },
+    {
+      "text": "to",
+      "start": 61,
+      "end": 61.04
+    },
+    {
+      "text": "buy.",
+      "start": 61.12,
+      "end": 62.04
+    },
+    {
+      "text": "If",
+      "start": 62.08,
+      "end": 62.12
+    },
+    {
+      "text": "you",
+      "start": 62.16,
+      "end": 62.24
+    },
+    {
+      "text": "charge",
+      "start": 62.4,
+      "end": 62.56
+    },
+    {
+      "text": "mostly",
+      "start": 62.72,
+      "end": 62.88
+    },
+    {
+      "text": "at",
+      "start": 62.96,
+      "end": 63.04
+    },
+    {
+      "text": "home,",
+      "start": 63.12,
+      "end": 63.653
+    },
+    {
+      "text": "the",
+      "start": 63.707,
+      "end": 63.76
+    },
+    {
+      "text": "savings",
+      "start": 63.8,
+      "end": 64.24
+    },
+    {
+      "text": "cover",
+      "start": 64.36,
+      "end": 64.48
+    },
+    {
+      "text": "that",
+      "start": 64.6,
+      "end": 64.72
+    },
+    {
+      "text": "gap",
+      "start": 64.84,
+      "end": 64.96
+    },
+    {
+      "text": "in",
+      "start": 65,
+      "end": 65.04
+    },
+    {
+      "text": "about",
+      "start": 65.12,
+      "end": 65.44
+    },
+    {
+      "text": "three",
+      "start": 65.56,
+      "end": 65.68
+    },
+    {
+      "text": "years.",
+      "start": 65.76,
+      "end": 66.68
+    },
+    {
+      "text": "If",
+      "start": 66.72,
+      "end": 66.8
+    },
+    {
+      "text": "you",
+      "start": 66.88,
+      "end": 66.96
+    },
+    {
+      "text": "only",
+      "start": 67.04,
+      "end": 67.36
+    },
+    {
+      "text": "use",
+      "start": 67.44,
+      "end": 67.6
+    },
+    {
+      "text": "fast",
+      "start": 67.68,
+      "end": 67.92
+    },
+    {
+      "text": "chargers,",
+      "start": 68,
+      "end": 68.84
+    },
+    {
+      "text": "it",
+      "start": 68.88,
+      "end": 68.96
+    },
+    {
+      "text": "can",
+      "start": 69.04,
+      "end": 69.12
+    },
+    {
+      "text": "take",
+      "start": 69.2,
+      "end": 69.28
+    },
+    {
+      "text": "about",
+      "start": 69.36,
+      "end": 69.68
+    },
+    {
+      "text": "seventeen",
+      "start": 69.76,
+      "end": 70.48
+    },
+    {
+      "text": "years.",
+      "start": 70.56,
+      "end": 71.48
+    },
+    {
+      "text": "But",
+      "start": 71.52,
+      "end": 71.84
+    },
+    {
+      "text": "EVs",
+      "start": 71.92,
+      "end": 72.32
+    },
+    {
+      "text": "also",
+      "start": 72.4,
+      "end": 72.72
+    },
+    {
+      "text": "tend",
+      "start": 72.76,
+      "end": 72.88
+    },
+    {
+      "text": "to",
+      "start": 72.96,
+      "end": 73.12
+    },
+    {
+      "text": "lose",
+      "start": 73.24,
+      "end": 73.36
+    },
+    {
+      "text": "value",
+      "start": 73.44,
+      "end": 73.76
+    },
+    {
+      "text": "faster,",
+      "start": 73.84,
+      "end": 74.52
+    },
+    {
+      "text": "and",
+      "start": 74.56,
+      "end": 74.8
+    },
+    {
+      "text": "that",
+      "start": 74.88,
+      "end": 74.96
+    },
+    {
+      "text": "can",
+      "start": 75.08,
+      "end": 75.2
+    },
+    {
+      "text": "cut",
+      "start": 75.28,
+      "end": 75.36
+    },
+    {
+      "text": "into",
+      "start": 75.48,
+      "end": 75.6
+    },
+    {
+      "text": "those",
+      "start": 75.68,
+      "end": 75.76
+    },
+    {
+      "text": "savings.",
+      "start": 75.84,
+      "end": 76.834
+    },
+    {
+      "text": "Which",
+      "start": 77.006,
+      "end": 77.04
+    },
+    {
+      "text": "plug",
+      "start": 77.16,
+      "end": 77.28
+    },
+    {
+      "text": "would",
+      "start": 77.36,
+      "end": 77.44
+    },
+    {
+      "text": "you",
+      "start": 77.52,
+      "end": 77.6
+    },
+    {
+      "text": "use",
+      "start": 77.68,
+      "end": 77.84
+    },
+    {
+      "text": "most?",
+      "start": 77.92,
+      "end": 78.48
+    }
+  ]
+}

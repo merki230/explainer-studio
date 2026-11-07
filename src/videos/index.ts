@@ -41,6 +41,8 @@ import {spec as flockCamera} from './flock-camera/spec';
 import flockCameraTranscript from './flock-camera/transcript.json';
 import {spec as bladeBattery} from './blade-battery/spec';
 import bladeBatteryTranscript from './blade-battery/transcript.json';
+import {spec as evCost} from './ev-cost/spec';
+import evCostTranscript from './ev-cost/transcript.json';
 // </imports>
 
 export type VideoEntry = {spec: VideoSpec; transcript: Transcript};
@@ -71,5 +73,6 @@ export const VIDEOS: Record<string, VideoEntry> = {
   'hybrid-city': {spec: hybridCity, transcript: hybridCityTranscript as Transcript},
   'flock-camera': {spec: flockCamera, transcript: flockCameraTranscript as Transcript},
   'blade-battery': {spec: bladeBattery, transcript: bladeBatteryTranscript as Transcript},
+  'ev-cost': {spec: evCost, transcript: evCostTranscript as Transcript},
   // </entries>
 };
