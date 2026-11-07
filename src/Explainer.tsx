@@ -43,6 +43,7 @@ import {dcCameraEnd, dcCameraStart, dcCarry} from './scenes/DatacenterSliceScene
 import {townCameraEnd, townCameraStart, townCarry} from './scenes/TownSliceScene';
 import {cityTwinCameraEnd, cityTwinCameraStart, cityTwinCarry} from './scenes/CityTwinScene';
 import {recordsCameraEnd, recordsCameraStart} from './scenes/RecordsSliceScene';
+import {plugSheetCameraEnd, plugSheetCameraStart} from './scenes/PlugSheetScene';
 import {REVEALS} from './scenes/openingReveal';
 import type {Framing} from './three/section/SectionCamera';
 
@@ -68,6 +69,7 @@ const CAMERAS: Record<string, {start: CameraFn; end: CameraFn}> = {
   'town-slice': {start: townCameraStart as CameraFn, end: townCameraEnd as CameraFn},
   'city-twin': {start: cityTwinCameraStart as CameraFn, end: cityTwinCameraEnd as CameraFn},
   'records-slice': {start: recordsCameraStart as CameraFn, end: recordsCameraEnd as CameraFn},
+  'plug-sheet': {start: plugSheetCameraStart as CameraFn, end: plugSheetCameraEnd as CameraFn},
 };
 import {transitionInto, type Transition} from './scenes/transitions';
 import {clickOffFrame, type ClickOff} from './scenes/clickOff';

@@ -77,6 +77,9 @@ export const capOutline = (pts: P2[], phi: number, off: number): V3[] => {
   return pts.map(([a, r]) => [a, r * Math.cos(phi) + t[1] * off, r * Math.sin(phi) + t[2] * off] as V3);
 };
 
+/** A pad piece's side of the disc (its key: 'out…' outboard, 'in…' inboard). */
+const sideOf = (k: string): 'out' | 'in' => (k.startsWith('out') ? 'out' : 'in');
+
 const rect = (a0: number, a1: number, r0: number, r1: number): P2[] => [
   [a0, r0],
   [a1, r0],
@@ -215,10 +218,12 @@ export type BrakeCornerProps = {
   /** The wheel's lit metal materials (shared reflections and albedo). */
   mats: {disc: THREE.MeshPhysicalMaterial; caliper: THREE.Material; dark: THREE.Material};
   low?: boolean;
+  /** No. 016 (N6): the pads close their hairline gaps onto the disc, 0 (open) → 1 (0.1 of the gap left: no touching faces). Default 0. */
+  squeeze?: number;
 };
 
 /** The brake corner (see the file comment). */
-export const BrakeCorner: React.FC<BrakeCornerProps> = ({wedge, spin, padThickness = 0.03, rust = 0, ink, mats, low, open = true}) => {
+export const BrakeCorner: React.FC<BrakeCornerProps> = ({wedge, spin, padThickness = 0.03, rust = 0, ink, mats, low, open = true, squeeze = 0}) => {
   const [w0, w1] = wedge;
   const T = padThickness;
   const own = useMemo(
@@ -303,14 +308,14 @@ export const BrakeCorner: React.FC<BrakeCornerProps> = ({wedge, spin, padThickne
     const c2 = w0 + BRAKE.caliperSpan;
     const p2a = Math.max(w1 + 0.014, w0 + 0.014);
     const pads2 = open && p2a < w0 + BRAKE.padSpan;
-    const solids: {g: THREE.BufferGeometry; m: 'disc' | 'caliper' | 'friction' | 'backing'}[] = [
+    const solids: {g: THREE.BufferGeometry; m: 'disc' | 'caliper' | 'friction' | 'backing'; side?: 'out' | 'in'}[] = [
       {g: revolveProfile(disc.outer, rest[0], rest[1], segs), m: 'disc'},
       {g: revolveProfile(disc.inner, rest[0], rest[1], segs), m: 'disc'},
       {g: revolveProfile(hat, rest[0], rest[1], segs), m: 'disc'},
       {g: revolveProfile(body, c0, c1, 24), m: 'caliper'},
       ...(open ? [{g: revolveProfile(piston, c0 + 0.1, w0, 16), m: 'backing' as const}] : []),
-      ...(['outF', 'inF'] as const).map((k) => ({g: revolveProfile(pads[k], p0, p1, 16), m: 'friction' as const})),
-      ...(['outB', 'inB'] as const).map((k) => ({g: revolveProfile(pads[k], p0, p1, 16), m: 'backing' as const})),
+      ...(['outF', 'inF'] as const).map((k) => ({g: revolveProfile(pads[k], p0, p1, 16), m: 'friction' as const, side: sideOf(k)})),
+      ...(['outB', 'inB'] as const).map((k) => ({g: revolveProfile(pads[k], p0, p1, 16), m: 'backing' as const, side: sideOf(k)})),
       ...(back2
         ? [
             {g: revolveProfile(body, w1, c2, 24), m: 'caliper' as const},
@@ -319,28 +324,28 @@ export const BrakeCorner: React.FC<BrakeCornerProps> = ({wedge, spin, padThickne
         : []),
       ...(pads2
         ? [
-            ...(['outF', 'inF'] as const).map((k) => ({g: revolveProfile(pads[k], p2a, w0 + BRAKE.padSpan, 16), m: 'friction' as const})),
-            ...(['outB', 'inB'] as const).map((k) => ({g: revolveProfile(pads[k], p2a, w0 + BRAKE.padSpan, 16), m: 'backing' as const})),
+            ...(['outF', 'inF'] as const).map((k) => ({g: revolveProfile(pads[k], p2a, w0 + BRAKE.padSpan, 16), m: 'friction' as const, side: sideOf(k)})),
+            ...(['outB', 'inB'] as const).map((k) => ({g: revolveProfile(pads[k], p2a, w0 + BRAKE.padSpan, 16), m: 'backing' as const, side: sideOf(k)})),
           ]
         : []),
     ];
     // the caliper's and pads' far ends (not cut: their own material)
-    const ends: {g: THREE.BufferGeometry; m: 'caliper' | 'friction' | 'backing'}[] = [
+    const ends: {g: THREE.BufferGeometry; m: 'caliper' | 'friction' | 'backing'; side?: 'out' | 'in'}[] = [
       {g: capProfile(body, c0, -eps), m: 'caliper'},
       ...(open ? [] : [{g: capProfile(body, c1, eps), m: 'caliper' as const}]),
       ...(['outF', 'inF'] as const).flatMap((k) => [
-        {g: capProfile(pads[k], p0, -eps), m: 'friction' as const},
-        {g: capProfile(pads[k], p1, eps), m: 'friction' as const},
+        {g: capProfile(pads[k], p0, -eps), m: 'friction' as const, side: sideOf(k)},
+        {g: capProfile(pads[k], p1, eps), m: 'friction' as const, side: sideOf(k)},
       ]),
       ...(['outB', 'inB'] as const).flatMap((k) => [
-        {g: capProfile(pads[k], p0, -eps), m: 'backing' as const},
-        {g: capProfile(pads[k], p1, eps), m: 'backing' as const},
+        {g: capProfile(pads[k], p0, -eps), m: 'backing' as const, side: sideOf(k)},
+        {g: capProfile(pads[k], p1, eps), m: 'backing' as const, side: sideOf(k)},
       ]),
       ...(back2 ? [{g: capProfile(body, c2, eps), m: 'caliper' as const}] : []),
       ...(pads2
         ? (['outF', 'inF', 'outB', 'inB'] as const).flatMap((k) => [
-            {g: capProfile(pads[k], p2a, -eps), m: (k === 'outF' || k === 'inF' ? 'friction' : 'backing') as 'friction' | 'backing'},
-            {g: capProfile(pads[k], w0 + BRAKE.padSpan, eps), m: (k === 'outF' || k === 'inF' ? 'friction' : 'backing') as 'friction' | 'backing'},
+            {g: capProfile(pads[k], p2a, -eps), m: (k === 'outF' || k === 'inF' ? 'friction' : 'backing') as 'friction' | 'backing', side: sideOf(k)},
+            {g: capProfile(pads[k], w0 + BRAKE.padSpan, eps), m: (k === 'outF' || k === 'inF' ? 'friction' : 'backing') as 'friction' | 'backing', side: sideOf(k)},
           ])
         : []),
     ];
@@ -373,13 +378,16 @@ export const BrakeCorner: React.FC<BrakeCornerProps> = ({wedge, spin, padThickne
     return x < w1 - w0 + m || x > Math.PI * 2 - m;
   };
   const mid = (BRAKE.r0 + BRAKE.r1) / 2;
+  // No. 016 (N6): the pads move onto the disc (outboard pads inboard, inboard pads outboard)
+  const sq = 0.9 * BRAKE.gap * Math.max(0, Math.min(1, squeeze));
+  const padShift = (side?: 'out' | 'in'): V3 | undefined => (side === 'out' ? [-sq, 0, 0] : side === 'in' ? [sq, 0, 0] : undefined);
   return (
     <group>
       {geo.solids.map((s, i) => (
-        <mesh key={i} geometry={s.g} material={matOf[s.m]} castShadow receiveShadow />
+        <mesh key={i} geometry={s.g} material={matOf[s.m]} position={padShift(s.side)} castShadow receiveShadow />
       ))}
       {geo.ends.map((s, i) => (
-        <mesh key={`e${i}`} geometry={s.g} material={matOf[s.m]} />
+        <mesh key={`e${i}`} geometry={s.g} material={matOf[s.m]} position={padShift(s.side)} />
       ))}
       {geo.caps.map((g, i) => (
         <mesh key={`c${i}`} geometry={g} material={own.cut} receiveShadow />

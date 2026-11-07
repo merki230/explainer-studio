@@ -9,6 +9,7 @@ import {useFontsLoaded} from '../section/useFontsLoaded';
 import {ROTOR, rotorTexture, SIDE_BASE, SIDE_R0, sidewallTexture, TREAD_A, treadTexture} from './tireTextures';
 import {applyAlbedo, applyEnv, useAlbedo, useEnvStrength, useStudioEnv} from './useStudioEnv';
 import {BrakeCorner, capOutline, capProfile} from './BrakeCorner';
+import {CaliperPads, TreadBlocks, TreadGauge} from './WearKit';
 
 type V3 = [number, number, number];
 
@@ -439,6 +440,18 @@ export type RealWheelProps = {
    * its colour. Default 0.
    */
   heat?: number;
+  /**
+   * No. 016 (N6): the caliper's squeeze, 0 (open) → 1 (the pads on the disc), with `axle`. The block caliper gets two pads
+   * that close on the rotor (`WearKit` `CaliperPads`); the brake corner (`brake`) closes its pads' hairline gaps.
+   * Neutral, never orange. Default undefined (the caliper as drawn before, no pads).
+   */
+  squeeze?: number;
+  /**
+   * No. 016 (N7): tread blocks on the crown (`WearKit` `TreadBlocks`), `h` proud of it (radius-1 units, `treadHeight`),
+   * real geometry that lowers as the tread wears; `gauge` 0 → 1: the ink depth ticks beside it (`TreadGauge`). The parent
+   * lifts the wheel by `h` × radius so the blocks stand on the road. Default none.
+   */
+  tread?: {h: number; gauge?: number};
 };
 
 /** Ghost a material set (`ghost`): × opacity, transparent, no depth writes; restores each once back at 1. */
@@ -782,6 +795,8 @@ export const RealWheel: React.FC<RealWheelProps> = ({
   design = 'alloy',
   ghost,
   heat = 0,
+  squeeze,
+  tread,
 }) => {
   const gl = useThree((s) => s.gl);
   gl.localClippingEnabled = true;
@@ -840,6 +855,8 @@ export const RealWheel: React.FC<RealWheelProps> = ({
       brakeDisc: clipped(phys(REAL.rotor, {metalness: 0.6, roughness: 0.5, side: THREE.DoubleSide})),
       // the brake corner's caliper: bare cast iron, lighter than the painted block caliper, so its edge reads
       brakeCaliper: clipped(phys(REAL.steel, {metalness: 0.35, roughness: 0.55, side: THREE.DoubleSide})),
+      // No. 016 (N6): the block caliper's pads (friction material)
+      brakePad: clipped(phys(REAL.friction, {roughness: 0.9})),
     };
   }, [plane]);
   mats.fill.color.copy(raw(section.cut)).multiplyScalar(0.8 / m.exposure);
@@ -1080,6 +1097,15 @@ export const RealWheel: React.FC<RealWheelProps> = ({
     <group position={[position[0], position[1] - drop, position[2]]} rotation={[0, yaw, 0]} scale={radius}>
       <mesh geometry={geo.tire} material={tireMats} castShadow receiveShadow />
       <mesh geometry={geo.rim} material={tireMats} castShadow receiveShadow />
+      {tread ? (
+        <>
+          {/* No. 016 (N7): the tread blocks turn with the tire; their gaps close at speed (no strobing) */}
+          <group rotation={[spin, 0, 0]}>
+            <TreadBlocks h={tread.h} smear={(Math.abs(blur) - 0.012) / 0.028} ghost={ghost ?? 1} />
+          </group>
+          <TreadGauge h={tread.h} k={Math.max(0.5, inkScale)} mood={mood} opacity={(tread.gauge ?? 0) * (ghost ?? 1)} />
+        </>
+      ) : null}
       {geo.caps.map((g, i) => (
         <mesh key={i} geometry={g} material={mats.cut} receiveShadow />
       ))}
@@ -1099,6 +1125,7 @@ export const RealWheel: React.FC<RealWheelProps> = ({
           spin={spin}
           rust={brake.rust}
           padThickness={brake.padThickness}
+          squeeze={squeeze}
           ink={((low ? 0.02 : 0.011) * inkScale) / radius}
           mats={{disc: mats.brakeDisc, caliper: sportMats ? sportMats.caliper : mats.brakeCaliper, dark: mats.dark}}
           low={low}
@@ -1114,6 +1141,7 @@ export const RealWheel: React.FC<RealWheelProps> = ({
           <mesh position={[-0.075, 0.42, 0]} material={mats.fill}>
             <boxGeometry args={[0.15, 0.13, 0.3]} />
           </mesh>
+          {squeeze !== undefined ? <CaliperPads squeeze={squeeze} material={mats.brakePad} /> : null}
         </group>
       ) : null}
 

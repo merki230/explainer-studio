@@ -82,6 +82,9 @@ export type ChartCardProps = {
   /**
    * Outer size in px, border included (default 696 × 560; capped at the detail box's 696 × 620). Wide frame (§ 11.5):
    * default 900 × 640, capped at 900 × 700 (bars: 640, with a footnote 700).
+   * Bars mode: 560 high (620 with a footnote; wide 640 / 700) unless `height` is given, which then wins (capped the
+   * same). A row takes 150 px inside the border (+51 with a bracket), rows from y 40: one row with a bracket fits
+   * `height: 290` (40 px bottom padding), one row without `240`. A footnote sits at y 516 (wide 578): keep the default.
    */
   width?: number;
   height?: number;
@@ -234,7 +237,8 @@ export const ChartCard: React.FC<ChartCardProps & {mood?: Mood}> = ({
   const rise = interpolate(enter, [0, 1], [8, 0]);
   const barsMode = !!bars?.length;
   const W = Math.min(K.maxW, width) - 2 * BORDER;
-  const H = Math.min(K.maxH, barsMode ? (footnote?.length ? K.barsFootH : K.barsH) : height) - 2 * BORDER;
+  // bars mode: the style guide's 560 (620 with a footnote) unless the spec gives a height (a short card for 1 row)
+  const H = Math.min(K.maxH, barsMode ? (heightIn ?? (footnote?.length ? K.barsFootH : K.barsH)) : height) - 2 * BORDER;
   // the plot: y axis at x0, x axis at y1; arrowheads past the ends
   const x0 = 64;
   const x1 = W - 40;

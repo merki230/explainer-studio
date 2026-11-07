@@ -695,6 +695,13 @@ export const CITY = {
   carBodies: ['#3f434a', '#a7acb2', '#4f5d70', '#8d8478', '#4d5a50'],
   /** The default body of an extra whose lamps are set 'dark' (the queue's odd one out): charcoal, ≈ 4% saturation. */
   charcoal: '#25272b',
+  /**
+   * No. 016: the street's wear (`CarCityRoad` `pavement`): a lighter, older asphalt patch, the black crack sealant, a
+   * cast-iron utility cover. Neutral greys (< 8% saturation), far from the reserved band; never the system.
+   */
+  patch: '#999ca1',
+  seal: '#2f3135',
+  cover: '#3f4247',
 };
 
 /**
@@ -800,6 +807,39 @@ export const CHARGE = {
  */
 export const TWINS = {
   gasPaint: '#6a5a4c',
+};
+
+/**
+ * No. 016 `ev-cost` (scene-builder values, 🧪 until the brand-director's review): the plug sheet's three sets
+ * (`plug-sheet`). All neutral, under 20% saturation, nothing near the reserved orange band (8–40° at ≥ 60%); the only
+ * orange on the sheet is the demand fee (`section.orange`, drawn by the scene).
+ *  - The home garage: `garageWall` (painted drywall inside, a warm light grey), `garageFloor` (the slab, a step under
+ *    `CHARGE.concrete`), `door` (the house door, painted), `hall` (the dark hallway seen through it), `shelf` (a grey
+ *    steel shelf) and `boxes` (cardboard and plastic tubs on it, greyed), `wallCharger` / `wallChargerDark` (a generic
+ *    Level 2 charger: a pale box with a dark face; its status LED is `section.signalGreen`).
+ *  - The pump island: `pump` (the cabinet, light grey), `pumpBand` (its plain top band, a mid grey: no brand, no price
+ *    sign), `pumpDark` (the face panel and the dark, unreadable display), `nozzle` (the grip, near black), `spout` (steel).
+ *  - The station's supply: `transformer` (the pad transformer, a muted grey-green, ≈ 140°, 8%), `meterCabinet` (the
+ *    meter cabinet, a light steel grey), `feed` (the underground feed drawn on the ground's cut face, a mid grey, never
+ *    the system).
+ */
+export const PLUGS = {
+  garageWall: '#d8d3c9',
+  garageFloor: '#b3afa7',
+  door: '#e4e0d8',
+  hall: '#3b3934',
+  shelf: '#8b8e92',
+  boxes: ['#b9ab97', '#9fa4a9', '#c7c2b8'],
+  wallCharger: '#e6e6e2',
+  wallChargerDark: '#2a2d32',
+  pump: '#d5d6d2',
+  pumpBand: '#8f959b',
+  pumpDark: '#24272c',
+  nozzle: '#26282c',
+  spout: '#a9adb3',
+  transformer: '#66706a',
+  meterCabinet: '#b8bbbd',
+  feed: '#5d6167',
 };
 
 export const WINTER = {

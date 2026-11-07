@@ -76,6 +76,38 @@ export type CarCityRoadProps = {
    * road). Colours `WINTER`. Default false.
    */
   winter?: boolean;
+  /**
+   * No. 016: ground-level wear that rides the road, so a moving car reads as moving with nothing above the curb (the
+   * sky stays clear for overlays): lighter asphalt patches and black crack-seal lines across the lane, a utility cover,
+   * two-way yellow raised markers between the double yellow (every 6 m), curb and sidewalk joints (every 3 m). One
+   * fixed layout on a 12 m repeat (the storefronts' period: a looping scene's seam holds). Default false.
+   */
+  pavement?: boolean;
+};
+
+/** The pavement layer's repeat (m): equals the storefronts' 12 m, so a loop that lands the street lands this too. */
+export const PAVEMENT_PERIOD = 12;
+
+/**
+ * The pavement layer, one 12 m tile (u along x from the tile's start, z across; the cut face at z +1.75, the curb at −1.75).
+ * Patches and covers sit mostly in the near half of the lane, between the cut and the car's near wheels, where a far
+ * framing sees the road.
+ */
+const PAVE = {
+  patches: [
+    {u: 0.6, len: 2.1, z0: 0.3, z1: 1.3},
+    {u: 6.9, len: 0.9, z0: 0.75, z1: 1.3},
+    {u: 7.9, len: 1.4, z0: -1.35, z1: -0.2},
+    {u: 9.3, len: 1.0, z0: 0.5, z1: 1.3},
+  ],
+  /** Crack-seal lines across the road (u, from z0 to z1, slant in m along x over the line). */
+  seals: [
+    {u: 3.7, z0: -1.75, z1: 1.74, slant: 0.35},
+    {u: 10.6, z0: -0.4, z1: 1.74, slant: -0.25},
+  ],
+  covers: [{u: 5.2, z: 0.85, r: 0.33}],
+  markers: [1.5, 7.5],
+  joints: [0, 3, 6, 9],
 };
 
 const R = CITY_ROAD;
@@ -185,6 +217,23 @@ const walkTexture = () => {
   return t;
 };
 
+/**
+ * A mark on the road (patch, sealant, joint, cover, marker): drawn over the surface it lies on, clipped to the block.
+ * Its colour is decoded as sRGB, like the lane and sidewalk textures it sits on (`raw` would read it as linear: a
+ * patch two shades over the asphalt came out near white).
+ */
+const srgb = (hex: string) => new THREE.Color().setStyle(hex, THREE.SRGBColorSpace);
+const decal = (color: string, roughness: number, planes: THREE.Plane[], o: THREE.MeshStandardMaterialParameters = {}) =>
+  new THREE.MeshStandardMaterial({
+    ...o,
+    color: srgb(color),
+    roughness,
+    clippingPlanes: planes,
+    polygonOffset: true,
+    polygonOffsetFactor: -2,
+    polygonOffsetUnits: -2,
+  });
+
 /** Clips every material under it to the block's length (things slide in through the ends). */
 const ClipToBlock: React.FC<{planes: THREE.Plane[]; children: React.ReactNode}> = ({planes, children}) => {
   const ref = useRef<THREE.Group>(null);
@@ -269,6 +318,7 @@ export const CarCityRoad: React.FC<CarCityRoadProps> = ({
   from = -CITY_ROAD.x,
   to = CITY_ROAD.x,
   winter = false,
+  pavement = false,
 }) => {
   const cx = (from + to) / 2;
   const len = to - from;
@@ -310,6 +360,12 @@ export const CarCityRoad: React.FC<CarCityRoadProps> = ({
         clippingPlanes: planes,
       }),
       bark: new THREE.MeshStandardMaterial({color: raw(WINTER.bark), roughness: 0.9, clippingPlanes: planes}),
+      // No. 016: the pavement layer, a hair above the road (polygon offset, no z-fight at the far framings)
+      patch: decal(CITY.patch, 0.95, planes),
+      seal: decal(CITY.seal, 0.55, planes),
+      cover: decal(CITY.cover, 0.6, planes, {metalness: 0.3}),
+      marker: decal(STREET.centreLine, 0.4, planes),
+      joint: decal(CITY.seal, 0.9, planes),
     };
   }, [m.earth, planes, len]);
   // the sidewalk under a thin cover of packed snow
@@ -393,6 +449,57 @@ export const CarCityRoad: React.FC<CarCityRoadProps> = ({
           </group>
         ))}
       </ClipToBlock>
+      {pavement
+        ? riding(scroll, PAVEMENT_PERIOD, from, to, 1).map(({x, id}) => (
+            <group key={`pv${id}`} position={[x, 0, 0]}>
+              {PAVE.patches.map((q, i) => (
+                <mesh key={`p${i}`} material={mats.patch} position={[q.u + q.len / 2, 0.004, (q.z0 + q.z1) / 2]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+                  <planeGeometry args={[q.len, q.z1 - q.z0]} />
+                </mesh>
+              ))}
+              {PAVE.seals.map((q, i) => {
+                const w = q.z1 - q.z0;
+                return (
+                  <mesh
+                    key={`s${i}`}
+                    material={mats.seal}
+                    position={[q.u + q.slant / 2, 0.005, (q.z0 + q.z1) / 2]}
+                    rotation={[-Math.PI / 2, 0, Math.atan2(q.slant, w)]}
+                    receiveShadow
+                  >
+                    <planeGeometry args={[0.08, Math.hypot(w, q.slant)]} />
+                  </mesh>
+                );
+              })}
+              {PAVE.covers.map((q, i) => (
+                <group key={`c${i}`} position={[q.u, 0, q.z]}>
+                  <mesh material={mats.seal} position={[0, 0.004, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+                    <circleGeometry args={[q.r + 0.05, 32]} />
+                  </mesh>
+                  <mesh material={mats.cover} position={[0, 0.006, 0]} receiveShadow>
+                    <cylinderGeometry args={[q.r, q.r, 0.012, 32]} />
+                  </mesh>
+                </group>
+              ))}
+              {PAVE.markers.map((u, i) => (
+                <mesh key={`m${i}`} material={mats.marker} position={[u, 0.012, (R.yellow[0] + R.yellow[1]) / 2]} castShadow>
+                  <boxGeometry args={[0.1, 0.024, 0.1]} />
+                </mesh>
+              ))}
+              {PAVE.joints.map((u, i) => (
+                <group key={`j${i}`}>
+                  {/* the curb's face, then on across the sidewalk */}
+                  <mesh material={mats.joint} position={[u, R.curb / 2, -R.z + 0.002]}>
+                    <planeGeometry args={[0.03, R.curb]} />
+                  </mesh>
+                  <mesh material={mats.joint} position={[u, R.curb + 0.002, (R.back - R.z) / 2]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+                    <planeGeometry args={[0.035, -R.back - R.z]} />
+                  </mesh>
+                </group>
+              ))}
+            </group>
+          ))
+        : null}
       {winter ? (
         <>
           {/* packed snow along the curb on the road, slush in the wheel paths (the road's length: no scroll to show) */}

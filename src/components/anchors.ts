@@ -13,6 +13,7 @@ import {labAnchorOnScreen, type SectionLabSceneProps} from '../scenes/SectionLab
 import {townAnchorOnScreen, type TownSliceSceneProps} from '../scenes/TownSliceScene';
 import {cityTwinAnchorOnScreen, type CityTwinSceneProps} from '../scenes/CityTwinScene';
 import {recordsAnchorOnScreen, type RecordsSliceSceneProps} from '../scenes/RecordsSliceScene';
+import {plugSheetAnchorOnScreen, type PlugSheetSceneProps} from '../scenes/PlugSheetScene';
 import {streetAnchorOnScreen, type StreetSliceSceneProps} from '../scenes/StreetSliceScene';
 import {towerAnchorOnScreen, type TowerSliceSceneProps} from '../scenes/TowerSliceScene';
 import type {Format} from '../theme';
@@ -46,6 +47,7 @@ export const ANCHOR_SCENES = [
   'section-lab',
   'city-twin',
   'records-slice',
+  'plug-sheet',
 ];
 
 /**
@@ -69,7 +71,9 @@ export const ANCHOR_SCENES = [
  * 'inverter', 'nose', 'tail', 'top' (= 'roof', car tags), 'frontWheel', 'rearWheel', 'cluster', 'head'; 'lead:*', 'signal:*', 'lane:*'.
  * `records-slice` (No. 015): 'rack', 'monitor', 'desk', 'head', 'slab:n', 'tick:n', 'rulerEnd', 'ruler'. `city-slice` also (No. 015):
  * 'plate[:k]', 'rack[:k]', 'tail[:k]', 'lens', 'ledRing', 'antenna', 'modem', 'battery', 'housing', 'pole', 'ghost'.
- * `car-slice` also: 'engine', 'motor', 'battery', 'inverter', 'nose', 'tail', 'roof', 'frontWheel', 'rearWheel'. Undefined elsewhere
+ * `car-slice` also: 'engine', 'motor', 'battery', 'inverter', 'nose', 'tail', 'roof', 'frontWheel', 'rearWheel'.
+ * `plug-sheet` (No. 016): 'peak', 'meter', 'pole', 'post:1'…'post:4', 'car:1'…'car:4', 'port:k', 'feed:k', 'ghost:k',
+ * 'clock', 'top:home', 'you', 'charger', 'houseMeter', 'top:pump', 'pump', 'nozzle', 'extra'. Undefined elsewhere
  * or for an unknown name.
  */
 export const anchorOnScreen = (
@@ -105,5 +109,6 @@ export const anchorOnScreen = (
   if (scene.name === 'section-lab') return labAnchorOnScreen(scene.props as Partial<SectionLabSceneProps>, anchor, o);
   if (scene.name === 'city-twin') return cityTwinAnchorOnScreen(scene.props as Partial<CityTwinSceneProps>, anchor, o);
   if (scene.name === 'records-slice') return recordsAnchorOnScreen(scene.props as Partial<RecordsSliceSceneProps>, anchor, o);
+  if (scene.name === 'plug-sheet') return plugSheetAnchorOnScreen(scene.props as Partial<PlugSheetSceneProps>, anchor, o);
   return undefined;
 };

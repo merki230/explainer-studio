@@ -996,6 +996,12 @@ export type RealCarProps = {
    */
   port?: {light?: number};
   /**
+   * No. 016 (cut car only, the gas car): the near rear quarter drawn whole, as with `port`, with a fuel filler door in
+   * the port's place (`chargePortAt`): a recess, the filler neck with its cap off, and the door hinged at its front edge,
+   * `open` 0 (shut, flush) → 1 (swung out ≈ 100°). Ignored with `port`. Default none.
+   */
+  filler?: {open?: number};
+  /**
    * No. 011 (cut car only): the stripped body shell (a teardown): the lower body, its section and the far side stand;
    * no glass, lamps, dash, cluster, steering, seats or carpet (the floor bare paint). Default false.
    */
@@ -1044,6 +1050,7 @@ export const RealCar: React.FC<RealCarProps> = ({
   tunnel = false,
   coupeStyle,
   port,
+  filler,
   strip = false,
   carpet = true,
   seatLift = 0,
@@ -1372,12 +1379,13 @@ export const RealCar: React.FC<RealCarProps> = ({
           {bodyInk.map((b, i) => (
             <InkLine key={i} points={b} thickness={inkT} />
           ))}
-          {port ? (
+          {port || filler ? (
             <ChargeQuarter
               real={real}
               outline={cs ? cs.rear : coupe ? coupeRear(style) : bay ? BODY_EV_REAR : BODY}
               port={chargePortAt(shape)}
-              light={port.light ?? 0}
+              light={port?.light ?? 0}
+              filler={port ? undefined : (filler?.open ?? 0)}
               lampY={lamps.tail[1]}
               lampX={lamps.tail[0]}
               mood={mood}
@@ -2156,7 +2164,9 @@ const ChargeQuarter: React.FC<{
   mood: Mood;
   mats: {paint: THREE.Material; cut: THREE.Material; tail: THREE.Material; trim: THREE.Material};
   inkT: number;
-}> = ({real, outline, port, light, lampX, lampY, mood, mats, inkT}) => {
+  /** No. 016: a fuel filler door instead of the charging port, open 0 → 1. Undefined: the port. */
+  filler?: number;
+}> = ({real, outline, port, light, lampX, lampY, mood, mats, inkT, filler}) => {
   const m = MOODS[mood];
   const rq = useMemo(() => (real ? realQuarterParts(real) : null), [real]);
   const creaseGeo = useMemo(() => {
@@ -2186,6 +2196,7 @@ const ChargeQuarter: React.FC<{
       })(),
       step: ys.length >= 2 ? ([Math.min(...ys), Math.max(...ys)] as P2) : null,
       flap: roundedBox(0.14, 0.13, 0.008, 0.02, 3),
+      fillerDoor: roundedBox(0.17, 0.17, 0.01, 0.07, 4),
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(outline)]);
@@ -2247,6 +2258,25 @@ const ChargeQuarter: React.FC<{
           <boxGeometry args={[0.04, 0.17, QUARTER_Z - CAR_LAYOUT.cutZ]} />
         </mesh>
       )}
+      {filler !== undefined ? (
+        <>
+          {/* No. 016: the fuel filler: the recess, the neck (its cap off), the door hinged at its front edge */}
+          <mesh position={[px, py, pz + 0.001]} rotation={[Math.PI / 2, 0, 0]} material={pm.socket}>
+            <cylinderGeometry args={[0.078, 0.078, 0.004, 40]} />
+          </mesh>
+          <mesh position={[px, py, pz + 0.006]} rotation={[Math.PI / 2, 0, 0]} material={pm.face}>
+            <cylinderGeometry args={[0.032, 0.036, 0.01, 32]} />
+          </mesh>
+          <mesh position={[px, py, pz + 0.0115]} rotation={[Math.PI / 2, 0, 0]} material={pm.pin}>
+            <cylinderGeometry args={[0.02, 0.02, 0.002, 24]} />
+          </mesh>
+          <group position={[px + 0.09, py, pz + 0.004]} rotation={[0, (100 * Math.max(0, Math.min(1, filler)) * Math.PI) / 180, 0]}>
+            <mesh geometry={geo.fillerDoor} material={mats.paint} position={[-0.088, 0, 0.007]} castShadow />
+          </group>
+        </>
+      ) : null}
+      {filler !== undefined ? null : (
+      <>
       {/* the port: the recess, the socket's face with its pins, the ring light, the open flap */}
       <mesh position={[px, py, pz + 0.001]} rotation={[Math.PI / 2, 0, 0]} material={pm.socket}>
         <cylinderGeometry args={[0.066, 0.066, 0.004, 40]} />
@@ -2271,6 +2301,8 @@ const ChargeQuarter: React.FC<{
       <group position={[px + 0.075, py, pz + 0.002]} rotation={[0, (100 * Math.PI) / 180, 0]}>
         <mesh geometry={geo.flap} material={mats.paint} position={[-0.072, 0, 0.004]} castShadow />
       </group>
+      </>
+      )}
     </group>
   );
 };

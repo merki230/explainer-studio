@@ -44,7 +44,7 @@ export const CURB = {x0: 4.35, x1: 6.35, z0: 1.2, z1: 1.5, h: 0.24};
 const hex = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
 
 /** The bay's surface: concrete slabs (China) or asphalt (US), u along x over one tile, v across. */
-const surfaceTexture = (kind: 'concrete' | 'asphalt') => {
+export const surfaceTexture = (kind: 'concrete' | 'asphalt') => {
   const W = 512;
   const H = 256;
   const conc = kind === 'concrete';

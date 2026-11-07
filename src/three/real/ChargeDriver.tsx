@@ -1,5 +1,5 @@
 import React from 'react';
-import {EXTRA_B, type Mood} from '../../theme';
+import {EXTRA_B, type CastName, type Mood} from '../../theme';
 import type {Gesture} from '../rig';
 import {Figure} from '../section/Figure';
 import type {DriverPose} from './chargeMotion';
@@ -17,6 +17,8 @@ export type ChargeDriverFigureProps = {
   seed: string;
   /** The scene's start in the video (s). */
   clockOffset?: number;
+  /** No. 016: who walks (default 'extra'; 'you' for YOU at home: `look` is then ignored). */
+  who?: CastName;
 };
 
 /**
@@ -24,7 +26,7 @@ export type ChargeDriverFigureProps = {
  * car (tipped back about the feet), sitting on the curb, carrying the plug in the right hand or holding the phone
  * (its screen to the face, never the camera). Mount it in the bay's frame. Nothing when they're in the car.
  */
-export const ChargeDriverFigure: React.FC<ChargeDriverFigureProps> = ({pose, mood, look, seed, clockOffset = 0}) => {
+export const ChargeDriverFigure: React.FC<ChargeDriverFigureProps> = ({pose, mood, look, seed, clockOffset = 0, who = 'extra'}) => {
   if (pose.inCar) return null;
   const [px, py, pz] = pose.pos;
   const c = Math.cos(pose.rot);
@@ -45,8 +47,8 @@ export const ChargeDriverFigure: React.FC<ChargeDriverFigureProps> = ({pose, moo
     <group position={[px, py, pz]} rotation={[0, pose.rot, 0]}>
       <group rotation={[-pose.tilt, 0, 0]}>
         <Figure
-          who="extra"
-          look={look === 'b' ? EXTRA_B : undefined}
+          who={who}
+          look={who === 'extra' && look === 'b' ? EXTRA_B : undefined}
           mood={mood}
           seed={seed}
           stance={pose.stance}

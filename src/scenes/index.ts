@@ -22,6 +22,7 @@ import {DatacenterSliceScene} from './DatacenterSliceScene';
 import {TownSliceScene} from './TownSliceScene';
 import {CityTwinScene} from './CityTwinScene';
 import {RecordsSliceScene} from './RecordsSliceScene';
+import {PlugSheetScene} from './PlugSheetScene';
 
 /**
  * Scene registry. To add a scene: write a component that takes
@@ -52,6 +53,7 @@ export const SCENES: Record<string, React.FC<any>> = {
   'town-slice': TownSliceScene,
   'city-twin': CityTwinScene,
   'records-slice': RecordsSliceScene,
+  'plug-sheet': PlugSheetScene,
 };
 
 export type SceneName =
@@ -77,4 +79,5 @@ export type SceneName =
   | 'datacenter-slice'
   | 'town-slice'
   | 'city-twin'
-  | 'records-slice';
+  | 'records-slice'
+  | 'plug-sheet';

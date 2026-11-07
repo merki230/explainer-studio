@@ -2,6 +2,26 @@
 
 Every change to `brand.md` or `style-guide.md` gets a line here: date, what changed, why (pointing to a `feedback.md` entry or a research section). Nothing changes silently.
 
+## style-guide v0.18.10 · 2026-11-06 · No. 016 `ev-cost`: several ghosts in a row
+
+Owner decision 2026-11-06 on the question left open in v0.18.9, relayed by the main session. The owner chose the brand-director's recommendation, **"A": several ghosts may show at once only when they mark the same kind of absence in a row of identical slots (e.g. empty charging stalls). They draw on together, up to 4.** Value 🧪.
+
+- **§ 3 Ghost outline:** "never with a second ghost" now carries this one exception. Why: in a row of identical slots, several ghosts read as one idea ("these stalls are empty"), not as competing absences. Unblocks No. 016's stalls 2 and 4.
+
+## style-guide v0.18.9 · 2026-11-06 · No. 016 `ev-cost`: plug-sheet review
+
+Brand-director review of the scene-builder's `plug-sheet` scene and `PLUGS` tokens, relayed by the main session (stills: half-scale scratch renders). No owner decision involved; values 🧪. The brand-director doesn't edit code, so the scene-builder applies the fixes below.
+
+- **§ 1, new `PLUGS` row:** approved as built. Three warm tokens sit at 16–20% saturation, not "under 15%" as the theme comment says (`garageWall`, `door`, `boxes[0]`). Fine: the band's floor is 60%.
+- **§ 1 Status green:** adds a wall charger's status LED while current flows (steady; off = `ledOff`).
+- **§ 3 Ghost outline:** 4.5 px when the ghost stands at a slant (≥ 45°); 3 px stays the default. Why: the foreshortened dashes read faint at 3 px on the stalls.
+- **§ 3, new row "US fast-charger row":** perpendicular back-in stalls approved. Cars are never mirrored (driver on the left). Why: the as-built stall frame is a reflection (det −1), which makes the cars right-hand drive.
+- **§ 3, new rows "In-set ink gauge"** (tread meter: ink, no digits, magnification 🎭 and disclosed) **and "Liquids in a cut-away"** (oil `REAL.coffee`, precedent No. 010 coolant).
+- **§ 5, new row "One system per video":** regen and brakes in ink and grey in No. 016. Recorded as a general refinement of the orange rule, not a per-video exception.
+- **§ 5, new row "A charge as a block":** the fee slab (orange core, 25% halo, bloom, no text), its split and slide to node dots.
+- **Scene-builder fixes:** stop reflecting the stall frame (see § 3); `FuelPump.tsx` earth `#5a5550` → the mood's `earth`; `StationSupply.tsx` insulator `#d9dcd8` → `CHARGE.cabinet` `#d3d4d1`, vent `#2b2e30` → `CHARGE.cabinetDark` `#2a2d32`; fix the `PLUGS` comment ("under 20% saturation").
+- **Open, for the owner:** two ghosts at once (stalls 2 and 4) break § 3's "never with a second ghost". Not changed.
+
 ## style-guide v0.18.8 · 2026-11-05 · `flock-camera`: camera-view photo is a 3D render
 
 The owner judged the hand-drawn 2D car photo in the No. 015 camera-view box too crude ("the car photo need to be improve"). It was replaced with renders of the scene's own 3D car, and the owner approved the result. Value 🧪.

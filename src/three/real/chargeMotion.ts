@@ -167,6 +167,8 @@ export type ChargeDriver = {
   look?: 'a' | 'b';
   /** × every move's speed (a fast-forward driver). Default 1. */
   rate?: number;
+  /** No. 016: the plug already latched in the port before the first key (the first 'unplug' takes it out). Default false. */
+  plugged?: boolean;
 };
 
 /** The bay's fixed points for a driver (world, the bay's frame, the car parked). */
@@ -329,9 +331,10 @@ export const driverTimeline = (d: ChargeDriver, g: DriverGeo, notBefore = -Infin
     posture: (startSpot ? 'stand' : 'car') as Posture,
     pos: startSpot ? startSpot.pos : g.door,
     rot: startSpot?.rot ?? 0,
-    plug: 'holster' as Plug,
+    plug: (d.plugged ? 'port' : 'holster') as Plug,
     walked: 0,
   };
+  if (d.plugged) latched.push([-Infinity, Infinity]);
   if (cur.posture === 'car') segs.push({k: 'car', t0: -Infinity, t1: -Infinity});
   else segs.push({k: 'hold', t0: -Infinity, t1: -Infinity, pos: cur.pos, rot: cur.rot, posture: 'stand', plug: 'holster', walked: 0});
 

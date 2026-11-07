@@ -41,6 +41,7 @@ import {
 import type {RoadSignKind} from './RoadSigns';
 import {HYBRID, hybridPoint, HybridSystems} from './HybridDrive';
 import {DragArrow, ExhaustPuffs} from './CarAir';
+import {BrakeDust, DUST_LIFE, InkArrowAlong, inkArrowState, OIL_PAN_POINT, OilPan, treadHeight, type DustPuff} from './WearKit';
 import {CarCityRoad} from '../section/CarCityRoad';
 import {RealWheel, WHEEL} from './RealWheel';
 import {TireSensor} from './TireSensor';
@@ -367,6 +368,11 @@ export type SlicedCarOptions = {
   /** 'city': low storefronts at the back of the sidewalk (default false: plain sky behind the title block, owner review). */
   storefronts?: boolean;
   /**
+   * 'city' (No. 016): ground-level wear on the street that streams with the road (`CarCityRoad` `pavement`): asphalt
+   * patches, a utility cover, raised markers in the double yellow, curb joints, all on a 12 m repeat. Default false.
+   */
+  pavement?: boolean;
+  /**
    * 'city': metres the road block runs ahead of the car's centre (default 14 for 'ev', else 5): corners and
    * their signals slide in through that end, so a longer run shows a red light while it is still well ahead.
    */
@@ -491,6 +497,13 @@ export type SlicedCarOptions = {
   /** Set by Explainer ('forward', gas and ev): the drawn wheel turn (rev) carried from the previous scene, as `revsFrom`. */
   wheelFrom?: number;
   /**
+   * 'forward' (No. 016): the drawn turn's cap, rad a frame, instead of the rim's alias limit (`safeStep`, 0.45 on 5
+   * spokes). Lower reads more clearly as rolling at a far framing (0.25 ≈ a fifth of a 5-spoke pitch). Default the limit.
+   */
+  wheelStep?: number;
+  /** 'forward' (No. 016): the spokes' smear at full speed, rad (`wheelSmear` `max`). Default 0.4. */
+  wheelSmearMax?: number;
+  /**
    * The body (No. 007): 'crossover' (default) or 'coupe' (`RealCar` `shape`: two doors, low, a fastback; its
    * seats sit `COUPE_SEAT_DROP` lower, and the driver's hands and feet follow); 'sedan' (No. 010); the real models
    * (No. 011, style guide v0.15 § 3): 'model3' (Tesla Model 3 Highland: a low rounded nose, one fastback line, a
@@ -506,8 +519,11 @@ export type SlicedCarOptions = {
    * blades on the electric one, the calipers `RACE.caliperGas` / `caliperEv`). Default none.
    */
   coupeStyle?: CoupeStyle;
-  /** Each wheel's opacity (`RealWheel` `ghost`, 0 → 1), e.g. the near rear wheel ghosted in a close look at the rear drive unit. Default none. */
-  wheelGhost?: Partial<Record<WheelId, number>>;
+  /**
+   * Each wheel's opacity (`RealWheel` `ghost`, 0 → 1), e.g. the near rear wheel ghosted in a close look at the rear drive
+   * unit; a constant or keys (No. 016: a glide in and out of a ghosted wheel without a pop). Default none.
+   */
+  wheelGhost?: Partial<Record<WheelId, Keyed>>;
   /** The driver wears an open-face helmet (`Figure` `helmet`: shell and visor colours, theme tokens). Default none. */
   helmet?: {shell: string; visor: string};
   /**
@@ -572,6 +588,11 @@ export type SlicedCarOptions = {
    * `chargePortAt`); `light` 0 → 1 lights its ring (flat `signalGreen`, never bloomed). Null for none (default).
    */
   chargePort?: {light?: number} | null;
+  /**
+   * No. 016 ('gas'): the near rear quarter drawn whole with a fuel filler door in the charging port's place (`RealCar`
+   * `filler`); `open` 0 (shut) → 1 (swung out), a constant or keys. Null for none (default).
+   */
+  fillerDoor?: {open?: Keyed} | null;
   /**
    * No. 010 ('ev'): the pack charging. `soc` 0 → 1 is every module's orange level (the charge going in;
    * it overrides the regen's fill); `heat` 0 → 1 a soft glow on the cells' cut faces (`BatteryPack` `heat`).
@@ -661,6 +682,43 @@ export type SlicedCarOptions = {
   packNode?: Keyed;
   /** No. 014: the driver's idle clock (breathing, blinks) at the scene's start, s. Default the scene's start in the video (a loop sets it). */
   figureClock?: number;
+  /**
+   * No. 016 (N6): the calipers' squeeze per axle, 0 (open) → 1 (the pads on the disc), constants or keys (`RealWheel`
+   * `squeeze`): pads under the block caliper close on the rotor (🎭 open gap ≈ 5 mm); the EV's brake corner closes its
+   * pads' gaps. Neutral, never orange. Default none (the calipers as drawn in No. 002–015).
+   */
+  caliper?: {front?: Keyed; rear?: Keyed} | null;
+  /**
+   * No. 016 (N6): faint grey brake-dust puffs off a near wheel's disc at each `at` (s): `size` 0.5 → 2 (default 1),
+   * `wheel` 'front' (default) or 'rear'. Each lives ≈ 1.1 s, leaving the wheel's rear edge and drifting back in its wake
+   * (🎭 at 0.15 of the road's speed); `REAL.friction` grey, never orange. Default none.
+   */
+  brakeDust?: {at: number; size?: number; wheel?: 'front' | 'rear'}[];
+  /**
+   * No. 016 (N6), 'ev': the motor doing the slowing (F4: ink, not orange): from `at` an ink arrow (`CurveArrow` 'ink',
+   * a paper outline, never bloomed) draws from the near front wheel's hub over the tire into the drive unit, over
+   * `drawFor` (default 0.6 s); `fadeAt`: it fades (0.5 s). Null for none (default).
+   */
+  regenArrow?: {at: number; drawFor?: number; fadeAt?: number} | null;
+  /**
+   * No. 016 (N7): the near wheels' tread depth per axle, 1 (new) → 0 (worn), constants or keys (an axle left out is drawn
+   * as before, no blocks): tread blocks on the crown, real geometry, ≈ 22 mm proud when new (🎭 ≈ 2.7× real) down to
+   * ≈ 3 mm worn, their gaps closing into a band at speed; the wheel rides on them (lifted by the tread). Default none.
+   */
+  treadDepth?: {front?: Keyed; rear?: Keyed} | null;
+  /** No. 016 (N7): the ink depth meter beside each keyed near tread (worn at its foot, new at its top, a heavier tick for now; 🎭 ≈ 7× the depth). Default true with `treadDepth`. */
+  treadTicks?: boolean;
+  /**
+   * No. 016 (N7): the weight on a wheel: from `at` an ink arrow (`CurveArrow` 'ink', never bloomed, no number) draws
+   * down over the near `wheel`'s front half ('rear' default, or 'front') over `drawFor` (default 0.6 s), its tip just above the tire,
+   * `length` m long (default 0.7); `fadeAt`: it fades (0.5 s). Null for none (default).
+   */
+  weightArrow?: {at: number; drawFor?: number; fadeAt?: number; wheel?: 'front' | 'rear'; length?: number} | null;
+  /**
+   * No. 016 (N5): the four-cylinder's oil pan ('gas' 'i4', 'hybrid'): a pressed-steel sump under the crankcase, cut on the
+   * engine's section plane (hatched, inked), the oil in it level, dark (`REAL.coffee`). Anchor 'oilPan'. Default false.
+   */
+  oilPan?: boolean;
 };
 
 /**
@@ -1237,7 +1295,10 @@ export const engineCrank = (p: Partial<SlicedCarOptions>, t: number) => {
   return (p.crankFrom ?? 0) + turns * Math.PI * 2 * CRANK_SCALE;
 };
 
-/** No. 014: a named point of the car (world, for anchors): 'engine', 'motor', 'battery', 'inverter' (the hybrid's), 'nose', 'tail', 'roof', 'frontWheel', 'rearWheel', 'cluster'. */
+/**
+ * No. 014: a named point of the car (world, for anchors): 'engine', 'motor', 'battery', 'inverter' (the hybrid's), 'nose', 'tail',
+ * 'roof', 'frontWheel', 'rearWheel', 'cluster'; No. 016: 'oilPan' (the four-cylinder's sump, `oilPan`), 'driveUnit' (the EV's front motor).
+ */
 export const slicedCarPoint = (p: Partial<SlicedCarOptions>, name: string): V3 | undefined => {
   const lay = layoutOf(p);
   const car: V3 | undefined =
@@ -1255,7 +1316,11 @@ export const slicedCarPoint = (p: Partial<SlicedCarOptions>, name: string): V3 |
                 ? [C.axleX.rear, R, C.cutZ + 0.12]
                 : name === 'cluster'
                   ? [lay.cluster[0] + 0.07, lay.cluster[1] + 0.06, lay.cluster[2]]
-                  : undefined;
+                  : name === 'oilPan'
+                    ? OIL_PAN_POINT
+                    : name === 'driveUnit'
+                      ? [EV.motor[0], EV.motor[1], EV.motorZ + 0.05]
+                      : undefined;
   return car ? toWorld(p, car) : undefined;
 };
 
@@ -1330,7 +1395,8 @@ export const sportWheelOf = (p: Partial<SlicedCarOptions>) => {
 };
 
 /** The drawn wheels' cap (rev/s) in 'forward': under the alias limit of this car's rim. */
-const wheelCapRevs = (p: Partial<SlicedCarOptions>, fps = 30) => capRevs(fps, spokesOf(sportWheelOf(p)));
+const wheelCapRevs = (p: Partial<SlicedCarOptions>, fps = 30) =>
+  p.wheelStep !== undefined ? Math.min(capRevs(fps, spokesOf(sportWheelOf(p))), (p.wheelStep * fps) / (2 * Math.PI)) : capRevs(fps, spokesOf(sportWheelOf(p)));
 
 /**
  * The wheels' drawn turn (rev) at t. 'legacy': `simRevs`. 'forward': the speed × playback rate capped at
@@ -1365,7 +1431,7 @@ const wheelBlurOf = (p: Partial<SlicedCarOptions>, id: WheelId, t: number, fps: 
   const k = fasterOf(p, id);
   const real = (simRevs(p, t + 0.25 / fps, fps) - simRevs(p, t - 0.25 / fps, fps)) * k * Math.PI * 2;
   const v = speedAt(drivingOf(p), t, 0.8) * rateAt(p, t) * k;
-  return (v < 0 ? -1 : 1) * wheelSmear(real, v, wheelCapRevs(p, fps) * k);
+  return (v < 0 ? -1 : 1) * wheelSmear(real, v, wheelCapRevs(p, fps) * k, p.wheelSmearMax);
 };
 
 /** Where a wheel's sensor node is (world) at t (the valve's angle as it turns). */
@@ -2396,6 +2462,36 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
     const f = Math.max(0, Math.min(1, keyedValue(bh.front, t, 0)));
     return WHEELS[id].x > 0 ? f : Math.max(0, Math.min(1, bh.rear === undefined ? 0.6 * f : keyedValue(bh.rear, t, 0)));
   };
+  // ---- No. 016 (N5–N7): the calipers, the brake dust, the ink regen and weight arrows, the tread
+  const axleOf = (id: WheelId): 'front' | 'rear' => (WHEELS[id].x > 0 ? 'front' : 'rear');
+  const squeezeOf = (id: WheelId) => {
+    const c = props.caliper;
+    if (!c) return undefined;
+    const k = c[axleOf(id)];
+    return k === undefined ? 0 : Math.max(0, Math.min(1, keyedValue(k, t, 0)));
+  };
+  const treadOf = (id: WheelId) => {
+    const td = props.treadDepth;
+    if (!td || !WHEELS[id].near) return undefined;
+    const k = td[axleOf(id)];
+    if (k === undefined) return undefined;
+    return {h: treadHeight(keyedValue(k, t, 1)), gauge: props.treadTicks === false ? 0 : 1};
+  };
+  const dustOf = (which: 'front' | 'rear'): DustPuff[] =>
+    (props.brakeDust ?? []).flatMap((q, i) => {
+      if ((q.wheel ?? 'front') !== which) return [];
+      const age = t - q.at;
+      if (age < 0 || age > DUST_LIFE) return [];
+      const size = Math.max(0.3, Math.min(2.5, q.size ?? 1));
+      const u = age / DUST_LIFE;
+      // it drifts back in the wheel's wake: 🎭 at 0.15 of the road's speed (the wake moves mostly with the car), so a
+      // puff made while braking stays by the wheel long enough to read, then thins out behind it
+      const back = 0.15 * (distAt(t) - distAt(q.at)) + 0.1 * age;
+      return [{i, age, size, back, u, op: 0.38 * Math.sqrt(size) * ease(age, 0, 0.1) * (1 - ease(u, 0.25, 1))}];
+    });
+  const arrowR = 0.022 * Math.max(0.5, Math.min(1.8, camD / 12));
+  const regenK = ev && props.regenArrow ? inkArrowState(props.regenArrow, t) : null;
+  const weightK = props.weightArrow ? inkArrowState(props.weightArrow, t) : null;
   const frostK = Math.max(0, Math.min(1, keyedValue(props.frost, t, props.dressing === 'winter' ? 0.55 : 0)));
   // the hybrid's cluster: its power needle to drive with the drive path, to charge with the regen
   const hybPower = hybrid
@@ -2679,6 +2775,7 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
           corners={corners}
           signs={signs}
           storefronts={props.storefronts ?? false}
+          pavement={props.pavement ?? false}
           winter={props.dressing === 'winter'}
           from={dir < 0 ? -(props.roadAhead ?? (ev ? 14 : 5)) : -(props.roadBehind ?? 5)}
           to={dir < 0 ? (props.roadBehind ?? 5) : (props.roadAhead ?? (ev ? 14 : 5))}
@@ -2766,6 +2863,7 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
               mirrored={left ? true : undefined}
               coupeStyle={props.shape === 'coupe' ? props.coupeStyle : undefined}
               {...(ev && props.chargePort ? {port: props.chargePort} : {})}
+              {...(gas && props.fillerDoor ? {filler: {open: keyedValue(props.fillerDoor.open, t, 0)}} : {})}
               {...(strip ? {strip: true} : {})}
               {...(bladeSt ? {carpet: false, seatLift} : {})}
             />
@@ -2876,7 +2974,10 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
                   <RearDrive mood={mood} axle={gearSpin} inkScale={inkK} />
                 </>
               ) : (
-                <EngineBay mood={mood} open={plate} inkScale={inkK} crank={crank4} tremor={tremor} />
+                <>
+                  <EngineBay mood={mood} open={plate} inkScale={inkK} crank={crank4} tremor={tremor} />
+                  {props.oilPan ? <OilPan mood={mood} inkScale={inkK} tremor={tremor} /> : null}
+                </>
               )}
               {dz ? (
                 <group position={[0, 0, dz]}>
@@ -2996,6 +3097,7 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
             <>
               {/* No. 014: the hybrid's four-cylinder (no intake: the motor-generator sits there), its pedals, its systems */}
               <EngineBay mood={mood} open={0} intake={false} crank={crank4} tremor={tremor} inkScale={inkK} />
+              {props.oilPan ? <OilPan mood={mood} inkScale={inkK} tremor={tremor} /> : null}
               {dz ? (
                 <group position={[0, 0, dz]}>
                   <GasPedals mood={mood} accel={gasFoot ? gasFoot.accel : 0} brake={gasFoot ? gasFoot.brake : 0} />
@@ -3286,11 +3388,12 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
         const turn = w.near ? -dir : dir;
         // the gas car's front wheels steer (🎭 `steerRatio`)
         const steerYaw = gas && w.x > 0 ? (dir * steerNow) / steerRatio : 0;
+        const tread = treadOf(id);
         return (
           <RealWheel
             key={id}
             mood={mood}
-            position={[dir * w.x, R - (w.near ? dropOf(id) : 0), w.z]}
+            position={[dir * w.x, R - (w.near ? dropOf(id) : 0) + (tread ? tread.h * R : 0), w.z]}
             yaw={(w.near ? -Math.PI / 2 : Math.PI / 2) + steerYaw}
             radius={R}
             cut={cutNear ? 'mid' : 'none'}
@@ -3298,8 +3401,10 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
             motionBlur={turn * blur}
             sport={sportWheel}
             design={realWheelDesign(props.shape)}
-            ghost={props.wheelGhost?.[id]}
+            ghost={props.wheelGhost?.[id] === undefined ? undefined : Math.max(0, Math.min(1, keyedValue(props.wheelGhost[id], t, 1)))}
             heat={heatOf(id)}
+            squeeze={squeezeOf(id)}
+            tread={tread}
             brake={
               ev && id === 'FR'
                 ? {
@@ -3321,6 +3426,53 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
         );
       })}
 
+      {/* No. 016 (N6): brake dust off the near discs (grey, never orange) */}
+      {(['front', 'rear'] as const).map((which) => {
+        const puffs = dustOf(which);
+        if (!puffs.length) return null;
+        const w = WHEELS[which === 'front' ? 'FR' : 'RR'];
+        return <BrakeDust key={which} puffs={puffs} origin={[dir * w.x - dir * 0.08, R * 0.62, w.z + 0.16]} dir={dir} mood={mood} />;
+      })}
+      {/* No. 016 (N6): the motor doing the slowing, hub → drive unit (ink, F4) */}
+      {regenK ? (
+        <InkArrowAlong
+          points={(
+            [
+              [1.35, 0.36, 0.99],
+              [1.27, 0.6, 0.99],
+              [1.17, 0.84, 0.9],
+              [1.12, 0.9, 0.62],
+              [1.17, 0.76, 0.42],
+            ] as V3[]
+          ).map((q) => toWorld(props, q))}
+          drawn={regenK.drawn}
+          opacity={regenK.opacity}
+          radius={arrowR}
+          mood={mood}
+        />
+      ) : null}
+      {/* No. 016 (N7): the weight on a wheel (ink, no number) */}
+      {weightK && props.weightArrow ? (
+        (() => {
+          const wa = props.weightArrow;
+          const w = WHEELS[(wa.wheel ?? 'rear') === 'front' ? 'FR' : 'RR'];
+          const tip = R * 2 + 0.12;
+          // over the wheel's front half: the tread meter (`treadTicks`) stands over its rear half
+          const x = dir * (w.x + 0.12);
+          return (
+            <InkArrowAlong
+              points={[
+                [x, tip + (wa.length ?? 0.7), w.z + 0.25],
+                [x, tip, w.z + 0.25],
+              ]}
+              drawn={weightK.drawn}
+              opacity={weightK.opacity}
+              radius={arrowR * 1.4}
+              mood={mood}
+            />
+          );
+        })()
+      ) : null}
       {/* No. 014 (N5): the air resistance at the nose (ink, never bloomed) and the streamlines over the car */}
       {da && daGlow > 0.01 ? (
         <DragArrow

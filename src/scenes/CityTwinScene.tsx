@@ -92,7 +92,8 @@ export type CityTwinFraming =
   | 'hybridFront'
   | 'bay'
   | 'battery'
-  | 'bottomCar';
+  | 'bottomCar'
+  | 'wheels';
 
 export type CityTwinSceneProps = {
   durationInFrames: number;
@@ -137,6 +138,19 @@ export type CityTwinSceneProps = {
   snow?: {density?: number; gusts?: number[]} | boolean;
   /** How both cars' wheels turn (a car's own `wheels` wins). Default 'forward'. */
   wheels?: WheelMode;
+  /**
+   * No. 016: both lanes' ground-level wear streaming with the road ('city': patches, crack seal, a utility cover, raised
+   * markers, curb joints; `CarCityRoad` `pavement`), so a moving twin reads as moving with no storefronts. A car's own
+   * `pavement` wins. Default false (No. 014 as posted).
+   */
+  pavement?: boolean;
+  /**
+   * No. 016 ('forward'): the drawn wheel turn's cap for both twins and their leads, rad a frame (default the rim's alias
+   * limit, 0.45 = 26° on 5 spokes). 0.25 (14°, a fifth of a spoke pitch) reads clearly as rolling forward at 'stack'.
+   */
+  wheelStep?: number;
+  /** No. 016 ('forward'): the spokes' smear at full speed, rad (default 0.4). */
+  wheelSmearMax?: number;
   /** Framing preset (default 'stack'). */
   framing?: CityTwinFraming;
   camera?: {from: Framing; to?: Framing};
@@ -160,9 +174,34 @@ export type CityTwinSceneProps = {
 const gapOf = (p: Partial<CityTwinSceneProps>) => p.laneGap ?? 3.0;
 const laneY = (p: Partial<CityTwinSceneProps>, w: Which) => (w === 'top' ? gapOf(p) : 0);
 
-/** The framings (world; set on test stills). The top car's own framings sit on its lane. */
+/** The top twin's body (its own `shape`, else the lane's default, 'sedan'). */
+const topShapeOf = (p: Partial<CityTwinSceneProps>): ShellProfile => p.top?.shape ?? DEFAULTS.top.shape ?? 'sedan';
+
+/**
+ * The framings (world; set on test stills). The top car's own framings sit on its lane. No. 016 (N5): with crossover
+ * twins (the top twin's `shape: 'crossover'`), 'bays', 'twinBrakes', 'bottomCar' and 'wheels' are set for the taller
+ * pair; every other pair (No. 014's sedans) keeps the values it was posted with.
+ */
 export const cityTwinFramings = (p: Partial<CityTwinSceneProps>): Record<CityTwinFraming, Framing> => {
   const g = gapOf(p);
+  const sedan = cityTwinSedanFramings(g);
+  if (topShapeOf(p) !== 'crossover') return sedan;
+  return {
+    ...sedan,
+    // both front bays: the EV's drive unit on top, the four-cylinder and its oil pan below (the oil pan sits behind the
+    // near front wheel at this angle: ghost that wheel, `wheelGhost: {FR: …}`, to show it)
+    bays: {look: [-1.45, g / 2 + 0.55, 0.45], distance: 12.5},
+    // both near front wheels whole, the calipers behind the spokes, the drive unit over the top wheel (the ink arrow)
+    twinBrakes: {look: [-1.3, g / 2 + 0.3, 0.8], distance: 11.0},
+    // the gas twin whole, low in the frame; the top lane above it and sky over that for a counter
+    bottomCar: {look: [-0.1, 0.95, 0.3], distance: 19},
+    // both near rear wheels whole and the road under them (the tread, the weight arrow)
+    wheels: {look: [1.3, g / 2 + 0.3, 0.8], distance: 11.0},
+  };
+};
+
+/** No. 014's framings (the sedan pair), as posted. */
+const cityTwinSedanFramings = (g: number): Record<CityTwinFraming, Framing> => {
   return {
     stack: {look: [-3.3, g / 2 - 1.15, 0.3], distance: 58},
     stackLow: {look: [-3.3, g / 2 + 0.9, 0.3], distance: 60},
@@ -174,6 +213,7 @@ export const cityTwinFramings = (p: Partial<CityTwinSceneProps>): Record<CityTwi
     bay: {look: [-1.4, g + 0.55, 0.4], distance: 4.4},
     battery: {look: [0.62, g + 0.3, 0.6], distance: 3.4},
     bottomCar: {look: [0.25, 0.55, 0.3], distance: 16.5},
+    wheels: {look: [1.3, g / 2 + 0.3, 0.8], distance: 11.0},
   };
 };
 
@@ -257,6 +297,9 @@ const carBase = (p: Partial<CityTwinSceneProps>, w: Which, fps: number): Partial
     road,
     driving: p.driving ?? [{at: 0, speed: 0}],
     wheels: p.wheels,
+    ...(p.pavement !== undefined ? {pavement: p.pavement} : {}),
+    ...(p.wheelStep !== undefined ? {wheelStep: p.wheelStep} : {}),
+    ...(p.wheelSmearMax !== undefined ? {wheelSmearMax: p.wheelSmearMax} : {}),
     ...car,
     corners: road === 'city' ? corners : undefined,
     startFrame: p.startFrame,
@@ -301,12 +344,13 @@ const leadAt = (p: Partial<CityTwinSceneProps>, w: Which, t: number, fps: number
   const ahead = L.driving
     ? gap + simRevs({...car, driving: L.driving, revsFrom: 0}, t, fps) * WHEEL_C - V(t)
     : gap + V(t + lag) - V(t);
-  const cap = capRevs(fps);
+  // the twin's cap (its `wheelStep`, else the rim's alias limit), so lead and twin roll alike
+  const cap = car.wheelStep !== undefined ? Math.min(capRevs(fps), (car.wheelStep * fps) / (2 * Math.PI)) : capRevs(fps);
   // its wheels: the twin's drawn turn `lag` s later (so the loop's solved angle holds), or its own capped turn
   const drawnRevs = L.driving ? cappedTravel((x) => speedAt(L.driving!, x, 0.8), t, cap) : wheelTurnRevs(car, t + lag, fps);
   const v = speedAt(leadDrv, t, 0.8);
   const realBlur = v * 2 * Math.PI * (0.5 / fps);
-  const blur = wheelMode(car.wheels) === 'legacy' ? realBlur : wheelSmear(realBlur, v, cap);
+  const blur = wheelMode(car.wheels) === 'legacy' ? realBlur : wheelSmear(realBlur, v, cap, car.wheelSmearMax);
   const lamps = L.brake !== undefined ? keyedValue(L.brake, t, 0) : autoLamps(leadDrv, t);
   return {
     x: -(NOSE_X + ahead + LEAD_HALF),
