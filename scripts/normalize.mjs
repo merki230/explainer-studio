@@ -6,11 +6,13 @@
 //   treated as the raw render and moved to the raw path first. Output: src/videos/<slug>/release/<slug>.mp4 (git-ignored).
 //   With --short <n> (a Short cut from chapter n) the files are named <slug>-short-<n> instead of <slug>.
 //
-// Target: -14 LUFS integrated, -1.5 dBTP, LRA 11 (edit TARGET to change). loudnorm itself runs with a
-// tighter TP (INTERNAL_TP, -2.5) because its dynamic mode overshoots; the result is checked against -1.5.
-// Pass 1 measures, pass 2 applies with linear=true. When linear can't reach the target without the true
-// peak passing TP (typical for a quiet voice mix), loudnorm falls back to dynamic mode; the script
-// reports which mode ran. The bundled ffmpeg has no alimiter, so there is no other way to reach -14.
+// Target: -14 LUFS (+-1), -1.5 dBTP, LRA 11 (edit TARGET to change). loudnorm runs with a tighter internal TP
+// (INTERNAL_TPS, first -2.5) because its dynamic mode overshoots. Pass 1 measures, pass 2 applies with
+// linear=true. When linear can't reach the target without the true peak passing TP (typical for a quiet
+// voice mix), loudnorm falls back to dynamic mode. The written file is verified; if its true peak is above
+// -1.5 or loudness is outside +-1 LU, pass 1+2 repeat with the next, tighter internal TP (down to -6.5) and
+// the script reports every try. The bundled ffmpeg has only loudnorm and volume (no alimiter/compressor),
+// so a tighter internal TP is the only limiter available; it costs some dynamics on peaky voice mixes.
 // Audio: AAC, 48 kHz, 192k, trimmed to the video's length (AAC priming adds ~0.1 s of padding).
 // Checks: video frame count and duration equal the raw file's; audio start within 1 frame of video.
 import {execFileSync, spawnSync} from 'node:child_process';
@@ -22,7 +24,8 @@ import {compId, takeShort} from './lib.mjs';
 const TARGET = {I: -14, TP: -1.5, LRA: 11};
 // loudnorm in dynamic mode overshoots the TP it is given (and the AAC encode adds a little), so it is
 // fed a tighter internal TP; the final file is still checked against TARGET.TP.
-const INTERNAL_TP = -2.5;
+const INTERNAL_TPS = [-2.5, -3.5, -4.5, -5.5, -6.5];
+const I_TOLERANCE = 1;
 const FPS = 30;
 
 const ffmpeg = (args) => {
@@ -69,39 +72,48 @@ export const normalize = (slug, short = null) => {
     renameSync(final, raw);
   }
   mkdirSync(dirname(final), {recursive: true});
-  const target = `I=${TARGET.I}:TP=${INTERNAL_TP}:LRA=${TARGET.LRA}`;
   const rawInfo = probe(raw);
   if (rawInfo.aStart === null) throw new Error(`${raw} has no audio stream.`);
-
-  console.log(`Measuring ${raw} ...`);
-  const m = loudnormJson(ffmpeg(['-i', raw, '-vn', '-af', `loudnorm=${target}:print_format=json`, '-f', 'null', '-']));
-  const gain = TARGET.I - Number(m.input_i);
-  const linearOk = Number(m.input_tp) + gain <= INTERNAL_TP;
-  const measured =
-    `measured_I=${m.input_i}:measured_TP=${m.input_tp}:measured_LRA=${m.input_lra}:` +
-    `measured_thresh=${m.input_thresh}:offset=${m.target_offset}`;
-
   const tmp = `out/${slug}/raw/${name}.normalizing.mp4`;
-  const args = [
-    '-y', '-i', raw, '-map', '0:v', '-map', '0:a', '-c:v', 'copy',
-    '-af', `loudnorm=${target}:${measured}:linear=true:print_format=json`,
-    '-ar', '48000', '-c:a', 'aac', '-b:a', '192k', '-t', String(rawInfo.vDur), '-movflags', '+faststart', tmp,
-  ];
-  console.log(`Applying (${linearOk ? 'linear expected' : 'linear would exceed true peak, dynamic fallback expected'}) ...`);
-  const applied = loudnormJson(ffmpeg(args));
-  rmSync(final, {force: true});
-  renameSync(tmp, final);
-
-  // Verify the written file: loudness, sync, frames.
-  const after = loudnormJson(ffmpeg(['-i', final, '-vn', '-af', `loudnorm=${target}:print_format=json`, '-f', 'null', '-']));
-  const out = probe(final);
   const frame = 1 / FPS;
-  const problems = [];
-  if (Number(after.input_tp) > TARGET.TP) problems.push(`true peak ${after.input_tp} dBTP is above ${TARGET.TP}`);
+
+  // Try INTERNAL_TPS in order; the first written file that meets TP and loudness wins. Files that already
+  // pass with the first value (-2.5) take exactly the path they always took.
+  let m, gain, linearOk, applied, after, out, tpUsed, problems;
+  const tried = [];
+  for (const tp of INTERNAL_TPS) {
+    const target = `I=${TARGET.I}:TP=${tp}:LRA=${TARGET.LRA}`;
+    console.log(`Measuring ${raw} (internal TP ${tp}) ...`);
+    m = loudnormJson(ffmpeg(['-i', raw, '-vn', '-af', `loudnorm=${target}:print_format=json`, '-f', 'null', '-']));
+    gain = TARGET.I - Number(m.input_i);
+    linearOk = Number(m.input_tp) + gain <= tp;
+    const measured =
+      `measured_I=${m.input_i}:measured_TP=${m.input_tp}:measured_LRA=${m.input_lra}:` +
+      `measured_thresh=${m.input_thresh}:offset=${m.target_offset}`;
+    const args = [
+      '-y', '-i', raw, '-map', '0:v', '-map', '0:a', '-c:v', 'copy',
+      '-af', `loudnorm=${target}:${measured}:linear=true:print_format=json`,
+      '-ar', '48000', '-c:a', 'aac', '-b:a', '192k', '-t', String(rawInfo.vDur), '-movflags', '+faststart', tmp,
+    ];
+    console.log(`Applying (${linearOk ? 'linear expected' : 'linear would exceed true peak, dynamic fallback expected'}) ...`);
+    applied = loudnormJson(ffmpeg(args));
+    rmSync(final, {force: true});
+    renameSync(tmp, final);
+    after = loudnormJson(ffmpeg(['-i', final, '-vn', '-af', `loudnorm=${target}:print_format=json`, '-f', 'null', '-']));
+    out = probe(final);
+    tpUsed = tp;
+    problems = [];
+    if (Number(after.input_tp) > TARGET.TP) problems.push(`true peak ${after.input_tp} dBTP is above ${TARGET.TP}`);
+    if (Math.abs(Number(after.input_i) - TARGET.I) > I_TOLERANCE) problems.push(`loudness ${after.input_i} LUFS is not within ${I_TOLERANCE} LU of ${TARGET.I}`);
+    tried.push(`TP ${tp}: ${Number(after.input_i).toFixed(1)} LUFS, ${Number(after.input_tp).toFixed(1)} dBTP`);
+    if (!problems.length) break;
+    console.log(`  failed (${problems.join('; ')}), trying a tighter internal TP ...`);
+  }
   if (out.frames !== rawInfo.frames) problems.push(`frame count ${rawInfo.frames} -> ${out.frames}`);
   if (Math.abs(out.vDur - rawInfo.vDur) > 1e-3) problems.push(`video duration ${rawInfo.vDur} -> ${out.vDur}`);
   if (Math.abs(out.aStart - out.vStart) > frame) problems.push(`audio starts ${(out.aStart - out.vStart).toFixed(3)} s off video`);
 
+  if (tried.length > 1) console.log(`Retries: ${tried.join(' | ')}; kept internal TP ${tpUsed}`);
   console.log(`Mode:    ${applied.normalization_type}${linearOk ? '' : ' (linear would put the true peak at ' + (Number(m.input_tp) + gain).toFixed(1) + ' dBTP)'}`);
   console.log(`Before:  ${fmt(m, 'input_')}`);
   console.log(`After:   ${fmt(after, 'input_')}   (target ${TARGET.I} LUFS, <= ${TARGET.TP} dBTP)`);
