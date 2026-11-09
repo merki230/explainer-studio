@@ -1016,6 +1016,15 @@ export type RealCarProps = {
   benchShift?: number;
   /** No. 014 (N6): frost on the glass, 0 → 1: the windows whiten and close up (a cold morning). Default 0. */
   frost?: number;
+  /** No. 017 (brand § 3): the cluster's face lit but blank (no readable digits or words). Default false. */
+  clusterBlank?: boolean;
+  /** No. 017: × the frost's colour (a brightly lit garage: keep lit frost ≤ 244, brand § 2). Default 1 (No. 014 as posted). */
+  frostTone?: number;
+  /**
+   * No. 017 (N1): the dash sectioned this far back from the near cut (z of its cut face) where the HVAC box sits, so the
+   * box (drawn by the scene, its own cut ring at the near cut) shows inside it. Default none (the dash to the cut).
+   */
+  hvacDashZ?: number;
 };
 
 const TAIL_RED = raw(HIGHWAY.tailLight);
@@ -1057,6 +1066,9 @@ export const RealCar: React.FC<RealCarProps> = ({
   sillFrom,
   benchShift = 0,
   frost = 0,
+  frostTone = 1,
+  hvacDashZ,
+  clusterBlank = false,
 }) => {
   const split = gas || splitDash;
   // the gas car's body is the EV's (open bay) plus a sill
@@ -1077,10 +1089,10 @@ export const RealCar: React.FC<RealCarProps> = ({
     const tx = new THREE.CanvasTexture(c);
     return {c, tx, key: '', mat: new THREE.MeshBasicMaterial({map: tx})};
   }, []);
-  const faceKey = evCluster ? `ev|${speed}|${Math.round(evCluster.power * 100)}` : `${warning}|${speed}|${tireLight}`;
+  const faceKey = clusterBlank ? 'blank' : evCluster ? `ev|${speed}|${Math.round(evCluster.power * 100)}` : `${warning}|${speed}|${tireLight}`;
   if (ready && face.key !== faceKey) {
-    if (evCluster) drawEvCluster(face.c.getContext('2d')!, 380, 120, {speed, power: evCluster.power});
-    else drawCluster(face.c.getContext('2d')!, 380, 120, {warning, speed, trip: 'TRIP 12:40', tireLight});
+    if (evCluster) drawEvCluster(face.c.getContext('2d')!, 380, 120, {speed, power: evCluster.power, blank: clusterBlank});
+    else drawCluster(face.c.getContext('2d')!, 380, 120, {warning, speed, trip: 'TRIP 12:40', tireLight, blank: clusterBlank});
     face.tx.needsUpdate = true;
     face.key = faceKey;
   }
@@ -1247,11 +1259,13 @@ export const RealCar: React.FC<RealCarProps> = ({
   applyAlbedo([mats.paint, mats.trim, mats.seat, mats.carpet, mats.receiver, mats.gloss, mats.bumper], albedo);
   // No. 014 (N6): frost whitens the glass and closes it up (each pane's own colour and opacity kept to come back to)
   for (const g of [mats.glass, mats.tint, mats.glassTint, mats.rakedGlass]) {
-    const u = g.userData as {base?: {c: THREE.Color; o: number}};
-    u.base ??= {c: g.color.clone(), o: g.opacity};
+    const u = g.userData as {base?: {c: THREE.Color; o: number; r: number}};
+    u.base ??= {c: g.color.clone(), o: g.opacity, r: (g as THREE.MeshStandardMaterial).roughness ?? 0};
     const k = Math.max(0, Math.min(1, frost));
-    g.color.copy(u.base.c).lerp(raw(WINTER.frost), k);
+    g.color.copy(u.base.c).lerp(frostTone === 1 ? raw(WINTER.frost) : raw(WINTER.frost).multiplyScalar(frostTone), k);
     g.opacity = u.base.o + (0.9 - u.base.o) * k;
+    // No. 017 (gated with `frostTone`): frost is rough, so it scatters the sun's reflection (lit frost ≤ 244, brand § 2)
+    if ('roughness' in g) (g as THREE.MeshStandardMaterial).roughness = frostTone === 1 ? u.base.r : u.base.r + (0.95 - u.base.r) * k;
   }
   if (style) applyAlbedo([mats.grille, mats.gloss2, mats.bolster], albedo);
 
@@ -1321,6 +1335,9 @@ export const RealCar: React.FC<RealCarProps> = ({
   const [sx, sy, sz] = L.steering;
   // across the car: the whole width, or from the far side to the near cut
   const span = whole ? {w: 1.6, z: 0} : {w: L.cutZ + 0.87, z: (L.cutZ - 0.87) / 2};
+  // No. 017 (N1): the dash cut back for the HVAC box (the box draws the cut at the near cut)
+  const dashSpan = !whole && hvacDashZ !== undefined ? {w: hvacDashZ + 0.87, z: (hvacDashZ - 0.87) / 2} : span;
+  const hvacCut = !whole && hvacDashZ !== undefined;
   // the cut car's lamps (x, y): headlights on the nose, the far tail lamp, the centre high-mount lamp
   const lamps: Record<'head' | 'tail' | 'high', P2> = cs
     ? cs.lamps
@@ -1529,12 +1546,12 @@ export const RealCar: React.FC<RealCarProps> = ({
           <>
             {/* the gas car: the dash's top slab runs to the cut; below it the dash is sectioned at GAS_DASH_Z */}
             <mesh
-              position={[0.92, 1.16, span.z]}
+              position={[0.92, 1.16, dashSpan.z]}
               material={[mats.trim, mats.trim, mats.trim, mats.trim, mats.cut, mats.trim]}
               castShadow
               receiveShadow
             >
-              <boxGeometry args={[0.4, 0.12, span.w]} />
+              <boxGeometry args={[0.4, 0.12, dashSpan.w]} />
             </mesh>
             <mesh
               position={[0.92, 1.01, (GAS_DASH_Z - 0.87) / 2]}
@@ -1546,10 +1563,14 @@ export const RealCar: React.FC<RealCarProps> = ({
             </mesh>
             <CutOutline
               rects={[
-                [
-                  [0.72, 1.1, L.cutZ],
-                  [1.12, 1.22, L.cutZ],
-                ],
+                ...(hvacCut
+                  ? []
+                  : ([
+                      [
+                        [0.72, 1.1, L.cutZ],
+                        [1.12, 1.22, L.cutZ],
+                      ],
+                    ] as [V3, V3][])),
                 [
                   [0.72, 0.92, GAS_DASH_Z],
                   [1.12, 1.1, GAS_DASH_Z],
@@ -1560,15 +1581,15 @@ export const RealCar: React.FC<RealCarProps> = ({
           </>
         ) : (
           <mesh
-            position={[0.92, 1.08, span.z]}
+            position={[0.92, 1.08, dashSpan.z]}
             material={[mats.trim, mats.trim, mats.trim, mats.trim, whole ? mats.trim : mats.cut, mats.trim]}
             castShadow
             receiveShadow
           >
-            <boxGeometry args={[0.4, 0.28, span.w]} />
+            <boxGeometry args={[0.4, 0.28, dashSpan.w]} />
           </mesh>
         )}
-        {whole || split || cg ? null : (
+        {whole || split || cg || hvacCut ? null : (
           <CutOutline
             rects={[
               [

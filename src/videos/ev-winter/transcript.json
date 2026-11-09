@@ -1,0 +1,955 @@
+{
+  "audio": "audio/voiceover.mp3",
+  "words": [
+    {
+      "text": "A",
+      "start": 0.133,
+      "end": 0.16
+    },
+    {
+      "text": "gas",
+      "start": 0.24,
+      "end": 0.48
+    },
+    {
+      "text": "car",
+      "start": 0.56,
+      "end": 0.8
+    },
+    {
+      "text": "heats",
+      "start": 0.88,
+      "end": 1.2
+    },
+    {
+      "text": "you",
+      "start": 1.28,
+      "end": 1.36
+    },
+    {
+      "text": "with",
+      "start": 1.44,
+      "end": 1.52
+    },
+    {
+      "text": "heat",
+      "start": 1.6,
+      "end": 1.84
+    },
+    {
+      "text": "it",
+      "start": 1.88,
+      "end": 1.92
+    },
+    {
+      "text": "was",
+      "start": 2,
+      "end": 2.08
+    },
+    {
+      "text": "going",
+      "start": 2.16,
+      "end": 2.32
+    },
+    {
+      "text": "to",
+      "start": 2.36,
+      "end": 2.4
+    },
+    {
+      "text": "throw",
+      "start": 2.52,
+      "end": 2.64
+    },
+    {
+      "text": "away.",
+      "start": 2.88,
+      "end": 3.6
+    },
+    {
+      "text": "An",
+      "start": 3.72,
+      "end": 3.84
+    },
+    {
+      "text": "EV",
+      "start": 3.92,
+      "end": 4.32
+    },
+    {
+      "text": "has",
+      "start": 4.44,
+      "end": 4.56
+    },
+    {
+      "text": "to",
+      "start": 4.6,
+      "end": 4.64
+    },
+    {
+      "text": "make",
+      "start": 4.72,
+      "end": 4.8
+    },
+    {
+      "text": "its",
+      "start": 4.88,
+      "end": 4.96
+    },
+    {
+      "text": "heat",
+      "start": 5.04,
+      "end": 5.2
+    },
+    {
+      "text": "from",
+      "start": 5.28,
+      "end": 5.36
+    },
+    {
+      "text": "the",
+      "start": 5.48,
+      "end": 5.6
+    },
+    {
+      "text": "same",
+      "start": 5.72,
+      "end": 5.84
+    },
+    {
+      "text": "battery",
+      "start": 5.92,
+      "end": 6.24
+    },
+    {
+      "text": "that",
+      "start": 6.32,
+      "end": 6.4
+    },
+    {
+      "text": "drives",
+      "start": 6.48,
+      "end": 6.8
+    },
+    {
+      "text": "it.",
+      "start": 6.88,
+      "end": 7.44
+    },
+    {
+      "text": "You've",
+      "start": 7.52,
+      "end": 7.76
+    },
+    {
+      "text": "probably",
+      "start": 8,
+      "end": 8.24
+    },
+    {
+      "text": "heard",
+      "start": 8.4,
+      "end": 8.56
+    },
+    {
+      "text": "the",
+      "start": 8.64,
+      "end": 8.72
+    },
+    {
+      "text": "cold",
+      "start": 8.8,
+      "end": 9.2
+    },
+    {
+      "text": "drains",
+      "start": 9.28,
+      "end": 9.6
+    },
+    {
+      "text": "the",
+      "start": 9.64,
+      "end": 9.68
+    },
+    {
+      "text": "battery.",
+      "start": 9.76,
+      "end": 10.64
+    },
+    {
+      "text": "But",
+      "start": 10.76,
+      "end": 10.88
+    },
+    {
+      "text": "in",
+      "start": 10.96,
+      "end": 11.12
+    },
+    {
+      "text": "one",
+      "start": 11.2,
+      "end": 11.28
+    },
+    {
+      "text": "lab",
+      "start": 11.36,
+      "end": 11.52
+    },
+    {
+      "text": "test",
+      "start": 11.6,
+      "end": 11.92
+    },
+    {
+      "text": "at",
+      "start": 12,
+      "end": 12.08
+    },
+    {
+      "text": "20",
+      "start": 12.2,
+      "end": 12.32
+    },
+    {
+      "text": "degrees,",
+      "start": 12.4,
+      "end": 13.28
+    },
+    {
+      "text": "range",
+      "start": 13.36,
+      "end": 13.68
+    },
+    {
+      "text": "fell",
+      "start": 13.8,
+      "end": 13.92
+    },
+    {
+      "text": "12",
+      "start": 14,
+      "end": 14.24
+    },
+    {
+      "text": "percent",
+      "start": 14.4,
+      "end": 14.8
+    },
+    {
+      "text": "with",
+      "start": 14.88,
+      "end": 14.96
+    },
+    {
+      "text": "the",
+      "start": 15,
+      "end": 15.04
+    },
+    {
+      "text": "heater",
+      "start": 15.08,
+      "end": 15.36
+    },
+    {
+      "text": "off,",
+      "start": 15.52,
+      "end": 16
+    },
+    {
+      "text": "and",
+      "start": 16.04,
+      "end": 16.08
+    },
+    {
+      "text": "about",
+      "start": 16.16,
+      "end": 16.48
+    },
+    {
+      "text": "40",
+      "start": 16.56,
+      "end": 16.84
+    },
+    {
+      "text": "percent",
+      "start": 16.88,
+      "end": 17.28
+    },
+    {
+      "text": "with",
+      "start": 17.36,
+      "end": 17.44
+    },
+    {
+      "text": "it",
+      "start": 17.48,
+      "end": 17.52
+    },
+    {
+      "text": "on.",
+      "start": 17.6,
+      "end": 18.32
+    },
+    {
+      "text": "Most",
+      "start": 18.4,
+      "end": 18.64
+    },
+    {
+      "text": "of",
+      "start": 18.72,
+      "end": 18.8
+    },
+    {
+      "text": "that",
+      "start": 18.92,
+      "end": 19.04
+    },
+    {
+      "text": "was",
+      "start": 19.12,
+      "end": 19.2
+    },
+    {
+      "text": "the",
+      "start": 19.28,
+      "end": 19.36
+    },
+    {
+      "text": "heater.",
+      "start": 19.4,
+      "end": 20.24
+    },
+    {
+      "text": "The",
+      "start": 20.32,
+      "end": 20.4
+    },
+    {
+      "text": "cold",
+      "start": 20.48,
+      "end": 20.8
+    },
+    {
+      "text": "slows",
+      "start": 20.88,
+      "end": 21.2
+    },
+    {
+      "text": "the",
+      "start": 21.24,
+      "end": 21.28
+    },
+    {
+      "text": "battery",
+      "start": 21.48,
+      "end": 21.68
+    },
+    {
+      "text": "too,",
+      "start": 21.76,
+      "end": 22.32
+    },
+    {
+      "text": "so",
+      "start": 22.44,
+      "end": 22.56
+    },
+    {
+      "text": "braking",
+      "start": 22.64,
+      "end": 23.04
+    },
+    {
+      "text": "recovers",
+      "start": 23.12,
+      "end": 23.52
+    },
+    {
+      "text": "less",
+      "start": 23.6,
+      "end": 23.76
+    },
+    {
+      "text": "energy.",
+      "start": 23.84,
+      "end": 24.72
+    },
+    {
+      "text": "And",
+      "start": 24.76,
+      "end": 24.8
+    },
+    {
+      "text": "the",
+      "start": 24.88,
+      "end": 24.96
+    },
+    {
+      "text": "heater",
+      "start": 25,
+      "end": 25.28
+    },
+    {
+      "text": "draws",
+      "start": 25.36,
+      "end": 25.68
+    },
+    {
+      "text": "power",
+      "start": 25.88,
+      "end": 26.08
+    },
+    {
+      "text": "every",
+      "start": 26.16,
+      "end": 26.56
+    },
+    {
+      "text": "minute,",
+      "start": 26.72,
+      "end": 27.12
+    },
+    {
+      "text": "so",
+      "start": 27.24,
+      "end": 27.36
+    },
+    {
+      "text": "short",
+      "start": 27.48,
+      "end": 27.6
+    },
+    {
+      "text": "trips",
+      "start": 27.68,
+      "end": 27.92
+    },
+    {
+      "text": "hurt",
+      "start": 28,
+      "end": 28.24
+    },
+    {
+      "text": "most.",
+      "start": 28.44,
+      "end": 29.12
+    },
+    {
+      "text": "Test",
+      "start": 29.24,
+      "end": 29.36
+    },
+    {
+      "text": "drivers",
+      "start": 29.56,
+      "end": 29.76
+    },
+    {
+      "text": "lost",
+      "start": 29.84,
+      "end": 30.08
+    },
+    {
+      "text": "about",
+      "start": 30.16,
+      "end": 30.32
+    },
+    {
+      "text": "a",
+      "start": 30.4,
+      "end": 30.48
+    },
+    {
+      "text": "quarter",
+      "start": 30.56,
+      "end": 30.88
+    },
+    {
+      "text": "of",
+      "start": 30.96,
+      "end": 31.04
+    },
+    {
+      "text": "their",
+      "start": 31.12,
+      "end": 31.2
+    },
+    {
+      "text": "range",
+      "start": 31.36,
+      "end": 31.52
+    },
+    {
+      "text": "on",
+      "start": 31.56,
+      "end": 31.6
+    },
+    {
+      "text": "the",
+      "start": 31.68,
+      "end": 31.76
+    },
+    {
+      "text": "highway,",
+      "start": 31.88,
+      "end": 32.48
+    },
+    {
+      "text": "and",
+      "start": 32.56,
+      "end": 32.64
+    },
+    {
+      "text": "earlier",
+      "start": 32.72,
+      "end": 33.04
+    },
+    {
+      "text": "tests",
+      "start": 33.12,
+      "end": 33.52
+    },
+    {
+      "text": "found",
+      "start": 33.6,
+      "end": 33.68
+    },
+    {
+      "text": "about",
+      "start": 33.76,
+      "end": 34.08
+    },
+    {
+      "text": "half",
+      "start": 34.24,
+      "end": 34.4
+    },
+    {
+      "text": "on",
+      "start": 34.48,
+      "end": 34.64
+    },
+    {
+      "text": "short",
+      "start": 34.76,
+      "end": 34.88
+    },
+    {
+      "text": "trips.",
+      "start": 34.92,
+      "end": 35.76
+    },
+    {
+      "text": "That",
+      "start": 35.88,
+      "end": 36
+    },
+    {
+      "text": "lost",
+      "start": 36.08,
+      "end": 36.32
+    },
+    {
+      "text": "range",
+      "start": 36.4,
+      "end": 36.64
+    },
+    {
+      "text": "returns",
+      "start": 36.88,
+      "end": 37.12
+    },
+    {
+      "text": "in",
+      "start": 37.2,
+      "end": 37.36
+    },
+    {
+      "text": "spring,",
+      "start": 37.56,
+      "end": 37.92
+    },
+    {
+      "text": "without",
+      "start": 38.12,
+      "end": 38.32
+    },
+    {
+      "text": "lasting",
+      "start": 38.48,
+      "end": 38.64
+    },
+    {
+      "text": "harm",
+      "start": 38.72,
+      "end": 38.88
+    },
+    {
+      "text": "to",
+      "start": 38.96,
+      "end": 39.04
+    },
+    {
+      "text": "the",
+      "start": 39.08,
+      "end": 39.12
+    },
+    {
+      "text": "battery,",
+      "start": 39.32,
+      "end": 39.68
+    },
+    {
+      "text": "one",
+      "start": 39.76,
+      "end": 39.92
+    },
+    {
+      "text": "study",
+      "start": 40.08,
+      "end": 40.24
+    },
+    {
+      "text": "of",
+      "start": 40.32,
+      "end": 40.4
+    },
+    {
+      "text": "30,000",
+      "start": 40.48,
+      "end": 40.64
+    },
+    {
+      "text": "EVs",
+      "start": 40.8,
+      "end": 41.6
+    },
+    {
+      "text": "says.",
+      "start": 41.76,
+      "end": 42.4
+    },
+    {
+      "text": "Until",
+      "start": 42.56,
+      "end": 42.72
+    },
+    {
+      "text": "then,",
+      "start": 42.8,
+      "end": 43.2
+    },
+    {
+      "text": "a",
+      "start": 43.28,
+      "end": 43.36
+    },
+    {
+      "text": "heat",
+      "start": 43.48,
+      "end": 43.6
+    },
+    {
+      "text": "pump",
+      "start": 43.68,
+      "end": 43.84
+    },
+    {
+      "text": "helps",
+      "start": 43.92,
+      "end": 44.24
+    },
+    {
+      "text": "by",
+      "start": 44.36,
+      "end": 44.48
+    },
+    {
+      "text": "moving",
+      "start": 44.64,
+      "end": 44.8
+    },
+    {
+      "text": "heat",
+      "start": 44.96,
+      "end": 45.12
+    },
+    {
+      "text": "in",
+      "start": 45.2,
+      "end": 45.36
+    },
+    {
+      "text": "from",
+      "start": 45.44,
+      "end": 45.52
+    },
+    {
+      "text": "outside",
+      "start": 45.6,
+      "end": 46.16
+    },
+    {
+      "text": "instead",
+      "start": 46.24,
+      "end": 46.56
+    },
+    {
+      "text": "of",
+      "start": 46.64,
+      "end": 46.72
+    },
+    {
+      "text": "making",
+      "start": 46.88,
+      "end": 47.04
+    },
+    {
+      "text": "it,",
+      "start": 47.12,
+      "end": 47.627
+    },
+    {
+      "text": "but",
+      "start": 47.733,
+      "end": 47.84
+    },
+    {
+      "text": "less",
+      "start": 48,
+      "end": 48.16
+    },
+    {
+      "text": "in",
+      "start": 48.24,
+      "end": 48.32
+    },
+    {
+      "text": "deep",
+      "start": 48.4,
+      "end": 48.56
+    },
+    {
+      "text": "cold.",
+      "start": 48.64,
+      "end": 49.44
+    },
+    {
+      "text": "Seat",
+      "start": 49.52,
+      "end": 49.84
+    },
+    {
+      "text": "and",
+      "start": 49.92,
+      "end": 50
+    },
+    {
+      "text": "steering-wheel",
+      "start": 50.08,
+      "end": 50.56
+    },
+    {
+      "text": "heaters",
+      "start": 50.64,
+      "end": 50.96
+    },
+    {
+      "text": "help",
+      "start": 51.04,
+      "end": 51.28
+    },
+    {
+      "text": "too,",
+      "start": 51.52,
+      "end": 51.84
+    },
+    {
+      "text": "but",
+      "start": 51.92,
+      "end": 52
+    },
+    {
+      "text": "test",
+      "start": 52.08,
+      "end": 52.24
+    },
+    {
+      "text": "drivers",
+      "start": 52.32,
+      "end": 52.72
+    },
+    {
+      "text": "using",
+      "start": 52.88,
+      "end": 53.04
+    },
+    {
+      "text": "only",
+      "start": 53.12,
+      "end": 53.44
+    },
+    {
+      "text": "those",
+      "start": 53.6,
+      "end": 53.76
+    },
+    {
+      "text": "got",
+      "start": 53.84,
+      "end": 54.08
+    },
+    {
+      "text": "uncomfortably",
+      "start": 54.2,
+      "end": 54.88
+    },
+    {
+      "text": "cold.",
+      "start": 54.96,
+      "end": 55.813
+    },
+    {
+      "text": "The",
+      "start": 55.867,
+      "end": 55.92
+    },
+    {
+      "text": "usual",
+      "start": 56,
+      "end": 56.24
+    },
+    {
+      "text": "advice",
+      "start": 56.32,
+      "end": 56.72
+    },
+    {
+      "text": "is",
+      "start": 56.8,
+      "end": 56.88
+    },
+    {
+      "text": "to",
+      "start": 56.96,
+      "end": 57.04
+    },
+    {
+      "text": "preheat",
+      "start": 57.12,
+      "end": 57.6
+    },
+    {
+      "text": "while",
+      "start": 57.68,
+      "end": 57.84
+    },
+    {
+      "text": "still",
+      "start": 57.92,
+      "end": 58.16
+    },
+    {
+      "text": "plugged",
+      "start": 58.2,
+      "end": 58.48
+    },
+    {
+      "text": "in,",
+      "start": 58.56,
+      "end": 58.907
+    },
+    {
+      "text": "so",
+      "start": 58.933,
+      "end": 58.96
+    },
+    {
+      "text": "the",
+      "start": 59.04,
+      "end": 59.12
+    },
+    {
+      "text": "heater",
+      "start": 59.16,
+      "end": 59.44
+    },
+    {
+      "text": "runs",
+      "start": 59.52,
+      "end": 59.68
+    },
+    {
+      "text": "on",
+      "start": 59.76,
+      "end": 59.92
+    },
+    {
+      "text": "wall",
+      "start": 60.04,
+      "end": 60.16
+    },
+    {
+      "text": "power",
+      "start": 60.24,
+      "end": 60.56
+    },
+    {
+      "text": "instead",
+      "start": 60.64,
+      "end": 60.96
+    },
+    {
+      "text": "of",
+      "start": 61,
+      "end": 61.04
+    },
+    {
+      "text": "the",
+      "start": 61.08,
+      "end": 61.12
+    },
+    {
+      "text": "battery.",
+      "start": 61.2,
+      "end": 62.013
+    },
+    {
+      "text": "Do",
+      "start": 62.08,
+      "end": 62.16
+    },
+    {
+      "text": "you",
+      "start": 62.24,
+      "end": 62.32
+    },
+    {
+      "text": "warm",
+      "start": 62.44,
+      "end": 62.56
+    },
+    {
+      "text": "your",
+      "start": 62.64,
+      "end": 62.8
+    },
+    {
+      "text": "car",
+      "start": 62.88,
+      "end": 63.04
+    },
+    {
+      "text": "before",
+      "start": 63.12,
+      "end": 63.36
+    },
+    {
+      "text": "unplugging?",
+      "start": 63.44,
+      "end": 64.08
+    }
+  ]
+}

@@ -1,7 +1,10 @@
 import React, {useMemo} from 'react';
 import {AbsoluteFill, useCurrentFrame, useVideoConfig} from 'remotion';
 import * as THREE from 'three';
-import {CAR, MOODS, TWINS, type Mood} from '../theme';
+import {CAR, MOODS, TWINS, WINTER, type Mood} from '../theme';
+import {raw} from '../three/plaster';
+import {HeatFlow} from '../three/real/HeatKit';
+import {Snow} from '../three/section/Snowfall';
 import type {ShellProfile} from '../three/real/CarShell';
 import {ChargeCable, plugTail, type PlugPose} from '../three/real/ChargeCable';
 import {ChargeDriverFigure, driverLook} from '../three/real/ChargeDriver';
@@ -107,7 +110,7 @@ import {ease, framingAtKeys, keyedValue, type CameraKey, type Keyed} from './key
 type V3 = [number, number, number];
 type P2 = [number, number];
 
-export type PlugSheetFraming = 'sheet' | 'plugs' | 'home' | 'homeWide' | 'pump' | 'fast' | 'row' | 'rowLow' | 'supply';
+export type PlugSheetFraming = 'sheet' | 'plugs' | 'home' | 'homeWide' | 'pump' | 'fast' | 'row' | 'rowLow' | 'supply' | 'garageWide' | 'garageFeed';
 
 /** A beat for YOU at home: the charge kit's `DriverKey`, with home spots for `walkTo` / `lean`. */
 export type HomeSpot = DriverSpot | 'houseDoor' | 'inside' | 'roof' | 'tail' | 'nose' | 'charger';
@@ -135,6 +138,19 @@ export type PlugHome = {
   ledPulses?: number[];
   /** The house meter's turn: revolutions per second while the car is plugged (default 0.09) and otherwise (default 0.015). */
   meter?: {charging?: number; idle?: number};
+  /**
+   * No. 017 (N11): a snowy morning: snow on the driveway past the garage door (a cover cut with the slab, its cut face a
+   * band over the slab's, tire tracks, banks at the back edge and by the door's pier), falling snow over the driveway only
+   * (`snow`: density default 1.5, `maxPx` the flakes' on-screen cap, default 6;
+   * false: none). Frost on the car's glass is the car's own `frost` keys. Default none.
+   */
+  winter?: {snow?: {density?: number; maxPx?: number} | false} | null;
+  /**
+   * No. 017 (N11): preheating on the wall: an orange flow draws from the wall charger along the cable to the port
+   * (the first 55 % of `drawFor`, default 1.2 s), then the car's HVAC feed from the port to the heater (set `car.hvac`;
+   * never into the pack). `fadeAt` fades both (0.6 s); `period` the dots' pace (default 1.2 s). Null: none.
+   */
+  preheat?: {at: number; drawFor?: number; fadeAt?: number | null; period?: number; width?: number} | null;
 };
 
 /** The pump island (middle section). */
@@ -231,6 +247,58 @@ export type PlugSheetSceneProps = {
   cameraGlide?: number;
 };
 
+// ---------------------------------------------------------------- No. 017: the snowy driveway
+
+/** N11: packed snow over the driveway's slab past the garage door, the car's two tire tracks in it (bay frame). */
+const DrivewaySnow: React.FC = () => {
+  const mats = useMemo(
+    () => ({
+      // a step under the token: lit in the open, the snow stays ≤ 244 (brand § 2 whites)
+      snow: new THREE.MeshStandardMaterial({color: raw(WINTER.snow).multiplyScalar(0.9), roughness: 0.95}),
+      shade: new THREE.MeshStandardMaterial({color: raw(WINTER.snowShade), roughness: 0.95}),
+      track: new THREE.MeshStandardMaterial({color: raw(WINTER.packed), roughness: 0.9, polygonOffset: true, polygonOffsetFactor: -2}),
+    }),
+    [],
+  );
+  const x0 = GARAGE.x1 + GARAGE.wall;
+  const L = 30;
+  const T = 0.09;
+  return (
+    <group>
+      {/* the snow cover, cut with the slab: its cut face (front, toward the camera) in the shade tone, a band over the slab's */}
+      <mesh
+        material={[mats.shade, mats.snow, mats.snow, mats.snow, mats.shade, mats.snow]}
+        position={[x0 + L / 2, T / 2, (GARAGE.back + GARAGE.front) / 2]}
+        castShadow
+        receiveShadow
+      >
+        <boxGeometry args={[L, T, GARAGE.front - GARAGE.back]} />
+      </mesh>
+      {[-0.8, 0.8].map((z) => (
+        <mesh key={z} material={mats.track} position={[x0 + L / 2, T + 0.001, z]} rotation={[-Math.PI / 2, 0, 0]}>
+          <planeGeometry args={[L, 0.24]} />
+        </mesh>
+      ))}
+      {/* banks: along the driveway's back edge and heaped by the garage door's pier (shovelled off the tracks) */}
+      {[...Array(14).keys()].map((i) => {
+        const r = (k: string) => {
+          const v = Math.sin((i + 1) * 91.17 + k.length * 13.7) * 43758.5453;
+          return v - Math.floor(v);
+        };
+        const x = x0 + 0.3 + i * 0.75 + 0.2 * r('x');
+        return (
+          <mesh key={i} material={r('s') > 0.5 ? mats.snow : mats.shade} position={[x, T, GARAGE.back + 0.35 + 0.1 * r('z')]} scale={[0.6 + 0.3 * r('l'), 0.22 + 0.14 * r('h'), 0.4]} castShadow receiveShadow>
+            <sphereGeometry args={[1, 14, 9]} />
+          </mesh>
+        );
+      })}
+      <mesh material={mats.snow} position={[x0 + 0.35, T, GARAGE.opening[0] - 0.15]} scale={[0.4, 0.3, 0.35]} castShadow>
+        <sphereGeometry args={[1, 14, 9]} />
+      </mesh>
+    </group>
+  );
+};
+
 // ---------------------------------------------------------------- layout
 
 /** Where each section's frame sits in the world (the row's x offset centres the sheet). */
@@ -265,6 +333,10 @@ export const plugSheetFramings = (p: Partial<PlugSheetSceneProps> = {}): Record<
     row: {look: [ROW_X - 0.3, -0.4, -3.2], distance: 62},
     rowLow: {look: [ROW_X - 0.3, 0.8, -3.2], distance: 66},
     supply: {look: [ROW_X + 4.9, 0.6, 3.4], distance: 32},
+    // No. 017 (N11): the garage alone, lower and closer than 'home' (the car nose in, charger, driveway, house door) …
+    garageWide: {look: [HOME_X + 1.4, home + 0.9, 0.3], distance: 30},
+    // … and the preheat's path in one frame: charger, cable, port, the HVAC box and the pack's gauge (the door at the edge)
+    garageFeed: {look: [HOME_X + 1.6, home + 0.95, 0.4], distance: 19.5},
   };
 };
 
@@ -279,6 +351,8 @@ export const PLUG_WIDE: Record<PlugSheetFraming, number> = {
   row: 1.4,
   rowLow: 1.4,
   supply: 1.35,
+  garageWide: 1.35,
+  garageFeed: 1.35,
 };
 
 // ---------------------------------------------------------------- time
@@ -845,6 +919,22 @@ export const PlugSheetScene: React.FC<PlugSheetSceneProps> = (propsIn) => {
               <group position={[hs.drive.x, 0, 0]}>
                 <SlicedCar
                   {...hs.model.car}
+                  {...(hs.model.car.hvac && hs.h.preheat
+                    ? {
+                        hvac: {
+                          ...hs.model.car.hvac,
+                          feed: {
+                            from: 'port' as const,
+                            // the car keeps the scene's clock: the home's keys may run on the video's
+                            at: hs.h.preheat.at + 0.55 * (hs.h.preheat.drawFor ?? 1.2) - (hs.th - tl),
+                            drawFor: 0.45 * (hs.h.preheat.drawFor ?? 1.2),
+                            fadeAt: hs.h.preheat.fadeAt == null ? null : hs.h.preheat.fadeAt - (hs.th - tl),
+                            period: hs.h.preheat.period,
+                            width: hs.h.preheat.width,
+                          },
+                        },
+                      }
+                    : {})}
                   mood={mood}
                   road="street"
                   {...wheelOpts(laneRevs(hs.legs.arrive, hs.legs.leave, hs.th, fps), hs.drive.speed)}
@@ -870,8 +960,42 @@ export const PlugSheetScene: React.FC<PlugSheetSceneProps> = (propsIn) => {
               const c = chargePortAt((hs.model.car?.shape ?? 'crossover') as ShellProfile);
               const portNose: V3 = [-c[0] + hs.drive.x, c[1], c[2]];
               const cab = cableFor(homeRoute, portNose, hs.pose, hs.latched);
-              return <ChargeCable points={cab.points} plug={cab.plug} cut={null} arrows={0} heat={0} mood={mood} inkScale={inkK} />;
+              const pre = hs.h.preheat;
+              const preK = pre && hs.latched ? ease(hs.th, pre.at, pre.at + 0.55 * (pre.drawFor ?? 1.2)) : 0;
+              const preG = pre ? (pre.fadeAt == null ? 1 : 1 - ease(hs.th, pre.fadeAt, pre.fadeAt + 0.6)) : 0;
+              return (
+                <>
+                  <ChargeCable points={cab.points} plug={cab.plug} cut={null} arrows={0} heat={0} mood={mood} inkScale={inkK} />
+                  {/* No. 017 (N11): the wall's power along the cable to the port, spent on heat (orange) */}
+                  {preK > 0 && preG > 0.01 ? (
+                    <HeatFlow
+                      // riding on the cable's top as its own line (brand v0.18.12: the cable stays black under it)
+                      legs={[cab.points.map((q) => [q[0], q[1] + 0.04, q[2] + 0.02] as V3)]}
+                      progress={preK}
+                      glow={preG}
+                      radius={(pre?.width ?? 0.008) * Math.max(0.5, Math.min(3.5, camD / 12))}
+                      flow={hs.th / (pre?.period ?? 1.2)}
+                      dots={4}
+                    />
+                  ) : null}
+                </>
+              );
             })()}
+            {/* No. 017 (N11): the snowy morning (packed snow on the driveway, its tire tracks, flakes over it) */}
+            {hs.h.winter ? <DrivewaySnow /> : null}
+            {hs.h.winter && hs.h.winter.snow !== false ? (
+              <Snow
+                t={tl + startFrame / fps}
+                density={hs.h.winter.snow?.density ?? 1.5}
+                gusts={[]}
+                y0={0}
+                y1={4.2}
+                mood={mood}
+                maxPx={hs.h.winter.snow?.maxPx ?? 6}
+                cam={cam.position.clone().sub(new THREE.Vector3(...homeAt(props)))}
+                box={{xW: 9, xC: GARAGE.x1 + 0.3 + 4.5, z0: GARAGE.back, zD: GARAGE.front - GARAGE.back}}
+              />
+            ) : null}
           </group>
         ) : null}
 

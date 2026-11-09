@@ -1,9 +1,11 @@
 import React, {useMemo} from 'react';
-import {AbsoluteFill, random, useCurrentFrame, useVideoConfig} from 'remotion';
+import {AbsoluteFill, useCurrentFrame, useVideoConfig} from 'remotion';
 import * as THREE from 'three';
 import {CAR, CITY, HIGHWAY, MOODS, TWINS, WINTER, type Mood} from '../theme';
 import {raw} from '../three/plaster';
 import {DrivingCar} from '../three/real/DrivingCar';
+import {HEAT_SPIN, heatSpin} from '../three/real/HeatKit';
+import {StationClock} from '../three/real/ChargeSite';
 import type {ShellProfile} from '../three/real/CarShell';
 import {CAR_LAYOUT} from '../three/real/RealCar';
 import {
@@ -27,6 +29,7 @@ import {CITY_ROAD} from '../three/section/CarCityRoad';
 import {formatOf, projectToFrame, SectionCamera, sectionCameraAt, type Framing} from '../three/section/SectionCamera';
 import {SectionLights, SectionStage} from '../three/section/SectionStage';
 import {skyTexture} from '../three/section/textures';
+import {Snow} from '../three/section/Snowfall';
 import {framingAtKeys, keyedValue, speedAt, type CameraKey, type Keyed, type SpeedKey} from './keyframes';
 
 /*
@@ -37,7 +40,8 @@ import {framingAtKeys, keyedValue, speedAt, type CameraKey, type Keyed, type Spe
  * lead car (whole, uncut: `DrivingCar`) ahead of each does the same stop-and-go a moment earlier, its brake lamps
  * lighting by themselves. The lanes' signals are keyed together (`lights`), the twins share their speed keys
  * (`driving`), and by default their brake lamps and pedal feet follow those keys (`autoPedals`). `dressing: 'winter'`
- * re-dresses the corner for a very cold day (N6: snowbanks, packed snow, bare trees, frost, a paler sky, light snow).
+ * re-dresses the corner for a very cold day (N6: snowbanks, packed snow, bare trees, frost, a paler sky, light snow);
+ * `dressing: 'spring'` for early spring (No. 017: budding street trees, a slightly warmer sky).
  *
  * World: x along the street (the cars drive toward −x, each standing at x 0 while its road scrolls), y up, z toward the
  * camera; the bottom lane's road at y 0, the top lane's at `laneGap`. Times are seconds into the scene.
@@ -48,7 +52,7 @@ import {framingAtKeys, keyedValue, speedAt, type CameraKey, type Keyed, type Spe
  * is frame 0.
  */
 
-type Which = 'top' | 'bottom';
+export type Which = 'top' | 'bottom';
 const WHICH: Which[] = ['top', 'bottom'];
 const R = CAR_LAYOUT.wheelR;
 const WHEEL_C = 2 * Math.PI * R;
@@ -80,7 +84,7 @@ export type TwinLead = {
 export type TwinCar = Partial<SlicedCarOptions> & {lead?: TwinLead | false};
 
 /** What a continuing scene carries per car (set by Explainer). */
-type TwinCarry = {revsFrom: number; wheelFrom?: number; crankFrom?: number};
+type TwinCarry = {revsFrom: number; wheelFrom?: number; crankFrom?: number; heatTurnFrom?: {blower?: number; fan?: number}};
 
 export type CityTwinFraming =
   | 'stack'
@@ -93,14 +97,27 @@ export type CityTwinFraming =
   | 'bay'
   | 'battery'
   | 'bottomCar'
-  | 'wheels';
+  | 'wheels'
+  // No. 017 (N12), the crossover pair
+  | 'twinHeat'
+  | 'twinSpring'
+  | 'evHeat'
+  | 'evPack'
+  | 'evFront'
+  | 'evCar'
+  | 'evNose'
+  | 'evSky'
+  | 'evCabin';
 
 export type CityTwinSceneProps = {
   durationInFrames: number;
   /** Day (default) or Night. */
   mood?: Mood;
-  /** 'mild' (default) or 'winter' (N6): the same corner on a very cold day. */
-  dressing?: 'mild' | 'winter';
+  /**
+   * 'mild' (default), 'winter' (N6): the same corner on a very cold day, or 'spring' (No. 017): 'mild' with budding street
+   * trees and a slightly warmer sky (the mood's `paper` laid thinly over it). A new dressing is a new location (slides).
+   */
+  dressing?: 'mild' | 'winter' | 'spring';
   /**
    * The top twin. Defaults: `{variant: 'hybrid', shape: 'sedan', nearWheels: 'whole', driver: 'you', storefronts: true,
    * roadAhead: 34, roadBehind: 26}` (YOU's car colour), a lead car.
@@ -134,8 +151,12 @@ export type CityTwinSceneProps = {
    * top lane's block at any gap that fits 'stack'; both lanes' signals are keyed together anyway) or 'both'.
    */
   signals?: 'top' | 'both';
-  /** Falling snow (winter: default on): `density` (default 1), `gusts` (s: a gust carries the flakes across). */
-  snow?: {density?: number; gusts?: number[]} | boolean;
+  /**
+   * Falling snow (winter: default on): `density` (default 1), `gusts` (s: a gust carries the flakes across). No. 017:
+   * `maxPx` caps a flake's on-screen size (px across at 1080 × 1920; brand § 1 WINTER: 6), so close framings don't show
+   * big flakes near the camera. Default none (No. 014 as posted).
+   */
+  snow?: {density?: number; gusts?: number[]; maxPx?: number} | boolean;
   /** How both cars' wheels turn (a car's own `wheels` wins). Default 'forward'. */
   wheels?: WheelMode;
   /**
@@ -151,6 +172,17 @@ export type CityTwinSceneProps = {
   wheelStep?: number;
   /** No. 016 ('forward'): the spokes' smear at full speed, rad (default 0.4). */
   wheelSmearMax?: number;
+  /**
+   * No. 017 (N6): the corner's post clock (`StationClock`, no numerals, never orange) on the top lane's sidewalk, in road
+   * space (it streams with the street and stops with it): `ahead` m ahead of the car's centre at `when` (s, default 0, or
+   * the scene's end with `loop`, so the clock lands on frame 0's place;
+   * default ahead 3.0), story `time` in minutes after midnight (default 490 = 8:10), the minute hand jumping one minute at
+   * each of `ticks` (s; 🎭 compressed time), `radius` (m, default 0.3), `height` of the face's centre over the sidewalk
+   * (default 2.5), `lane` (default 'top'). Default none.
+   */
+  postClock?: {ahead?: number; when?: number; time?: number; ticks?: number[]; radius?: number; height?: number; lane?: Which} | false;
+  /** No. 017: both lanes' winter trees shifted along the street (m; a car's own `treeShift` wins). Default 0. */
+  treeShift?: number;
   /** Framing preset (default 'stack'). */
   framing?: CityTwinFraming;
   camera?: {from: Framing; to?: Framing};
@@ -197,8 +229,29 @@ export const cityTwinFramings = (p: Partial<CityTwinSceneProps>): Record<CityTwi
     bottomCar: {look: [-0.1, 0.95, 0.3], distance: 19},
     // both near rear wheels whole and the road under them (the tread, the weight arrow)
     wheels: {look: [1.3, g / 2 + 0.3, 0.8], distance: 11.0},
+    ...winterFramings(g),
   };
 };
+
+/**
+ * No. 017 (N12): the crossover pair's winter framings (world: the cars face −x, so the car frame's x is mirrored; the EV
+ * on top at y = g). 'twinHeat': both front halves stacked (bays, HVAC boxes, cabins; frame 0, between the title block
+ * and the captions); 'twinSpring': both whole, stacked, wider; 'evHeat': the EV whole, low-ish (pack, drive unit, box,
+ * YOU); 'evPack': the cut pack close with the near front wheel and the gauges; 'evFront': the pack's front, the drive
+ * unit, the near front wheel and caliper; 'evCar': the EV whole with the corner's post clock above; 'evNose': the heat
+ * pump with air ahead of the grille; 'evSky': the EV low under the snowy sky; 'evCabin': YOU, the seat, wheel and dash.
+ */
+const winterFramings = (g: number): Record<string, Framing> => ({
+  twinHeat: {look: [-1.3, g / 2 + 0.55, 0.35], distance: 31},
+  twinSpring: {look: [-0.9, g / 2 + 0.55, 0.2], distance: 25},
+  evHeat: {look: [-0.35, g + 0.85, 0.35], distance: 8.6},
+  evPack: {look: [-0.35, g + 0.5, 0.65], distance: 6.2},
+  evFront: {look: [-1.05, g + 0.55, 0.65], distance: 4.2},
+  evCar: {look: [-0.6, g + 1.55, 0.1], distance: 11.5},
+  evNose: {look: [-2.05, g + 0.75, 0.45], distance: 10.5},
+  evSky: {look: [-0.4, g + 3.8, 0.1], distance: 17},
+  evCabin: {look: [-0.45, g + 1.15, 0.3], distance: 3.4},
+});
 
 /** No. 014's framings (the sedan pair), as posted. */
 const cityTwinSedanFramings = (g: number): Record<CityTwinFraming, Framing> => {
@@ -214,6 +267,7 @@ const cityTwinSedanFramings = (g: number): Record<CityTwinFraming, Framing> => {
     battery: {look: [0.62, g + 0.3, 0.6], distance: 3.4},
     bottomCar: {look: [0.25, 0.55, 0.3], distance: 16.5},
     wheels: {look: [1.3, g / 2 + 0.3, 0.8], distance: 11.0},
+    ...(winterFramings(g) as Record<'twinHeat' | 'twinSpring' | 'evHeat' | 'evPack' | 'evFront' | 'evCar' | 'evNose' | 'evSky' | 'evCabin', Framing>),
   };
 };
 
@@ -300,6 +354,7 @@ const carBase = (p: Partial<CityTwinSceneProps>, w: Which, fps: number): Partial
     ...(p.pavement !== undefined ? {pavement: p.pavement} : {}),
     ...(p.wheelStep !== undefined ? {wheelStep: p.wheelStep} : {}),
     ...(p.wheelSmearMax !== undefined ? {wheelSmearMax: p.wheelSmearMax} : {}),
+    ...(p.treeShift !== undefined ? {treeShift: p.treeShift} : {}),
     ...car,
     corners: road === 'city' ? corners : undefined,
     startFrame: p.startFrame,
@@ -316,8 +371,21 @@ const carBase = (p: Partial<CityTwinSceneProps>, w: Which, fps: number): Partial
     if (engineTurns(o)) o.crankFrom = -mod(engineCrank(z, secs), 4 * Math.PI);
     // the drivers' idle (breathing, blinks) lands on frame 0's clock too
     o.figureClock = -secs;
+    // No. 017 (N13): the heat parts' dots and wisps on frame 0's phase, the blower and fan on frame 0's turn
+    o.heatClock = -secs;
+    o.heatTurnFrom = heatTurnsAt({...o, heatTurnFrom: undefined}, secs, fps, true);
   }
   return o;
+};
+
+/**
+ * No. 017 (N13): the blower's and fan's turn at t (rad) with the car's `heatTurnFrom`; `seam`: instead the start offset
+ * that lands both on a whole turn at t (frame 0's angle, 0).
+ */
+const heatTurnsAt = (o: Partial<SlicedCarOptions>, t: number, fps: number, seam: boolean) => {
+  const b = heatSpin(o.hvac ? (o.hvac.blower ?? o.hvac.on ?? 1) : undefined, t, HEAT_SPIN.blower, fps, o.heatTurnFrom?.blower ?? 0);
+  const f = heatSpin(o.gasHeat ? (o.gasHeat.fan ?? 1) : undefined, t, HEAT_SPIN.fan, fps, o.heatTurnFrom?.fan ?? 0);
+  return seam ? {blower: -mod(b, 2 * Math.PI), fan: -mod(f, 2 * Math.PI)} : {blower: b, fan: f};
 };
 
 /** A twin's options at t (adds the auto brake lamps). */
@@ -404,6 +472,7 @@ export const cityTwinCarry = (p: Partial<CityTwinSceneProps>, durationInFrames: 
       revsFrom: simRevs(o, T, fps),
       ...(wheelMode(o.wheels) === 'forward' ? {wheelFrom: wheelTurnRevs(o, T, fps)} : {}),
       ...(engineTurns(o) ? {crankFrom: engineCrank(o, T)} : {}),
+      ...(o.hvac || o.gasHeat ? {heatTurnFrom: heatTurnsAt(o, T, fps, false)} : {}),
     };
   }
   return out;
@@ -464,35 +533,17 @@ export const cityTwinAnchorOnScreen = (
   return pt ? projectToFrame(cam, lift(pt)) : undefined;
 };
 
-/** Falling snow (winter): seeded flakes in a box round the lanes, falling, swaying, carried by gusts. */
-const Snow: React.FC<{t: number; density: number; gusts: number[]; y0: number; y1: number; mood: Mood}> = ({t, density, gusts, y0, y1, mood}) => {
-  const n = Math.round(420 * density);
-  const geo = useMemo(() => new THREE.SphereGeometry(1, 6, 4), []);
-  const mat = useMemo(() => new THREE.MeshBasicMaterial({color: '#ffffff', transparent: true, opacity: 0.9, depthWrite: false}), []);
-  mat.color.copy(raw(WINTER.flake)).multiplyScalar(0.95 / MOODS[mood].exposure);
-  const mesh = useMemo(() => new THREE.InstancedMesh(geo, mat, 600), [geo, mat]);
-  const X = 22;
-  const H = y1 - y0;
-  const gust = gusts.reduce((a, g) => a + 5 * Math.max(0, Math.min(1, (t - g) / 1.4)) ** 2 * (3 - 2 * Math.max(0, Math.min(1, (t - g) / 1.4))), 0);
-  const m4 = new THREE.Matrix4();
-  for (let i = 0; i < 600; i++) {
-    if (i >= n) {
-      m4.makeScale(0, 0, 0);
-      mesh.setMatrixAt(i, m4);
-      continue;
-    }
-    const r = (k: string) => random(`snow-${i}-${k}`);
-    const fall = 0.6 + 0.5 * r('v');
-    const y = y1 - mod(r('y') * H + t * fall, H);
-    const x = mod(r('x') * X + 0.25 * Math.sin(t * (0.6 + r('w')) + 6 * r('p')) + gust * (0.7 + 0.6 * r('g')), X) - X / 2 - 1;
-    const z = -3 + 5.6 * r('z');
-    const s = 0.022 + 0.02 * r('s');
-    m4.makeScale(s, s, s).setPosition(x, y, z);
-    mesh.setMatrixAt(i, m4);
-  }
-  mesh.instanceMatrix.needsUpdate = true;
-  mesh.frustumCulled = false;
-  return <primitive object={mesh} />;
+/** N6: the corner's post clock, riding the street (see `postClock`). */
+const PostClock: React.FC<{pc: NonNullable<Exclude<CityTwinSceneProps['postClock'], false>>; car: SlicedCarOptions; t: number; fps: number}> = ({pc, car, t, fps}) => {
+  const dist = (tt: number) => simRevs(car, tt, fps) * WHEEL_C;
+  const x = -(pc.ahead ?? 3.0) + (dist(t) - dist(pc.when ?? 0));
+  const jumps = (pc.ticks ?? []).reduce((a, k) => a + Math.max(0, Math.min(1, (t - k) / 0.12)), 0);
+  const r = pc.radius ?? 0.3;
+  return (
+    <group position={[x, CITY_ROAD.curb, -2.05]}>
+      <StationClock position={[0, pc.height ?? 2.5, 0]} minutes={(pc.time ?? 490) + jumps} radius={r} />
+    </group>
+  );
 };
 
 /**
@@ -547,8 +598,10 @@ export const CityTwinScene: React.FC<CityTwinSceneProps> = (props) => {
   const skyFoot = useMemo(() => new THREE.MeshBasicMaterial({fog: false}), []);
   skyFoot.color.copy(raw(m.sky[2])).multiplyScalar(1 / m.exposure);
   const pale = useMemo(() => new THREE.MeshBasicMaterial({transparent: true, depthWrite: false, fog: false}), []);
-  pale.color.copy(raw(WINTER.skyTint)).multiplyScalar(1 / m.exposure);
-  pale.opacity = winter ? 0.4 : 0;
+  const spring = props.dressing === 'spring';
+  // winter: paler, greyer; spring: a thin warm wash (the mood's paper) over the blue
+  pale.color.copy(raw(spring ? m.paper : WINTER.skyTint)).multiplyScalar(1 / m.exposure);
+  pale.opacity = winter ? 0.4 : spring ? 0.32 : 0;
   const camNow = cameraAtFrame(props, {frame, fps, durationInFrames});
   const camD = camNow.position.distanceTo(camNow.look);
   const g = gapOf(props);
@@ -580,7 +633,7 @@ export const CityTwinScene: React.FC<CityTwinSceneProps> = (props) => {
         <mesh position={[-6, -75 + g / 2, -40]} material={skyFoot}>
           <planeGeometry args={[320, 100]} />
         </mesh>
-        <mesh position={[-6, -25 + g / 2, -39.9]} material={pale} visible={winter}>
+        <mesh position={[-6, -25 + g / 2, -39.9]} material={pale} visible={winter || spring}>
           <planeGeometry args={[320, 200]} />
         </mesh>
         {lanes.map(({w, car, lead}) => (
@@ -588,6 +641,9 @@ export const CityTwinScene: React.FC<CityTwinSceneProps> = (props) => {
             <SlicedCar {...(car as SlicedCarOptions)} cameraDistance={camD} />
             {(props.road ?? 'city') === 'highway' ? (
               <VergePosts scroll={simRevs(car as SlicedCarOptions, t, fps) * WHEEL_C} half={(car as SlicedCarOptions).roadHalf ?? STREET.half} />
+            ) : null}
+            {props.postClock && (props.postClock.lane ?? 'top') === w && (props.road ?? 'city') === 'city' ? (
+              <PostClock pc={props.loop && props.postClock.when === undefined ? {...props.postClock, when: durationInFrames / fps} : props.postClock} car={car as SlicedCarOptions} t={t} fps={fps} />
             ) : null}
             {lead ? (
               <DrivingCar
@@ -609,12 +665,15 @@ export const CityTwinScene: React.FC<CityTwinSceneProps> = (props) => {
         ))}
         {snowOn ? (
           <Snow
-            t={t + startFrame / fps}
+            // a loop's snow lands on frame 0's flakes at the seam (keep its last stay free of gusts)
+            t={props.loop ? t - durationInFrames / fps : t + startFrame / fps}
             density={snowOpt.density ?? 1}
-            gusts={(snowOpt.gusts ?? []).map((x) => x + startFrame / fps)}
+            gusts={(snowOpt.gusts ?? []).map((x) => (props.loop ? x - durationInFrames / fps : x + startFrame / fps))}
             y0={-0.5}
             y1={g + 6}
             mood={mood}
+            maxPx={snowOpt.maxPx}
+            cam={camNow.position}
           />
         ) : null}
       </SectionStage>

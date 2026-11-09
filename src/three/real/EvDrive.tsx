@@ -1,6 +1,6 @@
 import React, {useMemo} from 'react';
 import * as THREE from 'three';
-import {REAL, section, type Mood} from '../../theme';
+import {REAL, section, WINTER, type Mood} from '../../theme';
 import {raw, roundedBox} from '../plaster';
 import {cutMaterial, INK, InkLine} from '../section/cutLook';
 import {GlowEdge, GlowShell, haloOpacity} from './madeBy';
@@ -754,6 +754,11 @@ export const DriveUnit: React.FC<DriveUnitProps> = ({
 
 export type BatteryPackProps = {
   mood: Mood;
+  /**
+   * No. 017 (N3): the cold cue, 0 → 1: the cells' uncut cans (the module faces) mixed toward `WINTER.snowShade` at
+   * ≤ 50 % (lit, opaque look, no emissive; the casing's cut faces stay cut). Default 0.
+   */
+  cold?: number;
   /** Each module's charge level 0–1 (orange, the system), front (0) to back. Default none. */
   fill?: number[];
   /** The levels' glow (0 → 1): the loop fades them out. */
@@ -932,7 +937,7 @@ const bladeTexture = (() => {
 })();
 
 /** The battery pack cut open (see the file comment). */
-export const BatteryPack: React.FC<BatteryPackProps> = ({mood, fill, glow = 1, inkScale = 1, heat, sweep, frontWidth = 0.035, modules, blade, layout = EV_PACK}) => {
+export const BatteryPack: React.FC<BatteryPackProps> = ({mood, fill, glow = 1, inkScale = 1, heat, sweep, frontWidth = 0.035, modules, blade, layout = EV_PACK, cold = 0}) => {
   const moduleSpan = (k: number) => layoutModuleSpan(layout, k);
   const MODULE_Y = layout.moduleY;
   const nMod = layout.modules;
@@ -964,9 +969,13 @@ export const BatteryPack: React.FC<BatteryPackProps> = ({mood, fill, glow = 1, i
       lidCarpet: phys(REAL.carpet, {roughness: 0.95, transparent: true}),
       bladeEdge: new THREE.MeshBasicMaterial({color: raw(section.orange), transparent: true}),
       bladeHalo: new THREE.MeshBasicMaterial({color: raw(section.orange), transparent: true, depthWrite: false}),
+      // No. 017 (N3): the cold tint over the cans
+      cold: new THREE.MeshStandardMaterial({color: raw(WINTER.snowShade), roughness: 0.6, transparent: true, depthWrite: false, opacity: 0}),
     }),
     [],
   );
+  const coldK = Math.max(0, Math.min(1, cold));
+  mats.cold.opacity = 0.5 * coldK;
   // the sweep's front (car frame x): from the rear module's back wall to the front one's
   const sw = sweep === undefined ? null : Math.max(0, Math.min(1, sweep));
   const sweepX = sw === null ? 0 : moduleSpan(nMod - 1)[0] + sw * (moduleSpan(0)[1] - moduleSpan(nMod - 1)[0]);
@@ -1064,6 +1073,11 @@ export const BatteryPack: React.FC<BatteryPackProps> = ({mood, fill, glow = 1, i
             >
               <boxGeometry args={[b - a, MODULE_Y[1] - MODULE_Y[0], z - 0.01 - zb - 0.03]} />
             </mesh>
+            {coldK > 0.004 ? (
+              <mesh position={[(a + b) / 2, (MODULE_Y[0] + MODULE_Y[1]) / 2, z - 0.0085]} material={mats.cold} renderOrder={2}>
+                <planeGeometry args={[b - a - 0.004, MODULE_Y[1] - MODULE_Y[0]]} />
+              </mesh>
+            ) : null}
             {heat !== undefined && heatK > 0.004 ? (
               // No. 010: the heat in the cells, a soft bloom over the whole face
               <mesh

@@ -1,0 +1,12 @@
+A gas car heats you with heat it was going to throw away. An EV has to make its heat from the same battery that drives it.
+You've probably heard the cold drains the battery.
+But in one lab test at 20 degrees, range fell 12 percent with the heater off, and about 40 percent with it on.
+Most of that was the heater.
+The cold slows the battery too, so braking recovers less energy.
+And the heater draws power every minute, so short trips hurt most.
+Test drivers lost about a quarter of their range on the highway, and earlier tests found about half on short trips.
+That lost range returns in spring, without lasting harm to the battery, one study of 30,000 EVs says.
+Until then, a heat pump helps by moving heat in from outside instead of making it, but less in deep cold.
+Seat and steering-wheel heaters help too, but test drivers using only those got uncomfortably cold.
+The usual advice is to preheat while still plugged in, so the heater runs on wall power instead of the battery.
+Do you warm your car before unplugging?

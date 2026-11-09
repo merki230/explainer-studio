@@ -13,6 +13,8 @@ export type ClusterState = {
   speed?: number;
   /** The trip line, e.g. "TRIP 12:40". */
   trip?: string;
+  /** No. 017 (brand § 3 Generic devices): the lit face with no readable digits or words. Default false. */
+  blank?: boolean;
   /** Draw the tire-pressure symbol at all (default true). False: no symbol, not even dimmed (a cluster with no tire story). */
   tireLight?: boolean;
 };
@@ -71,6 +73,10 @@ export const drawCluster = (cx: CanvasRenderingContext2D, w: number, h: number, 
   cx.setTransform(1, 0, 0, 1, 0, 0);
   cx.fillStyle = FACE;
   cx.fillRect(0, 0, w, h);
+  if (s.blank) {
+    cx.restore();
+    return;
+  }
   const k = h / 220;
   // the speedometer: an arc of ticks on the left
   const ox = w * 0.3;
@@ -121,6 +127,8 @@ export type EvClusterState = {
   power: number;
   /** Draw the power meter (default true). False: the speed alone, centred in the face (No. 007, line 3b). */
   meter?: boolean;
+  /** No. 017 (brand § 3 Generic devices): the lit face with no readable digits or words. Default false. */
+  blank?: boolean;
   /**
    * The meter's POWER fill (above 0): 'ink' (default, the face's ink) or 'orange' (No. 007: the motor's
    * power as the system's mark, like the CHARGE zone).
@@ -140,6 +148,10 @@ export const drawEvCluster = (cx: CanvasRenderingContext2D, w: number, h: number
   cx.setTransform(1, 0, 0, 1, 0, 0);
   cx.fillStyle = FACE;
   cx.fillRect(0, 0, w, h);
+  if (s.blank) {
+    cx.restore();
+    return;
+  }
   const u = h / 209;
   const pad = 20 * u;
   const meter = s.meter !== false;

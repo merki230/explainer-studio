@@ -2,7 +2,7 @@ import {useThree} from '@react-three/fiber';
 import React, {useLayoutEffect, useMemo, useRef} from 'react';
 import * as THREE from 'three';
 import {random} from 'remotion';
-import {CITY, HIGHWAY, MOODS, section, STREET, WINTER, type Mood} from '../../theme';
+import {CITY, HIGHWAY, MOODS, REAL, section, STREET, WINTER, type Mood} from '../../theme';
 import {raw, roundedBox} from '../plaster';
 import {RoadSign, type RoadSignKind} from '../real/RoadSigns';
 import {CutOutline, cutMaterial, INK} from './cutLook';
@@ -77,12 +77,19 @@ export type CarCityRoadProps = {
    */
   winter?: boolean;
   /**
+   * No. 017: the same street in early spring: the winter's street trees (same places, `treeShift`) budding, small clusters
+   * of pale green (`REAL.leafEdge`) and leaf green (`section.leaf`) along their branches; no snow. Default false.
+   */
+  spring?: boolean;
+  /**
    * No. 016: ground-level wear that rides the road, so a moving car reads as moving with nothing above the curb (the
    * sky stays clear for overlays): lighter asphalt patches and black crack-seal lines across the lane, a utility cover,
    * two-way yellow raised markers between the double yellow (every 6 m), curb and sidewalk joints (every 3 m). One
    * fixed layout on a 12 m repeat (the storefronts' period: a looping scene's seam holds). Default false.
    */
   pavement?: boolean;
+  /** No. 017: the winter (and spring) trees' places shifted along the street (m), to keep bark out of a car's outline at a framing. Default 0. */
+  treeShift?: number;
 };
 
 /** The pavement layer's repeat (m): equals the storefronts' 12 m, so a loop that lands the street lands this too. */
@@ -121,8 +128,11 @@ const riding = (scroll: number, period: number, from: number, to: number, pad: n
   return out;
 };
 
-/** A bare street tree (its foot at the origin): a trunk and a few forked branches, seeded. */
-const BareTree: React.FC<{id: number; mat: THREE.Material; snow: THREE.Material}> = ({id, mat, snow}) => {
+/**
+ * A bare street tree (its foot at the origin): a trunk and a few forked branches, seeded. With `buds` (No. 017, spring): no
+ * snow; small seeded clusters of buds along each branch's outer half and on its twig.
+ */
+const BareTree: React.FC<{id: number; mat: THREE.Material; snow: THREE.Material; buds?: THREE.Material[]}> = ({id, mat, snow, buds}) => {
   const rnd = (k: string) => random(`tree-${id}-${k}`);
   const h = 2.5 + 0.5 * rnd('h');
   const branches = [...Array(6).keys()].map((i) => {
@@ -146,14 +156,42 @@ const BareTree: React.FC<{id: number; mat: THREE.Material; snow: THREE.Material}
             <mesh material={mat} position={[0, 0.25, 0]}>
               <cylinderGeometry args={[0.01, 0.02, 0.5, 5]} />
             </mesh>
+            {buds ? <Buds id={`${id}-${i}-twig`} len={0.5} mats={buds} /> : null}
           </group>
+          {buds ? <Buds id={`${id}-${i}`} len={b.len} mats={buds} /> : null}
         </group>
       ))}
-      {/* a little snow caught in the crotch of the trunk */}
-      <mesh material={snow} position={[0, h * 0.55, 0]} scale={[0.12, 0.05, 0.12]}>
-        <sphereGeometry args={[1, 10, 6]} />
-      </mesh>
+      {buds ? null : (
+        // a little snow caught in the crotch of the trunk
+        <mesh material={snow} position={[0, h * 0.55, 0]} scale={[0.12, 0.05, 0.12]}>
+          <sphereGeometry args={[1, 10, 6]} />
+        </mesh>
+      )}
     </group>
+  );
+};
+
+/** No. 017 (spring): a few bud clusters along a branch's outer half (y up the branch from its foot), seeded. */
+const Buds: React.FC<{id: string; len: number; mats: THREE.Material[]}> = ({id, len, mats}) => {
+  const rnd = (k: string) => random(`bud-${id}-${k}`);
+  return (
+    <>
+      {[0, 1, 2, 3].map((j) => {
+        const r = 0.06 + 0.05 * rnd(`r${j}`);
+        const a = rnd(`a${j}`) * Math.PI * 2;
+        return (
+          <mesh
+            key={j}
+            material={mats[rnd(`c${j}`) < 0.45 ? 0 : 1]}
+            position={[0.05 * Math.cos(a), len * (0.5 + 0.5 * (j / 3)), 0.05 * Math.sin(a)]}
+            scale={[r, r * 0.8, r]}
+            castShadow
+          >
+            <icosahedronGeometry args={[1, 1]} />
+          </mesh>
+        );
+      })}
+    </>
   );
 };
 
@@ -318,7 +356,9 @@ export const CarCityRoad: React.FC<CarCityRoadProps> = ({
   from = -CITY_ROAD.x,
   to = CITY_ROAD.x,
   winter = false,
+  spring = false,
   pavement = false,
+  treeShift = 0,
 }) => {
   const cx = (from + to) / 2;
   const len = to - from;
@@ -360,6 +400,8 @@ export const CarCityRoad: React.FC<CarCityRoadProps> = ({
         clippingPlanes: planes,
       }),
       bark: new THREE.MeshStandardMaterial({color: raw(WINTER.bark), roughness: 0.9, clippingPlanes: planes}),
+      // No. 017: spring buds, pale green and leaf green
+      buds: [REAL.leafEdge, section.leaf].map((c) => new THREE.MeshStandardMaterial({color: raw(c), roughness: 0.8, clippingPlanes: planes})),
       // No. 016: the pavement layer, a hair above the road (polygon offset, no z-fight at the far framings)
       patch: decal(CITY.patch, 0.95, planes),
       seal: decal(CITY.seal, 0.55, planes),
@@ -529,13 +571,21 @@ export const CarCityRoad: React.FC<CarCityRoadProps> = ({
             );
           })}
           {/* bare street trees on the sidewalk, riding the road */}
-          {riding(scroll, 9, from, to, 2).map(({x, id}) => (
+          {riding(scroll + treeShift, 9, from, to, 2).map(({x, id}) => (
             <group key={`t${id}`} position={[x, R.curb, -2.85]}>
               <BareTree id={id} mat={mats.bark} snow={mats.snow} />
             </group>
           ))}
         </>
       ) : null}
+      {spring
+        ? // No. 017: the winter's street trees, budding (same places)
+          riding(scroll + treeShift, 9, from, to, 2).map(({x, id}) => (
+            <group key={`t${id}`} position={[x, R.curb, -2.85]}>
+              <BareTree id={id} mat={mats.bark} snow={mats.snow} buds={mats.buds} />
+            </group>
+          ))
+        : null}
       {/* storefronts at the back of the sidewalk: facade, shop window, blank awning, parapet */}
       {visibleShops.map((s, i) => {
         const h = 3.3 + 0.35 * s.k;

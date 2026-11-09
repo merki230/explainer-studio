@@ -17,6 +17,13 @@ export type CounterRow = {
    * the frame its car reaches 60). Default: `start` + (`to` − `from`), i.e. the clock in real time.
    */
   stopAt?: number;
+  /**
+   * No. 017: this row's own clock. Seconds after the counter enters when this row starts counting from `from` (it then
+   * runs linearly to `to` at its `stopAt`, default `startAt` + (`to` − `from`)). Before it, the row shows an en dash
+   * ("–", not measured yet), in the room of its final value. Rows without it run on the shared clock, as before, and
+   * the shared clock ignores rows that have it.
+   */
+  startAt?: number;
 };
 
 export type CounterProps = {
@@ -189,7 +196,8 @@ export const Counter: React.FC<CounterProps & {mood?: Mood}> = ({
  * The stopwatch compare (No. 007): the counter's frame holding rows stacked like the lanes they stand
  * for, each a label (Inter 700 30 px, uppercase), digits (Archivo 800 80 px, right-aligned, tabular)
  * and the unit (Inter 600 34 px). One clock for all rows, linear between the stop keys; each row shows
- * min(clock, its `to`), truncated like a stopwatch so it reads its final value only on its stop frame.
+ * min(clock, its `to`), truncated like a stopwatch so it reads its final value only on its stop frame. A row with its
+ * own `startAt` (No. 017) runs its own clock instead and reads "–" until then.
  */
 const CounterRows: React.FC<
   Required<Pick<CounterProps, 'from' | 'x' | 'y' | 'subPlace' | 'decimals' | 'start'>> &
@@ -200,8 +208,9 @@ const CounterRows: React.FC<
   const L = useLayout();
   const {ink, paper, inkSub} = overlayInk(mood);
   const enter = ease(frame, 0, 10);
-  // the clock's keys: `from` at `start`, then each row's `to` at its stop time (sorted, never running back)
-  const keys = [{t: start, v: from}, ...rows.map((r) => ({t: r.stopAt ?? start + (r.to - from), v: r.to}))].sort(
+  // the clock's keys: `from` at `start`, then each shared row's `to` at its stop time (sorted, never running back)
+  const shared = rows.filter((r) => r.startAt === undefined);
+  const keys = [{t: start, v: from}, ...shared.map((r) => ({t: r.stopAt ?? start + (r.to - from), v: r.to}))].sort(
     (a, b) => a.t - b.t,
   );
   for (let i = 1; i < keys.length; i++) keys[i].v = Math.max(keys[i].v, keys[i - 1].v);
@@ -219,6 +228,14 @@ const CounterRows: React.FC<
       minimumFractionDigits: decimals,
       maximumFractionDigits: decimals,
     });
+  // what a row reads now: the shared clock (capped at its `to`), or its own clock from `startAt` ("–" before it)
+  const shown = (r: CounterRow) => {
+    if (r.startAt === undefined) return fmt(Math.min(clock, r.to));
+    if (t < r.startAt) return '\u2013';
+    const stop = r.stopAt ?? r.startAt + (r.to - from);
+    const v = stop > r.startAt ? from + (r.to - from) * Math.min(1, (t - r.startAt) / (stop - r.startAt)) : r.to;
+    return fmt(Math.min(v, r.to));
+  };
   const subLine = (
     <div
       style={{
@@ -237,7 +254,7 @@ const CounterRows: React.FC<
   // A row whose number grows a digit (9 → 30 min) would widen the box mid-count: then every row keeps
   // the room of its final value from the start (an invisible copy under the digits). Rows that keep
   // their width (0.0 → 3.6 s, No. 007) render as before.
-  const grows = rows.some((r) => fmt(r.to).length !== fmt(Math.min(from, r.to)).length);
+  const grows = rows.some((r) => r.startAt !== undefined || fmt(r.to).length !== fmt(Math.min(from, r.to)).length);
   return (
     <div
       style={{
@@ -284,10 +301,10 @@ const CounterRows: React.FC<
               {grows ? (
                 <span style={{display: 'inline-grid', justifyItems: 'end'}}>
                   <span style={{gridArea: '1 / 1', visibility: 'hidden'}}>{fmt(r.to)}</span>
-                  <span style={{gridArea: '1 / 1'}}>{fmt(Math.min(clock, r.to))}</span>
+                  <span style={{gridArea: '1 / 1'}}>{shown(r)}</span>
                 </span>
               ) : (
-                fmt(Math.min(clock, r.to))
+                shown(r)
               )}
             </span>
             <span style={{fontFamily: fonts.sans, fontWeight: 600, fontSize: L.counter.unit, color: ink}}>{label}</span>

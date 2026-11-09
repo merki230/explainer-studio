@@ -53,6 +53,8 @@ const SECTION_DEFAULT_LOCATION: Record<string, string> = {
   'city-twin': 'city-twin',
   // No. 015: the records sheet (server room and office on one sheet)
   'records-slice': 'records',
+  // No. 017: the Lab's cold chamber
+  'cold-lab': 'cold-lab',
 };
 
 /** Frames of a horizontal video's `slide` (§ 11.6: 24, cubic in-out). */

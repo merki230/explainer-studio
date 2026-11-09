@@ -11,6 +11,7 @@ import {raw, roundedBox} from '../plaster';
 import {
   CAR_LAYOUT,
   carLayout,
+  chargePortAt,
   cutSetOf,
   lowCabin,
   RealCar,
@@ -41,8 +42,10 @@ import {
 import type {RoadSignKind} from './RoadSigns';
 import {HYBRID, hybridPoint, HybridSystems} from './HybridDrive';
 import {DragArrow, ExhaustPuffs} from './CarAir';
+import {BreathPuffs, flowState, GasHeat, HEAT, HEAT_SPIN, HeatFlow, HeatPump, heatSpin, HvacBox, InkGauge, runs, SeatHeat, WheelHeat, type FlowKeys, steppedLevel, type GasHeatKeys, type HeatPumpKeys, type HvacKeys} from './HeatKit';
 import {BrakeDust, DUST_LIFE, InkArrowAlong, inkArrowState, OIL_PAN_POINT, OilPan, treadHeight, type DustPuff} from './WearKit';
 import {CarCityRoad} from '../section/CarCityRoad';
+import {HighwayWinter} from '../section/HighwayWinter';
 import {RealWheel, WHEEL} from './RealWheel';
 import {TireSensor} from './TireSensor';
 import {TireSpray, type SprayEmitter} from './TireSpray';
@@ -670,8 +673,12 @@ export type SlicedCarOptions = {
    * strobe), thicker with speed. `fadeAt`: all fade (0.5 s). Null for none (default).
    */
   dragArrow?: {at: number; length?: number; ref?: number; streamlines?: boolean; fadeAt?: number; y?: number} | null;
-  /** No. 014 (N6), 'city': the street's dressing: 'mild' (default) or 'winter' (snowbanks, packed snow, bare trees, frost). */
-  dressing?: 'mild' | 'winter';
+  /**
+   * No. 014 (N6), 'city': the street's dressing: 'mild' (default) or 'winter' (snowbanks, packed snow, bare trees, frost).
+   * No. 017 (N8), 'highway': 'winter' adds packed snow on the far edge, a snowbank riding the road, slush wheel paths, streaks.
+   * No. 017, 'city': 'spring' is 'mild' plus budding street trees (pale green buds on the winter trees' places); elsewhere = 'mild'.
+   */
+  dressing?: 'mild' | 'winter' | 'spring';
   /** No. 014 (N6): frost on the car's glass, 0 → 1, a constant or keys. Default 0.55 with `dressing: 'winter'`, else 0. */
   frost?: Keyed;
   /** No. 014, 'hybrid': the pack's resting level (orange, the charge it holds), 0 → 1, a constant or keys. Default 0. */
@@ -691,15 +698,19 @@ export type SlicedCarOptions = {
   /**
    * No. 016 (N6): faint grey brake-dust puffs off a near wheel's disc at each `at` (s): `size` 0.5 → 2 (default 1),
    * `wheel` 'front' (default) or 'rear'. Each lives ≈ 1.1 s, leaving the wheel's rear edge and drifting back in its wake
-   * (🎭 at 0.15 of the road's speed); `REAL.friction` grey, never orange. Default none.
+   * (🎭 at 0.15 of the road's speed); `REAL.friction` grey, never orange. No. 017: `from: 'caliper'` starts it at the
+   * caliper, up behind the hub, instead of low by the contact patch (the default, as No. 016 posted; low read as tire
+   * smoke); with `size` ≈ 0.35 it's a third the size at ≈ 0.22 opacity. Default none.
    */
-  brakeDust?: {at: number; size?: number; wheel?: 'front' | 'rear'}[];
+  brakeDust?: {at: number; size?: number; wheel?: 'front' | 'rear'; from?: 'patch' | 'caliper'}[];
   /**
    * No. 016 (N6), 'ev': the motor doing the slowing (F4: ink, not orange): from `at` an ink arrow (`CurveArrow` 'ink',
    * a paper outline, never bloomed) draws from the near front wheel's hub over the tire into the drive unit, over
-   * `drawFor` (default 0.6 s); `fadeAt`: it fades (0.5 s). Null for none (default).
+   * `drawFor` (default 0.6 s); `fadeAt`: it fades (0.5 s). No. 017 (N5): `reach` 0 → 1 (default 1) draws only that share
+   * of its length (a weak regen stopping short of the drive unit); below 1 with no `fadeAt` it fades 0.5 s after drawing.
+   * Null for none (default).
    */
-  regenArrow?: {at: number; drawFor?: number; fadeAt?: number} | null;
+  regenArrow?: {at: number; drawFor?: number; fadeAt?: number; reach?: number} | null;
   /**
    * No. 016 (N7): the near wheels' tread depth per axle, 1 (new) → 0 (worn), constants or keys (an axle left out is drawn
    * as before, no blocks): tread blocks on the crown, real geometry, ≈ 22 mm proud when new (🎭 ≈ 2.7× real) down to
@@ -719,6 +730,67 @@ export type SlicedCarOptions = {
    * engine's section plane (hatched, inked), the oil in it level, dark (`REAL.coffee`). Anchor 'oilPan'. Default false.
    */
   oilPan?: boolean;
+  /**
+   * No. 017 (N1): the HVAC box in the dash ('ev', 'gas'), cut with the dash: housing, blower wheel, a heater core (gas)
+   * or an electric element (EV), the defrost and face vents, warm-air wisps (halo only, § 5 System heat near the cast),
+   * the EV's orange feed from the pack (`feed`). See `HvacKeys` (HeatKit). Null for none (default).
+   */
+  hvac?: HvacKeys | null;
+  /**
+   * No. 017 (N2), 'gas' four-cylinder: the engine's heat: radiator (cut, finned, coolant), fan, cut coolant hoses, the
+   * exhaust pipe and muffler under the floor, and the heat flows (fat to the radiator and the tailpipe, thin to the HVAC
+   * box's core), with wisps of thrown-away heat. See `GasHeatKeys` (HeatKit). Null for none (default).
+   */
+  gasHeat?: GasHeatKeys | null;
+  /** No. 017 (N9), 'ev': the heat pump (exchanger behind the grille, compressor, lines, wisps pulled in). See `HeatPumpKeys`. */
+  heatPump?: HeatPumpKeys | null;
+  /**
+   * No. 017 (N3), 'ev': the cold cue on the cells, 0 → 1 (constant or keys): the cells' uncut cans mixed toward
+   * `WINTER.snowShade` at ≤ 50 % (opaque, no emissive; the cut faces stay cut). Default 0.
+   */
+  packCold?: Keyed;
+  /**
+   * No. 017 (N10): the driver's seat heater, 0 → 1 (constant or keys): the § 5 "made by" glow on the seat's near side
+   * faces (cushion and back), inset so YOU occludes it and the bloom stays off the figure. Default 0.
+   */
+  seatHeat?: Keyed;
+  /** No. 017 (N10): the seat heater's feed from the pack (orange, under the floor and up into the seat base): draw keys. */
+  seatFeed?: (FlowKeys & {width?: number}) | null;
+  /** No. 017 (N10): the steering wheel's rim heater, 0 → 1: glow on the rim's top and bottom arcs only (between the hands). */
+  wheelHeat?: Keyed;
+  /** No. 017 (N10): a small shiver of the driver at each time (s; ≈ 0.8 s, ± 4 mm, seeded). Use `gestures` 'hunch' for shoulders up. */
+  shiver?: number[];
+  /** No. 017 (N10): grey breath puffs by the driver's mouth at each time (s; the exhaust vapour's token, ≤ 0.6). */
+  breath?: number[];
+  /** No. 017, 'city' winter or spring: the street trees' places shifted along the street (m; keep bark a wheel's width off a car's outline). Default 0. */
+  treeShift?: number;
+  /** No. 017 (brand § 3 Generic devices): the cluster lit but blank, no readable digits or words. Default false. */
+  clusterBlank?: boolean;
+  /** No. 017: × the frost's colour on the glass (`RealCar` `frostTone`; ≈ 0.8 in a brightly lit garage). Default 1. */
+  frostTone?: number;
+  /** No. 017 (N13): the heat parts' clock at the scene's start (s; dots and wisps). Default the scene's start in the video; a loop sets it. */
+  heatClock?: number;
+  /** No. 017 (N13): the blower's and fan's turn at the scene's start (rad). Default 0; a loop solves it. */
+  heatTurnFrom?: {blower?: number; fan?: number};
+  /** No. 017 (N3): the in-set ink thermometer beside the pack (§ 3 In-set ink gauge, no digits). Null for none (default). */
+  thermometer?: InkGaugeKeys | null;
+  /** No. 017 (N4): the in-set ink range-left gauge beside the pack (ticks stepping down, refillable). Null for none. */
+  rangeGauge?: InkGaugeKeys | null;
+};
+
+/**
+ * No. 017 (N3, N4): an in-set ink gauge's keys: its fill as `level` (constant or keys, wins) or stepped (`start`, minus
+ * `step` at each of `ticks`, s); `at` its foot (car frame; defaults beside the pack, in the rear footwell over it),
+ * `height` (m), `opacity` (keys: it can draw in and out).
+ */
+export type InkGaugeKeys = {
+  level?: Keyed;
+  start?: number;
+  step?: number;
+  ticks?: number[];
+  at?: V3;
+  height?: number;
+  opacity?: Keyed;
 };
 
 /**
@@ -1337,6 +1409,24 @@ const streamFlow = (p: Partial<SlicedCarOptions>, t: number, fps = 30) => {
     s += Math.min(6, 2 + 0.15 * v) * h;
   }
   return s / 8;
+};
+
+/** No. 016 (N6) / No. 017 (N5): the regen arrow's path (car frame), cut to its first `reach` share (the head at the stop). */
+const REGEN_PATH: V3[] = [
+  [1.35, 0.36, 0.99],
+  [1.27, 0.6, 0.99],
+  [1.17, 0.84, 0.9],
+  [1.12, 0.9, 0.62],
+  [1.17, 0.76, 0.42],
+];
+const regenArrowPoints = (reach: number): V3[] => {
+  if (reach >= 0.999) return REGEN_PATH;
+  const c = new THREE.CatmullRomCurve3(REGEN_PATH.map((q) => new THREE.Vector3(...q)));
+  const n = 8;
+  return [...Array(n + 1).keys()].map((i) => {
+    const v = c.getPointAt((i / n) * Math.max(0.05, reach));
+    return [v.x, v.y, v.z] as V3;
+  });
 };
 
 /** No. 014: the front of the cut sedan's nose (car frame x). */
@@ -2477,9 +2567,9 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
     if (k === undefined) return undefined;
     return {h: treadHeight(keyedValue(k, t, 1)), gauge: props.treadTicks === false ? 0 : 1};
   };
-  const dustOf = (which: 'front' | 'rear'): DustPuff[] =>
+  const dustOf = (which: 'front' | 'rear', from: 'patch' | 'caliper' = 'patch'): DustPuff[] =>
     (props.brakeDust ?? []).flatMap((q, i) => {
-      if ((q.wheel ?? 'front') !== which) return [];
+      if ((q.wheel ?? 'front') !== which || (q.from ?? 'patch') !== from) return [];
       const age = t - q.at;
       if (age < 0 || age > DUST_LIFE) return [];
       const size = Math.max(0.3, Math.min(2.5, q.size ?? 1));
@@ -2490,9 +2580,38 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
       return [{i, age, size, back, u, op: 0.38 * Math.sqrt(size) * ease(age, 0, 0.1) * (1 - ease(u, 0.25, 1))}];
     });
   const arrowR = 0.022 * Math.max(0.5, Math.min(1.8, camD / 12));
-  const regenK = ev && props.regenArrow ? inkArrowState(props.regenArrow, t) : null;
+  const regenK =
+    ev && props.regenArrow
+      ? (() => {
+          const ra = props.regenArrow;
+          const reach = Math.max(0, Math.min(1, ra.reach ?? 1));
+          const st = inkArrowState(reach < 1 && ra.fadeAt == null ? {...ra, fadeAt: ra.at + (ra.drawFor ?? 0.6) + 0.5} : ra, t);
+          return {drawn: st.drawn, opacity: st.opacity, reach};
+        })()
+      : null;
   const weightK = props.weightArrow ? inkArrowState(props.weightArrow, t) : null;
   const frostK = Math.max(0, Math.min(1, keyedValue(props.frost, t, props.dressing === 'winter' ? 0.55 : 0)));
+  // No. 017: the cold cue, the gauges' line weight, a part's turn from speed keys (rev/s at 1; fixed steps, deterministic)
+  const packColdK = Math.max(0, Math.min(1, keyedValue(props.packCold, t, 0)));
+  const gaugeK = Math.max(0.6, Math.min(2.2, camD / 6));
+  // the heat parts' clock (dots, wisps; a loop sets it so the last frame lands on frame 0's phase)
+  const heatClock = props.heatClock ?? startFrame / fps;
+  // the system lines' width with the camera distance (brand review: they held at close framings, vanished at far ones)
+  const heatLine = Math.max(0.25, Math.min(3.5, camD / 12));
+  // No. 017 (N10): the shiver (a seeded tremble under an 0.8 s envelope)
+  const shiverOff: V3 = (props.shiver ?? []).reduce(
+    (acc, at, i) => {
+      const age = t - at;
+      if (age < 0 || age > 0.8) return acc;
+      const env = Math.sin((age / 0.8) * Math.PI) * 0.004;
+      const ph = 6 * random(`shiver-${i}`);
+      return [acc[0] + env * Math.sin(age * 75 + ph), acc[1] + env * 0.5 * Math.sin(age * 63 + 2 * ph), acc[2] + env * Math.sin(age * 81 + 3 * ph)] as V3;
+    },
+    [0, 0, 0] as V3,
+  );
+  const seatHeatK = Math.max(0, Math.min(1, keyedValue(props.seatHeat, t, 0)));
+  const wheelHeatK = Math.max(0, Math.min(1, keyedValue(props.wheelHeat, t, 0)));
+  const seatFeedSt = props.seatFeed ? flowState(props.seatFeed, t) : null;
   // the hybrid's cluster: its power needle to drive with the drive path, to charge with the regen
   const hybPower = hybrid
     ? props.power !== undefined
@@ -2757,6 +2876,8 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
             z={HWY.front}
             ink={inkK}
           />
+          {/* No. 017 (N8): the highway's winter dressing (packed snow, a bank riding the road, slush, streaks) */}
+          {props.dressing === 'winter' ? <HighwayWinter scroll={-dir * distance} half={hwX} /> : null}
           <CutOutline
             rects={[
               [
@@ -2777,6 +2898,8 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
           storefronts={props.storefronts ?? false}
           pavement={props.pavement ?? false}
           winter={props.dressing === 'winter'}
+          {...(props.dressing === 'spring' ? {spring: true} : {})}
+          {...(props.treeShift ? {treeShift: props.treeShift} : {})}
           from={dir < 0 ? -(props.roadAhead ?? (ev ? 14 : 5)) : -(props.roadBehind ?? 5)}
           to={dir < 0 ? (props.roadBehind ?? 5) : (props.roadAhead ?? (ev ? 14 : 5))}
           inkScale={inkK}
@@ -2854,6 +2977,9 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
                   }
                 : {})}
               frost={frostK}
+              {...(props.frostTone !== undefined ? {frostTone: props.frostTone} : {})}
+              {...(props.clusterBlank ? {clusterBlank: true} : {})}
+              {...(props.hvac && (ev || gas) ? {hvacDashZ: HEAT.box.z0} : {})}
               shape={props.shape}
               awd={props.awd}
               rearBay={rearBay}
@@ -2873,7 +2999,7 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
             who={driver}
             mood={mood}
             look={props.driverLook}
-            position={[lay.driver[0] + bodyJ[0], lay.driver[1] + bodyY + bodyJ[1] + seatLift + settleRock, lay.driver[2] + bodyJ[2]]}
+            position={[lay.driver[0] + bodyJ[0] + shiverOff[0], lay.driver[1] + bodyY + bodyJ[1] + seatLift + settleRock + shiverOff[1], lay.driver[2] + bodyJ[2] + shiverOff[2]]}
             rotationY={Math.PI / 2}
             gestures={gestures}
             phone={false}
@@ -2975,7 +3101,7 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
                 </>
               ) : (
                 <>
-                  <EngineBay mood={mood} open={plate} inkScale={inkK} crank={crank4} tremor={tremor} />
+                  <EngineBay mood={mood} open={plate} inkScale={inkK} crank={crank4} tremor={tremor} radiator={!props.gasHeat} />
                   {props.oilPan ? <OilPan mood={mood} inkScale={inkK} tremor={tremor} /> : null}
                 </>
               )}
@@ -3124,6 +3250,67 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
           ) : null}
           {/* No. 014 (N3): grey exhaust puffs at the tailpipe (gas, hybrid) */}
           {(gas || hybrid) && props.exhaust && !strip ? <ExhaustPuffs puffs={puffs} tailpipe={HYBRID.tailpipe} mood={mood} /> : null}
+          {/* No. 017 (N1, N2, N9, N3, N4): heat in the car (orange = the heat and the energy spent making it) */}
+          {props.hvac && (ev || gas) && !strip ? (
+            <HvacBox
+              {...props.hvac}
+              kind={props.hvac.kind ?? (gas ? 'core' : 'electric')}
+              t={t}
+              drift={distAt}
+              mood={mood}
+              inkScale={inkK}
+              blowerAngle={heatSpin(props.hvac.blower ?? props.hvac.on ?? 1, t, HEAT_SPIN.blower, fps, props.heatTurnFrom?.blower ?? 0)}
+              clock={heatClock}
+              lineScale={heatLine}
+              port={chargePortAt(props.shape ?? 'crossover')}
+            />
+          ) : null}
+          {props.gasHeat && gas && !v8 && !strip ? (
+            <GasHeat {...props.gasHeat} t={t} drift={distAt} mood={mood} inkScale={inkK} fanAngle={heatSpin(props.gasHeat.fan ?? 1, t, HEAT_SPIN.fan, fps, props.heatTurnFrom?.fan ?? 0)} clock={heatClock} lineScale={heatLine} />
+          ) : null}
+          {/* No. 017 (N10): seat and wheel heat (glow masked by the figure), the seat's feed, breath */}
+          {seatHeatK > 0.01 && !strip ? <SeatHeat at={[lay.driver[0], lay.driver[1] + seatLift, lay.driver[2]]} k={seatHeatK} lineScale={heatLine} /> : null}
+          {wheelHeatK > 0.01 && !strip ? <WheelHeat at={lay.steering} k={wheelHeatK} steer={gas ? steerNow : 0} /> : null}
+          {seatFeedSt && seatFeedSt.p > 0 && seatFeedSt.g > 0.01 && !strip ? (
+            <HeatFlow
+              legs={runs([
+                [lay.driver[0] - 0.12, 0.335, 0.66],
+                [lay.driver[0] - 0.2, 0.335, 0.66],
+                [lay.driver[0] - 0.2, lay.driver[1] + seatLift + 0.44, lay.driver[2] + 0.2],
+              ])}
+              progress={seatFeedSt.p}
+              glow={seatFeedSt.g}
+              radius={(props.seatFeed?.width ?? 0.006) * heatLine}
+              flow={(t + heatClock) / 1.2}
+              dots={2}
+            />
+          ) : null}
+          {props.breath && props.breath.length && !strip ? (
+            <BreathPuffs mouth={[lay.driver[0] + 0.06, lay.driver[1] + seatLift + 1.3, lay.driver[2]]} times={props.breath} t={t} color={RACE.haze} />
+          ) : null}
+          {props.heatPump && ev && !strip ? <HeatPump {...props.heatPump} t={t} drift={distAt} mood={mood} inkScale={inkK} clock={heatClock} lineScale={heatLine} /> : null}
+          {ev && props.thermometer ? (
+            <InkGauge
+              kind="thermo"
+              level={steppedLevel(props.thermometer, t)}
+              at={props.thermometer.at ?? [-0.3, 0.37, 0.74]}
+              height={props.thermometer.height ?? 0.3}
+              mood={mood}
+              k={gaugeK}
+              opacity={keyedValue(props.thermometer.opacity, t, 1)}
+            />
+          ) : null}
+          {ev && props.rangeGauge ? (
+            <InkGauge
+              kind="range"
+              level={steppedLevel(props.rangeGauge, t)}
+              at={props.rangeGauge.at ?? [-0.5, 0.37, 0.74]}
+              height={props.rangeGauge.height ?? 0.3}
+              mood={mood}
+              k={gaugeK}
+              opacity={keyedValue(props.rangeGauge.opacity, t, 1)}
+            />
+          ) : null}
           {ev && props.madeBy ? (
             <MadeByCar
               madeBy={props.madeBy}
@@ -3172,7 +3359,7 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
                   frontWidth={props.packCharge.frontWidth}
                 />
               ) : (
-                <BatteryPack mood={mood} fill={regen?.modules} glow={rg} inkScale={inkK} modules={packMods} />
+                <BatteryPack mood={mood} fill={regen?.modules} glow={rg} inkScale={inkK} modules={packMods} cold={packColdK} />
               )}
               {dz ? (
                 <group position={[0, 0, dz]}>
@@ -3433,21 +3620,20 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
         const w = WHEELS[which === 'front' ? 'FR' : 'RR'];
         return <BrakeDust key={which} puffs={puffs} origin={[dir * w.x - dir * 0.08, R * 0.62, w.z + 0.16]} dir={dir} mood={mood} />;
       })}
+      {(['front', 'rear'] as const).map((which) => {
+        const puffs = dustOf(which, 'caliper');
+        if (!puffs.length) return null;
+        const w = WHEELS[which === 'front' ? 'FR' : 'RR'];
+        return <BrakeDust key={`c${which}`} puffs={puffs} origin={[dir * w.x - dir * 0.2, R * 1.05, w.z + 0.2]} dir={dir} mood={mood} />;
+      })}
       {/* No. 016 (N6): the motor doing the slowing, hub → drive unit (ink, F4) */}
       {regenK ? (
         <InkArrowAlong
-          points={(
-            [
-              [1.35, 0.36, 0.99],
-              [1.27, 0.6, 0.99],
-              [1.17, 0.84, 0.9],
-              [1.12, 0.9, 0.62],
-              [1.17, 0.76, 0.42],
-            ] as V3[]
-          ).map((q) => toWorld(props, q))}
+          points={regenArrowPoints(regenK.reach).map((q) => toWorld(props, q))}
           drawn={regenK.drawn}
           opacity={regenK.opacity}
-          radius={arrowR}
+          // No. 017 (N5): a short (weak) arrow a little heavier, so its ink stroke and head read
+          radius={arrowR * (regenK.reach < 1 ? 1.5 : 1)}
           mood={mood}
         />
       ) : null}

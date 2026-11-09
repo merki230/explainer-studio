@@ -2,6 +2,36 @@
 
 Every change to `brand.md` or `style-guide.md` gets a line here: date, what changed, why (pointing to a `feedback.md` entry or a research section). Nothing changes silently.
 
+## style-guide v0.18.12 · 2026-11-09 · No. 017 `ev-winter`: batch-2 stills
+
+Brand-director review of the scene-builder's batch-2 stills, relayed by the main session. No owner decision involved; values 🧪.
+
+- **§ 5 Glow, car-scale paths:** the builder's deviation is accepted. Width scales × camD/12, clamped 0.5–3.5, and the core reads 3–8 px on screen at full scale. Why: at × camD/30 the close framings went too thin. The intent is one readable width on screen. The ruler keeps /30.
+- **§ 5 Glow, along a cable:** the path rides on the cable as its own line. The cable stays black. Why: in the garage, the charge cable itself was tinted orange-brown and read as an orange object.
+- **§ 5 System heat near the cast:** a heated seat's face keeps its fabric (≤ 10% tint). Why: the cushion and back read as an orange-brown tile (the "made by" no-tile rule).
+- **§ 3 Generic devices:** no readable cluster text, and plates blank unless the story is about plates. Why: the stills show "0 MPH / CHARGE" and "30" on the cluster, and a real-format plate "6RTD 418" on the lead car, all readable text outside the overlays.
+- **§ 3 Winter and heat parts:** frost tone up to 0.8 on glass, with the whites condition.
+
+## style-guide v0.18.11 · 2026-11-09 · No. 017 `ev-winter`: heat near the cast, energy as the system, winter parts
+
+Brand-director rulings on the director's questions in `src/videos/ev-winter/av-script.md` (F5, F10, F11, the one-system map, new colour needs), relayed by the main session. These rules applied to a new case, with no owner decision; values 🧪. The brand-director doesn't edit code, so the scene-builder builds to these.
+
+- **§ 5, new row "System heat near the cast" (F5):** the director's proposal accepted, with checkable values.
+  - **Wisps:** halo only, ≤ 25%, no core, dots or spill. They end ≥ 0.15 m and ≥ 16 px on screen from any figure and never cross one.
+  - **Heated seat and wheel:** "made by" glow, occluded by the figure and never drawn over it. The figure is kept out of bloom.
+  - **Fallback:** the orange stops at the vents.
+- **§ 5 One system per video, "energy that becomes the system":** the director's map is confirmed. The battery → heater, wall → heater (preheat), battery → compressor and battery → seat lines are orange: they are the energy spent on heat, one flow ending in the system. Stored charge, drive energy, charging and regen stay out. Test: an orange line must end in the system.
+- **§ 1 `TWINS.gasPaint` (F10):** keep `#6a5a4c` and keep bark out of the gas twin's silhouette (≥ one wheel's width on screen). Check at `twinHeat` and `stack`. If the check fails, use `#4a5d72` for the whole video as a separate token, so No. 014 and No. 016 re-render unchanged. Why: the "never shares the winter corner" condition no longer holds, and the gas twin is a recurring car.
+- **§ 3, new row "Winter and heat parts":** no new tokens.
+  - **Coolant:** `CHARGE.coolant`, never the real orange or green.
+  - **Cold cells:** tint the uncut cell surfaces toward `WINTER.snowShade` at ≤ 50%. Cut faces stay `cut`.
+  - **Frost and breath:** frost is `WINTER.frost`; breath uses the exhaust-vapour token (or `HIGHWAY.spray`).
+  - **Heat parts:** aluminium heat parts, never red-hot.
+  - **Cold Lab:** `LAB` + `WINTER` tokens; straps in `REAL.flex`; the test car in `#3f434a`.
+- **§ 3 In-set ink gauge:** adds the thermometer and range gauge (ink fill, never red or orange, no digits).
+- **§ 3, new row "Re-dressing a recent location" (F11):** a slice from the last two videos may return only with a new dressing, a new system and new framings, plus one location the last two videos didn't use. No. 017 passes on condition that G gets a new framing (not No. 016's `home`). Why: brand.md's reuse row targets templated content (`research/platforms.md` P§4, S32), so this makes it checkable.
+- **Raised for the owner (not changed):** the twin corner has now appeared in No. 014, No. 016 and No. 017. Should it become a second recurring location like The Lab, re-dressed per video? Recommendation: yes. Until the owner decides, the re-dress row above governs.
+
 ## style-guide v0.18.10 · 2026-11-06 · No. 016 `ev-cost`: several ghosts in a row
 
 Owner decision 2026-11-06 on the question left open in v0.18.9, relayed by the main session. The owner chose the brand-director's recommendation, **"A": several ghosts may show at once only when they mark the same kind of absence in a row of identical slots (e.g. empty charging stalls). They draw on together, up to 4.** Value 🧪.

@@ -267,6 +267,8 @@ export type EngineBayProps = {
    * on the firewall. Default true; false (the hybrid) leaves that space to the motor-generator and its inverter.
    */
   intake?: boolean;
+  /** 'i4' (No. 017): the plain radiator box behind the grille drawn. Default true; false when `HeatKit`'s `GasHeat` draws its own. */
+  radiator?: boolean;
   /** 'i4' (No. 014): the engine's tremor while it runs, an offset (m) of the block, head and moving parts. Default none. */
   tremor?: V3;
 };
@@ -276,7 +278,7 @@ export const EngineBay: React.FC<EngineBayProps> = ({engine = 'i4', crank, ...p}
   engine === 'v8' ? <V8Bay mood={p.mood} crank={crank ?? 0} inkScale={p.inkScale} /> : <I4Bay {...p} crank={crank} />;
 
 /** The four-cylinder, intake, throttle body, air duct, radiator and the computer (see the file comment). */
-const I4Bay: React.FC<Omit<EngineBayProps, 'engine'>> = ({mood, open = 0, inkScale = 1, crank, intake = true, tremor}) => {
+const I4Bay: React.FC<Omit<EngineBayProps, 'engine'>> = ({mood, open = 0, inkScale = 1, crank, intake = true, tremor, radiator = true}) => {
   const {env, envScale, albedo} = usePhys();
   const mats = useMemo(
     () => ({
@@ -673,13 +675,15 @@ const I4Bay: React.FC<Omit<EngineBayProps, 'engine'>> = ({mood, open = 0, inkSca
       </group>
       {/* exhaust down the front, the radiator behind the grille */}
       <mesh geometry={geo.exhaust} material={mats.exhaust} castShadow />
-      <mesh
-        geometry={roundedBox(0.045, 0.56, 0.9, 0.01)}
-        material={mats.radiator}
-        position={[2.06, 0.6, -0.15]}
-        castShadow
-        receiveShadow
-      />
+      {radiator ? (
+        <mesh
+          geometry={roundedBox(0.045, 0.56, 0.9, 0.01)}
+          material={mats.radiator}
+          position={[2.06, 0.6, -0.15]}
+          castShadow
+          receiveShadow
+        />
+      ) : null}
 
       {intake ? (
       <>
