@@ -251,6 +251,9 @@ Owner decision of 2026-10-29, relayed by the main session (✅). Logged in `feed
 - **brand.md What we never do:** the "signature shape" ban notes the coming exception; it still holds until the spec exists.
 - **Publish copy:** the "cars are generic designs" disclosure line changes for videos that use these cars (publisher).
 - brand.md header to v0.13.5.
+## Feedback only · 2026-10-28 · TikTok boost on mile-markers (no version change)
+
+No rule changed. Logged in `feedback.md` ("No. 009 · mile-markers: TikTok boost notice"): TikTok gave the post 4.0k extra views "for being authentic and helpful to others", citing ≈ 6 people who found it through search and shares (small sample). Two 🧪 lessons the owner agreed to test: L1, captions open with the plain question people would search; L2, prefer topics with a practical, shareable payoff (fits H5). Future boost notices are to be logged per post.
 
 ## v0.13.4 · 2026-10-28 · Profile copy and sourcing rules amended for the new bio and captions (owner answers)
 

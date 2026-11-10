@@ -38,6 +38,28 @@ First two data points: No. 002 (evening, about 7 PM, 2026-10-17) and No. 003 (mi
 
 ---
 
+## No. 009 · mile-markers (`mile-markers`): TikTok boost notice (platform signal)
+
+- **Received:** 2026-10-28, about 21:00 America/Chicago, TikTok notification "Creator updates", relayed by the main session · **Post:** "What Exit 150 means", caption opening "What do exit numbers mean? On most interstates, Exit 150 is about 1…"
+
+**The notice** (quoted as relayed)
+
+- "Your post got 4.0k extra views for being authentic and helpful to others."
+- "Why it stood out: ~6 people found your post helpful through search and shares."
+
+**Reading:** a platform signal, not proof. The sample is tiny (≈ 6 people), and TikTok doesn't say how it decides. It points the same way as H5 (feedback "No. 002 · The Tire", hypotheses): practical hidden tech gets searched and shared.
+
+**Lessons** (owner agreed; 🧪 to test, no rule changed)
+
+| # | Lesson | Fits | What would confirm it |
+|---|---|---|---|
+| L1 | Captions open with the question exactly as people would search it: plain wording, not clever ("What do exit numbers mean?") | Caption pattern line 1 ("Profiles and captions", below) | More boost notices or search traffic on posts whose first line is a plain search question |
+| L2 | Prefer topics with a practical "good to know" payoff people share (mile-markers: read the marker to 911) | H5 recipe step 4, "a real-life payoff the viewer can check" | Shares and "helpful" notices on payoff topics against topics without one |
+
+**To watch:** log every future boost or "helpful" notice per post here, with its date, quoted text, extra views and the number of people it names.
+
+---
+
 ## Profiles and captions: one bio, a caption pattern (owner decisions, not a video)
 
 - **Decided:** 2026-10-28, owner, relayed by the main session · **Applies to:** the three profiles now; the caption pattern on every new post and on the four posts getting polls (`ev-charging`, `one-pedal`, `ev-acceleration`, `mile-markers`)
