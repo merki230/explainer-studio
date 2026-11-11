@@ -1,0 +1,16 @@
+A heat pump puts more heat into your house than the electricity it uses, because the extra heat was already outside.
+That sounds impossible.
+How can the air outside hold any heat when it's 30 degrees?
+Even 30-degree air holds heat, and heat always flows from warmer to colder.
+That's why the heat pump keeps a liquid in its outdoor coil colder than the air, usually by 10 to 20 degrees.
+To that liquid, 30-degree air is warm, so heat flows in and the liquid boils into a gas.
+Then a compressor squeezes the gas, which heats it up.
+Now the gas is hotter than your living room, so it can heat the house.
+The electricity runs the compressor, and the rest of the heat comes in from outside.
+A space heater brings nothing in, so it makes all its heat, one unit for each unit of electricity.
+At a mild 40 degrees, one Canadian government test house got about three units of heat for each unit of electricity.
+At 6 below zero, the same house got one and a half, which still beats a space heater.
+As it gets colder, heat pumps pull less and less heat out of the air, until most of them shut off.
+On newer heat pumps, that can happen somewhere between 5 above and 13 below zero, and backup heat, if there is any, takes over.
+Electric cars heat the cabin one of the same two ways, with a plain heater that makes heat or a heat pump that moves it.
+And at home, does your house make its heat, or move it?

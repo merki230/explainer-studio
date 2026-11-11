@@ -2,6 +2,21 @@
 
 Every change to `brand.md` or `style-guide.md` gets a line here: date, what changed, why (pointing to a `feedback.md` entry or a research section). Nothing changes silently.
 
+## style-guide v0.18.14 · 2026-11-11 · No. 018 `home-heat`: how the 25% halo is measured
+
+The scene-builder asked a rule question about the `house-slice` wisps, relayed by the main session. This clarifies existing rules with no owner decision needed; values are 🧪. The owner may revert any point.
+
+- **§ 5 Glow, measurement:** "orange at 25%" means the **authored opacity before bloom**, summed where halos overlap. Why: the guide defines it as the path halo's value, "25%, in the bloom layer". Bloom is applied on top by design (§ 2), and the 16 px clearance in "System heat near the cast" is there because of bloom's reach. If the cap applied after bloom, every halo the channel has shipped would fail it, the path halo included.
+- **§ 5 Glow, post-bloom guard (new value):** on the final pixel, at most **45%** of the way from background to `orange`, which is the existing "made by" surge ceiling. Why: this keeps bloom from turning stacked wisps into an orange wash. The No. 018 measurements (0.35 / ≈ 0.30 / ≈ 0.30 / 0.21 after bloom) all pass.
+- **§ 5 System heat, air wisps away from people:** they keep the same 25% cap, and they read through **placement over dark surfaces and convergence on what they enter**. Why: on frame 830 the one visible intake glow sits over the snow, off the unit, with nothing flowing into the fins. The trouble there is placement and motion, not the cap. Writing a per-group exception was not needed: 0.25 summed is inside the rule.
+
+## style-guide v0.18.13 · 2026-11-11 · No. 018 `home-heat`: Night whites and snow
+
+Brand-director rulings on the scene-builder's `house-slice` stills, relayed by the main session. A Night clarification of existing rules, no owner decision; values 🧪. The owner may revert either point.
+
+- **§ 2 Whites, now both moods:** the ≤ 244 / zero-255 ceiling applies at Night as well. With the Night floor, a Night front cut face reads **179 to 244**. Fix order: lower the set's key first. If that fails the subject floor, apply `cut` × ≥ 0.96 on the one over-lit face. Never touch the exposure or the token. Why: the ground block's cut faces measured 247–248 under Night exposure 1.4. Clipping doesn't depend on mood, and § 1 "No pure white surfaces" already covers both moods. Checklist 4 updated.
+- **§ 1 `WINTER`, Night tone:** lit snow under the Night key is the `snow` material × **0.87** (`HOUSE_SNOW`), not a new token. Why: at × 0.9 the roof measured 245. The written fallback `#e4e8ec` (≈ × 0.96) would fail too.
+
 ## style-guide v0.18.12 · 2026-11-09 · No. 017 `ev-winter`: batch-2 stills
 
 Brand-director review of the scene-builder's batch-2 stills, relayed by the main session. No owner decision involved; values 🧪.

@@ -87,6 +87,8 @@ export type HeatFlowProps = {
   legs: V3[][];
   /** 0 → 1: how much of the route is drawn (from its start). Default 1. */
   progress?: number;
+  /** 0 → 1: where the drawn part starts (a tail running after the head: the flow fading from its start). Default 0. */
+  from?: number;
   /** 0 → 1: the flow's strength (core, halo and dots fade with it). Default 1. */
   glow?: number;
   /** Core radius (m). The halo is `haloScale` × this. Default 0.012. */
@@ -109,6 +111,7 @@ export type HeatFlowProps = {
 export const HeatFlow: React.FC<HeatFlowProps> = ({
   legs,
   progress = 1,
+  from = 0,
   glow = 1,
   radius = 0.012,
   haloScale = 2.8,
@@ -133,9 +136,10 @@ export const HeatFlow: React.FC<HeatFlowProps> = ({
   );
   useEffect(() => () => Object.values(mats).forEach((m) => m.dispose()), [mats]);
   const p = clamp01(progress);
+  const f0 = Math.min(p, clamp01(from));
   const g = clamp01(glow);
   const s = clamp01(surge);
-  if (p <= 0 || g <= 0.003) return null;
+  if (p <= 0 || g <= 0.003 || p - f0 <= 0.0005) return null;
   mats.core.opacity = g;
   mats.halo.opacity = Math.min(0.6, (halo + (0.45 - halo) * s) * g);
   mats.dot.opacity = g;
@@ -145,11 +149,11 @@ export const HeatFlow: React.FC<HeatFlowProps> = ({
   const b = curve.getPointAt(1);
   return (
     <group>
-      <FlowTube curve={curve} segs={segs} radius={r} progress={p} material={mats.core} order={3} />
-      <FlowTube curve={curve} segs={segs} radius={r * haloScale} progress={p} material={mats.halo} order={4} />
+      <FlowTube curve={curve} segs={segs} radius={r} progress={p} from={f0} material={mats.core} order={3} />
+      <FlowTube curve={curve} segs={segs} radius={r * haloScale} progress={p} from={f0} material={mats.halo} order={4} />
       {nodes ? (
         <>
-          <mesh position={a} material={mats.node} userData={{glow: true}} renderOrder={5}>
+          <mesh position={a} material={mats.node} userData={{glow: true}} renderOrder={5} visible={f0 <= 0.0005}>
             <sphereGeometry args={[r * 2.1, 14, 10]} />
           </mesh>
           {p >= 0.999 ? (
@@ -162,8 +166,8 @@ export const HeatFlow: React.FC<HeatFlowProps> = ({
       {flow !== undefined && p >= 0.999
         ? [...Array(dots).keys()].map((i) => {
             const u = (((flow + i / dots) % 1) + 1) % 1;
-            // dots fade in and out at the route's ends (no pop at the loop of the phase)
-            const k = Math.min(1, u / 0.06, (1 - u) / 0.06);
+            // dots fade in and out at the route's ends (no pop at the loop of the phase); none behind a tail
+            const k = Math.min(1, u / 0.06, (1 - u) / 0.06) * (f0 > 0 ? Math.max(0, Math.min(1, (u - f0) / 0.06)) : 1);
             return (
               <mesh key={i} position={curve.getPointAt(u)} scale={Math.max(0.001, k)} material={mats.dot} userData={{glow: true}} renderOrder={6}>
                 <sphereGeometry args={[r * 1.5, 10, 8]} />
@@ -176,11 +180,12 @@ export const HeatFlow: React.FC<HeatFlowProps> = ({
 };
 
 /** A tube of a radius along `curve`, revealed from its start to `progress` (rebuilt only when the radius changes). */
-const FlowTube: React.FC<{curve: THREE.Curve<THREE.Vector3>; segs: number; radius: number; progress: number; material: THREE.Material; order: number}> = ({
+const FlowTube: React.FC<{curve: THREE.Curve<THREE.Vector3>; segs: number; radius: number; progress: number; from?: number; material: THREE.Material; order: number}> = ({
   curve,
   segs,
   radius,
   progress,
+  from = 0,
   material,
   order,
 }) => {
@@ -188,7 +193,8 @@ const FlowTube: React.FC<{curve: THREE.Curve<THREE.Vector3>; segs: number; radiu
   const geo = useMemo(() => new THREE.TubeGeometry(curve, segs, Math.max(0.0005, rk), 8, false), [curve, segs, rk]);
   useEffect(() => () => geo.dispose(), [geo]);
   const total = geo.index ? geo.index.count : 0;
-  geo.setDrawRange(0, Math.floor((total * clamp01(progress)) / 6) * 6);
+  const a0 = Math.floor((total * clamp01(from)) / 6) * 6;
+  geo.setDrawRange(a0, Math.max(0, Math.floor((total * clamp01(progress)) / 6) * 6 - a0));
   return <mesh geometry={geo} material={material} userData={{glow: true}} frustumCulled={false} renderOrder={order} />;
 };
 
@@ -1078,6 +1084,15 @@ export type InkGaugeProps = {
   opacity?: number;
   /** 'range': tick count on the scale (default 5). */
   ticks?: number;
+  /** 'thermo' (No. 018): unlabelled scale marks at these fills (0 → 1) instead of the three default quarter ticks. */
+  marks?: number[];
+  /**
+   * 'thermo' (No. 018): a range band drawn on beside the tube between two fills (`from` → `to`, 0 → 1): a heavy ink bar
+   * on the side away from the marks, `draw` 0 → 1 (it grows from `from`), and an end tick at each end, `ends` 0 → 1 each.
+   */
+  band?: {from: number; to: number; draw?: number; ends?: [number, number]};
+  /** 'thermo' (No. 018): short ink ticks drawn on at fills (`at` 0 → 1) on the marks' side, `k` 0 → 1 (grows outward). */
+  flags?: {at: number; k: number}[];
 };
 
 /**
@@ -1085,7 +1100,7 @@ export type InkGaugeProps = {
  * 'thermo': a tube (two walls, a rounded foot) with an ink fill line; 'range': a short scale (a stem, ticks) with a
  * heavier ink fill line beside it, stepping down. 🎭, disclosed.
  */
-export const InkGauge: React.FC<InkGaugeProps> = ({kind, level, at, height = 0.32, mood, k = 1, opacity = 1, ticks = 5}) => {
+export const InkGauge: React.FC<InkGaugeProps> = ({kind, level, at, height = 0.32, mood, k = 1, opacity = 1, ticks = 5, marks, band, flags}) => {
   const mats = useMemo(
     () => ({
       core: new THREE.MeshBasicMaterial({color: raw(section.cutLine), transparent: true}),
@@ -1129,7 +1144,31 @@ export const InkGauge: React.FC<InkGaugeProps> = ({kind, level, at, height = 0.3
         {/* the fill line: a heavy ink stroke up the tube's middle */}
         {bar('fill', [0, fill / 2, 0.001], [w * 1.4, Math.max(0.002, fill)])}
         {/* scale ticks (no digits) */}
-        {[0.25, 0.5, 0.75].map((f) => bar(`t${f}`, [tw / 2 + w * 1.4, foot + (H - foot) * f, 0], [w * 1.6, w * 0.5]))}
+        {(marks ?? [0.25, 0.5, 0.75]).map((f) => bar(`t${f}`, [tw / 2 + w * 1.4, foot + (H - foot) * f, 0], [w * 1.6, w * 0.5]))}
+        {/* No. 018: ticks drawn on at a fill (the marks' side, growing outward) */}
+        {(flags ?? [])
+          .filter((fl) => fl.k > 0.01)
+          .map((fl, i) => {
+            const len = w * 3.2 * clamp01(fl.k);
+            return bar(`f${i}`, [tw / 2 + w * 0.4 + len / 2, foot + (H - foot) * clamp01(fl.at), 0.001], [len, w * 0.8]);
+          })}
+        {/* No. 018: a range band on the far side (grows from its `from`), its end ticks */}
+        {band && (band.draw ?? 1) > 0.01
+          ? (() => {
+              const y0 = foot + (H - foot) * clamp01(band.from);
+              const y1 = foot + (H - foot) * clamp01(band.to);
+              const yd = y0 + (y1 - y0) * clamp01(band.draw ?? 1);
+              const bx = -tw / 2 - w * 2.2;
+              const [e0, e1] = band.ends ?? [1, 1];
+              return (
+                <>
+                  {bar('band', [bx, (y0 + yd) / 2, 0.001], [w * 1.6, Math.max(0.002, Math.abs(yd - y0))])}
+                  {e0 > 0.01 ? bar('be0', [bx + (w * 1.8 * clamp01(e0)) / 2 - w * 0.9, y0, 0.001], [w * 1.8 * clamp01(e0) + w * 0.8, w * 0.8]) : null}
+                  {e1 > 0.01 ? bar('be1', [bx + (w * 1.8 * clamp01(e1)) / 2 - w * 0.9, y1, 0.001], [w * 1.8 * clamp01(e1) + w * 0.8, w * 0.8]) : null}
+                </>
+              );
+            })()
+          : null}
       </group>
     );
   }
@@ -1143,6 +1182,58 @@ export const InkGauge: React.FC<InkGaugeProps> = ({kind, level, at, height = 0.3
       {[...Array(n).keys()].map((i) => bar(`t${i}`, [0.012 * k, (i / (n - 1)) * H, 0], [0.024 * k, w * 0.6]))}
       {/* the range left: a heavy fill line beside the stem */}
       {bar('fill', [0.03 * k, (H * lv) / 2, 0.001], [w * 1.6, Math.max(0.002, H * lv)])}
+    </group>
+  );
+};
+
+/**
+ * No. 018 (N10): an ink bracket between two heights (`y0`, `y1`, world) at `x`, `z` (world; a plane facing +z, the caller
+ * turns its group): a vertical stroke drawn on from `y0` (`draw` 0 → 1) and a tick at each end (`ends` 0 → 1 each),
+ * pointing left (−x) toward what it compares. The § 3 in-set ink look: `cutLine` on a thin `cut` halo, no digits.
+ */
+export const InkBracket: React.FC<{x: number; y0: number; y1: number; z: number; mood: Mood; k?: number; draw: number; ends?: [number, number]; opacity?: number}> = ({
+  x,
+  y0,
+  y1,
+  z,
+  mood,
+  k = 1,
+  draw,
+  ends = [0, 0],
+  opacity = 1,
+}) => {
+  const mats = useMemo(
+    () => ({
+      core: new THREE.MeshBasicMaterial({color: raw(section.cutLine), transparent: true}),
+      halo: new THREE.MeshBasicMaterial({color: raw(section.cut), transparent: true, depthWrite: false}),
+    }),
+    [],
+  );
+  useEffect(() => () => Object.values(mats).forEach((m) => m.dispose()), [mats]);
+  mats.halo.color.copy(raw(section.cut)).multiplyScalar(0.95 / MOODS[mood].exposure);
+  const o = clamp01(opacity);
+  mats.core.opacity = o;
+  mats.halo.opacity = 0.9 * o;
+  const d = clamp01(draw);
+  if (o < 0.02 || d < 0.01) return null;
+  const w = 0.012 * k;
+  const yd = y0 + (y1 - y0) * d;
+  const tick = 0.05 * Math.max(0.6, k);
+  const bar = (key: string, c: V3, size: [number, number]) => (
+    <group key={key} position={c}>
+      <mesh material={mats.core} renderOrder={9}>
+        <planeGeometry args={size} />
+      </mesh>
+      <mesh material={mats.halo} position={[0, 0, -0.001]} renderOrder={8}>
+        <planeGeometry args={[size[0] + w * 1.6, size[1] + w * 1.6]} />
+      </mesh>
+    </group>
+  );
+  return (
+    <group>
+      {bar('v', [x, (y0 + yd) / 2, z], [w * 0.9, Math.max(0.002, Math.abs(yd - y0))])}
+      {ends[0] > 0.01 ? bar('e0', [x - (tick * clamp01(ends[0])) / 2, y0, z], [tick * clamp01(ends[0]), w * 0.9]) : null}
+      {ends[1] > 0.01 && d > 0.99 ? bar('e1', [x - (tick * clamp01(ends[1])) / 2, y1, z], [tick * clamp01(ends[1]), w * 0.9]) : null}
     </group>
   );
 };

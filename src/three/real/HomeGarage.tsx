@@ -53,7 +53,7 @@ const HALL = {x0: -3.24, x1: -2.34, z0: -4.6, z1: -2.42, h: 2.12};
 
 /** The meter's dial (canvas): a pale face, an arc of ticks, no numerals, no logo. */
 let meterTex: THREE.CanvasTexture | null = null;
-const meterDial = () => {
+export const meterDial = () => {
   if (meterTex) return meterTex;
   const c = document.createElement('canvas');
   c.width = 256;

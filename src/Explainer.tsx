@@ -45,6 +45,7 @@ import {cityTwinCameraEnd, cityTwinCameraStart, cityTwinCarry} from './scenes/Ci
 import {recordsCameraEnd, recordsCameraStart} from './scenes/RecordsSliceScene';
 import {plugSheetCameraEnd, plugSheetCameraStart} from './scenes/PlugSheetScene';
 import {coldLabCameraEnd, coldLabCameraStart} from './scenes/ColdLabScene';
+import {houseCameraEnd, houseCameraStart, houseCarry} from './scenes/HouseSliceScene';
 import {REVEALS} from './scenes/openingReveal';
 import type {Framing} from './three/section/SectionCamera';
 
@@ -72,6 +73,7 @@ const CAMERAS: Record<string, {start: CameraFn; end: CameraFn}> = {
   'records-slice': {start: recordsCameraStart as CameraFn, end: recordsCameraEnd as CameraFn},
   'plug-sheet': {start: plugSheetCameraStart as CameraFn, end: plugSheetCameraEnd as CameraFn},
   'cold-lab': {start: coldLabCameraStart as CameraFn, end: coldLabCameraEnd as CameraFn},
+  'house-slice': {start: houseCameraStart as CameraFn, end: houseCameraEnd as CameraFn},
 };
 import {transitionInto, type Transition} from './scenes/transitions';
 import {clickOffFrame, type ClickOff} from './scenes/clickOff';
@@ -536,6 +538,8 @@ const ExplainerBody: React.FC<{
       // the real opening's reveal (§ 11.6.1): the first scene's camera rides the clip's track and glides out of it
       if (i === 0 && video.opening && short === undefined && format === 'horizontal' && REVEALS[videoId] && own.reveal === undefined)
         own.reveal = REVEALS[videoId];
+      // house-slice (No. 018) rounds its periodic motion to the video's length (the loop), which a scene can't read
+      if (s.scene === 'house-slice' && own.videoFrames === undefined) own.videoFrames = timeline.durationInFrames;
       const t = into[i];
       const cam = CAMERAS[s.scene];
       if ((t?.kind === 'continue' || t?.kind === 'glide') && cam && timeline.scenes[i - 1].scene === s.scene) {
@@ -569,6 +573,8 @@ const ExplainerBody: React.FC<{
         // city-twin (No. 014): each twin's road, wheel turn and crank
         if (s.scene === 'city-twin')
           Object.assign(own, cityTwinCarry({...props[i - 1], startFrame: prev.startFrame}, prev.endFrame - prev.startFrame, FPS));
+        // house-slice (No. 018): the snow's gusts so far (their push carries on)
+        if (s.scene === 'house-slice') Object.assign(own, houseCarry(props[i - 1]));
         // 'auto' turns a continue into a glide when this scene's framing is too far from where the
         // last one ended to continue smoothly (a preset with the same look-at keeps pushing instead)
         const start = cam.start(own, s.endFrame - s.startFrame, FPS);

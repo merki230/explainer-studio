@@ -55,6 +55,8 @@ const SECTION_DEFAULT_LOCATION: Record<string, string> = {
   'records-slice': 'records',
   // No. 017: the Lab's cold chamber
   'cold-lab': 'cold-lab',
+  // No. 018: the house on a winter night (living room, basement, yard and driveway on one sheet)
+  'house-slice': 'house',
 };
 
 /** Frames of a horizontal video's `slide` (§ 11.6: 24, cubic in-out). */

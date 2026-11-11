@@ -1,0 +1,1350 @@
+{
+  "audio": "audio/voiceover.mp3",
+  "words": [
+    {
+      "text": "A",
+      "start": 0.133,
+      "end": 0.16
+    },
+    {
+      "text": "heat",
+      "start": 0.24,
+      "end": 0.4
+    },
+    {
+      "text": "pump",
+      "start": 0.48,
+      "end": 0.72
+    },
+    {
+      "text": "puts",
+      "start": 0.88,
+      "end": 1.04
+    },
+    {
+      "text": "more",
+      "start": 1.2,
+      "end": 1.36
+    },
+    {
+      "text": "heat",
+      "start": 1.52,
+      "end": 1.68
+    },
+    {
+      "text": "into",
+      "start": 1.8,
+      "end": 1.92
+    },
+    {
+      "text": "your",
+      "start": 2,
+      "end": 2.08
+    },
+    {
+      "text": "house",
+      "start": 2.24,
+      "end": 2.4
+    },
+    {
+      "text": "than",
+      "start": 2.48,
+      "end": 2.56
+    },
+    {
+      "text": "the",
+      "start": 2.6,
+      "end": 2.64
+    },
+    {
+      "text": "electricity",
+      "start": 2.88,
+      "end": 3.28
+    },
+    {
+      "text": "it",
+      "start": 3.36,
+      "end": 3.44
+    },
+    {
+      "text": "uses,",
+      "start": 3.52,
+      "end": 4.16
+    },
+    {
+      "text": "because",
+      "start": 4.32,
+      "end": 4.48
+    },
+    {
+      "text": "the",
+      "start": 4.56,
+      "end": 4.64
+    },
+    {
+      "text": "extra",
+      "start": 4.72,
+      "end": 4.96
+    },
+    {
+      "text": "heat",
+      "start": 5.04,
+      "end": 5.28
+    },
+    {
+      "text": "was",
+      "start": 5.4,
+      "end": 5.52
+    },
+    {
+      "text": "already",
+      "start": 5.72,
+      "end": 5.92
+    },
+    {
+      "text": "outside.",
+      "start": 6.2,
+      "end": 6.72
+    },
+    {
+      "text": "That",
+      "start": 7.16,
+      "end": 7.2
+    },
+    {
+      "text": "sounds",
+      "start": 7.32,
+      "end": 7.44
+    },
+    {
+      "text": "impossible.",
+      "start": 7.52,
+      "end": 8.8
+    },
+    {
+      "text": "How",
+      "start": 8.88,
+      "end": 8.96
+    },
+    {
+      "text": "can",
+      "start": 9.04,
+      "end": 9.12
+    },
+    {
+      "text": "the",
+      "start": 9.2,
+      "end": 9.28
+    },
+    {
+      "text": "air",
+      "start": 9.36,
+      "end": 9.52
+    },
+    {
+      "text": "outside",
+      "start": 9.76,
+      "end": 10
+    },
+    {
+      "text": "hold",
+      "start": 10.16,
+      "end": 10.32
+    },
+    {
+      "text": "any",
+      "start": 10.4,
+      "end": 10.64
+    },
+    {
+      "text": "heat",
+      "start": 10.72,
+      "end": 10.96
+    },
+    {
+      "text": "when",
+      "start": 11,
+      "end": 11.04
+    },
+    {
+      "text": "it's",
+      "start": 11.12,
+      "end": 11.36
+    },
+    {
+      "text": "30",
+      "start": 11.4,
+      "end": 11.6
+    },
+    {
+      "text": "degrees?",
+      "start": 11.68,
+      "end": 12.64
+    },
+    {
+      "text": "Even",
+      "start": 12.72,
+      "end": 13.04
+    },
+    {
+      "text": "30-degree",
+      "start": 13.12,
+      "end": 13.68
+    },
+    {
+      "text": "air",
+      "start": 13.84,
+      "end": 14
+    },
+    {
+      "text": "holds",
+      "start": 14.08,
+      "end": 14.4
+    },
+    {
+      "text": "heat,",
+      "start": 14.48,
+      "end": 15.04
+    },
+    {
+      "text": "and",
+      "start": 15.12,
+      "end": 15.2
+    },
+    {
+      "text": "heat",
+      "start": 15.28,
+      "end": 15.6
+    },
+    {
+      "text": "always",
+      "start": 15.68,
+      "end": 16.08
+    },
+    {
+      "text": "flows",
+      "start": 16.16,
+      "end": 16.48
+    },
+    {
+      "text": "from",
+      "start": 16.6,
+      "end": 16.72
+    },
+    {
+      "text": "warmer",
+      "start": 16.8,
+      "end": 17.2
+    },
+    {
+      "text": "to",
+      "start": 17.28,
+      "end": 17.36
+    },
+    {
+      "text": "colder.",
+      "start": 17.44,
+      "end": 18.4
+    },
+    {
+      "text": "That's",
+      "start": 18.48,
+      "end": 18.6
+    },
+    {
+      "text": "why",
+      "start": 18.64,
+      "end": 18.72
+    },
+    {
+      "text": "the",
+      "start": 18.8,
+      "end": 18.88
+    },
+    {
+      "text": "heat",
+      "start": 19,
+      "end": 19.12
+    },
+    {
+      "text": "pump",
+      "start": 19.2,
+      "end": 19.44
+    },
+    {
+      "text": "keeps",
+      "start": 19.48,
+      "end": 19.68
+    },
+    {
+      "text": "a",
+      "start": 19.76,
+      "end": 19.84
+    },
+    {
+      "text": "liquid",
+      "start": 20,
+      "end": 20.16
+    },
+    {
+      "text": "in",
+      "start": 20.24,
+      "end": 20.32
+    },
+    {
+      "text": "its",
+      "start": 20.4,
+      "end": 20.48
+    },
+    {
+      "text": "outdoor",
+      "start": 20.56,
+      "end": 20.96
+    },
+    {
+      "text": "coil",
+      "start": 21.2,
+      "end": 21.44
+    },
+    {
+      "text": "colder",
+      "start": 21.52,
+      "end": 21.84
+    },
+    {
+      "text": "than",
+      "start": 21.92,
+      "end": 22
+    },
+    {
+      "text": "the",
+      "start": 22.08,
+      "end": 22.16
+    },
+    {
+      "text": "air,",
+      "start": 22.24,
+      "end": 22.72
+    },
+    {
+      "text": "usually",
+      "start": 22.88,
+      "end": 23.2
+    },
+    {
+      "text": "by",
+      "start": 23.28,
+      "end": 23.52
+    },
+    {
+      "text": "10",
+      "start": 23.6,
+      "end": 23.68
+    },
+    {
+      "text": "to",
+      "start": 23.76,
+      "end": 23.92
+    },
+    {
+      "text": "20",
+      "start": 24,
+      "end": 24.08
+    },
+    {
+      "text": "degrees.",
+      "start": 24.16,
+      "end": 25.28
+    },
+    {
+      "text": "To",
+      "start": 25.36,
+      "end": 25.44
+    },
+    {
+      "text": "that",
+      "start": 25.52,
+      "end": 25.6
+    },
+    {
+      "text": "liquid,",
+      "start": 25.68,
+      "end": 26.32
+    },
+    {
+      "text": "30-degree",
+      "start": 26.36,
+      "end": 26.88
+    },
+    {
+      "text": "air",
+      "start": 26.96,
+      "end": 27.2
+    },
+    {
+      "text": "is",
+      "start": 27.32,
+      "end": 27.44
+    },
+    {
+      "text": "warm,",
+      "start": 27.52,
+      "end": 28.16
+    },
+    {
+      "text": "so",
+      "start": 28.24,
+      "end": 28.32
+    },
+    {
+      "text": "heat",
+      "start": 28.4,
+      "end": 28.64
+    },
+    {
+      "text": "flows",
+      "start": 28.84,
+      "end": 29.04
+    },
+    {
+      "text": "in",
+      "start": 29.12,
+      "end": 29.36
+    },
+    {
+      "text": "and",
+      "start": 29.44,
+      "end": 29.52
+    },
+    {
+      "text": "the",
+      "start": 29.56,
+      "end": 29.6
+    },
+    {
+      "text": "liquid",
+      "start": 29.68,
+      "end": 30
+    },
+    {
+      "text": "boils",
+      "start": 30.08,
+      "end": 30.48
+    },
+    {
+      "text": "into",
+      "start": 30.6,
+      "end": 30.72
+    },
+    {
+      "text": "a",
+      "start": 30.76,
+      "end": 30.8
+    },
+    {
+      "text": "gas.",
+      "start": 30.88,
+      "end": 31.84
+    },
+    {
+      "text": "Then",
+      "start": 32,
+      "end": 32.16
+    },
+    {
+      "text": "a",
+      "start": 32.24,
+      "end": 32.28
+    },
+    {
+      "text": "compressor",
+      "start": 32.32,
+      "end": 32.96
+    },
+    {
+      "text": "squeezes",
+      "start": 33,
+      "end": 33.52
+    },
+    {
+      "text": "the",
+      "start": 33.56,
+      "end": 33.6
+    },
+    {
+      "text": "gas,",
+      "start": 33.8,
+      "end": 34.08
+    },
+    {
+      "text": "which",
+      "start": 34.16,
+      "end": 34.32
+    },
+    {
+      "text": "heats",
+      "start": 34.36,
+      "end": 34.56
+    },
+    {
+      "text": "it",
+      "start": 34.6,
+      "end": 34.64
+    },
+    {
+      "text": "up.",
+      "start": 34.76,
+      "end": 35.44
+    },
+    {
+      "text": "Now",
+      "start": 35.52,
+      "end": 35.68
+    },
+    {
+      "text": "the",
+      "start": 35.72,
+      "end": 35.76
+    },
+    {
+      "text": "gas",
+      "start": 35.84,
+      "end": 36.08
+    },
+    {
+      "text": "is",
+      "start": 36.16,
+      "end": 36.32
+    },
+    {
+      "text": "hotter",
+      "start": 36.4,
+      "end": 36.64
+    },
+    {
+      "text": "than",
+      "start": 36.72,
+      "end": 36.8
+    },
+    {
+      "text": "your",
+      "start": 36.88,
+      "end": 37.04
+    },
+    {
+      "text": "living",
+      "start": 37.16,
+      "end": 37.28
+    },
+    {
+      "text": "room,",
+      "start": 37.36,
+      "end": 37.72
+    },
+    {
+      "text": "so",
+      "start": 37.76,
+      "end": 38
+    },
+    {
+      "text": "it",
+      "start": 38.04,
+      "end": 38.08
+    },
+    {
+      "text": "can",
+      "start": 38.16,
+      "end": 38.24
+    },
+    {
+      "text": "heat",
+      "start": 38.32,
+      "end": 38.4
+    },
+    {
+      "text": "the",
+      "start": 38.48,
+      "end": 38.56
+    },
+    {
+      "text": "house.",
+      "start": 39,
+      "end": 39.467
+    },
+    {
+      "text": "The",
+      "start": 39.493,
+      "end": 39.52
+    },
+    {
+      "text": "electricity",
+      "start": 39.76,
+      "end": 40.24
+    },
+    {
+      "text": "runs",
+      "start": 40.32,
+      "end": 40.56
+    },
+    {
+      "text": "the",
+      "start": 40.6,
+      "end": 40.64
+    },
+    {
+      "text": "compressor,",
+      "start": 40.84,
+      "end": 41.4
+    },
+    {
+      "text": "and",
+      "start": 41.44,
+      "end": 41.52
+    },
+    {
+      "text": "the",
+      "start": 41.6,
+      "end": 41.68
+    },
+    {
+      "text": "rest",
+      "start": 41.8,
+      "end": 41.92
+    },
+    {
+      "text": "of",
+      "start": 41.96,
+      "end": 42
+    },
+    {
+      "text": "the",
+      "start": 42.04,
+      "end": 42.08
+    },
+    {
+      "text": "heat",
+      "start": 42.16,
+      "end": 42.4
+    },
+    {
+      "text": "comes",
+      "start": 42.52,
+      "end": 42.64
+    },
+    {
+      "text": "in",
+      "start": 42.72,
+      "end": 42.8
+    },
+    {
+      "text": "from",
+      "start": 42.88,
+      "end": 42.96
+    },
+    {
+      "text": "outside.",
+      "start": 43.52,
+      "end": 44.133
+    },
+    {
+      "text": "A",
+      "start": 44.187,
+      "end": 44.24
+    },
+    {
+      "text": "space",
+      "start": 44.4,
+      "end": 44.56
+    },
+    {
+      "text": "heater",
+      "start": 44.64,
+      "end": 44.88
+    },
+    {
+      "text": "brings",
+      "start": 44.92,
+      "end": 45.2
+    },
+    {
+      "text": "nothing",
+      "start": 45.28,
+      "end": 45.6
+    },
+    {
+      "text": "in,",
+      "start": 45.68,
+      "end": 46.16
+    },
+    {
+      "text": "so",
+      "start": 46.24,
+      "end": 46.32
+    },
+    {
+      "text": "it",
+      "start": 46.4,
+      "end": 46.48
+    },
+    {
+      "text": "makes",
+      "start": 46.64,
+      "end": 46.8
+    },
+    {
+      "text": "all",
+      "start": 46.88,
+      "end": 46.96
+    },
+    {
+      "text": "its",
+      "start": 47.04,
+      "end": 47.2
+    },
+    {
+      "text": "heat,",
+      "start": 47.48,
+      "end": 47.8
+    },
+    {
+      "text": "one",
+      "start": 47.84,
+      "end": 48
+    },
+    {
+      "text": "unit",
+      "start": 48.08,
+      "end": 48.4
+    },
+    {
+      "text": "for",
+      "start": 48.52,
+      "end": 48.64
+    },
+    {
+      "text": "each",
+      "start": 48.72,
+      "end": 48.88
+    },
+    {
+      "text": "unit",
+      "start": 48.96,
+      "end": 49.12
+    },
+    {
+      "text": "of",
+      "start": 49.2,
+      "end": 49.28
+    },
+    {
+      "text": "electricity.",
+      "start": 49.52,
+      "end": 50.587
+    },
+    {
+      "text": "At",
+      "start": 50.613,
+      "end": 50.64
+    },
+    {
+      "text": "a",
+      "start": 50.72,
+      "end": 50.8
+    },
+    {
+      "text": "mild",
+      "start": 50.84,
+      "end": 51.2
+    },
+    {
+      "text": "40",
+      "start": 51.28,
+      "end": 51.48
+    },
+    {
+      "text": "degrees,",
+      "start": 51.52,
+      "end": 52.32
+    },
+    {
+      "text": "one",
+      "start": 52.4,
+      "end": 52.56
+    },
+    {
+      "text": "Canadian",
+      "start": 52.8,
+      "end": 53.04
+    },
+    {
+      "text": "government",
+      "start": 53.24,
+      "end": 53.44
+    },
+    {
+      "text": "test",
+      "start": 53.56,
+      "end": 53.68
+    },
+    {
+      "text": "house",
+      "start": 53.76,
+      "end": 54
+    },
+    {
+      "text": "got",
+      "start": 54.08,
+      "end": 54.16
+    },
+    {
+      "text": "about",
+      "start": 54.24,
+      "end": 54.56
+    },
+    {
+      "text": "three",
+      "start": 54.64,
+      "end": 54.88
+    },
+    {
+      "text": "units",
+      "start": 54.96,
+      "end": 55.2
+    },
+    {
+      "text": "of",
+      "start": 55.28,
+      "end": 55.36
+    },
+    {
+      "text": "heat",
+      "start": 55.44,
+      "end": 55.68
+    },
+    {
+      "text": "for",
+      "start": 55.8,
+      "end": 55.92
+    },
+    {
+      "text": "each",
+      "start": 56,
+      "end": 56.16
+    },
+    {
+      "text": "unit",
+      "start": 56.32,
+      "end": 56.48
+    },
+    {
+      "text": "of",
+      "start": 56.56,
+      "end": 56.64
+    },
+    {
+      "text": "electricity.",
+      "start": 56.88,
+      "end": 57.92
+    },
+    {
+      "text": "At",
+      "start": 58,
+      "end": 58.08
+    },
+    {
+      "text": "6",
+      "start": 58.2,
+      "end": 58.32
+    },
+    {
+      "text": "below",
+      "start": 58.44,
+      "end": 58.56
+    },
+    {
+      "text": "zero,",
+      "start": 58.64,
+      "end": 59.253
+    },
+    {
+      "text": "the",
+      "start": 59.307,
+      "end": 59.36
+    },
+    {
+      "text": "same",
+      "start": 59.44,
+      "end": 59.68
+    },
+    {
+      "text": "house",
+      "start": 59.84,
+      "end": 60
+    },
+    {
+      "text": "got",
+      "start": 60.12,
+      "end": 60.24
+    },
+    {
+      "text": "one",
+      "start": 60.32,
+      "end": 60.36
+    },
+    {
+      "text": "and",
+      "start": 60.4,
+      "end": 60.48
+    },
+    {
+      "text": "a",
+      "start": 60.56,
+      "end": 60.64
+    },
+    {
+      "text": "half,",
+      "start": 60.96,
+      "end": 61.36
+    },
+    {
+      "text": "which",
+      "start": 61.44,
+      "end": 61.52
+    },
+    {
+      "text": "still",
+      "start": 61.68,
+      "end": 61.84
+    },
+    {
+      "text": "beats",
+      "start": 61.88,
+      "end": 62
+    },
+    {
+      "text": "a",
+      "start": 62.08,
+      "end": 62.16
+    },
+    {
+      "text": "space",
+      "start": 62.24,
+      "end": 62.48
+    },
+    {
+      "text": "heater.",
+      "start": 62.52,
+      "end": 63.333
+    },
+    {
+      "text": "As",
+      "start": 63.387,
+      "end": 63.44
+    },
+    {
+      "text": "it",
+      "start": 63.52,
+      "end": 63.6
+    },
+    {
+      "text": "gets",
+      "start": 63.72,
+      "end": 63.84
+    },
+    {
+      "text": "colder,",
+      "start": 63.92,
+      "end": 64.64
+    },
+    {
+      "text": "heat",
+      "start": 64.72,
+      "end": 64.8
+    },
+    {
+      "text": "pumps",
+      "start": 64.88,
+      "end": 65.12
+    },
+    {
+      "text": "pull",
+      "start": 65.2,
+      "end": 65.44
+    },
+    {
+      "text": "less",
+      "start": 65.52,
+      "end": 65.76
+    },
+    {
+      "text": "and",
+      "start": 65.84,
+      "end": 66
+    },
+    {
+      "text": "less",
+      "start": 66.12,
+      "end": 66.24
+    },
+    {
+      "text": "heat",
+      "start": 66.32,
+      "end": 66.48
+    },
+    {
+      "text": "out",
+      "start": 66.56,
+      "end": 66.64
+    },
+    {
+      "text": "of",
+      "start": 66.68,
+      "end": 66.72
+    },
+    {
+      "text": "the",
+      "start": 66.8,
+      "end": 66.88
+    },
+    {
+      "text": "air,",
+      "start": 66.96,
+      "end": 67.32
+    },
+    {
+      "text": "until",
+      "start": 67.36,
+      "end": 67.68
+    },
+    {
+      "text": "most",
+      "start": 67.8,
+      "end": 67.92
+    },
+    {
+      "text": "of",
+      "start": 67.96,
+      "end": 68
+    },
+    {
+      "text": "them",
+      "start": 68.12,
+      "end": 68.24
+    },
+    {
+      "text": "shut",
+      "start": 68.28,
+      "end": 68.4
+    },
+    {
+      "text": "off.",
+      "start": 68.48,
+      "end": 69.28
+    },
+    {
+      "text": "On",
+      "start": 69.36,
+      "end": 69.44
+    },
+    {
+      "text": "newer",
+      "start": 69.52,
+      "end": 69.76
+    },
+    {
+      "text": "heat",
+      "start": 69.88,
+      "end": 70
+    },
+    {
+      "text": "pumps,",
+      "start": 70.04,
+      "end": 70.44
+    },
+    {
+      "text": "that",
+      "start": 70.48,
+      "end": 70.64
+    },
+    {
+      "text": "can",
+      "start": 70.72,
+      "end": 70.8
+    },
+    {
+      "text": "happen",
+      "start": 70.88,
+      "end": 71.2
+    },
+    {
+      "text": "somewhere",
+      "start": 71.28,
+      "end": 71.52
+    },
+    {
+      "text": "between",
+      "start": 71.6,
+      "end": 72.08
+    },
+    {
+      "text": "5",
+      "start": 72.2,
+      "end": 72.32
+    },
+    {
+      "text": "above",
+      "start": 72.56,
+      "end": 72.8
+    },
+    {
+      "text": "and",
+      "start": 72.88,
+      "end": 73.12
+    },
+    {
+      "text": "13",
+      "start": 73.16,
+      "end": 73.6
+    },
+    {
+      "text": "below",
+      "start": 73.68,
+      "end": 73.92
+    },
+    {
+      "text": "zero,",
+      "start": 74,
+      "end": 74.72
+    },
+    {
+      "text": "and",
+      "start": 74.8,
+      "end": 74.88
+    },
+    {
+      "text": "backup",
+      "start": 75.08,
+      "end": 75.28
+    },
+    {
+      "text": "heat,",
+      "start": 75.44,
+      "end": 75.64
+    },
+    {
+      "text": "if",
+      "start": 75.68,
+      "end": 75.76
+    },
+    {
+      "text": "there",
+      "start": 75.84,
+      "end": 75.92
+    },
+    {
+      "text": "is",
+      "start": 76,
+      "end": 76.08
+    },
+    {
+      "text": "any,",
+      "start": 76.16,
+      "end": 76.52
+    },
+    {
+      "text": "takes",
+      "start": 76.56,
+      "end": 76.72
+    },
+    {
+      "text": "over.",
+      "start": 76.8,
+      "end": 77.92
+    },
+    {
+      "text": "Electric",
+      "start": 78.08,
+      "end": 78.24
+    },
+    {
+      "text": "cars",
+      "start": 78.44,
+      "end": 78.64
+    },
+    {
+      "text": "heat",
+      "start": 78.72,
+      "end": 78.8
+    },
+    {
+      "text": "the",
+      "start": 78.88,
+      "end": 78.96
+    },
+    {
+      "text": "cabin",
+      "start": 79.04,
+      "end": 79.36
+    },
+    {
+      "text": "one",
+      "start": 79.44,
+      "end": 79.48
+    },
+    {
+      "text": "of",
+      "start": 79.52,
+      "end": 79.6
+    },
+    {
+      "text": "the",
+      "start": 79.68,
+      "end": 79.76
+    },
+    {
+      "text": "same",
+      "start": 79.92,
+      "end": 80.08
+    },
+    {
+      "text": "two",
+      "start": 80.16,
+      "end": 80.32
+    },
+    {
+      "text": "ways,",
+      "start": 80.4,
+      "end": 81.067
+    },
+    {
+      "text": "with",
+      "start": 81.093,
+      "end": 81.12
+    },
+    {
+      "text": "a",
+      "start": 81.28,
+      "end": 81.387
+    },
+    {
+      "text": "plain",
+      "start": 81.493,
+      "end": 81.6
+    },
+    {
+      "text": "heater",
+      "start": 81.68,
+      "end": 81.92
+    },
+    {
+      "text": "that",
+      "start": 82,
+      "end": 82.16
+    },
+    {
+      "text": "makes",
+      "start": 82.24,
+      "end": 82.48
+    },
+    {
+      "text": "heat",
+      "start": 82.56,
+      "end": 83.04
+    },
+    {
+      "text": "or",
+      "start": 83.12,
+      "end": 83.36
+    },
+    {
+      "text": "a",
+      "start": 83.44,
+      "end": 83.52
+    },
+    {
+      "text": "heat",
+      "start": 83.64,
+      "end": 83.76
+    },
+    {
+      "text": "pump",
+      "start": 83.8,
+      "end": 84
+    },
+    {
+      "text": "that",
+      "start": 84.08,
+      "end": 84.24
+    },
+    {
+      "text": "moves",
+      "start": 84.36,
+      "end": 84.48
+    },
+    {
+      "text": "it.",
+      "start": 84.56,
+      "end": 85.213
+    },
+    {
+      "text": "And",
+      "start": 85.28,
+      "end": 85.36
+    },
+    {
+      "text": "at",
+      "start": 85.44,
+      "end": 85.52
+    },
+    {
+      "text": "home,",
+      "start": 85.8,
+      "end": 86.12
+    },
+    {
+      "text": "does",
+      "start": 86.16,
+      "end": 86.24
+    },
+    {
+      "text": "your",
+      "start": 86.32,
+      "end": 86.48
+    },
+    {
+      "text": "house",
+      "start": 86.64,
+      "end": 86.8
+    },
+    {
+      "text": "make",
+      "start": 86.88,
+      "end": 87.04
+    },
+    {
+      "text": "its",
+      "start": 87.12,
+      "end": 87.2
+    },
+    {
+      "text": "heat,",
+      "start": 87.28,
+      "end": 87.76
+    },
+    {
+      "text": "or",
+      "start": 87.84,
+      "end": 87.92
+    },
+    {
+      "text": "move",
+      "start": 88,
+      "end": 88.08
+    },
+    {
+      "text": "it?",
+      "start": 88.16,
+      "end": 88.56
+    }
+  ]
+}
