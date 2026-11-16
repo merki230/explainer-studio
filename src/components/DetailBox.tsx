@@ -20,6 +20,8 @@ import {MOODS} from '../theme';
 import {StreetBox} from './streetBoxes';
 import {drawTripApp} from './tripAppKit';
 import {CameraViewBox, SearchBox, SettingsBox, type CameraBoxProps} from './CameraBoxes';
+import {drawLightApp, LIGHT_APP_ASPECT} from './lightAppKit';
+import {cityCountdownAt, type CitySliceSceneProps} from '../scenes/CitySliceScene';
 
 /**
  * No. 015 contents ('camera-view', 'search', 'settings'; see `CameraBoxes.tsx`): what a plate camera captured (leader to
@@ -47,7 +49,15 @@ export type DetailBoxProps = CameraBoxProps & {
     | 'trip-app'
     | 'camera-view'
     | 'search'
-    | 'settings';
+    | 'settings'
+    | 'light-app';
+  /**
+   * 'light-app' (No. 019, a `city-slice` with `signal` keys; leader to `anchor`, default 'phone': the dash phone): a generic
+   * map app counting down the light (`lightAppKit.ts`): the lit lens and the seconds, read from the scene's signal keys
+   * like the pole's countdown box (`countdownOffset` s, default the scene's, so the two show the same second), the 5 px
+   * orange estimate edge under the number.
+   */
+  countdownOffset?: number;
   /**
    * 'dispatch-map' (No. 009, any scene with anchors): a generic dispatcher's map, read like a screen. A rough
    * orange circle over the highway (approximate: soft rim, breathing ±4%) collapses over 0.6 s to an orange
@@ -187,6 +197,8 @@ export const DetailBox: React.FC<DetailBoxProps & {mood?: Mood; scene: SceneCtx}
     <SettingsBox {...p} scene={{...p.scene, props: p.scene.props as Record<string, unknown>}} />
   ) : p.content === 'trip-app' ? (
     <TripBox {...p} />
+  ) : p.content === 'light-app' ? (
+    <LightAppBox {...p} />
   ) : p.content === 'dispatch-map' ? (
     <DispatchBox {...p} />
   ) : p.content === 'laptop' || p.content === 'usage' || p.content === 'register' ? (
@@ -872,6 +884,78 @@ const TripBox: React.FC<DetailBoxProps & {mood?: Mood; scene: SceneCtx}> = ({
         ? `${lx},${by} ${lx},${target[1]} ${target[0] + (lx < target[0] ? -12 : 12)},${target[1]}`
         : // the phone beside the box (not below it): out of the box's side at the phone's height
           `${onLeft ? left + outerW : left},${Math.max(boxTop + 24, target[1])} ${target[0] + (onLeft ? -12 : 12)},${Math.max(boxTop + 24, target[1])}`;
+  return (
+    <div style={{position: 'absolute', inset: 0, opacity: enter}}>
+      {leader && target ? (
+        <svg width={width} height={height} style={{position: 'absolute', inset: 0}}>
+          <polyline points={points} fill="none" stroke={ink} strokeWidth={2} strokeLinejoin="miter" />
+        </svg>
+      ) : null}
+      <Frame left={left} top={boxTop} w={outerW} h={outerH} ink={ink} paper={paper} rise={rise}>
+        <canvas ref={ref} width={innerW} height={innerH} style={{display: 'block', width: innerW, height: innerH}} />
+      </Frame>
+    </div>
+  );
+};
+
+/**
+ * The light-app box (No. 019, `content: 'light-app'`): the map app drawn by `drawLightApp`, its seconds from the scene's
+ * signal keys (`cityCountdownAt`, the pole box's timeline), read like a screen; the 2 px `ink` elbow leader goes to the
+ * phone running it (`anchor`, default 'phone': the dash phone in a `city-slice`). Sits on the side away from the anchor.
+ */
+const LightAppBox: React.FC<DetailBoxProps & {mood?: Mood; scene: SceneCtx}> = ({
+  size: sizeIn,
+  side,
+  top,
+  left: leftAt,
+  leader = true,
+  anchor = 'phone',
+  countdownOffset,
+  mood = 'day',
+  scene,
+}) => {
+  const frame = useCurrentFrame();
+  const {fps, width, height} = useVideoConfig();
+  const L = useLayout();
+  scene = {...scene, props: withFormat(scene.props, L.format)};
+  const size = fitWidth(L, sizeIn ?? L.detail.dashSize, LIGHT_APP_ASPECT, side === 'left', top);
+  const ref = useRef<HTMLCanvasElement>(null);
+  const cityProps = scene.props as Partial<CitySliceSceneProps>;
+  const cd = cityCountdownAt(cityProps, (frame + scene.offset) / fps, countdownOffset ?? cityProps.countdownOffset ?? 0);
+  const innerW = size;
+  const innerH = Math.round(size * LIGHT_APP_ASPECT);
+  const state = {state: cd.state, n: cd.n};
+  const key = JSON.stringify(state) + innerW;
+  useLayoutEffect(() => {
+    const handle = delayRender('Drawing the light app');
+    fontsReady().then(() => {
+      const cx = ref.current?.getContext('2d');
+      if (cx) drawLightApp(cx, innerW, innerH, state);
+      continueRender(handle);
+    });
+    // `key` captures everything the drawing depends on
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
+  const target = anchorOnScreen({...scene, props: scene.props as Record<string, unknown>}, anchor, frame, fps);
+  const {ink, paper} = overlayInk(mood);
+  const outerW = innerW + 2 * BORDER;
+  const outerH = innerH + 2 * BORDER;
+  const onLeft = (side ?? (target && target[0] > width / 2 ? 'left' : 'right')) === 'left';
+  const left = leftAt ?? (onLeft ? L.left : L.right - outerW);
+  const boxTop =
+    top ?? boxTopFor(L, left, outerW, outerH, () => Math.max(328, Math.min(1248 - outerH, (target ? target[1] : height / 2) - 70 - outerH)));
+  const enter = ease(frame, 0, DETAIL_FADE);
+  const rise = interpolate(enter, [0, 1], [8, 0]);
+  const by = boxTop + outerH;
+  const lx = onLeft ? left + outerW - 28 : left + 28;
+  const under = target ? target[0] >= left + 12 && target[0] <= left + outerW - 12 : false;
+  const points = !target
+    ? ''
+    : under
+      ? `${target[0]},${by} ${target[0]},${Math.max(by, target[1] - 12)}`
+      : target[1] >= by
+        ? `${lx},${by} ${lx},${target[1]} ${target[0] + (lx < target[0] ? -12 : 12)},${target[1]}`
+        : `${onLeft ? left + outerW : left},${Math.max(boxTop + 24, target[1])} ${target[0] + (onLeft ? -12 : 12)},${Math.max(boxTop + 24, target[1])}`;
   return (
     <div style={{position: 'absolute', inset: 0, opacity: enter}}>
       {leader && target ? (

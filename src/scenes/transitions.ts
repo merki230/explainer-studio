@@ -79,7 +79,9 @@ export const transitionInto = (prev: SceneLike, cur: SceneLike, format: Format =
           ? `town-${(s.props?.dressing as string | undefined) ?? 'main'}`
           : s.scene === 'city-twin'
             ? `city-twin-${(s.props?.dressing as string | undefined) ?? 'mild'}`
-            : SECTION_DEFAULT_LOCATION[s.scene]);
+            : s.scene === 'city-slice' && s.props?.dressing
+              ? `city-${s.props.dressing as string}`
+              : SECTION_DEFAULT_LOCATION[s.scene]);
     const mood = (s: SceneLike) => (s.props?.mood as string | undefined) ?? 'day';
     // a scene that opens in another mood (`moodFrom`, the time-passes blend) continues from it
     const opening = (s: SceneLike) => (s.props?.moodFrom as string | undefined) ?? mood(s);

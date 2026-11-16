@@ -47,6 +47,10 @@ import {spec as evWinter} from './ev-winter/spec';
 import evWinterTranscript from './ev-winter/transcript.json';
 import {spec as homeHeat} from './home-heat/spec';
 import homeHeatTranscript from './home-heat/transcript.json';
+import {spec as lightCountdown} from './light-countdown/spec';
+import lightCountdownTranscript from './light-countdown/transcript.json';
+import {spec as gamePreload} from './game-preload/spec';
+import gamePreloadTranscript from './game-preload/transcript.json';
 // </imports>
 
 export type VideoEntry = {spec: VideoSpec; transcript: Transcript};
@@ -80,5 +84,7 @@ export const VIDEOS: Record<string, VideoEntry> = {
   'ev-cost': {spec: evCost, transcript: evCostTranscript as Transcript},
   'ev-winter': {spec: evWinter, transcript: evWinterTranscript as Transcript},
   'home-heat': {spec: homeHeat, transcript: homeHeatTranscript as Transcript},
+  'light-countdown': {spec: lightCountdown, transcript: lightCountdownTranscript as Transcript},
+  'game-preload': {spec: gamePreload, transcript: gamePreloadTranscript as Transcript},
   // </entries>
 };

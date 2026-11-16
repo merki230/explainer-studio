@@ -11,6 +11,7 @@ import {skyTexture} from './textures';
 import {useFontsLoaded} from './useFontsLoaded';
 import {TireBay, type TireBayProps} from './TireBay';
 import {HeatBench, type HeatBenchProps} from './HeatBench';
+import {TimingCheck, type TimingCheckProps} from './TimingCheck';
 import {
   RealBench,
   RealConveyor,
@@ -89,8 +90,13 @@ export type LabSliceProps = {
    * the meter as wall devices behind glass). Same layout and motion. Default false.
    */
   realism?: boolean;
-  /** What the Lab is dressed as: 'apps' (default: the phone bench, arms, counter, meter), 'tire-bay' or 'heat-bench' (No. 013). */
-  dressing?: 'apps' | 'tire-bay' | 'heat-bench';
+  /**
+   * What the Lab is dressed as: 'apps' (default: the phone bench, arms, counter, meter), 'tire-bay', 'heat-bench' (No. 013)
+   * or 'timing-check' (No. 019: the wall grid of estimates and two researchers at laptops).
+   */
+  dressing?: 'apps' | 'tire-bay' | 'heat-bench' | 'timing-check';
+  /** The timing check's keys (see `TimingCheckProps`; `mood`, `t` and `clock` come from the slice). */
+  timingCheck?: Omit<TimingCheckProps, 'mood' | 't' | 'clock'>;
   /** The heat bench's state (see `HeatBenchProps`; `mood`, `t` and `clock` come from the slice). */
   heatBench?: Omit<HeatBenchProps, 'mood' | 't' | 'clock'>;
   /** The tire bay's rows, low tires and gauges (see `TireBayProps`). */
@@ -117,6 +123,7 @@ export const LabSlice: React.FC<LabSliceProps> = ({
   dressing = 'apps',
   tireBay,
   heatBench,
+  timingCheck,
 }) => {
   const bay = dressing === 'tire-bay';
   const clock = clockIn ?? t;
@@ -288,6 +295,8 @@ export const LabSlice: React.FC<LabSliceProps> = ({
 
       {bay ? (
         <TireBay mood={mood} t={t} {...(tireBay ?? {})} />
+      ) : dressing === 'timing-check' ? (
+        <TimingCheck mood={mood} t={t} clock={clock} {...(timingCheck ?? {})} />
       ) : dressing === 'heat-bench' ? (
         <>
           {/* the bench (steel top on legs) and the heat bench on it */}

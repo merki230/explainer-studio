@@ -1,13 +1,12 @@
 import React, {useMemo} from 'react';
 import {AbsoluteFill, useCurrentFrame, useVideoConfig} from 'remotion';
 import * as THREE from 'three';
-import {CITY, MOODS, type Mood} from '../theme';
+import {CAST_NEUTRAL, CITY, EXTRA_B, FPS, MOODS, type Mood} from '../theme';
 import {GhostLines} from '../three/real/GhostCar';
 import {CONE, PlateCameraPole, poleParts, irLevel, type PlateCameraKeys} from '../three/real/PlateCameraPole';
 import {rackBounds} from '../three/real/RoofRack';
-import {GlowNode, GlowSegment} from '../three/section/GlowLines';
 import {CAR_LAYOUT} from '../three/real/RealCar';
-import {carToWorld, DrivingCar} from '../three/real/DrivingCar';
+import {carToWorld, dashPhonePose, DrivingCar} from '../three/real/DrivingCar';
 import {capSpeed, cappedTravel, wheelMode, wheelSmear, type WheelMode} from '../three/real/wheelMotion';
 import type {RoadSignKind} from '../three/real/RoadSigns';
 import {SIGN_SIZE} from '../three/real/RoadSigns';
@@ -23,6 +22,30 @@ import {
 import {SectionLights, SectionStage} from '../three/section/SectionStage';
 import {skyTexture} from '../three/section/textures';
 import {ease, framingAtKeys, type CameraKey} from './keyframes';
+import {
+  cabinetBox,
+  cabinetLed,
+  callRoute,
+  ControllerCabinet,
+  CountdownBox,
+  countdownGhostLines,
+  countdownSpot,
+  COUNTDOWN_BOX,
+  decisionRoute,
+  ghostDigitLines,
+  GlowCore,
+  GlowHalo,
+  InkBar,
+  RoadShadow,
+  LoopDetectors,
+  loopRect,
+  camRoute,
+  camZone,
+  DetectCam,
+} from '../three/section/CityCountdown';
+import {GlowNode, GlowPolyline, GlowSegment, pointAlong, polylineLength} from '../three/section/GlowLines';
+import {EventPin} from '../three/real/CarPhoneKit';
+import {countdownAt, tapeAt, type CityTape} from './cityCountdown';
 
 type V3 = [number, number, number];
 const C = CAR_LAYOUT;
@@ -36,7 +59,19 @@ const LINE_GAP = 0.6;
 /** A pedal stop from creep speed (s). */
 const BRAKE_T = 0.9;
 
-export type CityFraming = 'lanes' | 'follow' | 'queue' | 'queueClose';
+export type CityFraming =
+  | 'lanes'
+  | 'follow'
+  | 'queue'
+  | 'queueClose'
+  | 'signal'
+  | 'count'
+  | 'car'
+  | 'queueTape'
+  | 'tape'
+  | 'approach'
+  | 'loopsWide'
+  | 'loops';
 /**
  * No. 015: framings round the plate-camera pole (`pole`), placed from the pole's spot, so they follow it and the stop
  * line. 'corner' (frame 0 and the loop: the pole on the right, YOU's car at the line in lane 3, between the title block
@@ -65,21 +100,62 @@ const isPoleFraming = (n: string): n is CityPoleFraming => n in POLE_FRAMINGS;
  * queue whole, the last car near the lower left), 'queueClose' (MW: the five-car queue in lane 3
  * filling the frame's diagonal, the front car ≈ 75 px wide, the last ≈ 115 px, every lamp readable).
  */
-export const CITY_FRAMINGS: Record<CityFraming, Framing> = {
+export const CITY_FRAMINGS: Record<'lanes' | 'follow' | 'queue' | 'queueClose', Framing> = {
   lanes: {look: [7.15, 1.0, -30.95], distance: 56},
   follow: {look: [6.36, 1.0, -22.69], distance: 36},
   queue: {look: [9.13, 1.0, -15.74], distance: 72},
   queueClose: {look: [12.47, 1.0, -9.17], distance: 60},
 };
 
+/**
+ * No. 019 (`light-countdown`): the framings of the two dressings ('china', 'us'), for the default stop line (35 m),
+ * moved with another like 'lanes' (the tape framings, on the cut face, stay put). With a `dressing`, 'queue' and
+ * 'queueClose' take these values (re-aimed for the tape); without one they keep No. 006's.
+ *  - 'signal' (frame 0 and the loop): the stop line and the lane 2–3 queues, the heads and the countdown box upper right.
+ *  - 'count': the heads and the box close (digits ≈ 80 px), the front cars' roofs below.
+ *  - 'car': the phone car's tail and roof at the line (lane 3 front), the box top right, room on the left for a box.
+ *  - 'queue': the queues and the air tape over their front (tape marks y ≈ 380–470; a detail box fits from y 504).
+ *  - 'queueClose': the front of both queues and the heads, the green readable.
+ *  - 'queueTape': a little wider than 'queue' (tape marks y ≈ 365–445).
+ *  - 'tape': the air tape close (x ≈ 210–760, the cursor at y ≈ 610), the reporting roofs under it above y 1000.
+ *  - 'approach' (US): lanes 2 and 3 approaching the line, the heads and the ghost box top right.
+ *  - 'loopsWide' (US): the line and the loops, the approach behind, the heads, the cabinet small.
+ *  - 'loops' (US): the loops, the lead-in, the cabinet cut open at the pole's foot, the heads at the top.
+ */
+export const COUNTDOWN_FRAMINGS: Record<Exclude<CityFraming, 'lanes' | 'follow'>, Framing> = {
+  signal: {look: [5.6, 2.6, -40], distance: 48},
+  count: {look: [4.2, 5.3, -49], distance: 25},
+  car: {look: [5.4, 2.4, -38], distance: 40},
+  queue: {look: [7.0, -1.7, -22], distance: 50},
+  queueClose: {look: [8.0, 2.0, -30], distance: 38},
+  queueTape: {look: [7.2, -2.2, -21], distance: 53},
+  tape: {look: [5.6, 0.4, -28.4], distance: 46},
+  approach: {look: [7.9, 2.6, -34.6], distance: 34},
+  loopsWide: {look: [9.0, 1.2, -31], distance: 54},
+  loops: {look: [8.3, 1.8, -36], distance: 38},
+};
+/** The framings that stay put whatever the stop line (the tape's, placed from its band). */
+const ON_CUT_FACE = new Set<string>(['tape', 'queueTape', 'queue']);
+
 /** A preset framing for a stop line `S` m up the street: 'lanes' and 'follow' move with the line, 'queue' widens. */
-export const cityFraming = (name: CityFraming | CityPoleFraming, S = 35, pole?: CityPole | false): Framing => {
+export const cityFraming = (
+  name: CityFraming | CityPoleFraming,
+  S = 35,
+  pole?: CityPole | false,
+  dressing?: CityDressing,
+): Framing => {
   if (isPoleFraming(name)) {
     const [x, y, z] = poleSpot(pole, S);
     const f = POLE_FRAMINGS[name];
     return {look: [x + f.d[0], y + f.d[1], z + f.d[2]], distance: f.distance};
   }
-  const f = CITY_FRAMINGS[name] ?? CITY_FRAMINGS.lanes;
+  const lc = name !== 'lanes' && name !== 'follow' && (dressing || !(name in CITY_FRAMINGS));
+  if (lc) {
+    const f = COUNTDOWN_FRAMINGS[name as keyof typeof COUNTDOWN_FRAMINGS];
+    if (ON_CUT_FACE.has(name)) return {look: f.look, distance: f.distance};
+    return {look: [f.look[0], f.look[1], f.look[2] - (S - 35)], distance: f.distance};
+  }
+  const f = CITY_FRAMINGS[name as keyof typeof CITY_FRAMINGS] ?? CITY_FRAMINGS.lanes;
   const d = S - 35;
   if (name === 'queue' || name === 'queueClose')
     return {look: [f.look[0], f.look[1], f.look[2] - d * 0.6], distance: f.distance * (1 + d / 80)};
@@ -142,8 +218,31 @@ export type CityCar = {
    * keys: 'draw' (draws on clockwise over 0.4 s), 'pulse' (swells once, 0.5 s), 'off' (fades over 0.3 s). Default none.
    */
   plateMark?: {at: number; do: 'draw' | 'pulse' | 'off'}[];
-  /** No. 015: the driver's glances toward the signal (seconds), each held 1.0 s. Default none. */
-  glances?: number[];
+  /**
+   * No. 015: the driver's glances toward the signal (seconds), each held 1.0 s. No. 019: or `{at, to, hold}`, `to` 'signal'
+   * (default) or 'phone' (the dash phone). Default none.
+   */
+  glances?: (number | {at: number; to?: 'signal' | 'phone'; hold?: number})[];
+  /** No. 019 (N4): a phone on a dash clip mount, its screen to the driver, lit (true) or `{screen}` 0 → 1. Default none. */
+  phone?: boolean | {screen?: number};
+  /** No. 019: where the driver looks between glances: 'ahead' (default) or 'phone' (head down to the dash phone). */
+  gaze?: 'ahead' | 'phone';
+  /** No. 019: the extra's look: 'neutral' (default, `CAST_NEUTRAL`) or 'b' (`EXTRA_B`, a second named extra). */
+  extraLook?: 'neutral' | 'b';
+  /** No. 019 (N6): its driver uses the app: an orange node dot rides over its roof on the scene's `appDots` keys. */
+  app?: boolean;
+  /** No. 019 (N7): loop calls (s) for a car standing on a loop (a moving car calls by itself as its front wheels cross one). */
+  calls?: number[];
+  /**
+   * No. 019 (F15): how it slows from `liftAt` to rest at `stopAt`: 'smooth' (default, as built: firmest midway) or
+   * 'constant' (an even deceleration, v0 / (stopAt − liftAt), the speed falling in a straight line).
+   */
+  decel?: 'smooth' | 'constant';
+  /**
+   * No. 019 (F15): a cruising car that starts level with car `beside` (its index in `cars`): the same front-bumper distance
+   * at the scene's start and, unless `speed` is given, the same speed. Overrides `ahead`.
+   */
+  beside?: number;
   /**
    * No. 015: the pull-away. Once at rest (after `stopAt`, or after a creep's pedal stop), the driver releases the brake
    * at `goAt` (the brake lamps go dark that frame) and the car pulls away up the street, speeding up smoothly to
@@ -185,6 +284,9 @@ export type CityGhost = {
   /** The cabinet's scale (1: 0.9 × 2.0 × 0.8 m, a symbol sized to read; default 0.8). */
   size?: number;
 };
+
+/** No. 019: the city slice's dressings (see `CitySliceSceneProps.dressing`). */
+export type CityDressing = 'china' | 'us';
 
 export type CitySign = {
   kind: RoadSignKind;
@@ -236,6 +338,53 @@ export type CitySliceSceneProps = {
   /** No. 015 N6: the ghost lookup (see `CityGhost`). Default none. */
   ghost?: CityGhost | null;
   /**
+   * No. 019: the street's dressing. 'china' (N1): the countdown box beside the middle head, no signs (unless `signs`),
+   * blank plates. 'us' (N2): the loops in lanes 2 and 3, their lead-ins and pull box, the controller cabinet cut open at
+   * the mast pole's foot, blank plates, the default signs. Each also moves 'queue' / 'queueClose' to No. 019's values and
+   * makes its own slide location (`city-china`, `city-us`). Default none (No. 006 / No. 015 as built).
+   */
+  dressing?: CityDressing;
+  /** No. 019: 'blank' plates (neutral, no characters). Default: the dressing's ('blank'), else invented characters. */
+  plates?: 'blank' | 'text';
+  /** No. 019 (N3): the countdown box's offset from the signal keys (s; default 0, the same second as the app). */
+  countdownOffset?: number;
+  /**
+   * No. 019 (N9): the countdown box that isn't there, as the § 3 ghost (dashed ink, 3 px, dash 16 / gap 10 px): it draws
+   * on over 0.8 s from `at`, fades over 0.7 s from `fadeAt`. `digits` (§ 3 ghost digits): dashed seven-segment outlines
+   * (dash 8 / gap 5 px), each whole over 3 frames at its `at`, out over 3 frames as the next comes in; the last goes out
+   * over 6 frames at `digitsOutAt` (default its `at` + 0.32). Default none.
+   */
+  ghostBox?: {at: number; fadeAt?: number | null; digits?: {at: number; d: number}[]; digitsOutAt?: number} | null;
+  /**
+   * No. 019 (N7): the cabinet decides to end the green: its LED flashes and a pulse runs from the cabinet to the mast pole,
+   * up it and along the arm to the heads (`decideFor` s, default 0.5; from the near corner the route crosses the street,
+   * so 0.9 reads better). The yellow comes on its own `signal` key.
+   */
+  decideAt?: number | number[];
+  decideFor?: number;
+  /**
+   * No. 019 (N7): which loop calls show: 'auto' (default: every car whose front wheels cross onto a loop, plus the `calls`
+   * keys) or 'keys' (only the cars' `calls` keys, e.g. a scene about the yellow where the calls would distract).
+   */
+  loopCalls?: 'auto' | 'keys';
+  /**
+   * No. 019 (owner note): a video-detection camera on the mast arm ('us' dressing), aimed down the approach. `true`: it
+   * watches lane 3; `{lanes}`: the lanes it watches. Those lanes call by the camera (a faint ink zone on the lane, and an
+   * orange pulse from the camera along the arm, down the mast and on to the cabinet); their loop sawcuts are left out, and
+   * the other lanes keep their loops. A car's `calls` keys use its lane's detector; `loopCalls: 'keys'` applies to both.
+   * Default none.
+   */
+  detectCam?: boolean | {lanes?: number[]};
+  /** No. 019 (N2): where the cabinet stands, 'near' (default: the near right corner, by the loops) or 'pole' (the mast pole's foot). */
+  cabinetAt?: 'near' | 'pole';
+  /**
+   * No. 019 (N6): the app cars' dots: they light over 0.3 s at `at`, each pulses once at `reportAt`, and each fades over
+   * 1.0 s once its car has left the frame. Default none.
+   */
+  appDots?: {at: number; reportAt?: number} | null;
+  /** No. 019 (N6): the time tape on the front cut face (see `CityTape` in `cityCountdown.ts`). Default none. */
+  tape?: CityTape | null;
+  /**
    * The loop (No. 015 N5): every car's wheel turn and driver's idle are solved so that the frame after the last one
    * equals frame 0 of a scene with the same car keys starting at 0 (wheel angles modulo the 5-spoke pitch). Key the cars
    * so their position, speed and lamps match frame 0, and set `drift: 0`. Default false.
@@ -258,7 +407,7 @@ export const DEFAULT_CITY_SIGNS: CitySign[] = [
 const PLATES = ['7HNC 418', '5LRT 902', '6DWE 335', '8JPA 160', '4KMS 571', '9TBG 247', '3VXF 683'];
 
 const cityCameraMove = (p: Partial<CitySliceSceneProps>, durationInFrames: number, fps: number, frame?: number) => {
-  const base = p.camera?.from ?? cityFraming(p.framing ?? 'lanes', p.stopLine ?? 35, p.pole);
+  const base = p.camera?.from ?? cityFraming(p.framing ?? 'lanes', p.stopLine ?? 35, p.pole, p.dressing);
   if (p.cameraKeys && p.cameraKeys.length) {
     const f = framingAtKeys(
       p.cameraKeys,
@@ -322,13 +471,16 @@ type Plan = {
   creep: boolean;
   /** The pull-away: when, to what speed, over how long (null: none). */
   go: {at: number; v: number; ramp: number} | null;
+  /** No. 019: an even deceleration from tL to tS (no creep). */
+  constant: boolean;
 };
 
 /** Each car's plan: its lane's x and its rest point (the line, or `gap` behind the car in front). */
 export const cityPlans = (p: Partial<CitySliceSceneProps>): Plan[] => {
   const S = p.stopLine ?? 35;
   const lastRest: Record<number, number> = {};
-  return (p.cars ?? []).map((c) => {
+  const cars = p.cars ?? [];
+  const plans = cars.map((c): Plan => {
     const lane = c.lane ?? 2;
     const x = L.lanes[lane - 1] ?? L.lanes[1];
     const gap = c.gap ?? p.gap ?? CITY_CAR_LENGTH;
@@ -336,9 +488,14 @@ export const cityPlans = (p: Partial<CitySliceSceneProps>): Plan[] => {
     const rest = front === undefined ? -S + LINE_GAP : front + CITY_CAR_LENGTH + gap;
     const cruise = c.liftAt === undefined && c.stopAt === undefined;
     if (!cruise) lastRest[lane] = rest;
-    const tS = c.stopAt ?? (c.liftAt ?? 0) + 3.5;
+    const tS0 = c.stopAt ?? (c.liftAt ?? 0) + 3.5;
+    // a pull-away keyed before the stop means the car was already at rest by then (No. 019 review: such a car used to
+    // ignore its `goAt` and stay parked while the cars behind drove through it)
+    const early = c.goAt !== undefined && !(c.creep !== undefined && c.creep !== false) && c.goAt < tS0;
+    const tS = early ? (c.goAt as number) - 0.05 : tS0;
     const tL = Math.min(c.liftAt ?? tS - 3.5, tS - 0.1);
     const creep = c.creep !== undefined && c.creep !== false;
+    const constant = c.decel === 'constant' && !creep;
     const vc = creep ? (typeof c.creep === 'number' ? c.creep : 1.4) : 0;
     const tB = c.brakeAt ?? null;
     return {
@@ -356,7 +513,16 @@ export const cityPlans = (p: Partial<CitySliceSceneProps>): Plan[] => {
         c.goAt === undefined || cruise
           ? null
           : {at: c.goAt, v: Math.max(0.5, c.goSpeed ?? 8), ramp: Math.max(0.5, c.goRamp ?? 3.5)},
+      constant,
     };
+  });
+  // No. 019: a cruising car `beside` another starts level with it (its front at the scene's start) at its speed
+  return plans.map((k, i) => {
+    const b = cars[i]?.beside;
+    const o = b === undefined ? undefined : plans[b];
+    if (!k.cruise || !o || b === i) return k;
+    const front = o.cruise ? -o.ahead : o.rest + restMotion(o, 0).togo;
+    return {...k, ahead: -front, v0: cars[i].speed ?? o.v0};
   });
 };
 
@@ -378,6 +544,14 @@ const restMotion = (k: Plan, t: number) => {
     return {togo: brakeLeft + k.vc * (tB - t), v: k.vc, a: 0};
   }
   const after = brakeLeft + creepLeft;
+  if (k.constant) {
+    // No. 019 (F15): an even deceleration v0 / T from tL to rest at tS
+    if (t >= k.tL) {
+      const r = k.tS - t;
+      return {togo: (k.v0 * r * r) / (2 * T), v: (k.v0 * r) / T, a: k.v0 / T};
+    }
+    return {togo: (k.v0 * T) / 2 + k.v0 * (k.tL - t), v: k.v0, a: 0};
+  }
   if (t >= k.tL) {
     const u = (t - k.tL) / T;
     return {
@@ -410,6 +584,7 @@ const motion = (k: Plan, t: number) => {
 const regenWindow = (k: Plan, th: number) => {
   if (k.cruise) return null;
   const T = k.tS - k.tL;
+  if (k.constant) return (k.v0 / T) > th ? {on: k.tL, off: Infinity} : null;
   const A = (k.v0 - k.vc) / T;
   // deceleration 6A·u(1 − u): first above th at u1, back under th/2 at u2
   const cross = (a: number, late: boolean) => {
@@ -557,12 +732,38 @@ export const cityAnchorPoint = (p: Partial<CitySliceSceneProps>, anchor: string,
       // the middle of the cabinet's front face (a callout's leader starts there)
       return g ? [(g.a[0] + g.b[0]) / 2, (g.a[1] + g.b[1]) / 2, g.a[2]] : undefined;
     }
+    case 'phone':
+      return phoneAt(p, arg, t);
+    case 'countdown':
+    case 'ghostBox': {
+      // the box's front face (its middle), or its top edge (`countdown:top`) for a label above it
+      const [x, y, z] = countdownSpot(S);
+      return [x, arg === 'top' ? y + COUNTDOWN_BOX.h / 2 : y, z + COUNTDOWN_BOX.d / 2];
+    }
+    case 'cabinet': {
+      const b = cabinetBox(S, p.cabinetAt);
+      return [(b.min[0] + b.max[0]) / 2, b.max[1], b.max[2]];
+    }
+    case 'led':
+      return cabinetLed(S, p.cabinetAt);
+    case 'loop': {
+      const r = loopRect(S, Number(arg ?? 3));
+      return [(r.x[0] + r.x[1]) / 2, 0, (r.z[0] + r.z[1]) / 2];
+    }
+    case 'cursor':
+    case 'marker':
+    case 'tape': {
+      if (!p.tape) return undefined;
+      const st = tapeAt(p.tape, p.cars ?? [], (p.startFrame ?? 0) / FPS, t);
+      const x = name === 'cursor' ? st.cursorX : name === 'marker' ? st.predict?.x : (st.x[0] + st.x[1]) / 2;
+      return x === undefined ? undefined : tapeWorld(st, x, 0, 0.005);
+    }
     case 'signal':
       return [L.lanes[1], I.signal.headY, I.signal.z];
     case 'stopLine':
       return [(L.road[0] + L.road[1]) / 2, 0, (I.stopNear + I.stopFar) / 2];
     case 'sign': {
-      const s = (p.signs ?? DEFAULT_CITY_SIGNS).find((q) => q.kind === arg);
+      const s = (p.signs ?? (p.dressing === 'china' ? [] : DEFAULT_CITY_SIGNS)).find((q) => q.kind === arg);
       if (!s) return undefined;
       const spot = CITY_SIGN_SPOTS[s.kind] ?? {x: 11.3, z: -9};
       return [s.x ?? spot.x, 84 * 0.0254 + SIGN_SIZE[s.kind].h / 2, s.z ?? spot.z];
@@ -571,6 +772,85 @@ export const cityAnchorPoint = (p: Partial<CitySliceSceneProps>, anchor: string,
       return undefined;
   }
 };
+
+/** No. 019: the dressing's parts on (defaults per `dressing`, see the props). */
+const camLanesOf = (p: Partial<CitySliceSceneProps>) =>
+  p.dressing === 'us' && p.detectCam ? (typeof p.detectCam === 'object' ? (p.detectCam.lanes ?? [3]) : [3]) : [];
+
+export const cityDress = (p: Partial<CitySliceSceneProps>) => ({
+  countdown: p.dressing === 'china',
+  /** The lanes the camera watches (no loop there). */
+  camLanes: camLanesOf(p),
+  loops: p.dressing === 'us' ? [2, 3].filter((l) => !camLanesOf(p).includes(l)) : [],
+  cabinet: p.dressing === 'us',
+  blank: (p.plates ?? (p.dressing ? 'blank' : 'text')) === 'blank',
+});
+
+/** No. 019 (N3): the countdown box's state at t (the same timeline the 'light-app' detail box reads). */
+export const cityCountdownAt = (p: Partial<CitySliceSceneProps>, t: number, offset = p.countdownOffset ?? 0) =>
+  countdownAt(p.signal, t, offset);
+
+/** No. 019 (N4): the dash phone's centre (world) on car k (default: the first car with a phone) at t, while drawn. */
+const phoneAt = (p: Partial<CitySliceSceneProps>, arg: string | undefined, t: number): V3 | undefined => {
+  const cars = p.cars ?? [];
+  const k = arg !== undefined ? Number(arg) : cars.findIndex((q) => !!q.phone);
+  const c = k < 0 ? null : cityCarAt(p, k, t);
+  if (!c || !c.drawn || !cars[k]?.phone) return undefined;
+  return carToWorld(dashPhonePose(carShape(cars[k], k)).centre, {x: c.x, z: c.z, yaw: 0});
+};
+
+/** A car's shape as drawn (its own, else every third extra a sedan). */
+const carShape = (c: CityCar, i: number) => c.shape ?? ((c.body ?? 'extra') === 'extra' && i % 3 === 1 ? 'sedan' : 'crossover');
+
+/**
+ * No. 019 (N7): every loop call in the scene, in time order: a moving car calls when its front wheels cross onto a loop
+ * in its lane (sampled each frame over the scene), a standing one on its `calls` keys.
+ */
+export const cityCalls = (p: Partial<CitySliceSceneProps>, durationInFrames: number, fps: number) => {
+  const dress = cityDress(p);
+  const lanes = [...dress.loops, ...dress.camLanes];
+  if (!lanes.length) return [];
+  const S = p.stopLine ?? 35;
+  const out: {lane: number; at: number; by: 'loop' | 'cam'}[] = [];
+  (p.cars ?? []).forEach((c, i) => {
+    const lane = c.lane ?? 2;
+    if (!lanes.includes(lane)) return;
+    const by = dress.camLanes.includes(lane) ? ('cam' as const) : ('loop' as const);
+    (c.calls ?? []).forEach((at) => out.push({lane, at, by}));
+    if (p.loopCalls === 'keys') return;
+    const edge = by === 'cam' ? camZone(S, lane).z[1] : loopRect(S, lane).z[1];
+    let prev: number | null = null;
+    for (let f = 0; f <= durationInFrames; f++) {
+      const at = cityCarAt(p, i, f / fps, fps);
+      if (!at) break;
+      const axle = at.z - CAR_LAYOUT.axleX.front;
+      if (prev !== null && prev > edge && axle <= edge) {
+        out.push({lane, at: f / fps, by});
+        break;
+      }
+      prev = axle;
+    }
+  });
+  return out.sort((a, b) => a.at - b.at);
+};
+
+/** No. 019 (N6): when each car's roof first leaves the frame (s), or Infinity (sampled each frame over the scene). */
+const leaveTimes = (p: Partial<CitySliceSceneProps>, durationInFrames: number, fps: number) =>
+  (p.cars ?? []).map((c, i) => {
+    if (!c.app) return Infinity;
+    let wasIn = false;
+    for (let f = 0; f <= durationInFrames; f++) {
+      const t = f / fps;
+      const a = cityCarAt(p, i, t, fps);
+      if (!a) return Infinity;
+      const w = carToWorld([-0.4, 2.2, 0], {x: a.x, z: a.z, yaw: 0});
+      const q = projectToFrame(cityCameraAt(p, {frame: f, fps, durationInFrames}), w);
+      const inFrame = a.drawn && q[0] >= 0 && q[0] <= 1080 && q[1] >= 0 && q[1] <= 1920;
+      if (inFrame) wasIn = true;
+      else if (wasIn) return t;
+    }
+    return Infinity;
+  });
 
 /** A named point of T on screen (px) at this frame (see `cityAnchorPoint`). */
 export const cityAnchorOnScreen = (
@@ -753,6 +1033,232 @@ const coneSpansFor = (
   return spans;
 };
 
+/** No. 019 (N7): a pulse riding a route: a short bright stretch (0.9 m) with a node-dot head, at share `u` (0 → 1). */
+const Pulse: React.FC<{route: V3[]; u: number; r: number}> = ({route, u, r}) => {
+  if (u <= 0 || u > 1.25) return null;
+  const len = polylineLength(route);
+  const head = Math.min(1, u);
+  const tail = Math.max(0, head - 0.9 / len);
+  const glow = u <= 1 ? 1 : 1 - (u - 1) / 0.25;
+  const pts = [...Array(9).keys()].map((k) => pointAlong(route, tail + ((head - tail) * k) / 8));
+  return (
+    <group>
+      <GlowPolyline points={pts} radius={r} glow={glow} />
+      <GlowNode at={pointAlong(route, head)} radius={r * 1.95} glow={glow} dot />
+    </group>
+  );
+};
+
+/** The first yellow key after t0 (s), or null. */
+const nextYellow = (p: Partial<CitySliceSceneProps>, t0: number) => {
+  const s = p.signal;
+  if (!s || typeof s === 'string') return null;
+  const k = [...s].sort((a, b) => a.at - b.at).find((q) => q.at > t0 && q.state === 'yellow');
+  return k ? k.at : null;
+};
+
+/**
+ * No. 019 (N7, review): the decision drawn as a trace that runs from the cabinet to the pole, up it and along the arm to
+ * every head over `dur` s and stays lit, so its two ends read in one framing; a node dot on the arm over each head lights
+ * as the trace reaches it and swells once more when the heads turn yellow (`yellowAt`; the lenses stay `warning`, never
+ * orange). The trace fades 0.5 s after the yellow (or 1.5 s after it arrives without one).
+ */
+const DecisionTrace: React.FC<{
+  S: number;
+  at?: 'near' | 'pole';
+  t: number;
+  from: number;
+  dur: number;
+  yellowAt: number | null;
+  r: number;
+}> = ({S, at, t, from, dur, yellowAt, r}) => {
+  if (t < from) return null;
+  const route = decisionRoute(S, at);
+  const len = polylineLength(route);
+  const draw = Math.min(1, (t - from) / dur);
+  const end = (yellowAt ?? from + dur + 1.0) + 0.5;
+  const glow = 1 - ease(t, end, end + 0.5);
+  if (glow < 0.003) return null;
+  // the heads' hangers on the arm (the route's last leg runs along the arm toward the left head)
+  const I = cityIntersection(S);
+  const armY = I.signal.headY + 0.95 - 0.12;
+  // the share of the route where its last leg (along the arm) passes x
+  const before = polylineLength(route.slice(0, -1));
+  const share = (x: number) => (before + Math.abs(route[route.length - 2][0] - x)) / len;
+  const swell = (a: number) => (t >= a && t <= a + 0.4 ? Math.sin((Math.PI * (t - a)) / 0.4) : 0);
+  return (
+    <group>
+      <GlowPolyline points={route} draw={draw} radius={r} glow={glow} />
+      {L.lanes.map((x) => {
+        const u = share(x);
+        if (draw < u) return null;
+        const reach = from + dur * u;
+        const sw = Math.max(swell(reach), yellowAt === null ? 0 : swell(yellowAt));
+        return <GlowNode key={x} at={[x, armY, I.signal.z + 0.14]} radius={r * 1.95} glow={glow} swell={1 + 0.5 * sw} />;
+      })}
+    </group>
+  );
+};
+
+/** No. 019 (N6): the time tape drawn from its state (`tapeAt`) on the front cut face, 25 mm proud. */
+/**
+ * No. 019: the system's car-scale weights (§ 5, × camD/12 clamped 0.5–3.5): the line's core radius (≈ 6 px wide on screen,
+ * inside the guide's 3–8 px) and a node dot's radius (1.95 × the core, ≈ 12 px wide; ≥ 8 px).
+ */
+const PATH_CORE = 0.009;
+/**
+ * Where an app car's dot rides (car-local, m): ≈ 0.4 m above the roof (the guide's value, 0.45 here), over the roof's REAR
+ * (x −1.5). Over the middle, the dot of a car seen just behind another sat on the front car's tail lamps on screen (review
+ * round 2); over its own rear roof it reads as that car's.
+ */
+const DOT_LIFT = 0.45;
+const DOT_BACK = -1.5;
+const TAPE_DOT = PATH_CORE * 1.95;
+
+/** The tape's place in the world: a point `u` m up the street along the band, lifted `dy` (and `dz` toward the camera). */
+export const tapeWorld = (st: {across: number; y: number}, u: number, dy = 0, dz = 0): V3 => [st.across, st.y + dy, -u + dz];
+
+const TapeView: React.FC<{
+  st: ReturnType<typeof tapeAt>;
+  mood: Mood;
+  kS: number;
+  pathR: number;
+  mPerPx: number;
+  /** Whether a drop line (world points down it) stays clear of every car on screen and above the caption band. */
+  clear?: (pts: V3[]) => boolean;
+}> = ({st, mood, kS, pathR, mPerPx, clear}) => {
+  const rd = TAPE_DOT * kS;
+  const f = st.fade;
+  const px = (n: number) => n * mPerPx;
+  const W = (u: number, dy = 0, dz = 0) => tapeWorld(st, u, dy, dz);
+  // brackets above the line, legs down, 10 px clear of the tallest bunch (a dot at its landing pulse, r × 1.3)
+  const by = rd * 1.3 + px(10) + px(8);
+  // each start stays a dot of its own (review: no blob): within a bunch, centres at least 2.4 r apart, laid out from the
+  // bunch's front; a bunch never spreads past 80 % of a cycle on the tape (then its dots touch, under one halo)
+  const cycleW = st.cycle * st.scale;
+  const laid = (() => {
+    const out: {x: number; drop: number; bunch: number; glow: number; pulse?: number}[] = [];
+    const byB = new Map<number, typeof st.dots>();
+    st.dots.forEach((d) => byB.set(d.bunch, [...(byB.get(d.bunch) ?? []), d]));
+    byB.forEach((ds) => {
+      const sorted = [...ds].sort((a, b) => a.x - b.x);
+      const gap = Math.min(2.4 * rd, sorted.length > 1 ? (0.8 * cycleW) / (sorted.length - 1) : 0);
+      let prev = -Infinity;
+      sorted.forEach((d) => {
+        const x = Math.max(d.x, prev + gap);
+        prev = x;
+        out.push({...d, x: Math.min(x, st.cursorX)});
+      });
+    });
+    return out;
+  })();
+  const bracket = (a: number, b: number, draw: number, w: number, o: number, key: string) => {
+    if (draw <= 0 || o < 0.01) return null;
+    const e = a + (b - a) * draw;
+    return (
+      <group key={key}>
+        <InkBar a={W(a, by, 0.01)} b={W(e, by, 0.01)} w={w} mood={mood} opacity={o} />
+        <InkBar a={W(a, by, 0.01)} b={W(a, by - px(8), 0.01)} w={w} mood={mood} opacity={o} />
+        {draw >= 0.999 ? <InkBar a={W(b, by, 0.01)} b={W(b, by - px(8), 0.01)} w={w} mood={mood} opacity={o} /> : null}
+      </group>
+    );
+  };
+  const bunches = new Map<number, number[]>();
+  laid.forEach((d) => bunches.set(d.bunch, [...(bunches.get(d.bunch) ?? []), d.x]));
+  const n = st.fronts.length;
+  return (
+    <group>
+      {/* the height cue (review): ink drop lines from the line's two ends to the pavement, dimension-line style, each with
+          a foot tick, and a faint neutral shadow on the road under the line. Drawing marks, never orange, no hangers */}
+      {st.draw > 0
+        ? (() => {
+            const e = st.x[0] + st.len * st.draw;
+            const g = 0.01 - st.y;
+            // light dimension marks: ≈ 2 px at 40 % ink, each from under the tape's end to the pavement right below it,
+            // drawn only where it passes no car and ends above the caption band (else the near one, or both, are left out)
+            const o = 0.4 * f * Math.min(1, st.draw * 4);
+            const ok = (u: number) =>
+              !clear || clear([0, 0.25, 0.5, 0.75, 1].map((k) => W(u, -px(4) + (g + px(4)) * k)));
+            const drop = (u: number, k: string) =>
+              ok(u) ? (
+                <group key={k}>
+                  <InkBar a={W(u, -px(4))} b={W(u, g)} w={px(2)} mood={mood} opacity={o} depth />
+                  <InkBar a={[st.across - px(8), 0.012, -u]} b={[st.across + px(8), 0.012, -u]} w={px(2)} mood={mood} opacity={o} depth />
+                </group>
+              ) : null;
+            return (
+              <>
+                {drop(st.x[0], 'd0')}
+                {st.draw >= 1 ? drop(st.x[1], 'd1') : null}
+                <RoadShadow a={[st.across, 0.008, -st.x[0]]} b={[st.across, 0.008, -e]} w={Math.max(0.08, px(7))} opacity={0.18 * o} />
+              </>
+            );
+          })()
+        : null}
+      {/* the line, its ends fading over 0.3 m (no caps) */}
+      {st.draw > 0
+        ? (() => {
+            const e = st.x[0] + st.len * st.draw;
+            const F = 0.3;
+            const steps = 6;
+            const segs: React.ReactNode[] = [];
+            const a0 = st.x[0] + F;
+            const b0 = Math.max(a0, e - (st.draw >= 1 ? F : 0));
+            if (b0 > a0) segs.push(<GlowSegment key="mid" a={W(a0)} b={W(b0)} radius={pathR} glow={f} />);
+            for (let k = 0; k < steps; k++) {
+              const g = f * ((k + 0.5) / steps);
+              const u0 = st.x[0] + (F * k) / steps;
+              if (u0 < e) segs.push(<GlowSegment key={`l${k}`} a={W(u0)} b={W(Math.min(e, u0 + F / steps))} radius={pathR} glow={g} />);
+              if (st.draw >= 1) {
+                const v0 = st.x[1] - (F * (k + 1)) / steps;
+                segs.push(<GlowSegment key={`r${k}`} a={W(v0)} b={W(v0 + F / steps)} radius={pathR} glow={g} />);
+              }
+            }
+            return segs;
+          })()
+        : null}
+      {st.draw > 0.5 ? (
+        <InkBar a={W(st.cursorX, -px(20), 0.012)} b={W(st.cursorX, px(20), 0.012)} w={px(3)} mood={mood} opacity={f} />
+      ) : null}
+      {laid.map((d, i) => (
+        // a synthetic start rises 0.3 m into the line at the cursor (no trail); a reported one has already risen
+        <GlowCore
+          key={i}
+          at={W(d.x, -0.3 * (1 - d.drop), 0.005)}
+          radius={rd * (d.pulse ? 1 + 0.3 * d.pulse : 1)}
+          glow={f * Math.min(1, d.drop * 2)}
+        />
+      ))}
+      {[...bunches.entries()].map(([k, xs]) => (
+        <GlowHalo key={`h${k}`} a={W(Math.min(...xs))} b={W(Math.max(...xs))} radius={rd * 2.2} glow={f} />
+      ))}
+      {st.brackets.map((b, i) => bracket(b.a, b.b, b.draw, px(3) * (1 + 0.7 * b.pulse), f, `b${i}`))}
+      {st.predict && n >= 2
+        ? bracket(
+            st.fronts[n - 2].x + (st.predict.from - st.fronts[n - 2].x) * st.predict.slide,
+            st.predict.from + (st.predict.to - st.predict.from) * st.predict.slide,
+            st.predict.slide > 0 ? 1 : 0,
+            px(3),
+            f,
+            'copy',
+          )
+        : null}
+      {st.predict && st.predict.marker > 0 ? (
+        <EventPin
+          head={W(st.predict.x, 0.25 + rd, 0.01)}
+          foot={W(st.predict.x, 0, 0.01)}
+          stem={st.predict.marker}
+          // the stem at the line's core weight, the head a node dot (EventPin's stem is 0.0225 × k)
+          k={(kS * PATH_CORE) / 0.0225}
+          headR={(TAPE_DOT * 0.0225) / PATH_CORE}
+          opacity={f * Math.min(1, st.predict.marker * 3)}
+        />
+      ) : null}
+      {st.gap ? <GlowSegment a={W(st.gap.a, 0, 0.008)} b={W(st.gap.b, 0, 0.008)} radius={pathR * 1.5} glow={f * st.gap.glow} /> : null}
+    </group>
+  );
+};
+
 /** How far behind the look-at point the sky card stands (m): past the street's far end. */
 const BACKDROP = 600;
 
@@ -790,7 +1296,7 @@ export const CitySliceScene: React.FC<CitySliceSceneProps> = (props) => {
   mats.sky.color.setScalar(1 / m.exposure);
 
   const S = props.stopLine ?? 35;
-  const signs = (props.signs ?? DEFAULT_CITY_SIGNS).map((s) => {
+  const signs = (props.signs ?? (props.dressing === 'china' ? [] : DEFAULT_CITY_SIGNS)).map((s) => {
     const spot = CITY_SIGN_SPOTS[s.kind] ?? {x: 11.3, z: -9};
     return {kind: s.kind, text: s.text, x: s.x ?? spot.x, z: s.z ?? spot.z};
   });
@@ -824,6 +1330,45 @@ export const CitySliceScene: React.FC<CitySliceSceneProps> = (props) => {
   const gBox = ghostBox(props);
   const mPerPx = (camD * 2 * Math.tan((13 * Math.PI) / 180)) / 1920;
   const gFade = g && g.fadeAt !== undefined && g.fadeAt !== null ? 1 - ease(t, g.fadeAt, g.fadeAt + 0.7) : 1;
+  // No. 019: the dressing, the countdown, the system's car-scale weight (§ 5: 0.018 × camD/12, clamped 0.5–3.5)
+  const dress = cityDress(props);
+  const cd = cityCountdownAt(props, t);
+  const kS = Math.max(0.5, Math.min(3.5, camD / 12));
+  const pathR = PATH_CORE * kS;
+  const calls = useMemo(() => cityCalls(props, durationInFrames, fps), [props, durationInFrames, fps]);
+  const leaves = useMemo(
+    () => (props.appDots ? leaveTimes(props, durationInFrames, fps) : []),
+    [props, durationInFrames, fps],
+  );
+  const gb = props.ghostBox ?? null;
+  // the ghost's px at the box's own depth (it stands past the look point), so its lines hold ≥ 3 px on screen
+  const boxPx = Math.max(
+    mPerPx,
+    (cam.position.distanceTo(new THREE.Vector3(...countdownSpot(S))) * 2 * Math.tan((13 * Math.PI) / 180)) / 1920,
+  );
+  const decides = props.decideAt === undefined ? [] : Array.isArray(props.decideAt) ? props.decideAt : [props.decideAt];
+  const firstCall = calls.length ? calls[0].at + (calls[0].by === 'cam' ? 1.1 : 0.75) : Infinity;
+  const ledOn = dress.cabinet && Number.isFinite(firstCall) ? ease(t, firstCall, firstCall + 0.1) : 0;
+  const ledFlash = decides.reduce((m, d) => (t >= d && t <= d + 0.4 ? Math.max(m, Math.sin((Math.PI * (t - d)) / 0.4)) : m), 0);
+  const tape = props.tape ? tapeAt(props.tape, props.cars ?? [], startFrame / fps, t) : null;
+  // a tape drop line's test: every point above the caption band (y ≤ 1000) and outside every drawn car's screen silhouette
+  const dropClear = (pts: V3[]) => {
+    const scr = pts.map((q) => projectToFrame(cam, q));
+    if (scr.some((q) => q[1] > 1000)) return false;
+    const box: V3[] = [];
+    for (const bx of [-2.42, 2.42]) for (const by of [0.15, 1.9]) for (const bz of [-0.98, 0.98]) box.push([bx, by, bz]);
+    return !cars.some(({at}) => {
+      if (!at || !at.drawn) return false;
+      const h = hull2(box.map((q) => projectToFrame(cam, carToWorld(q, {x: at.x, z: at.z, yaw: 0}))));
+      return scr.some((q) => inConvex(h, q));
+    });
+  };
+  // the app cars in the order of their starts (bunch 0's ranks on the tape)
+  const appRank = (props.cars ?? [])
+    .map((c, i) => ({c, i}))
+    .filter(({c}) => c.app && c.goAt !== undefined)
+    .sort((p, q) => (p.c.goAt as number) - (q.c.goAt as number))
+    .map(({i}) => i);
 
   return (
     <AbsoluteFill>
@@ -847,7 +1392,16 @@ export const CitySliceScene: React.FC<CitySliceSceneProps> = (props) => {
         >
           <planeGeometry args={[1, 1]} />
         </mesh>
-        <CitySlice mood={mood} stopLine={S} signal={citySignalAt(props, t)} ink={ink} signs={signs} trees={trees} />
+        <CitySlice
+          mood={mood}
+          stopLine={S}
+          signal={citySignalAt(props, t)}
+          ink={ink}
+          signs={signs}
+          trees={trees}
+          // No. 019: a deeper ground block under the dressings, so the low tape framings read as cut ground
+          bottom={props.dressing ? -8 : undefined}
+        />
         {cars.map(({c, i, at}) =>
           at && at.drawn ? (
             <DrivingCar
@@ -864,7 +1418,7 @@ export const CitySliceScene: React.FC<CitySliceSceneProps> = (props) => {
               tail={night ? 1 : 0}
               brake={at.lamp}
               driver={c.driver === undefined ? ((c.body ?? 'extra') === 'you' ? 'you' : 'extra') : c.driver}
-              plate={c.plate ?? PLATES[i % PLATES.length]}
+              plate={dress.blank ? ' ' : (c.plate ?? PLATES[i % PLATES.length])}
               paint={
                 c.paint ??
                 ((c.body ?? 'extra') !== 'extra'
@@ -873,11 +1427,18 @@ export const CitySliceScene: React.FC<CitySliceSceneProps> = (props) => {
                     ? CITY.charcoal
                     : CITY.carBodies[(i * 2) % CITY.carBodies.length])
               }
-              shape={c.shape ?? ((c.body ?? 'extra') === 'extra' && i % 3 === 1 ? 'sedan' : 'crossover')}
+              shape={carShape(c, i)}
               clockOffset={figureClock}
               roofRack={c.roofRack}
               plateBright={i === target ? irK : 0}
-              glances={(c.glances ?? []).map((a) => ({at: a}))}
+              glances={(c.glances ?? []).map((a) =>
+                typeof a === 'number'
+                  ? {at: a}
+                  : {at: a.at, hold: a.hold, target: a.to === 'phone' ? dashPhonePose(carShape(c, i)).centre : undefined},
+              )}
+              phone={c.phone ? {screen: typeof c.phone === 'object' ? (c.phone.screen ?? 1) : 1} : undefined}
+              gaze={c.gaze === 'phone' && c.phone ? dashPhonePose(carShape(c, i)).centre : undefined}
+              look={c.extraLook === 'b' ? {...CAST_NEUTRAL, ...EXTRA_B} : undefined}
             />
           ) : null,
         )}
@@ -934,6 +1495,166 @@ export const CitySliceScene: React.FC<CitySliceSceneProps> = (props) => {
             uplink={pole.uplink}
           />
         ) : null}
+        {/* No. 019: the dressings' hardware, the countdown box or its ghost, the calls and the decision */}
+        {dress.countdown ? (
+          <CountdownBox mood={mood} position={countdownSpot(S)} n={cd.n} color={cd.state === 'green' ? 'green' : 'red'} />
+        ) : null}
+        {dress.loops.length ? <LoopDetectors S={S} lanes={dress.loops} /> : null}
+        {dress.cabinet ? (
+          <ControllerCabinet S={S} at={props.cabinetAt} mood={mood} led={ledOn} flash={ledFlash} ink={ink} />
+        ) : null}
+        {gb ? (
+          <>
+            <GhostLines
+              mood={mood}
+              lines={countdownGhostLines(S)}
+              draw={ease(t, gb.at, gb.at + 0.8)}
+              opacity={gb.fadeAt !== undefined && gb.fadeAt !== null ? 1 - ease(t, gb.fadeAt, gb.fadeAt + 0.7) : 1}
+              width={3 * boxPx}
+              dash={[16 * boxPx, 10 * boxPx]}
+              view={SECTION_ANGLE}
+            />
+            {(gb.digits ?? []).map((d, i, all) => {
+              const f = 1 / fps;
+              const next = all[i + 1];
+              const inK = Math.min(1, Math.max(0, (t - d.at + f) / (3 * f)));
+              // a clean swap: the old digit goes out over 2 frames and is gone a frame before the next starts to appear
+              const outK = next
+                ? Math.min(1, Math.max(0, (t - (next.at - 3 * f)) / (2 * f)))
+                : Math.min(1, Math.max(0, (t - (gb.digitsOutAt ?? d.at + 0.32) + f) / (6 * f)));
+              const o = inK * (1 - outK);
+              return o > 0.01 ? (
+                <GhostLines
+                  key={i}
+                  mood={mood}
+                  lines={ghostDigitLines(S, String(d.d))}
+                  draw={1}
+                  opacity={o}
+                  width={3 * boxPx}
+                  dash={[8 * boxPx, 5 * boxPx]}
+                  view={SECTION_ANGLE}
+                />
+              ) : null;
+            })}
+          </>
+        ) : null}
+        {dress.camLanes.length ? <DetectCam S={S} /> : null}
+        {/* the camera's zones: faint ink outlines on its lanes (ink only, never orange) */}
+        {dress.camLanes.map((lane) => {
+          const r = camZone(S, lane);
+          const c: V3[] = [
+            [r.x[0], 0.015, r.z[0]],
+            [r.x[1], 0.015, r.z[0]],
+            [r.x[1], 0.015, r.z[1]],
+            [r.x[0], 0.015, r.z[1]],
+          ];
+          return (
+            <group key={`zone${lane}`}>
+              {c.map((a, k) => (
+                <InkBar key={k} a={a} b={c[(k + 1) % 4]} w={2 * mPerPx} mood={mood} opacity={0.35} depth />
+              ))}
+            </group>
+          );
+        })}
+        {calls.map((c, i) => {
+          if (c.by === 'cam') {
+            // a camera call: a trace leaves the camera, runs along the arm, down the mast and on to the cabinet (1.1 s),
+            // holds 0.4 s and fades over 0.4 s, so its camera end reads in a framing that shows only the arm; a node dot
+            // swells on the camera as the call starts
+            if (t < c.at || t > c.at + 1.9) return null;
+            const glow = 1 - ease(t, c.at + 1.5, c.at + 1.9);
+            const route = camRoute(S, props.cabinetAt);
+            const sw = t <= c.at + 0.4 ? Math.sin((Math.PI * (t - c.at)) / 0.4) : 0;
+            return (
+              <group key={`call${i}`}>
+                <GlowPolyline points={route} draw={Math.min(1, (t - c.at) / 1.1)} radius={pathR} glow={glow} />
+                <GlowNode at={route[0]} radius={pathR * 1.95} glow={glow} swell={1 + 0.5 * sw} />
+              </group>
+            );
+          }
+          if (t < c.at || t > c.at + 1.2) return null;
+          const r = loopRect(S, c.lane);
+          const sq: V3[] = [
+            [r.x[0], 0.02, r.z[0]],
+            [r.x[1], 0.02, r.z[0]],
+            [r.x[1], 0.02, r.z[1]],
+            [r.x[0], 0.02, r.z[1]],
+            [r.x[0], 0.02, r.z[0]],
+          ];
+          const edge = t < c.at + 0.3 ? ease(t, c.at, c.at + 0.06) : 1 - ease(t, c.at + 0.3, c.at + 0.45);
+          return (
+            <group key={`call${i}`}>
+              {edge > 0.003 ? <GlowPolyline points={sq} radius={pathR} glow={edge} /> : null}
+              <Pulse route={callRoute(S, c.lane, props.cabinetAt)} u={(t - c.at - 0.15) / 0.6} r={pathR} />
+            </group>
+          );
+        })}
+        {decides.map((d, i) => (
+          <DecisionTrace
+            key={`dec${i}`}
+            S={S}
+            at={props.cabinetAt}
+            t={t}
+            from={d}
+            dur={props.decideFor ?? 0.5}
+            yellowAt={nextYellow(props, d)}
+            r={pathR}
+          />
+        ))}
+        {/* No. 019 (N6): the app cars' dots, ≈ 0.4 m over the roof; an air tape's report lifts each one up to the tape */}
+        {props.appDots
+          ? cars.map(({c, i, at}) => {
+              if (!c.app || !at || !at.drawn) return null;
+              const a = props.appDots!;
+              const rank = appRank.indexOf(i);
+              // with a tape, a dot leaves its car when its start is reported (it rises to the tape); a tape without a
+              // report key means the starts were reported in an earlier scene, so the roofs carry no dot
+              if (tape && rank >= 0) {
+                const rep = props.tape?.report;
+                if (!rep || t >= rep.at + rank * (rep.stagger ?? 0.25)) return null;
+              }
+              const leave = leaves[i] ?? Infinity;
+              const glow = ease(t, a.at, a.at + 0.3) * (Number.isFinite(leave) ? 1 - ease(t, leave, leave + 1.0) : 1);
+              const sw =
+                a.reportAt !== undefined && t >= a.reportAt && t <= a.reportAt + 0.5
+                  ? 1 + 0.45 * Math.sin((Math.PI * (t - a.reportAt)) / 0.5)
+                  : 1;
+              const rd = TAPE_DOT * kS;
+              return (
+                <GlowNode
+                  key={`app${i}`}
+                  at={carToWorld([DOT_BACK, 1.78 + DOT_LIFT + rd, 0], {x: at.x, z: at.z, yaw: 0})}
+                  radius={rd}
+                  glow={glow}
+                  swell={sw}
+                />
+              );
+            })
+          : null}
+        {tape ? <TapeView st={tape} mood={mood} kS={kS} pathR={pathR} mPerPx={mPerPx} clear={dropClear} /> : null}
+        {/* No. 019 (§ 5 v0.18.16): each reported start rises from its car's dot to its own spot on the tape (0.6 s) */}
+        {tape && props.tape?.report
+          ? tape.rising.map((r) => {
+              const k = appRank[r.i];
+              const st0 = props.tape!.report!.at + r.i * (props.tape!.report!.stagger ?? 0.25);
+              const car = k === undefined ? null : cityCarAt(props, k, st0, fps);
+              if (!car || !car.drawn) return null;
+              const rd = TAPE_DOT * kS;
+              const from = carToWorld([DOT_BACK, 1.78 + DOT_LIFT + rd, 0], {x: car.x, z: car.z, yaw: 0});
+              // a car out of the frame sends nothing
+              const q = projectToFrame(cam, from);
+              if (q[0] < 0 || q[0] > 1080 || q[1] < 0 || q[1] > 1920) return null;
+              const to = tapeWorld(tape, r.x, 0, 0.005);
+              const u = ease(r.u, 0, 1);
+              const head: V3 = [from[0] + (to[0] - from[0]) * u, from[1] + (to[1] - from[1]) * u, from[2] + (to[2] - from[2]) * u];
+              return (
+                <group key={`rise${r.i}`}>
+                  <GlowSegment a={from} b={head} radius={pathR * 0.5} glow={r.trail} />
+                  {r.u < 1 ? <GlowNode at={head} radius={rd} glow={1} /> : null}
+                </group>
+              );
+            })
+          : null}
         {g && gBox && parts ? (
           <>
             <GhostLines

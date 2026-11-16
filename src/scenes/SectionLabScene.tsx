@@ -22,13 +22,14 @@ export const TIRE_BAY_FRAMINGS: Record<'wide' | 'bench', Framing> = {
 };
 
 /** The heat bench's framings (No. 013), named as the spec's: the room, the bench, and each item close. */
-export type LabFraming = 'wide' | 'bench' | 'jug1' | 'jug2' | 'heater';
+export type LabFraming = 'wide' | 'bench' | 'jug1' | 'jug2' | 'heater' | 'grid';
 const HEAT_H: Record<LabFraming, Framing> = {
   wide: {look: [-0.1, 1.3, 0], distance: 8.4},
   bench: {look: [0.15, 1.45, -0.6], distance: 6.2},
   jug1: {look: [-0.75, 1.45, -0.6], distance: 5.0},
   jug2: {look: [-0.2, 1.45, -0.6], distance: 5.0},
   heater: {look: [0.95, 1.5, -0.6], distance: 5.0},
+  grid: {look: [-0.25, 1.9, -1.1], distance: 6.0},
 };
 /** 9:16: the bench framed tight; the camera glides between the items rather than holding all three. */
 const HEAT_V: Record<LabFraming, Framing> = {
@@ -37,6 +38,8 @@ const HEAT_V: Record<LabFraming, Framing> = {
   jug1: {look: [-0.95, 1.4, -0.65], distance: 4.4},
   jug2: {look: [-0.2, 1.4, -0.65], distance: 4.4},
   heater: {look: [0.98, 1.5, -0.65], distance: 5.0},
+  // No. 019: the timing check's wall grid close (cells ≈ 6 px)
+  grid: {look: [-0.25, 1.88, -1.1], distance: 9.6},
 };
 /** The Lab's named framings for a format (the heat bench's set; other dressings keep `LAB_FRAMINGS` in 9:16). */
 export const labFramings = (format: Format | undefined): Record<LabFraming, Framing> => (format === 'horizontal' ? HEAT_H : HEAT_V);
@@ -68,7 +71,23 @@ export type SectionLabSceneProps = {
    * What the Lab is dressed as: 'apps' (default: No. 001's phone bench, arms, counter, meter) or
    * 'tire-bay' (No. 002: a rack of two rows of eight wheels with set-panel labels, two extras gauging).
    */
-  dressing?: 'apps' | 'tire-bay' | 'heat-bench';
+  dressing?: 'apps' | 'tire-bay' | 'heat-bench' | 'timing-check';
+  /**
+   * No. 019 (N11), 'timing-check': the wall grid's keys (seconds into the scene): `waveAt` (the orange wave sweeps it over
+   * `waveFor`, default 1.8 s, lighting the cells pale), `resolveAt` (a 0.6 s sweep: `share`, default 0.77, solid ink-light,
+   * the rest hollow), `blinkAt` (the hollow ones blink), `lit` (start lit, after an earlier scene's wave), `typing`
+   * (default true), `leanAt` ([left, right] researcher's lean-in). Framings 'wide' and 'grid' (with `framing`/`cameraKeys`).
+   */
+  timingCheck?: {
+    waveAt?: number;
+    waveFor?: number;
+    resolveAt?: number;
+    share?: number;
+    blinkAt?: number;
+    lit?: boolean;
+    typing?: boolean;
+    leanAt?: [number | null, number | null];
+  };
   /**
    * The tire bay: `rows` ({label, low: wheel indices 0–7, lowAt: s}, top shelf first), `lowPressure`
    * (default 0.55), `workers` (default true: two workers standing at the rack's ends gauge the end
@@ -150,7 +169,8 @@ const labCameraMove = (p: Partial<SectionLabSceneProps>, durationInFrames: numbe
 };
 
 /** The keyed camera (heat bench, or any Lab scene with `framing` / `cameraKeys`). */
-const keyedCamera = (p: Partial<SectionLabSceneProps>) => p.dressing === 'heat-bench' || p.framing !== undefined || (p.cameraKeys?.length ?? 0) > 0;
+const keyedCamera = (p: Partial<SectionLabSceneProps>) =>
+  p.dressing === 'heat-bench' || p.dressing === 'timing-check' || p.framing !== undefined || (p.cameraKeys?.length ?? 0) > 0;
 
 /** The keyed camera's framing at second `s`: keys from where the last scene ended, a glide in, the push from the last key. */
 const labKeyedAt = (p: Partial<SectionLabSceneProps>, s: number): Framing => {
@@ -263,6 +283,7 @@ const KeyedLab: React.FC<SectionLabSceneProps> = (p) => {
         dressing={p.dressing ?? 'apps'}
         tireBay={p.tireBay}
         heatBench={p.dressing === 'heat-bench' ? st : undefined}
+        timingCheck={p.timingCheck}
       />
     </SectionStage>
   );

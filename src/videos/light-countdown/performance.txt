@@ -1,0 +1,15 @@
+[calm] In China many traffic lights count down for drivers. But in the US that's not allowed.
+[curious] A countdown sounds helpful. So why not here?
+[calm] US rules keep countdowns off the lights drivers watch.
+The rulebook says research found warnings before the yellow increase crashes. Though studies of countdowns disagree.
+And many US lights would struggle to count down anyway because road sensors decide when the green ends. Often just seconds before the light changes.
+[curious] Meanwhile in China a map app can even count down a red light without needing a connection to it. The app's maker says.
+[calm] Instead the app can learn the timing from the cars.
+When the light turns green the waiting cars start to move.
+The app sees that moment on the phones of drivers using it.
+Over many days those starts repeat with the same gap. And that gap is the light's cycle.
+Once it knows the gap the app can count down to the next green.
+One research team tested a similar method at about 10,000 intersections in China. And more than three in four timing estimates were within five seconds.
+The countdown on the light and the one in the app both work best on lights that keep a steady schedule.
+Many US lights don't because they wait for your car.
+[warm] Do the lights near you wait for your car or run on a timer?

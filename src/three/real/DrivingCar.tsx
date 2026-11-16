@@ -1,12 +1,13 @@
 import React, {useMemo} from 'react';
 import * as THREE from 'three';
-import {CAST_NEUTRAL, MOODS, RACE, REAL, section, type Mood} from '../../theme';
+import {CAST_NEUTRAL, MOODS, RACE, REAL, section, type CastLook, type Mood} from '../../theme';
 import {raw} from '../plaster';
 import {Figure} from '../section/Figure';
 import {CAR_LAYOUT, RealCar, type CoupeStyle} from './RealCar';
 import {shellSink, type ShellProfile} from './CarShell';
 import {RealWheel} from './RealWheel';
 import {RoofRack} from './RoofRack';
+import {CupPhone, DashMount} from './CarPhoneKit';
 
 type V3 = [number, number, number];
 const C = CAR_LAYOUT;
@@ -16,6 +17,26 @@ export const carToWorld = (p: V3, at: {x: number; z: number; yaw: number}): V3 =
   const th = Math.PI / 2 - at.yaw;
   // rotation about y by th: (x, z) → (x cos + z sin, −x sin + z cos)
   return [at.x + p[0] * Math.cos(th) + p[2] * Math.sin(th), p[1], at.z - p[0] * Math.sin(th) + p[2] * Math.cos(th)];
+};
+
+/** No. 019 (N4): the dash phone's height (m, the No. 012 held phone's). */
+const DASH_PHONE_H = 0.22;
+
+/**
+ * No. 019 (N4): the dash-mounted phone in a whole car (car-local: x forward, y up, z right): the mount's foot on the dash
+ * top at its rear edge, inboard of the driver; the phone held 5 cm above it, its screen (+z) aimed at the driver's eyes
+ * (style guide § 3: the screen faces its owner), so the camera behind the car sees its back. The whole car's interior sits
+ * `wholeSink` + `shellSink(shape)` under the cut car's, as the driver does.
+ */
+export const dashPhonePose = (shape: ShellProfile = 'crossover') => {
+  const sink = C.wholeSink + shellSink(shape);
+  const foot: V3 = [0.7, 1.07 - sink, C.driver[2] + 0.34];
+  const pos = new THREE.Vector3(foot[0], foot[1] + 0.05 + DASH_PHONE_H / 2, foot[2]);
+  const eyes = new THREE.Vector3(C.driver[0] + 0.09, C.driver[1] + 1.25 - sink, C.driver[2]);
+  const n = eyes.clone().sub(pos).normalize();
+  const up = new THREE.Vector3(0, 1, 0).sub(n.clone().multiplyScalar(n.y)).normalize();
+  const q = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(up.clone().cross(n).normalize(), up, n));
+  return {foot, pos, q, n, up, centre: pos.toArray() as V3};
 };
 
 /**
@@ -78,6 +99,18 @@ export const DrivingCar: React.FC<{
    * `hold` s (default 1.0). Default none.
    */
   glances?: {at: number; hold?: number; target?: V3}[];
+  /**
+   * No. 019 (N4): a phone on a clip mount on the dash (`dashPhonePose`), its screen to the driver, lit `screen` 0 → 1 (the
+   * § 3 screen light on the face). Default none.
+   */
+  phone?: {screen: number};
+  /**
+   * No. 019: the driver's resting gaze, a car-local point held from the start under the glances (e.g. the dash phone).
+   * Default none (ahead).
+   */
+  gaze?: V3;
+  /** No. 019: the extra's colours (default `CAST_NEUTRAL`; e.g. `EXTRA_B` for a second named extra). */
+  look?: Partial<CastLook>;
 }> = ({
   mood,
   at,
@@ -100,6 +133,9 @@ export const DrivingCar: React.FC<{
   roofRack = false,
   plateBright = 0,
   glances = [],
+  phone,
+  gaze,
+  look,
 }) => {
   const lampMat = useMemo(
     () =>
@@ -139,6 +175,7 @@ export const DrivingCar: React.FC<{
           coupeStyle={shape === 'coupe' ? coupeStyle : undefined}
         />
         {roofRack ? <RoofRack shape={shape} /> : null}
+        {phone ? <DashPhone mood={mood} shape={shape} screen={phone.screen} /> : null}
         {frontLamps !== undefined
           ? [-1, 1].map((sd) => (
               <group key={sd}>
@@ -156,13 +193,14 @@ export const DrivingCar: React.FC<{
           <Figure
             who={who}
             // the extra's cool grey read as YOU's blue through the tinted glass (No. 005): warm grey
-            look={who === 'extra' ? CAST_NEUTRAL : undefined}
+            look={who === 'extra' ? (look ?? CAST_NEUTRAL) : undefined}
             mood={mood}
             // the whole car's interior sits lower, under its roof (RealCar `whole`)
             position={[C.driver[0], C.driver[1] - C.wholeSink - shellSink(shape), C.driver[2]]}
             rotationY={Math.PI / 2}
             gestures={[
               {pose: 'drive', at: -1},
+              ...(gaze ? [{pose: 'turn-to' as const, at: -1, target: gaze, blend: 0.4}] : []),
               ...glances.flatMap((g) => [
                 {pose: 'turn-to' as const, at: g.at, target: g.target ?? ([14, 3.5, 3] as V3), hold: g.hold ?? 1.0, blend: 0.4},
               ]),
@@ -202,5 +240,16 @@ export const DrivingCar: React.FC<{
         ));
       })}
     </group>
+  );
+};
+
+/** No. 019 (N4): the dash mount and its phone (car-local; see `dashPhonePose`). */
+const DashPhone: React.FC<{mood: Mood; shape: ShellProfile; screen: number}> = ({mood, shape, screen}) => {
+  const p = useMemo(() => dashPhonePose(shape), [shape]);
+  return (
+    <>
+      <DashMount foot={p.foot} pose={{pos: p.pos, q: p.q, n: p.n, up: p.up}} />
+      <CupPhone mood={mood} position={p.centre} quaternion={p.q} height={DASH_PHONE_H} screen={screen} open={0} />
+    </>
   );
 };

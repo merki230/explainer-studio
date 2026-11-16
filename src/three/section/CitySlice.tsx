@@ -563,6 +563,8 @@ export type CitySliceProps = {
   signs?: {kind: RoadSignKind; text: string[]; x: number; z: number}[];
   /** Street trees on the left sidewalk (default true). */
   trees?: boolean;
+  /** No. 019: the ground block's bottom (m, default `CITY_LAYOUT.bottom`, −4); deeper so a low framing reads as cut ground. */
+  bottom?: number;
 };
 
 /** The city slice (see the file comment). */
@@ -573,6 +575,7 @@ export const CitySlice: React.FC<CitySliceProps> = ({
   ink = 1,
   signs = [],
   trees = true,
+  bottom = L.bottom,
 }) => {
   const S = stopLine;
   const I = cityIntersection(S);
@@ -643,15 +646,15 @@ export const CitySlice: React.FC<CitySliceProps> = ({
   const inkPolys: V3[][] = [];
   // the ground's cut face: the profile across the street, and its layers (asphalt, base, sidewalk slab, curbs)
   inkPolys.push([
-    [X0, L.bottom, 0.003],
+    [X0, bottom, 0.003],
     [X0, G, 0.003],
     [L.curbL[1], G, 0.003],
     [L.road[0], 0, 0.003],
     [L.road[1], 0, 0.003],
     [L.curbR[0], G, 0.003],
     [X1, G, 0.003],
-    [X1, L.bottom, 0.003],
-    [X0, L.bottom, 0.003],
+    [X1, bottom, 0.003],
+    [X0, bottom, 0.003],
   ]);
   inkPolys.push([
     [L.curbL[0], -0.15, 0.003],
@@ -746,7 +749,7 @@ export const CitySlice: React.FC<CitySliceProps> = ({
   return (
     <group>
       {/* the ground: one deep block, the street's surfaces on it (cut on the plane) */}
-      <Block min={[X0, L.bottom, -D]} max={[X1, L.base, 0]} mats={[C, E, E, E, C, E]} shadow={false} />
+      <Block min={[X0, bottom, -D]} max={[X1, L.base, 0]} mats={[C, E, E, E, C, E]} shadow={false} />
       <Block min={[L.road[0], L.base, -D]} max={[L.road[1], 0, 0]} mats={[E, E, mats.road, E, C, E]} shadow={false} />
       {/* the cross street's roadway outside ours */}
       <Block
@@ -810,8 +813,8 @@ export const CitySlice: React.FC<CitySliceProps> = ({
         </group>
       ))}
       {/* the slice's ends, cut */}
-      <mesh material={C} position={[X1, (L.bottom + G) / 2, -D / 2]} rotation={[0, Math.PI / 2, 0]}>
-        <planeGeometry args={[D, G - L.bottom]} />
+      <mesh material={C} position={[X1, (bottom + G) / 2, -D / 2]} rotation={[0, Math.PI / 2, 0]}>
+        <planeGeometry args={[D, G - bottom]} />
       </mesh>
 
       {/* under the street, on the cut face: the storm sewer and the duct bank (light bores: drawn, not holes) */}

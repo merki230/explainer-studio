@@ -38,6 +38,16 @@ First two data points: No. 002 (evening, about 7 PM, 2026-10-17) and No. 003 (mi
 
 ---
 
+## No. 019 · light-countdown (`light-countdown`): owner note in production (not published)
+
+- **Received:** 2026-11-12, relayed by the main session (paraphrased, not a verbatim quote).
+
+**Owner's note:** showing the app's learning in the ground (the time tape on the street's cut face) makes viewers think it happens beneath the road. The US part of the same video shows road sensors underground, so the two read alike. Fix chosen: move the tape into the air above the China street, roughly 4 to 6 m above the queue, same style values. Each app car's orange dot rises from just above its roof to the timeline when its start is reported.
+
+**Rule changes:** style-guide v0.18.16. A new § 5 row, "Where the system is drawn", records it as a clarification of existing precedents, and § 5 The time tape gets the air placement (`CHANGELOG.md`). What would confirm it: viewer comments on No. 019 that place the app's data correctly (phones, the network), and none asking about sensors under the China road.
+
+---
+
 ## No. 009 · mile-markers (`mile-markers`): TikTok boost notice (platform signal)
 
 - **Received:** 2026-10-28, about 21:00 America/Chicago, TikTok notification "Creator updates", relayed by the main session · **Post:** "What Exit 150 means", caption opening "What do exit numbers mean? On most interstates, Exit 150 is about 1…"
