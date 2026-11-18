@@ -18,6 +18,8 @@ import {
 import {REAL_PHONE} from './RealPhone';
 import {roundedPlane, roundedSlab, rrPath, rrShape} from './shapes';
 import {applyAlbedo, applyEnv, useAlbedo, useEnvStrength, useStudioEnv} from './useStudioEnv';
+import {LANES, SensorLanes, type SensorLanesKeys} from './SensorLanes';
+import type {Mood} from '../../theme';
 
 type V3 = [number, number, number];
 type R = [number, number, number, number];
@@ -61,6 +63,16 @@ const CONNECTORS: {c: [number, number]; s: [number, number]; ref: string}[] = [
   {c: [-0.02, 0.85], s: [0.055, 0.06], ref: 'J8'},
 ];
 const BATTERY: R = [-0.4, -0.76, 0.4, 0.1];
+/** No. 020 (`sensors`): the battery narrowed between the two sensor strips. */
+const BATTERY_SENSORS: R = [-0.15, -0.76, 0.225, 0.1];
+/** No. 020: the board's two strips beside the battery (the sensors on the left, the sensor hub on the right). */
+const STRIPS: R[] = [
+  [-0.415, -0.8, -0.165, 0.14],
+  [0.24, -0.45, 0.415, 0.06],
+];
+/** No. 020: the board's top, for drawings laid over it (the lanes sit `LANE_LIFT` above). */
+export const PHONE_BOARD_TOP = BOARD_TOP;
+export const LANE_LIFT = 0.034;
 
 const rectOf = (c: [number, number], s: [number, number], g = 0): R => [
   c[0] - s[0] / 2 - g,
@@ -158,6 +170,15 @@ export type PhoneTeardownProps = {
    * `swing` −1 → 1 moves the mass along the phone's width (+x). Neutral metals, never orange. Default none (the shield).
    */
   motion?: {lid: number; swing: number};
+  /**
+   * No. 020: the crash-sensing parts beside the motion sensor (invented legends, § 3 Generic devices): a GPS chip, a
+   * barometer (a small can with a vent) and the microphone (a port at the bottom edge, where the haptic engine was), on a
+   * board strip left of a narrowed battery, and the sensor hub (the agree node's processor) on a strip at the right.
+   * Default false (No. 001–019 as built).
+   */
+  sensors?: boolean;
+  /** No. 020: the four sensor lanes drawn over the board (see `SensorLanes`). Default none. */
+  lanes?: {keys: SensorLanesKeys; t: number; unitPerPx: number; mood: Mood; opacity?: number; onTop?: boolean};
 };
 
 /**
@@ -168,7 +189,7 @@ export type PhoneTeardownProps = {
  * modules, black flex ribbons, the speaker and haptic engine. Contact shadows are baked into the
  * board and floor textures. Mount inside a `RealPhone` (its local units).
  */
-export const PhoneTeardown: React.FC<PhoneTeardownProps> = ({chipLit = 0, motion}) => {
+export const PhoneTeardown: React.FC<PhoneTeardownProps> = ({chipLit = 0, motion, sensors = false, lanes}) => {
   const ready = useFontsLoaded();
   const env = useStudioEnv();
   const envScale = useEnvStrength();
@@ -230,12 +251,13 @@ export const PhoneTeardown: React.FC<PhoneTeardownProps> = ({chipLit = 0, motion
     mats.board.needsUpdate = true;
     const cavity: R = [-IN.x, -IN.y, IN.x, IN.y];
     mats.floor.map = floorTexture(cavity, [
-      BATTERY,
+      sensors ? BATTERY_SENSORS : BATTERY,
       [BOARD[0], BOARD[1], BOARD[2], NOTCH[1]],
       [NOTCH[2], NOTCH[1], BOARD[2], BOARD[3]],
     ]);
     mats.floor.needsUpdate = true;
-    mats.label.map = batteryTexture((BATTERY[2] - BATTERY[0] - 0.04) / (BATTERY[3] - BATTERY[1] - 0.06));
+    const bat = sensors ? BATTERY_SENSORS : BATTERY;
+    mats.label.map = batteryTexture((bat[2] - bat[0] - 0.04) / (bat[3] - bat[1] - 0.06));
     mats.label.needsUpdate = true;
     mats.shieldTop.map = shieldTexture();
     mats.shieldTop.needsUpdate = true;
@@ -251,6 +273,10 @@ export const PhoneTeardown: React.FC<PhoneTeardownProps> = ({chipLit = 0, motion
       'motion',
       new THREE.MeshStandardMaterial({map: chipTexture(['MX-6A', '3-AXIS', '2640 Q'], 'motion'), roughness: 0.5}),
     );
+    if (sensors) {
+      mats.chipTop.set('gps', new THREE.MeshStandardMaterial({map: chipTexture(['GN-4', 'L1 L5', '2637'], 'gps'), roughness: 0.5}));
+      mats.chipTop.set('hub', new THREE.MeshStandardMaterial({map: chipTexture(['SH-2', 'MCU', '2642'], 'hub'), roughness: 0.5}));
+    }
     mats.glow.map = glowTexture();
     mats.glow.needsUpdate = true;
   }
@@ -333,6 +359,7 @@ export const PhoneTeardown: React.FC<PhoneTeardownProps> = ({chipLit = 0, motion
 
   const bz = BOARD_TOP;
   const batT = 0.05;
+  const BAT = sensors ? BATTERY_SENSORS : BATTERY;
   return (
     <group>
       {/* the cavity: midframe floor (baked occlusion) and its lip */}
@@ -435,23 +462,23 @@ export const PhoneTeardown: React.FC<PhoneTeardownProps> = ({chipLit = 0, motion
       <Flex a={[-0.315, 0.62]} b={[-0.03, 0.57]} z={FLOOR + 0.064} w={0.035} mat={mats.flex} end={mats.flexEnd} />
 
       {/* battery: foil pouch, printed label, pull tabs, its flex up to J2 */}
-      <group position={[(BATTERY[0] + BATTERY[2]) / 2, (BATTERY[1] + BATTERY[3]) / 2, FLOOR]}>
+      <group position={[(BAT[0] + BAT[2]) / 2, (BAT[1] + BAT[3]) / 2, FLOOR]}>
         <mesh
-          geometry={roundedSlab(BATTERY[2] - BATTERY[0], BATTERY[3] - BATTERY[1], batT, 0.03, 0.008)}
+          geometry={roundedSlab(BAT[2] - BAT[0], BAT[3] - BAT[1], batT, 0.03, 0.008)}
           material={mats.battery}
           castShadow
           receiveShadow
         />
         <mesh
-          geometry={roundedPlane(BATTERY[2] - BATTERY[0] - 0.04, BATTERY[3] - BATTERY[1] - 0.06, 0.012)}
+          geometry={roundedPlane(BAT[2] - BAT[0] - 0.04, BAT[3] - BAT[1] - 0.06, 0.012)}
           material={mats.label}
           position={[0, 0, batT + 0.0004]}
           receiveShadow
         />
-        {[-0.2, 0.2].map((x) => (
+        {(sensors ? [-0.08, 0.15] : [-0.2, 0.2]).map((x) => (
           <mesh
             key={x}
-            position={[x, -(BATTERY[3] - BATTERY[1]) / 2 + 0.01, batT + 0.001]}
+            position={[x, -(BAT[3] - BAT[1]) / 2 + 0.01, batT + 0.001]}
             material={mats.tab}
             castShadow
           >
@@ -463,14 +490,20 @@ export const PhoneTeardown: React.FC<PhoneTeardownProps> = ({chipLit = 0, motion
       {/* the long flex down the right side to the port, and along the bottom */}
       <Flex a={[0.418, -0.79]} b={[0.418, 0.14]} z={FLOOR + 0.004} w={0.026} mat={mats.flex} end={mats.flexEnd} />
       <Flex a={[0.06, -0.785]} b={[0.43, -0.785]} z={FLOOR + 0.004} w={0.024} mat={mats.flex} end={mats.flexEnd} />
-      {/* bottom: haptic engine, port, speaker */}
-      <mesh
-        geometry={roundedSlab(0.28, 0.08, 0.04, 0.012, 0.004)}
-        material={mats.haptic}
-        position={[-0.25, -0.85, FLOOR]}
-        castShadow
-        receiveShadow
-      />
+      {/* bottom: haptic engine (No. 020 `sensors`: the microphone's port in its place), port, speaker */}
+      {sensors ? null : (
+        <mesh
+          geometry={roundedSlab(0.28, 0.08, 0.04, 0.012, 0.004)}
+          material={mats.haptic}
+          position={[-0.25, -0.85, FLOOR]}
+          castShadow
+          receiveShadow
+        />
+      )}
+      {sensors ? <SensorParts z={bz} mats={mats} /> : null}
+      {lanes ? (
+        <SensorLanes keys={lanes.keys} t={lanes.t} unitPerPx={lanes.unitPerPx} mood={lanes.mood} z={bz + LANE_LIFT} opacity={lanes.opacity} onTop={lanes.onTop} />
+      ) : null}
       <mesh
         geometry={roundedSlab(0.11, 0.06, 0.032, 0.02, 0.006)}
         material={mats.port}
@@ -484,6 +517,66 @@ export const PhoneTeardown: React.FC<PhoneTeardownProps> = ({chipLit = 0, motion
       </group>
       <Screw p={[-0.39, -0.85, FLOOR + 0.04]} mat={mats.screw} slot={mats.slot} />
       <Screw p={[0.395, -0.86, FLOOR + 0.004]} mat={mats.screw} slot={mats.slot} />
+    </group>
+  );
+};
+
+/**
+ * No. 020 (`sensors`): the board strips and the crash-sensing parts on them (see `PhoneTeardownProps.sensors`): the GPS chip,
+ * the barometer's can with its vent, the microphone's package and its port in the bottom edge, and the sensor hub chip
+ * under the agree node. Neutral metals and solder mask, never orange.
+ */
+const SensorParts: React.FC<{z: number; mats: {boardEdge: THREE.Material; chip: THREE.Material; chipTop: Map<string, THREE.MeshStandardMaterial>; shield: THREE.Material; port: THREE.Material; slot: THREE.Material}}> = ({z, mats}) => {
+  const P2 = LANES.parts;
+  const hub = LANES.node;
+  return (
+    <group>
+      {STRIPS.map((r, i) => (
+        <mesh key={i} position={[(r[0] + r[2]) / 2, (r[1] + r[3]) / 2, z - BOARD_T / 2]} material={mats.boardEdge} castShadow receiveShadow>
+          <boxGeometry args={[r[2] - r[0], r[3] - r[1], BOARD_T]} />
+        </mesh>
+      ))}
+      {/* the GPS chip */}
+      <group position={[P2.gps[0], P2.gps[1], z]}>
+        <mesh position={[0, 0, 0.006]} material={mats.chip} castShadow receiveShadow>
+          <boxGeometry args={[0.12, 0.12, 0.012]} />
+        </mesh>
+        {mats.chipTop.get('gps') ? (
+          <mesh position={[0, 0, 0.0124]} material={mats.chipTop.get('gps')}>
+            <planeGeometry args={[0.117, 0.117]} />
+          </mesh>
+        ) : null}
+      </group>
+      {/* the barometer: a small metal can with a vent hole */}
+      <group position={[P2.baro[0], P2.baro[1], z]}>
+        <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 0, 0.016]} material={mats.shield} castShadow receiveShadow>
+          <cylinderGeometry args={[0.052, 0.055, 0.032, 28]} />
+        </mesh>
+        <mesh position={[0.012, 0.01, 0.0325]} material={mats.slot}>
+          <circleGeometry args={[0.011, 16]} />
+        </mesh>
+      </group>
+      {/* the microphone: its package on the strip and the port through the bottom edge */}
+      <mesh position={[P2.mic[0], P2.mic[1] + 0.07, z + 0.006]} material={mats.chip} castShadow receiveShadow>
+        <boxGeometry args={[0.07, 0.05, 0.012]} />
+      </mesh>
+      <mesh geometry={roundedSlab(0.1, 0.05, 0.03, 0.02, 0.006)} material={mats.port} position={[P2.mic[0], P2.mic[1], FLOOR]} castShadow receiveShadow />
+      {[-0.024, 0, 0.024].map((dx) => (
+        <mesh key={dx} position={[P2.mic[0] + dx, P2.mic[1], FLOOR + 0.0305]} material={mats.slot}>
+          <circleGeometry args={[0.007, 12]} />
+        </mesh>
+      ))}
+      {/* the sensor hub under the agree node */}
+      <group position={[hub[0], hub[1], z]}>
+        <mesh position={[0, 0, 0.005]} material={mats.chip} castShadow receiveShadow>
+          <boxGeometry args={[0.11, 0.11, 0.01]} />
+        </mesh>
+        {mats.chipTop.get('hub') ? (
+          <mesh position={[0, 0, 0.0104]} material={mats.chipTop.get('hub')}>
+            <planeGeometry args={[0.107, 0.107]} />
+          </mesh>
+        ) : null}
+      </group>
     </group>
   );
 };

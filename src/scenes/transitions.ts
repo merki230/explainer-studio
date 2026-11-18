@@ -57,6 +57,8 @@ const SECTION_DEFAULT_LOCATION: Record<string, string> = {
   'cold-lab': 'cold-lab',
   // No. 018: the house on a winter night (living room, basement, yard and driveway on one sheet)
   'house-slice': 'house',
+  // No. 020: the cameo (coaster and ski blocks on one sheet)
+  'cameo-slices': 'cameo',
 };
 
 /** Frames of a horizontal video's `slide` (§ 11.6: 24, cubic in-out). */

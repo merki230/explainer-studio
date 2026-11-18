@@ -1,1 +1,13 @@
-Put the hook in this first sentence. Then write the rest of the voiceover here, about 150 to 170 words for a minute.
+BYD drove a nail through two battery cells. One burst into flames, and the other didn't even smoke.
+You might think every EV battery has the same fire risk.
+In BYD's own test, a nickel cell went over 900 degrees Fahrenheit, and BYD's iron-phosphate Blade stayed at 140 or below.
+So why does chemistry matter that much?
+When a charged nickel cell overheats, it can release oxygen that helps fuel the fire.
+Iron phosphate holds its oxygen much more tightly.
+BYD says the Blade's long, flat shape also helps the cell cool.
+Each cell is more than three feet long and just over half an inch thick.
+Iron-phosphate cells can still overheat out of control, but it takes a higher temperature, and they give off less heat.
+Tesla said in 2021 it was moving its standard-range cars to iron phosphate as well.
+That chemistry stores less energy for its weight, though.
+Tesla's 4680 nickel cell holds about fifty percent more than the Blade, German researchers found.
+Do you know which battery chemistry is in the car you'd buy?

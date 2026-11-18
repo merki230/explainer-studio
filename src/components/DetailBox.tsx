@@ -21,6 +21,7 @@ import {StreetBox} from './streetBoxes';
 import {drawTripApp} from './tripAppKit';
 import {CameraViewBox, SearchBox, SettingsBox, type CameraBoxProps} from './CameraBoxes';
 import {drawLightApp, LIGHT_APP_ASPECT} from './lightAppKit';
+import {crashAlertAt, crashAlertKey, drawCrashAlert, type CrashAlertKeys} from './alertKit';
 import {cityCountdownAt, type CitySliceSceneProps} from '../scenes/CitySliceScene';
 
 /**
@@ -50,7 +51,18 @@ export type DetailBoxProps = CameraBoxProps & {
     | 'camera-view'
     | 'search'
     | 'settings'
-    | 'light-app';
+    | 'light-app'
+    | 'crash-alert';
+  /**
+   * 'crash-alert' (No. 020, any scene with anchors; leader to `anchor`, default 'phone'): the phone's own crash alert, generic
+   * (§ 8 Alert screens, `alertKit.ts`), keyed in seconds after the box enters (`CrashAlertKeys`): the alert (a `warning`
+   * triangle with a ring running `ringFor`, `Crash detected`, `Cancel`), from `countdownAt` the digits from `countFrom`
+   * (real seconds from `countStartAt`, an optional `timelapse`, `cancelBoxAt` an ink box round `Cancel`), from `callingAt`
+   * `Calling 911` and from `messageAt` `Message playing`. Inner 360 × 540 by default.
+   */
+  alert?: CrashAlertKeys;
+  /** 'dispatch-map' (No. 020): 'highway' (default, No. 009) or 'street' (a city grid, the pin on a street). */
+  mapKind?: 'highway' | 'street';
   /**
    * 'light-app' (No. 019, a `city-slice` with `signal` keys; leader to `anchor`, default 'phone': the dash phone): a generic
    * map app counting down the light (`lightAppKit.ts`): the lit lens and the seconds, read from the scene's signal keys
@@ -201,6 +213,8 @@ export const DetailBox: React.FC<DetailBoxProps & {mood?: Mood; scene: SceneCtx}
     <LightAppBox {...p} />
   ) : p.content === 'dispatch-map' ? (
     <DispatchBox {...p} />
+  ) : p.content === 'crash-alert' ? (
+    <CrashAlertBox {...p} />
   ) : p.content === 'laptop' || p.content === 'usage' || p.content === 'register' ? (
     <StreetBox {...p} content={p.content} scene={{...p.scene, props: p.scene.props as Record<string, unknown>}} />
   ) : p.content === 'dashboard' || p.content === 'ev-dashboard' || p.content === 'gas-dashboard' ? (
@@ -679,6 +693,7 @@ const DispatchBox: React.FC<DetailBoxProps & {mood?: Mood; scene: SceneCtx}> = (
   anchor = 'phone',
   mood = 'day',
   scene,
+  mapKind,
 }) => {
   const frame = useCurrentFrame();
   const {fps, width, height} = useVideoConfig();
@@ -700,12 +715,12 @@ const DispatchBox: React.FC<DetailBoxProps & {mood?: Mood; scene: SceneCtx}> = (
   const breathe = Math.round(0.04 * Math.sin(((frame + scene.offset) / fps / 2.4) * Math.PI * 2) * 1000) / 1000;
   const innerW = size;
   const innerH = Math.round(size * 0.86);
-  const key = `${circle}|${breathe}|${Math.round(pin * 1000)}|${pinLabel}|${innerW}`;
+  const key = `${circle}|${breathe}|${Math.round(pin * 1000)}|${pinLabel}|${innerW}|${mapKind ?? ''}`;
   useLayoutEffect(() => {
     const handle = delayRender('Drawing the dispatch map');
     fontsReady().then(() => {
       const cx = ref.current?.getContext('2d');
-      if (cx) drawDispatchMap(cx, innerW, innerH, {circle, breathe, pin, label: pinLabel});
+      if (cx) drawDispatchMap(cx, innerW, innerH, {circle, breathe, pin, label: pinLabel, ...(mapKind ? {kind: mapKind} : {})});
       continueRender(handle);
     });
     // `key` captures everything the drawing depends on
@@ -746,6 +761,78 @@ const DispatchBox: React.FC<DetailBoxProps & {mood?: Mood; scene: SceneCtx}> = (
       ? `${target[0]},${by} ${target[0]},${Math.max(by, target[1] - 12)}`
       : crosses
         ? `${sideX},${overY} ${target[0]},${overY} ${target[0]},${Math.max(overY, target[1] - 12)}`
+        : `${lx},${by} ${lx},${target[1]} ${target[0] + (lx < target[0] ? -12 : 12)},${target[1]}`;
+  return (
+    <div style={{position: 'absolute', inset: 0, opacity: enter}}>
+      {leader && target ? (
+        <svg width={width} height={height} style={{position: 'absolute', inset: 0}}>
+          <polyline points={points} fill="none" stroke={ink} strokeWidth={2} strokeLinejoin="miter" />
+        </svg>
+      ) : null}
+      <Frame left={left} top={boxTop} w={outerW} h={outerH} ink={ink} paper={paper} rise={rise}>
+        <canvas ref={ref} width={innerW} height={innerH} style={{display: 'block', width: innerW, height: innerH}} />
+      </Frame>
+    </div>
+  );
+};
+
+/**
+ * The crash-alert box (No. 020, `content: 'crash-alert'`): the phone's alert drawn by `drawCrashAlert`, read like a screen;
+ * the 2 px `ink` elbow leader goes to the phone (`anchor`, default 'phone': the cupholder phone in a `car-slice`). Sits on
+ * the side away from the anchor unless `side` / `left` / `top` place it.
+ */
+const CrashAlertBox: React.FC<DetailBoxProps & {mood?: Mood; scene: SceneCtx}> = ({
+  size: sizeIn,
+  side,
+  top,
+  left: leftAt,
+  leader = true,
+  anchor = 'phone',
+  alert = {},
+  mood = 'day',
+  scene,
+}) => {
+  const frame = useCurrentFrame();
+  const {fps, width, height} = useVideoConfig();
+  const L = useLayout();
+  scene = {...scene, props: withFormat(scene.props, L.format)};
+  const ASPECT = 1.5;
+  const innerW = fitWidth(L, sizeIn ?? 360, ASPECT, side === 'left', top);
+  const innerH = Math.round(innerW * ASPECT);
+  const ref = useRef<HTMLCanvasElement>(null);
+  const st = crashAlertAt(alert, frame / fps);
+  const key = `${crashAlertKey(st)}|${innerW}`;
+  useLayoutEffect(() => {
+    const handle = delayRender('Drawing the crash alert');
+    fontsReady().then(() => {
+      const cx = ref.current?.getContext('2d');
+      if (cx) drawCrashAlert(cx, innerW, innerH, st);
+      continueRender(handle);
+    });
+    // `key` captures everything the drawing depends on
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
+  const target = anchorOnScreen({...scene, props: scene.props as Record<string, unknown>}, anchor, frame, fps);
+  const {ink, paper} = overlayInk(mood);
+  const outerW = innerW + 2 * BORDER;
+  const outerH = innerH + 2 * BORDER;
+  const onLeft = (side ?? (target && target[0] > width / 2 ? 'left' : 'right')) === 'left';
+  const left = leftAt ?? (onLeft ? L.left : L.right - outerW);
+  const boxTop = top ?? boxTopFor(L, left, outerW, outerH, () => Math.max(328, Math.min(1248 - outerH, (target ? target[1] : height / 2) - 70 - outerH)));
+  const enter = ease(frame, 0, DETAIL_FADE);
+  const rise = interpolate(enter, [0, 1], [8, 0]);
+  const by = boxTop + outerH;
+  const under = target ? target[0] >= left + 12 && target[0] <= left + outerW - 12 : false;
+  // beside the box (the phone level with it): out of the box's near side straight across; below it: an elbow down
+  const besideY = target && target[1] > boxTop + 24 && target[1] < by - 24;
+  const sideX = target && target[0] < left ? left : left + outerW;
+  const lx = onLeft ? left + outerW - 28 : left + 28;
+  const points = !target
+    ? ''
+    : besideY
+      ? `${sideX},${target[1]} ${target[0] + (target[0] < left ? 12 : -12)},${target[1]}`
+      : under
+        ? `${target[0]},${by} ${target[0]},${Math.max(by, target[1] - 12)}`
         : `${lx},${by} ${lx},${target[1]} ${target[0] + (lx < target[0] ? -12 : 12)},${target[1]}`;
   return (
     <div style={{position: 'absolute', inset: 0, opacity: enter}}>

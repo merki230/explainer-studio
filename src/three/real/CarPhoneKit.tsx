@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import {MOODS, REAL, section, type Mood} from '../../theme';
 import {raw, roundedBox} from '../plaster';
 import {PhoneTeardown} from './PhoneTeardown';
+import type {SensorLanesKeys} from './SensorLanes';
 import {REAL_PHONE, RealPhone} from './RealPhone';
 
 type V3 = [number, number, number];
@@ -88,6 +89,13 @@ export type CupPhoneProps = {
   motion?: {lid: number; swing: number};
   /** Which face comes off (`RealPhone` `openSide`): the one toward the camera. Default 'front'. */
   openSide?: 'front' | 'back';
+  /** No. 020: the crash-sensing parts on the board (`PhoneTeardown` `sensors`). Default false. */
+  sensors?: boolean;
+  /**
+   * No. 020: the sensor lanes over the board (`SensorLanes`): their keys, the clock and the phone units per screen pixel.
+   * Drawn while the phone is open (through the back too: RealPhone turns the board, so the lanes read left to right).
+   */
+  lanes?: {keys: SensorLanesKeys; t: number; unitPerPx: number; onTop?: boolean};
 };
 
 /** The cupholder phone (see the file comment). */
@@ -100,6 +108,8 @@ export const CupPhone: React.FC<CupPhoneProps> = ({
   open,
   motion,
   openSide = 'front',
+  sensors = false,
+  lanes,
 }) => {
   const display = useMemo(() => new THREE.MeshBasicMaterial({color: raw(REAL.panelOff), toneMapped: false}), []);
   useEffect(() => () => display.dispose(), [display]);
@@ -109,7 +119,18 @@ export const CupPhone: React.FC<CupPhoneProps> = ({
   return (
     <group position={position} quaternion={quaternion}>
       <RealPhone scale={s} display={display} open={Math.max(0, Math.min(1, open))} openSide={openSide} shadows>
-        {open > 0.001 ? <PhoneTeardown motion={motion} /> : null}
+        {open > 0.001 ? (
+          sensors || lanes ? (
+            // RealPhone turns the board round for the back, so it reads left to right from that side too
+            <PhoneTeardown
+              motion={motion}
+              sensors
+              lanes={lanes ? {...lanes, mood, opacity: Math.max(0, Math.min(1, (open - 0.55) / 0.4))} : undefined}
+            />
+          ) : (
+            <PhoneTeardown motion={motion} />
+          )
+        ) : null}
       </RealPhone>
       {/* the § 3 screen light, on the face it turns to (Figure's call-phone values) */}
       <pointLight

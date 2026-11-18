@@ -93,7 +93,8 @@ export type PoseName =
   | 'nod-off'
   | 'jolt'
   | 'lean'
-  | 'hunch';
+  | 'hunch'
+  | 'sit-back';
 export const POSE_NAMES: PoseName[] = [
   'idle',
   'scroll',
@@ -108,6 +109,7 @@ export const POSE_NAMES: PoseName[] = [
   'jolt',
   'lean',
   'hunch',
+  'sit-back',
 ];
 
 /** Every joint as a delta from rest. Angles in radians, Euler [x pitch (forward +), y yaw (to +x), z roll]. */
@@ -176,6 +178,8 @@ const FIXED: Record<Exclude<PoseName, 'look-up' | 'turn-to'>, PoseParams> = {
   }),
   // A look down from whatever came before (e.g. back to the phone after a look up).
   'glance-down': base({neck: [0.05, 0, 0], head: [0.2, 0, 0], scroll: 0.1}),
+  // No. 020: sitting back upright against the seat after a crash, head level, eyes clear (hands: Figure `hands`, e.g. the lap).
+  'sit-back': base({spine: [-0.15, 0, 0], chest: [-0.07, 0, 0], neck: [-0.04, 0, 0], head: [-0.1, 0, 0], scroll: 0, eyesUp: 0.04}),
   // Driving (No. 002): sitting up, eyes on the road ahead (hands: Figure `hands`, on the wheel).
   drive: base({spine: [-0.05, 0, 0], chest: [-0.03, 0, 0], neck: [-0.04, 0, 0], head: [-0.24, 0, 0], scroll: 0, eyesUp: 0.06}),
   // Leaning in to read a tire gauge (No. 002's Lab extras; hands: Figure `hands`, at the valve).

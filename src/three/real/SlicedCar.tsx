@@ -11,6 +11,7 @@ import {raw, roundedBox} from '../plaster';
 import {
   CAR_LAYOUT,
   carLayout,
+  carSilhouette,
   chargePortAt,
   cutSetOf,
   lowCabin,
@@ -58,6 +59,26 @@ import {SECTION_ANGLE} from '../section/SectionCamera';
 import {useFontsLoaded} from '../section/useFontsLoaded';
 import {PULSE_LIFE, RadioPulse, WireWind} from '../TirePieces';
 import {hazardLevel} from './hazard';
+import {
+  Airbag,
+  airbagPush,
+  airbagState,
+  alarmArcs,
+  cabinOutline,
+  contactPitch,
+  insidePoly,
+  keepRuns,
+  LeadCar,
+  outsideFigures,
+  pressureRings,
+  seatedCapsules,
+  soundArcs,
+  type AirbagKeys,
+  type LeadCarKeys,
+} from './CrashKit';
+import {arcPts, InkRibbons, metresPerPx, type Stroke} from './inkStrokes';
+import type {SensorLanesKeys} from './SensorLanes';
+import {REAL_PHONE} from './RealPhone';
 import {capRevs, cappedTravel, spokesOf, wheelMode, wheelSmear, type WheelMode} from './wheelMotion';
 import {ease, integrateSpeed, keyedValue, speedAt, type Keyed, type SpeedKey} from '../../scenes/keyframes';
 
@@ -776,6 +797,50 @@ export type SlicedCarOptions = {
   thermometer?: InkGaugeKeys | null;
   /** No. 017 (N4): the in-set ink range-left gauge beside the pack (ticks stepping down, refillable). Null for none. */
   rangeGauge?: InkGaugeKeys | null;
+  /**
+   * No. 020 (N1): the stopped car ahead in YOU's lane, whole, in road space (see `LeadCarKeys`): contact when YOU's nose
+   * reaches its bumper (`contactAt`; give YOU a hard-stop speed key there, e.g. `{at, speed: 0, ramp: 0.08}`), YOU's car
+   * pitching ≤ 1.5° and the lead rocking ≤ 1° over 0.6 s, no deformation. Null for none (default).
+   */
+  lead?: LeadCarKeys | null;
+  /**
+   * No. 020 (owner sensitivity): the driver's posture after the crash. From `sitBackAt` (s) the driver sits back upright
+   * against the seat (rig pose 'sit-back': head level, eyes clear) over 0.8 s, the hands go to rest on the thighs (`hands`
+   * 'lap', default) or stay on the wheel ('wheel'), and (`moves`, default true) a small seeded shift of a hand every 1.9 s
+   * on the world's clock, so it holds inside a held instant. Null: none (default).
+   */
+  posture?: {sitBackAt: number; hands?: 'lap' | 'wheel'; moves?: boolean} | null;
+  /** No. 020 (N2): the driver's front airbag (see `AirbagKeys`), on its own clock; the driver pushed back ≤ 3 cm. Null: none. */
+  airbag?: AirbagKeys | null;
+  /**
+   * No. 020 (§ 8 Held instant): from `at` the world's time eases 1 → 0 over `ease` (default 0.3 s, cubic out): road, wheels,
+   * engine, lamps' blink, the cast's breath and blinks, the lead car all hold. The camera, the system's marks, the airbag
+   * and the ink waves keep their own clocks. `outAt`: eases back to 1 (default never: leave by a slide). Null: none.
+   */
+  held?: SlicedCarHeld | null;
+  /** No. 020 (N5): ink waves (§ 5 Physical events in ink; see `SlicedCarInkWaves`). Null for none (default). */
+  inkWaves?: SlicedCarInkWaves | null;
+};
+
+/** No. 020: the held instant's keys (see `SlicedCarOptions.held`). */
+export type SlicedCarHeld = {at: number; ease?: number; outAt?: number | null};
+
+/**
+ * No. 020 (N5): the ink waves, seconds into the scene (each on its own clock, so they run inside a held instant):
+ *  - `pressure`: 3 rings from the airbag (or a car-frame point) in the plane through the bag's near side parallel to the cut face, clipped to
+ *    the cabin's inner outline (windshield, headliner, rear glass, floor), never past the cut plane; `reach` (default 1.1 m,
+ *    so they read inside a sedan cabin: at 2.2 m, cubic out, a ring was past the glass within 2 frames) and `life` (0.6 s);
+ *  - `sound`: 3 short 60° arcs (`chordPx` long on screen, default 140) travelling from the direction of the car's nose (or a
+ *    car-frame point) to the cupholder phone's bottom edge (the mic), bulging toward it; `travel` m of the way shown
+ *    (default a quarter of the camera distance: from about the frame's edge);
+ *  - `alarm`: the phone's alarm arcs, a pair either side every 0.6 s from `at` until `until`, the siren's whoop from `whoopAt`;
+ *    `sides` 'left' | 'right' draws one side only (on screen), to keep clear of a detail box on the other (default 'both').
+ * All masked ≥ 16 px from the driver's silhouette.
+ */
+export type SlicedCarInkWaves = {
+  pressure?: {at: number; from?: 'airbag' | V3; reach?: number; life?: number}[];
+  sound?: {at: number; from?: 'nose' | V3; travel?: number; chordPx?: number}[];
+  alarm?: {at: number; until?: number | null; whoopAt?: number | null; sides?: 'both' | 'left' | 'right'}[];
 };
 
 /**
@@ -951,6 +1016,12 @@ export type SlicedCarCupPhone = {
   mount?: 'cup' | 'dash';
   /** Where the cupholder (or the mount's foot, on the dash top) is (car frame, m; default from the layout and `mount`). */
   at?: V3;
+  /**
+   * No. 020: which cupholder: 'back' (default, No. 012: between the seat backs, clear at the wide framings) or 'front' (at
+   * the console's front, by the driver's knee under the dash: the one the fixed camera sees past the seat at close
+   * framings, so the open phone and its lanes read).
+   */
+  cup?: 'back' | 'front';
   /** Draw the centre console with its cupholder (default true for 'cup', false for 'dash'). */
   console?: boolean;
   /**
@@ -999,6 +1070,40 @@ export type SlicedCarCupPhone = {
   closeAt?: number | null;
   /** × the mass's swing per m/s² of the car's acceleration (🎭; default 0.35: ≈ 3 m/s² swings it fully). */
   massGain?: number;
+  /** No. 020: the proof mass's swing, −1 → 1, a constant or keys, instead of the car's acceleration (e.g. held full through a held instant). */
+  massSwing?: Keyed;
+  /** No. 020 (N3): the crash-sensing parts on the board (GPS, barometer, microphone, sensor hub). Default: with `lanes`. */
+  sensors?: boolean;
+  /** No. 020 (N3): the four sensor lanes drawn on the open board (see `SensorLanesKeys`). Null for none (default). */
+  lanes?: SensorLanesKeys | null;
+  /**
+   * No. 020 (N4): orange rings (the 911 call, the system) rise from the phone from `ringsAt` every `ringEvery` s (default
+   * 0.8) until `ringsUntil`, up through the roof cut into the sky, fading as they grow. They lean toward `ringOffset` (car
+   * frame, m; default 0.25 back and 0.25 toward the console's far side, or with the 'front' cup 0.3 forward and 0.2 across)
+   * so the column stays clear of the driver's head.
+   */
+  ringsAt?: number | null;
+  ringEvery?: number;
+  ringsUntil?: number;
+  ringOffset?: V3;
+  /** No. 020 (N4): small orange dots (the texts) rising the same way, one per time (s), leaving the frame top. */
+  sends?: number[];
+  /**
+   * No. 020 (N6): the drop. From `dropAt` the phone slips from the hand and falls (0.35 s, gravity), bounces once and comes
+   * to rest on the driver's floor mat by the cut, leaning on the seat's side with its screen toward the camera (`dropTo`:
+   * the resting foot, car frame); its screen sleeps (0.3 s) unless `screen` is keyed; the hand returns to rest. `cutAt` works
+   * where it lies. Null: none (default).
+   */
+  dropAt?: number | null;
+  dropTo?: V3;
+  /**
+   * No. 020: the object cut-away floating (§ 3 Object cut-aways: "floating like a slice"), 0 (in its cupholder) → 1, a
+   * constant or keys (eased between them): the phone rises `floatBy[0]` m and comes `floatBy[1]` m toward the camera
+   * (default `FLOAT_BY.board` [0.15, 1.0]: clear of the seat side, the driver behind it; `FLOAT_BY.clear` [1.3, 0.9]: up in
+   * the sky band, no person behind it, for an emergency countdown); key it back to 0 to settle it in the cupholder. Default 0.
+   */
+  float?: Keyed;
+  floatBy?: [number, number];
 };
 
 /** The pick-up's progress at t: `reach` 0 → 1 (hand from the wheel to the cupholder) and `lift` 0 → 1 (cupholder to chest). */
@@ -1023,6 +1128,7 @@ export const cupholderOf = (p: Partial<SlicedCarOptions>): V3 => {
   if (p.cupPhone?.at) return p.cupPhone.at;
   const lay = layoutOf(p);
   if (p.cupPhone?.mount === 'dash') return dashMountOf(p);
+  if (p.cupPhone?.cup === 'front') return [lay.driver[0] + 0.5, lay.driver[1] + seatRise(p.shape) + 0.5, 0];
   return [lay.driver[0] - 0.02, lay.driver[1] + seatRise(p.shape) + 0.5, 0];
 };
 
@@ -1056,6 +1162,83 @@ const shot = (times: number[] | undefined, t: number, dur: number) =>
  * front of the chest, the screen to the eyes (style guide § 3), the top tipped forward.
  */
 export const cupPhonePose = (p: Partial<SlicedCarOptions>, t: number) => {
+  const d = p.cupPhone?.dropAt;
+  const pose = d == null || t <= d ? cupPhonePoseBase(p, t) : droppedPose(p, t, d);
+  const f = p.cupPhone?.float === undefined ? 0 : Math.max(0, Math.min(1, keyedValue(p.cupPhone.float, t, 0)));
+  if (f > 0) {
+    pose.pos.add(floatOffset(p).multiplyScalar(f));
+    // § 3 phones face their owners: floated toward the camera it stands upright (long axis on world up, at any float
+    // height) and only yaws so its screen faces the driver's side, its back to the camera
+    const lay = layoutOf(p);
+    const n = new THREE.Vector3(lay.driver[0] + 0.09 - pose.pos.x, 0, lay.driver[2] - pose.pos.z);
+    if (n.lengthSq() < 1e-6) n.set(0, 0, -1);
+    n.normalize();
+    const up = new THREE.Vector3(0, 1, 0);
+    const qf = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(up.clone().cross(n).normalize(), up, n));
+    pose.q.slerp(qf, f);
+    pose.n.set(0, 0, 1).applyQuaternion(pose.q);
+    pose.up.set(0, 1, 0).applyQuaternion(pose.q);
+  }
+  return pose;
+};
+
+/**
+ * No. 020: the floated cut-away's offset (car frame): up out of the cupholder and toward the camera along the fixed view, so
+ * the open phone floats clear of the driver like a slice (§ 3 Object cut-aways). `floatBy` overrides [up, toward camera].
+ */
+export const FLOAT_BY = {
+  /** In front of the driver's seat side, the driver behind it (the lanes at `board`). */
+  board: [0.15, 1.0] as [number, number],
+  /** Up past the cabin into the sky band: nothing of the driver behind it (the person-free countdown at `cupClear`). */
+  clear: [1.3, 0.9] as [number, number],
+};
+export const floatOffset = (p: Partial<SlicedCarOptions>) => {
+  const [up, toward] = p.cupPhone?.floatBy ?? FLOAT_BY.board;
+  const v = viewCarOf(isLeft(p));
+  return new THREE.Vector3(v[0] * toward, up + v[1] * toward, v[2] * toward);
+};
+
+/** No. 020 (N6): where a dropped phone comes to rest (car frame): its foot, its centre and its turn. */
+export const dropRest = (p: Partial<SlicedCarOptions>) => {
+  const lay = layoutOf(p);
+  const V = (v: V3) => new THREE.Vector3(...v);
+  // on the floor mat (the driver figure's origin is on the floor) by the cut, ahead of the seat's front edge
+  const foot = V(p.cupPhone?.dropTo ?? [lay.driver[0] + 0.24, C.floor + 0.012, Math.min(C.cutZ - 0.13, lay.driver[2] + 0.3)]);
+  // leaning back on the seat's side, its screen up toward the cut (the camera's side), a little turned
+  const lean = 0.55;
+  const n = V([0, Math.sin(lean), Math.cos(lean)]).applyAxisAngle(V([0, 1, 0]), 0.3).normalize();
+  const up = V([0, Math.cos(lean), -Math.sin(lean)]).applyAxisAngle(V([0, 1, 0]), 0.3).normalize();
+  const pos = foot.clone().add(up.clone().multiplyScalar(CUP_PHONE.h / 2)).add(n.clone().multiplyScalar(CUP_PHONE.d / 2));
+  const q = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(up.clone().cross(n).normalize(), up, n));
+  return {foot, pos, q, n, up};
+};
+
+/** No. 020 (N6): the phone falling from the hand (0.35 s, gravity), one small bounce, then at rest (`dropRest`). */
+const droppedPose = (p: Partial<SlicedCarOptions>, t: number, d: number) => {
+  const c = p.cupPhone ?? {};
+  const base = cupPhonePoseBase(p, d);
+  const rest = dropRest(p);
+  const FALL = 0.35;
+  const u = Math.min(1, (t - d) / FALL);
+  const pos = base.pos.clone().lerp(rest.pos, u);
+  pos.y = base.pos.y + (rest.pos.y - base.pos.y) * u * u;
+  const after = t - d - FALL;
+  if (after > 0 && after < 0.22) pos.y += 0.022 * Math.sin((Math.PI * after) / 0.22);
+  const q = base.q.clone().slerp(rest.q, ease(u, 0, 1));
+  const tumble = Math.sin(Math.PI * u) * 0.5;
+  if (tumble) q.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), tumble));
+  const n = new THREE.Vector3(0, 0, 1).applyQuaternion(q);
+  const up = new THREE.Vector3(0, 1, 0).applyQuaternion(q);
+  // the empty hand stays a moment, then returns to rest
+  const reach = base.reach * (1 - ease(t, d + 0.25, d + 0.75));
+  const screen =
+    c.screen === undefined
+      ? base.screen * (1 - ease(t, d + 0.45, d + 0.75))
+      : Math.max(0, Math.min(1, keyedValue(c.screen, t, 0)));
+  return {pos, q, n, up, grip: base.grip, reach, lift: base.lift, screen};
+};
+
+const cupPhonePoseBase = (p: Partial<SlicedCarOptions>, t: number) => {
   const c = p.cupPhone ?? {};
   const lay = layoutOf(p);
   const seatUp = seatRise(p.shape);
@@ -1296,8 +1479,26 @@ export const drivingOf = (p: Partial<SlicedCarOptions>): SpeedKey[] =>
     },
   ];
 
-/** The rate everything on the road plays at, t s into the scene (`timeScale`). */
-export const rateAt = (p: Partial<SlicedCarOptions>, t: number) => Math.max(0, keyedValue(p.timeScale, t, 1));
+/** No. 020: the held instant's rate at t (1 → 0, cubic out over `ease`; back to 1 from `outAt`). */
+export const heldRate = (h: SlicedCarHeld | null | undefined, t: number) => {
+  if (!h) return 1;
+  const e = Math.max(0.01, h.ease ?? 0.3);
+  const co = (x: number) => 1 - (1 - Math.max(0, Math.min(1, x))) ** 3;
+  return 1 - co((t - h.at) / e) * (1 - (h.outAt == null ? 0 : co((t - h.outAt) / e)));
+};
+
+/** No. 020: the world's clock under a held instant (s): ∫ `heldRate` dt from the scene's start (t itself without one). */
+export const heldClock = (h: SlicedCarHeld | null | undefined, t: number) => {
+  if (!h || t <= h.at) return t;
+  const STEP = 1 / 120;
+  let a = h.at;
+  for (let x = h.at; x < t; x += STEP) a += heldRate(h, x + Math.min(STEP, t - x) / 2) * Math.min(STEP, t - x);
+  return a;
+};
+
+/** The rate everything on the road plays at, t s into the scene (`timeScale`, and No. 020's held instant). */
+export const rateAt = (p: Partial<SlicedCarOptions>, t: number) =>
+  p.held ? Math.max(0, keyedValue(p.timeScale, t, 1)) * heldRate(p.held, t) : Math.max(0, keyedValue(p.timeScale, t, 1));
 
 /** The wheels' turn (rev) at t: ∫ speed × playback rate (a fixed-step sum, deterministic). */
 export const simRevs = (p: Partial<SlicedCarOptions>, t: number, fps = 30) => {
@@ -1311,7 +1512,7 @@ export const simRevs = (p: Partial<SlicedCarOptions>, t: number, fps = 30) => {
       : p.road === 'highway'
         ? speedAt(drv, 0, 0.8) * rateAt(p, 0) * ((p.startFrame ?? 0) / fps)
         : 0;
-  if (p.timeScale === undefined || p.timeScale === 1) return before + integrateSpeed(drv, t, 0.8);
+  if ((p.timeScale === undefined || p.timeScale === 1) && !p.held) return before + integrateSpeed(drv, t, 0.8);
   const STEP = 1 / 120;
   let a = 0;
   for (let x = 0; x < t; x += STEP) {
@@ -1553,6 +1754,10 @@ const routeFor = (id: WheelId, from: V3): V3[][] => {
 const RING_LIFE = PULSE_LIFE;
 /** How fast a call ring's centre rises (m/s): up through the cut roof, the location going out. */
 const RING_RISE = 0.9;
+/** No. 020: the cupholder phone's rings live longer and rise faster, out through the roof cut into the sky. */
+const CUP_RING = {life: 1.6, rise: 1.5};
+/** The view direction in the car's own frame (mirrored with it). */
+const viewCarOf = (left: boolean): V3 => (left ? [-SECTION_ANGLE[0], SECTION_ANGLE[1], SECTION_ANGLE[2]] : SECTION_ANGLE);
 
 /** The cluster's hazard arrows (No. 009): two green triangles on a clear canvas, drawn once. */
 const hazardArrows = (() => {
@@ -2117,6 +2322,9 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
       // No. 012: the phone's node dot, drawn over the cabin with its feel arrow
       nodeTop: new THREE.MeshBasicMaterial({color: raw(section.orange), depthTest: false, transparent: true}),
       nodeOff: new THREE.MeshStandardMaterial({color: raw(section.ledOff), roughness: 0.4}),
+      // No. 020: the texts' rising dots
+      sendCore: new THREE.MeshBasicMaterial({color: raw(section.orange), transparent: true, depthWrite: false}),
+      sendHalo: new THREE.MeshBasicMaterial({color: raw(section.orange), transparent: true, depthWrite: false, opacity: 0.25}),
       // the highway: interstate asphalt with the white edge line and the milled row, along x
       asphalt: wet
         ? asphaltMaterial(
@@ -2266,6 +2474,7 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
   const gestures: Gesture[] = [
     {pose: 'drive', at: -1},
     ...(glanceAt === null ? [] : [{pose: 'glance-down' as const, at: glanceAt, hold: 1.4}]),
+    ...(props.posture ? [{pose: 'sit-back' as const, at: props.posture.sitBackAt, blend: 0.8}] : []),
     ...(props.gestures ?? []),
     ...(props.glances ?? []).map((g) =>
       g.to === 'down'
@@ -2290,8 +2499,13 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
           .filter((r): r is {at: number; age: number} => r !== null && r.age >= 0 && r.age < RING_LIFE);
   const phoneDot = ringsAt !== null && t >= ringsAt;
   const hazardAtOn = props.hazardAt != null && !(props.shape === 'coupe' && props.coupeStyle);
+  // No. 020: under a held instant the world's clock (lamps' blink, the cast's idle life) holds with it
+  const heldOn = props.held ?? null;
+  const worldT = heldOn ? heldClock(heldOn, t) : t;
   const hazard =
-    props.hazardAt == null ? 0 : hazardLevel((startFrame + frame) / fps, (startFrame + props.hazardAt * fps) / fps);
+    props.hazardAt == null
+      ? 0
+      : hazardLevel(heldOn ? startFrame / fps + worldT : (startFrame + frame) / fps, (startFrame + props.hazardAt * fps) / fps);
   // the vibration path (highway): draw progress, glow, and the hands' buzz once it reaches the wheel
   const vib = hw && props.vibration ? props.vibration : null;
   const vibWheelAt = vib ? (vib.wheelAt ?? vib.at + 1.7) : 0;
@@ -2659,11 +2873,41 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
   // No. 012: the cupholder phone's holding hand may rest on the near thigh instead of the wheel
   const restLap = props.cupPhone?.rest === 'lap';
   const lapHand: V3 = [(props.cupPhone?.hand ?? 'near') === 'near' ? -0.14 : 0.14, 0.66 + seatUp, 0.36];
-  const handsWheel: [V3, V3] = restLap
+  const handsWheel1: [V3, V3] = restLap
     ? (props.cupPhone?.hand ?? 'near') === 'near'
       ? [lapHand, handsWheel0[1]]
       : [handsWheel0[0], lapHand]
     : handsWheel0;
+  // No. 020: sitting back, the hands to the thighs, with a small shift of one hand every 1.9 s (world clock)
+  const handsWheel: [V3, V3] = (() => {
+    const po = props.posture;
+    if (!po) return handsWheel1;
+    const k = ease(t, po.sitBackAt, po.sitBackAt + 0.8);
+    if (k <= 0) return handsWheel1;
+    const shift = (i: number): V3 => {
+      if (po.moves === false) return [0, 0, 0];
+      const since = worldT - po.sitBackAt - 0.8;
+      if (since <= 0) return [0, 0, 0];
+      const n = Math.floor(since / 1.9);
+      const at = (m: number): V3 =>
+        m < 0 || m % 2 !== i ? [0, 0, 0] : [(random(`sitback-x-${m}`) - 0.5) * 0.08, 0.02 * random(`sitback-y-${m}`), (random(`sitback-z-${m}`) - 0.5) * 0.08];
+      const a = at(n - 1);
+      const b = at(n);
+      const u = ease(since - n * 1.9, 0, 0.5);
+      return [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u, a[2] + (b[2] - a[2]) * u];
+    };
+    const lap: [V3, V3] = [
+      [-0.14, 0.66 + seatUp, 0.38],
+      [0.14, 0.66 + seatUp, 0.38],
+    ];
+    const goal: [V3, V3] = (po.hands ?? 'lap') === 'lap' ? lap : handsWheel1;
+    return [0, 1].map((i) => {
+      const s0 = handsWheel1[i];
+      const g = goal[i];
+      const d = shift(i);
+      return [s0[0] + (g[0] + d[0] - s0[0]) * k, s0[1] + (g[1] + d[1] - s0[1]) * k, s0[2] + (g[2] + d[2] - s0[2]) * k] as V3;
+    }) as [V3, V3];
+  })();
   // No. 012: the cupholder phone; its holding hand leaves the wheel for the phone's grip (figure-local)
   const cp = props.cupPhone ? props.cupPhone : null;
   const cpPose = cp ? cupPhonePose(props, t) : null;
@@ -2705,7 +2949,11 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
       ? ease(t, cpChipAt, cpChipAt + 0.4) * (cp.closeAt == null ? 1 : 1 - ease(t, cp.closeAt, cp.closeAt + 0.4))
       : 0;
   // the proof mass lags the car: it swings against the acceleration, along the phone's width
-  const cpSwing = cpWorld ? -slicedCarAccel(props, t) * (cp?.massGain ?? 0.35) * cpWorld.x.x * dir : 0;
+  const cpSwing = cpWorld
+    ? cp?.massSwing !== undefined
+      ? keyedValue(cp.massSwing, t, 0)
+      : -slicedCarAccel(props, t) * (cp?.massGain ?? 0.35) * cpWorld.x.x * dir
+    : 0;
   const cpDot = !!cp && cp.dotAt != null && t >= cp.dotAt;
   const cpDotSwell = cp ? 1 + 0.7 * shot(cp.pulses, t, 0.5) : 1;
   // the node dot sits just above the phone's top edge; the feel arrow leaves from it
@@ -2749,6 +2997,141 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
         };
       })
     : [];
+
+  // ---- No. 020: the crash (lead car, contact pitch, airbag, ink waves) and the cupholder phone's call
+  const leadK = props.lead ?? null;
+  const impactK = leadK && leadK.contactAt != null ? contactPitch(worldT - leadK.contactAt) : 0;
+  const leadSt = leadK
+    ? (() => {
+        const noseX = Math.max(...carSilhouette(props.shape).body.map((q) => q[0]));
+        const tailX = -Math.min(...carSilhouette(leadK.shape ?? 'sedan').body.map((q) => q[0]));
+        const dNow = distance;
+        const ca = leadK.contactAt ?? null;
+        const gap = ca !== null ? Math.max(0, distAt(ca) - dNow) : Math.max(0, (leadK.gap ?? 6) - (dNow - distAt(0)));
+        const pushed = ca !== null && t > ca ? Math.max(0, dNow - distAt(ca)) : 0;
+        const st = leadK.stepOutAt != null && t >= leadK.stepOutAt + 0.5;
+        const hz =
+          leadK.hazardAt == null
+            ? 0
+            : hazardLevel(heldOn ? startFrame / fps + worldT : (startFrame + frame) / fps, (startFrame + leadK.hazardAt * fps) / fps);
+        return {
+          x: dir * (noseX + gap + tailX),
+          rock: ca !== null ? 0.0175 * contactPitch(worldT - ca) : 0,
+          travelled: pushed,
+          brake: st ? hz : Math.max(0, Math.min(1, keyedValue(leadK.brake, t, 1))),
+          hazard: hz,
+        };
+      })()
+    : null;
+  // the road runs on ≥ 2 m past the lead car's front bumper (its widest gap is at the scene's start; + the ≤ 0.3 m push),
+  // fixed for the whole scene so its end never moves
+  const roadAheadEff = (() => {
+    const base = props.roadAhead ?? (ev ? 14 : 5);
+    if (!leadK) return base;
+    const noseX = Math.max(...carSilhouette(props.shape).body.map((q) => q[0]));
+    const lb = carSilhouette(leadK.shape ?? 'sedan').body.map((q) => q[0]);
+    const leadLen = Math.max(...lb) - Math.min(...lb);
+    const ca = leadK.contactAt ?? null;
+    const gap0 = ca !== null ? Math.max(0, distAt(ca) - distAt(0)) : Math.max(0, leadK.gap ?? 6);
+    return Math.max(base, noseX + gap0 + 0.3 + leadLen + 2);
+  })();
+  const bag = airbagState(props.airbag, t);
+  const bagPush = airbagPush(props.airbag, t);
+  const bagHub: V3 = [lay.steering[0] - 0.03, lay.steering[1], lay.steering[2]];
+  const waves = props.inkWaves ?? null;
+  const maskCaps = props.driverShown === false || strip ? [] : seatedCapsules([lay.driver[0] - bagPush, lay.driver[1], lay.driver[2]], seatUp);
+  const maskMargin = metresPerPx(camD) * (16 + 5);
+  const pressureStrokes: Stroke[] = (() => {
+    if (!waves?.pressure?.length) return [];
+    const cs = cutSetOf(props.shape);
+    const outline = cs
+      ? cabinOutline({floor: C.floor + 0.03, ws: cs.ws, roofCut: cs.roofCut, roofX: cs.roofX, backlight: cs.backlight, benchBackX: cs.bench.back[0]})
+      : ([
+          [-1.5, C.floor + 0.03],
+          [1.0, C.floor + 0.03],
+          [1.0, lay.roofCut - 0.05],
+          [-1.5, lay.roofCut - 0.05],
+        ] as [number, number][]);
+    const keepFig = outsideFigures(maskCaps, viewCarOf(left), maskMargin);
+    return waves.pressure.flatMap((w) => {
+      // the plane through the bag's near side (still through the bag): its centre plane lies behind the driver from the
+      // fixed camera, where the body hides every ring; this one sits between them, masked 16 px off the silhouette
+      const src: V3 = w.from === undefined || w.from === 'airbag' ? [bagHub[0] - 0.16, bagHub[1], Math.min(C.cutZ - 0.05, bagHub[2] + 0.2)] : w.from;
+      return pressureRings(t - w.at, {reach: w.reach ?? 1.1, life: w.life ?? 0.6}).flatMap((ring) =>
+        keepRuns(arcPts(src, ring.r, [1, 0, 0], [0, 1, 0], 0, Math.PI * 2, 160), (q) => insidePoly(outline, q[0], q[1]) && keepFig(q)).map(
+          (pts) => ({pts, alpha: ring.alpha}),
+        ),
+      );
+    });
+  })();
+  const waveStrokes: Stroke[] = (() => {
+    if (!waves || !cpWorld) return [];
+    const out: Stroke[] = [];
+    const w = new THREE.Vector3(...SECTION_ANGLE).normalize();
+    const flat = (v: THREE.Vector3) => v.clone().sub(w.clone().multiplyScalar(v.dot(w)));
+    const capsW = maskCaps.map((c) => ({a: toWorld(props, c.a), b: toWorld(props, c.b), r: c.r}));
+    const keepFig = outsideFigures(capsW, SECTION_ANGLE, maskMargin);
+    const ph = new THREE.Vector3(...cpWorld.pos);
+    for (const sw of waves.sound ?? []) {
+      const src = new THREE.Vector3(...toWorld(props, sw.from === undefined || sw.from === 'nose' ? [Math.max(...carSilhouette(props.shape).body.map((q) => q[0])), 0.75, 0] : sw.from));
+      const rec = ph.clone().sub(cpWorld.up.clone().multiplyScalar(CUP_PHONE.h / 2));
+      const dv = flat(rec.clone().sub(src));
+      const D = dv.length();
+      const u = dv.clone().normalize();
+      const v = w.clone().cross(u).normalize();
+      const travel = Math.min(D, sw.travel ?? 0.25 * camD);
+      // a short arc of fixed screen length (`chordPx`), bulging toward the mic, its front travelling the last `travel` m
+      const rho = metresPerPx(camD) * (sw.chordPx ?? 140);
+      for (const a of soundArcs(t - sw.at)) {
+        const front = rec.clone().sub(u.clone().multiplyScalar(travel * (1 - a.k)));
+        const c = front.clone().sub(u.clone().multiplyScalar(rho));
+        const pts = arcPts([c.x, c.y, c.z], rho, [u.x, u.y, u.z], [v.x, v.y, v.z], -Math.PI / 6, Math.PI / 3, 24);
+        keepRuns(pts, keepFig).forEach((q) => out.push({pts: q, alpha: a.alpha}));
+      }
+    }
+    const right = new THREE.Vector3(SECTION_ANGLE[2], 0, -SECTION_ANGLE[0]).normalize();
+    const upS = w.clone().cross(right).normalize();
+    for (const al of waves.alarm ?? []) {
+      if (t < al.at) continue;
+      for (const a of alarmArcs(t, al)) {
+        const r = 0.065 + a.r;
+        const sides = al.sides ?? 'both';
+        for (const a0 of [...(sides !== 'left' ? [-Math.PI / 6] : []), ...(sides !== 'right' ? [Math.PI - Math.PI / 6] : [])]) {
+          const pts = arcPts([ph.x, ph.y, ph.z], r, [right.x, right.y, right.z], [upS.x, upS.y, upS.z], a0, Math.PI / 3, 24);
+          keepRuns(pts, keepFig).forEach((q) => out.push({pts: q, alpha: a.alpha}));
+        }
+      }
+    }
+    return out;
+  })();
+  // the cupholder phone's rings and dots (world), leaning toward `ringOffset` so the column clears the head
+  const ringStart = (at: number): THREE.Vector3 => {
+    const pose = cupPhonePose(props, at);
+    const top = pose.pos.clone().add(pose.up.clone().multiplyScalar(CUP_PHONE.h / 2 + 0.06));
+    return new THREE.Vector3(...toWorld(props, [top.x, top.y, top.z]));
+  };
+  const ringOff = new THREE.Vector3(...toWorld(props, cp?.ringOffset ?? (cp?.cup === 'front' ? [0.3, 0, -0.2] : [-0.25, 0, -0.25])));
+  const ringAt = (at: number, age: number, rise: number): V3 => {
+    const c = ringStart(at).add(new THREE.Vector3(0, rise * age, 0)).add(ringOff.clone().multiplyScalar(Math.min(1, age / 0.6)));
+    return [c.x, c.y, c.z];
+  };
+  const cupRings =
+    cp && cp.ringsAt != null
+      ? [...Array(4).keys()]
+          .map((j) => {
+            const every = Math.max(0.2, cp.ringEvery ?? 0.8);
+            const n = Math.floor((t - cp.ringsAt!) / every) - j;
+            const at = cp.ringsAt! + n * every;
+            return n >= 0 && at <= (cp.ringsUntil ?? Infinity) && t - at < CUP_RING.life ? {at, age: t - at, c: ringAt(at, t - at, CUP_RING.rise)} : null;
+          })
+          .filter((r): r is {at: number; age: number; c: V3} => r !== null)
+      : [];
+  const ringW = Math.max(0.6, camD / 11);
+  const cupSends = (cp?.sends ?? []).flatMap((s0) => {
+    const age = t - s0;
+    if (age < 0 || age > 3.5) return [];
+    return [{c: ringAt(s0, age, 2.0), a: 1 - ease(age, 3.0, 3.5)}];
+  });
 
   const regenNodes: [V3, boolean][] = regen
     ? [
@@ -2900,8 +3283,8 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
           winter={props.dressing === 'winter'}
           {...(props.dressing === 'spring' ? {spring: true} : {})}
           {...(props.treeShift ? {treeShift: props.treeShift} : {})}
-          from={dir < 0 ? -(props.roadAhead ?? (ev ? 14 : 5)) : -(props.roadBehind ?? 5)}
-          to={dir < 0 ? (props.roadBehind ?? 5) : (props.roadAhead ?? (ev ? 14 : 5))}
+          from={dir < 0 ? -roadAheadEff : -(props.roadBehind ?? 5)}
+          to={dir < 0 ? (props.roadBehind ?? 5) : roadAheadEff}
           inkScale={inkK}
         />
       ) : (
@@ -2948,7 +3331,7 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
 
       {/* the car and its driver, in the car's own frame (mirrored in x when it faces left) */}
       <group scale={left ? [-1, 1, 1] : undefined}>
-        <Dip on={pedalsGas} angle={-0.022 * dip} pivot={[C.axleX.rear, R, 0]}>
+        <Dip on={pedalsGas || impactK !== 0} angle={-0.022 * dip - 0.0262 * impactK} pivot={[C.axleX.rear, R, 0]}>
           <group position={[bodyJ[0], bodyY + bodyJ[1], bodyJ[2]]}>
             <RealCar
               steeringJitter={shakeAmt > 0 ? [sj('sx', 0.004), sj('sy', 0.005), sj('sz', 0.004)] : undefined}
@@ -2999,12 +3382,12 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
             who={driver}
             mood={mood}
             look={props.driverLook}
-            position={[lay.driver[0] + bodyJ[0] + shiverOff[0], lay.driver[1] + bodyY + bodyJ[1] + seatLift + settleRock + shiverOff[1], lay.driver[2] + bodyJ[2] + shiverOff[2]]}
+            position={[lay.driver[0] + bodyJ[0] + shiverOff[0] - bagPush, lay.driver[1] + bodyY + bodyJ[1] + seatLift + settleRock + shiverOff[1], lay.driver[2] + bodyJ[2] + shiverOff[2]]}
             rotationY={Math.PI / 2}
             gestures={gestures}
             phone={false}
             hands={hands}
-            clockOffset={props.figureClock ?? startFrame / fps}
+            clockOffset={(props.figureClock ?? startFrame / fps) + (heldOn ? worldT - t : 0)}
             legs={legs}
             footScale={bay ? [1, EV_FOOT] : undefined}
             shoe={bay ? section.sneaker : undefined}
@@ -3014,6 +3397,11 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
             screenOn={props.call ? callScreen : undefined}
           />
           )}
+          {/* No. 020 (N2): the driver's front airbag from the wheel hub; (N5) the pressure rings, clipped to the cabin */}
+          {bag.bloom > 0.001 ? <Airbag hub={bagHub} bloom={bag.bloom} sag={bag.sag} /> : null}
+          {pressureStrokes.length ? (
+            <InkRibbons strokes={pressureStrokes} unitPerPx={metresPerPx(camD)} normal={[0, 0, 1]} mood={mood} />
+          ) : null}
           {/* No. 012 (R1): the centre console and its cupholder; the phone in the world (un-mirrored), its node dot, the feel arrow */}
           {cp && cp.mount === 'dash' && cpPose && !strip ? <DashMount foot={cupholderOf(props)} pose={cupPhonePose({...props, cupPhone: {...cp, pickAt: null}}, 0)} /> : null}
           {cp && (cp.console ?? cp.mount !== 'dash') && !strip ? (
@@ -3030,6 +3418,18 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
                 open={cpOpen}
                 motion={cpOpen > 0.001 ? {lid: cpLid, swing: cpSwing} : undefined}
                 openSide={new THREE.Vector3(0, 0, 1).applyQuaternion(cpWorld.q).dot(new THREE.Vector3(...SECTION_ANGLE)) >= 0 ? 'front' : 'back'}
+                {...(cp?.sensors || cp?.lanes ? {sensors: true} : {})}
+                {...(cp?.lanes
+                  ? {
+                      lanes: {
+                        keys: cp.lanes,
+                        t,
+                        unitPerPx: metresPerPx(camD) / (CUP_PHONE.h / REAL_PHONE.h),
+                        // over everything only once floated out (§ 3 cut-away); in its cupholder the seat and arms hide them
+                        onTop: (cp.float === undefined ? 0 : keyedValue(cp.float, t, 0)) > 0.5,
+                      },
+                    }
+                  : {})}
               />
               {cpTop && (cpDot || (fe && feTip && feGlow > 0.01)) ? (
                 <mesh position={cpTop} material={mats.nodeTop} userData={{glow: true}} scale={0.035 * markK * (cpDot ? cpDotSwell : 1)} renderOrder={21}>
@@ -3811,6 +4211,40 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
         </>
       ) : null}
 
+      {/* No. 020 (N4): the call's rings and the texts' dots rising from the cupholder phone through the roof into the sky */}
+      {cupRings.map((r) => (
+        <RadioPulse key={r.at.toFixed(3)} position={r.c} age={r.age} reach={0.3} weight={ringW} arc={Math.PI * 2} life={CUP_RING.life} />
+      ))}
+      {cupSends.map((d, i) => (
+        <group key={i} position={d.c}>
+          <mesh material={mats.sendCore} scale={0.032 * markK * d.a} userData={{glow: true}} renderOrder={6}>
+            <sphereGeometry args={[1, 16, 12]} />
+          </mesh>
+          <mesh material={mats.sendHalo} scale={0.064 * markK * d.a} userData={{glow: true}} renderOrder={5}>
+            <sphereGeometry args={[1, 16, 12]} />
+          </mesh>
+        </group>
+      ))}
+      {/* No. 020 (N5): the crash's sound arriving at the phone, the phone's alarm and siren (ink, never orange) */}
+      {waveStrokes.length ? (
+        <InkRibbons strokes={waveStrokes} unitPerPx={metresPerPx(camD)} normal={SECTION_ANGLE} mood={mood} />
+      ) : null}
+      {/* No. 020 (N1): the stopped car ahead */}
+      {leadSt ? (
+        <LeadCar
+          mood={mood}
+          keys={props.lead!}
+          x={leadSt.x}
+          dir={dir}
+          rock={leadSt.rock}
+          travelled={leadSt.travelled}
+          brake={leadSt.brake}
+          hazard={leadSt.hazard}
+          t={t}
+          clock={startFrame / fps + worldT}
+          lookBack={toWorld(props, [lay.driver[0], lay.driver[1] + 1.3, lay.driver[2]])}
+        />
+      ) : null}
       {/* No. 012 (R3): the event pins, popped out of the phone, standing on the road and riding it */}
       {pins.map((st, i) =>
         st && st.shown ? (

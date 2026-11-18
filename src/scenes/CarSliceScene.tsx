@@ -7,6 +7,8 @@ import {GAS} from '../three/real/GasDrive';
 import {
   cupholderOf,
   cupPhoneChipWorld,
+  cupPhonePose,
+  dropRest,
   cupPhoneWorld,
   engineCrank,
   engineTurns,
@@ -34,7 +36,8 @@ import {SectionLights, SectionStage} from '../three/section/SectionStage';
 import {skyTexture} from '../three/section/textures';
 import {raw} from '../three/plaster';
 import {wheelMode} from '../three/real/wheelMotion';
-import {MOTION_CHIP} from '../three/real/PhoneTeardown';
+import {LANE_LIFT, MOTION_CHIP, PHONE_BOARD_TOP} from '../three/real/PhoneTeardown';
+import {lanePartPoint, type LaneName} from '../three/real/SensorLanes';
 import {seatRise} from '../three/real/RealCar';
 import {framingAtKeys, type CameraKey} from './keyframes';
 
@@ -78,7 +81,14 @@ export type CarFraming =
   | 'mount'
   | 'chip'
   | 'hybrid'
-  | 'hybridFront';
+  | 'hybridFront'
+  | 'parked'
+  | 'carWide'
+  | 'crashCabin'
+  | 'cabinSky'
+  | 'cupClear'
+  | 'board'
+  | 'floor';
 
 export const CAR_FRAMINGS: Record<
   Exclude<
@@ -103,6 +113,13 @@ export const CAR_FRAMINGS: Record<
     | 'chip'
     | 'hybrid'
     | 'hybridFront'
+    | 'parked'
+    | 'carWide'
+    | 'crashCabin'
+    | 'cabinSky'
+    | 'cupClear'
+    | 'board'
+    | 'floor'
   >,
   Framing
 > = {
@@ -181,6 +198,34 @@ export const HYBRID_FRAMINGS: Partial<Record<CarFraming, Framing>> = {
   battery: {look: [0.62, 0.3, 0.6], distance: 3.4},
 };
 
+/**
+ * No. 020 (`crash-detect`): the crash framings for the gas sedan facing left (world metres; set on stills). `parked`: frame
+ * 0 and the loop, the cabin whole (head and held phone, wheel, console, the footwell by the cut). `carWide`: both cars
+ * whole (YOU's centre-right, the lead's tail at left), sky above the roof for the rings. `crashCabin`: the driver, the
+ * wheel and its airbag, the far window, the console and the phone. `cabinSky`: pulled back and up, the roof cut and the sky
+ * above it, the phone and its ring column right of centre. The phone-relative ones (`cupClear`, `board`, `floor`) are
+ * in `framingFor`.
+ */
+export const CRASH_FRAMINGS: Partial<Record<CarFraming, Framing>> = {
+  parked: {look: [-0.08, 1.0, 0.12], distance: 8.5},
+  carWide: {look: [-1.7, 1.15, 0.1], distance: 22},
+  crashCabin: {look: [-0.3, 1.0, 0.15], distance: 7.5},
+  cabinSky: {look: [-0.75, 1.75, 0.0], distance: 11},
+};
+
+/**
+ * No. 020: the phone-relative crash framings, on the floated cut-away (`cupPhone.float` 1, § 3 Object cut-aways): `cupClear`
+ * (the floated phone ≈ 30 % of the frame, left of centre so a detail box fits at the right (right edge x 888, top y 440);
+ * with `floatBy: FLOAT_BY.clear` nothing of the driver is behind it: the person-free countdown), `board` (the open phone ≈ 55 % of the frame: the four lanes, each ≥ 90 px), `floor` (the dropped
+ * phone at rest on the floor mat, opened, its lanes readable).
+ * `look`: an offset from the phone's centre (world m), `along`: an offset along the phone's up axis (m).
+ */
+export const CRASH_PHONE_FRAMINGS = {
+  cupClear: {offset: [0.05, 0.03, -0.026] as V3, along: 0, distance: 1.5},
+  board: {offset: [0, 0, 0] as V3, along: -0.022, distance: 0.82},
+  floor: {offset: [0, 0, 0] as V3, along: -0.02, distance: 0.95},
+};
+
 export type CarSliceSceneProps = SlicedCarOptions & {
   durationInFrames: number;
   /** Realistic objects (accepted for consistency; the car is always realistic). */
@@ -221,6 +266,19 @@ export const CUP_FRAMINGS = {cupholder: {distance: 2.1, lift: 0.02}, chip: {dist
 /** A framing preset for these props (EV and mirrored versions when the car faces left). */
 const framingFor = (p: Partial<CarSliceSceneProps>): Framing => {
   const name = p.framing ?? 'wide';
+  // No. 020: the phone-relative crash framings (the phone in its cupholder, or at rest where it was dropped)
+  if (name === 'cupClear' || name === 'board' || name === 'floor') {
+    const f = CRASH_PHONE_FRAMINGS[name];
+    const pose =
+      name === 'floor'
+        ? dropRest(p)
+        : cupPhonePose({...p, cupPhone: {...p.cupPhone, pickAt: null, dropAt: null, float: 1}}, 0);
+    const c = pose.pos.clone().add(pose.up.clone().multiplyScalar(f.along));
+    const w = toWorld(p, [c.x, c.y, c.z]);
+    return {look: [w[0] + f.offset[0], w[1] + f.offset[1], w[2] + f.offset[2]], distance: f.distance};
+  }
+  const crash = CRASH_FRAMINGS[name];
+  if (crash) return crash;
   if (name === 'cupholder' || name === 'mount' || name === 'chip') {
     const at =
       name === 'chip'
@@ -364,6 +422,11 @@ export const carAnchorOnScreen = (
     return projectToFrame(cameraAtFrame(p, o), p.cupPhone ? cupPhoneWorld(p, t) : slicedCarPhone(p, t));
   // No. 012: the motion sensor (the cut-away), the cupholder, the plug-in box's ghost, the driver's face (the screen light)
   if (anchor === 'chip' && p.cupPhone) return projectToFrame(cameraAtFrame(p, o), cupPhoneChipWorld(p, t, MOTION_CHIP));
+  // No. 020: the sensor lanes' parts on the open board ('lane:motion' | 'lane:gps' | 'lane:baro' | 'lane:mic') and the agree node
+  if ((anchor.startsWith('lane:') || anchor === 'agree') && p.cupPhone) {
+    const name = (anchor === 'agree' ? 'agree' : anchor.slice(5)) as LaneName | 'agree';
+    return projectToFrame(cameraAtFrame(p, o), cupPhoneChipWorld(p, t, lanePartPoint(name, PHONE_BOARD_TOP + LANE_LIFT)));
+  }
   if (anchor === 'cupholder' || anchor === 'mount') {
     const c = cupholderOf(p);
     return projectToFrame(cameraAtFrame(p, o), toWorld(p, c));

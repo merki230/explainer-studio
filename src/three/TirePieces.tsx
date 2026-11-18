@@ -24,7 +24,9 @@ export const RadioPulse: React.FC<{
   weight?: number;
   /** How much of the ring is drawn (radians), centred on the top (default 2π: whole). π: the upper half, for a source on the ground. */
   arc?: number;
-}> = ({position, age, reach = 0.9, weight = 1, arc = Math.PI * 2}) => {
+  /** No. 020: seconds the pair lives (default `PULSE_LIFE`), for rings that rise far (out of a car into the sky). */
+  life?: number;
+}> = ({position, age, reach = 0.9, weight = 1, arc = Math.PI * 2, life = PULSE_LIFE}) => {
   const ring = useMemo(() => {
     if (arc >= Math.PI * 2 - 1e-3) return RING;
     const g = new THREE.TorusGeometry(1, 0.035, 8, 48, arc);
@@ -46,7 +48,7 @@ export const RadioPulse: React.FC<{
   return (
     <group position={position} quaternion={q}>
       {[0, 1].map((k) => {
-        const u = (age - k * 0.15) / (PULSE_LIFE - 0.15);
+        const u = (age - k * 0.15) / (life - 0.15);
         const on = u > 0 && u < 1;
         const r = 0.04 + reach * (1 - Math.pow(1 - Math.max(0, Math.min(1, u)), 2));
         mats[k].opacity = on ? (1 - u) * (k === 0 ? 1 : 0.6) : 0;

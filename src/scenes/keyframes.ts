@@ -1,7 +1,10 @@
 import {Easing, interpolate} from 'remotion';
 
-/** A speed keyframe: from `at` (s), the speed eases to `speed` over the ramp. */
-export type SpeedKey = {at: number; speed: number};
+/**
+ * A speed keyframe: from `at` (s), the speed eases to `speed` over the ramp. No. 020: `ramp` (s) overrides the caller's
+ * ramp for this key alone (a hard stop at a collision, ≤ 0.25 s); default the caller's.
+ */
+export type SpeedKey = {at: number; speed: number; ramp?: number};
 
 /** Speed at t: each keyframe eases in over `ramp` seconds (sine in-out) from wherever the speed was. */
 export const speedAt = (keys: SpeedKey[], t: number, ramp: number) => {
@@ -10,7 +13,8 @@ export const speedAt = (keys: SpeedKey[], t: number, ramp: number) => {
   let v = ks[0].at <= 0 ? ks[0].speed : 0;
   for (const k of ks) {
     if (t < k.at) break;
-    const u = ramp > 0 ? Math.min(1, (t - k.at) / ramp) : 1;
+    const r = k.ramp ?? ramp;
+    const u = r > 0 ? Math.min(1, (t - k.at) / r) : 1;
     v = v + (k.speed - v) * (0.5 - 0.5 * Math.cos(Math.PI * u));
   }
   return v;

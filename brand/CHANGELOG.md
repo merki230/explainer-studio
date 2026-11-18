@@ -2,6 +2,19 @@
 
 Every change to `brand.md` or `style-guide.md` gets a line here: date, what changed, why (pointing to a `feedback.md` entry or a research section). Nothing changes silently.
 
+## style-guide v0.18.17 · 2026-11-16 · No. 020 `crash-detect`: ink waves, calm crashes, held instant, alert screens
+
+Brand-director rulings on the director's flags in `src/videos/crash-detect/av-script.md` (draft 2: F3, F4, F5, F6, F8, F9, F11, F14, N7), relayed by the main session. Existing rules applied to new cases; no owner decision taken; values 🧪. The owner may revert any point.
+
+- **§ 5, new row "Physical events in ink" (F5):** pressure rings, sound arcs and alarm/siren arcs drawn in ink. A 3 px `cutLine` stroke on a 2 px `cut` halo, solid, unlit, never orange, never near a figure, never in the same frame as an orange mark from the same source. Radio stays orange. Why: ink already means "physical, not the system" (scan line, gauge, regen arrows). The cause gets a picture and orange keeps one meaning. Owner to confirm as a house convention after first use.
+- **§ 3, new row "Crashes on screen" (F6, F8):** an accident (brake lamps ≥ 0.4 s before contact), no deformation, nothing comes off, only the airbags that fire in that crash type (frontal: **no side curtain**, which drops the director's curtain), everyone upright and active, and **no person in frame from the alert until the call starts**. Why: the system needs an airbag-level crash. The owner is sensitive to injury. Nothing may read as a how-to.
+- **§ 3, new row "Windows in a cut-open car" (F4):** the far window is drawn up, and the rings are clipped to the cabin outline in their own plane. Cut edges never pulse, which declines the director's alternative. Why: a pulsing cut edge would point at the cut as an opening.
+- **§ 3, new row "A cameo" (F11):** a small 3D twin-section slice (option A), never a 2D ink sheet. Why: option B would be a second exception to brand.md's "everything on screen is our 3D" (✅ owner decision), so it is the owner's call. It is not recommended.
+- **§ 8, new row "Held instant" (F3):** allowed once per video, ≤ 20 s. The world eases to a stop in 0.3 s after any shake kick has decayed, and the camera keeps moving. Only the camera, overlays, system marks and the named events move. Disclosed in the post. Why: four signals arrive within a fraction of a second, and the camera never stopping keeps it clear of a freeze frame. A one-video tool until the owner judges it.
+- **§ 6 Counter (F9):** a range or limit lands whole, with no count-up and no system mark pulsing with it. Second sub-line `SENSOR RANGE`. Why: a count-up beside a spike reads as the crash measuring 256 g, which the sources don't say.
+- **§ 8 Phone-screen kit, new row "Alert screens" (N7):** one headline and at most one button per state. A yellow `warning` triangle with an ink outline, no slider, no red, green or capsule buttons, no maker wording, no orange. Drops the director's slide-to-call bar. Why: the slider and round call buttons are the strongest Apple cues.
+- **F14 (no change to the guide):** at the drop, the quiet lanes stay flat ink and the agree node stays an empty ink ring. No X, cross, red, check mark or dimming. The director's draft already does this.
+
 ## style-guide v0.18.16 · 2026-11-12 · No. 019 `light-countdown`: the time tape goes into the air
 
 Owner feedback on No. 019 (`feedback.md`, No. 019, 2026-11-12), relayed by the main session with the fix already chosen: the tape moves above the China street. This entry is the brand-director's ruling and values. It clarifies existing precedents and adds no new identity default; values 🧪. The owner may revert any point.

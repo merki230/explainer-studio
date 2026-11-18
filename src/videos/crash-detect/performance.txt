@@ -1,0 +1,17 @@
+[calm] If you drop your phone nothing should happen.
+If your car crashes with it in the cup holder it can call nine-one-one.
+Every iPhone 14 and later comes with this feature turned on.
+[curious] How does the phone tell a crash from a drop?
+[calm] It waits until several of its sensors agree.
+On the iPhone 14 one is a motion sensor that measures jolts up to two-hundred-fifty-six times the pull of gravity.
+Another is GPS which shows the car moving fast and then suddenly stopping.
+A third feels the air pressure in the car change when the airbags fire if the windows are up.
+And the microphone listens for the sound of a crash once the phone knows you're driving.
+A dropped phone gets the jolt but usually not the other signs.
+Apple says it taught the phone those signs with more than a million hours of driving and crash data.
+When the phone does sense a crash it sounds an alarm and shows an alert for ten seconds.
+Then it counts down for thirty seconds with a loud siren. And you can still cancel.
+If nobody does it calls nine-one-one and plays a message that there's been a severe crash with your location.
+It also texts your emergency contacts.
+In the first months after launch roller coasters and ski slopes also set off automatic nine-one-one calls.
+[warm] Has your phone ever sounded that alarm when you weren't in a crash?

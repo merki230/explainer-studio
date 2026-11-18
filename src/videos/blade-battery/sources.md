@@ -14,6 +14,80 @@ Everything was accessed on 2026-11-03. **How to read the quotes** (same rules as
 
 ---
 
+## FACT-CHECK of script v3 (2026-11-09, fact-checker)
+
+**Verdict: PASS (no ❌ used by the script).** Same claims as v2; reworded lines re-read against the sources:
+- L3 "a nickel cell went over 900 degrees Fahrenheit, and BYD's iron-phosphate Blade stayed at 140 or below" ✅ (500 °C = 932 °F; 60 °C = 140 °F; "In BYD's own test" precedes it).
+- L7 "BYD says the Blade's long, flat shape also helps the cell cool" ✅ (BYD South Africa: "flat rectangle shape also improves cooling efficiency"). L8 "more than three feet long and just over half an inch thick" ✅ (965 × 14 mm = 3.17 ft × 0.55 in).
+- L9 "can still overheat out of control, but it takes a higher temperature, and they give off less heat" ✅ (Battery Design, KIT ARC; same support as v2 line 9).
+- L10 "to iron phosphate as well" ✅ (Tesla Q3 2021 deck). L11 "That chemistry stores less energy for its weight" ✅, its antecedent is L10's iron phosphate (RWTH 160 vs 241 Wh/kg). L12 ✅ unchanged.
+- Cleanup: the only "Status: ❌" line (claim 16, "burn") now reads 🟡 with a note that the old wording is out of the script. The remaining ❌ marks (nail "steel", unnamed test details, US claims, Tesla-cell implication) are in notes or table cells as "do not say" and are not Status lines, so `yarn check` (counts "Status: ❌") no longer warns.
+
+---
+
+## FACT-CHECK of script v2 (2026-11-09, fact-checker; superseded by v3 above, claims unchanged)
+
+**Verdict: PASS (no ❌).** All v1 fixes were applied. Legally sensitive: BYD and Tesla named; BYD's numbers are its own unreplicated test (line 3 says "BYD's own test", keep it).
+
+| Line | Claim | Status | Note / optional fix |
+|---|---|---|---|
+| 1 | BYD drove a nail through two battery cells | ✅ | Automotive World/BYD release (re-opened): nail tests on cells; InsideEVs "cells". BYD's video had three cells (NCM, LFP block, Blade); "two" is a selection, not false. |
+| 1 | One burst into flames | ✅ | BYD: "a ternary lithium battery exceeded 500°C and violently burned". Company claim, but line 3 attributes it. |
+| 1 | the other didn't even smoke | ✅ | BYD: "the Blade Battery emitted neither smoke nor fire after being penetrated" (Automotive World, re-opened; Charged EVs same). Hook is stated flatly, line 3 attributes within seconds. Also "Under the same conditions" in the release supports "the same test". |
+| 2 | one cell nickel-based, the other iron-phosphate Blade | ✅ | BYD "ternary (NCM)" = nickel-cobalt-manganese; InsideEVs "NCM, LFP and Blade". Belief framing 🎭 is fine. |
+| 3 | nickel cell went over 900 °F | ✅ | "exceeded 500°C" = 932 °F. |
+| 3 | Blade stayed at 140 or below | ✅ | "only reached 30 to 60°C"; 60 °C = 140 °F. Surface temperature; "BYD's own test" covers it. |
+| 5 | charged nickel cell can release oxygen that helps fuel the fire | ✅ | Sandia 2020 (oxygen release when heated, delithiated = charged; oxide phase change and solvent oxidation heat "of comparable magnitudes"). "Helps fuel" is a fair gloss. |
+| 6 | Iron phosphate holds its oxygen much more tightly | ✅ | Frontiers 2024: "high strength of phosphorus oxygen bond in phosphate group". |
+| 7 | over three feet long, just over half an inch thick | ✅ | 965 × 14 mm (electrive/RWTH) = 3.17 ft, 0.55 in. |
+| 8 | BYD says that long, flat shape helps the cell cool | ✅ | BYD South Africa: "The unique flat rectangle shape also improves cooling efficiency and preheating performance." Attributed. |
+| 9 | iron-phosphate cells can still overheat out of control | ✅ | "Overheat out of control" is an acceptable plain gloss for thermal runaway (self-accelerating heating). Battery Design: LFP critical temperature 230-260 °C "runaway almost certain". Not "burn": good, Frontiers saw no combustion. |
+| 9 | at higher temperatures and with less heat | ✅ | Battery Design: onset ~150-170 vs ~90-110 °C (NMC), ~10-15 vs ~20-25 kJ/Ah; KIT ARC (Ohneseit 2023): "significantly higher temperatures". |
+| 10 | Tesla said in 2021 it was moving standard-range cars to that chemistry (iron phosphate) too | ✅ | Tesla Q3 2021 deck via Electrek. "That chemistry" resolves to iron phosphate (line 9 is the nearest antecedent: iron-phosphate cells). Tesla's own product: naming OK. |
+| 11 | Iron phosphate stores less energy for its weight | ✅ | RWTH 160 vs 241 Wh/kg (cell-level, LFP vs NMC811); Frontiers: more nickel/cobalt = higher capacity. A general statement about the chemistry; fine. |
+| 12 | Tesla's 4680 nickel cell holds about fifty percent more than the Blade, German researchers found | ✅ | 241.01 / 160 = 1.506; RWTH Aachen PEM via electrive. Scope is first-gen-era Blade as tested; description should cite the paper (Gorsch et al., *Cell Reports Physical Science*, 2025). |
+| 13 | ending question | n/a | No claim. |
+
+Non-fact notes for the scriptwriter: line 9 opens "Even so" right after line 8 (shape helps it cool), which reads as if shape contradicts overheating; spoken-check's call. Line 10 "that chemistry" leans on line 9's antecedent, one line away from "iron-phosphate cells"; spoken-check's call.
+
+---
+
+## FACT-CHECK of script v1 (2026-11-09, fact-checker; superseded by v2 above; re-opened the pages, not the researcher's tool quotes)
+
+**Verdict: FAIL as worded (one ❌: line 10 "burn"). Every ❌/🟡 has a fixed wording below; with those fixes: PASS.** Legally sensitive: BYD, Tesla (both named, both company-vs-company comparison; BYD's numbers are its own unreplicated test).
+
+| Line | Claim | Status | Fix |
+|---|---|---|---|
+| 1 | BYD drove the same nail through two cells; one burst into flames, other barely got warm | 🟡 | BYD never says the nail was identical, and 30-60 °C (86-140 °F) is hot to touch, not "barely warm". Safer: "BYD put a nail through two battery cells: one burst into flames, the other stayed under 140 degrees." (✅ BYD, en.byd.com "exceeded 500°C and violently burned" / "only reached 30 to 60°C"; InsideEVs: cells). Section H option B wording is OK only if "same nail" is cut or hedged to "the same test". "Burst into flames" = BYD's "violently burned" ✅. |
+| 2 | You'd think every EV battery has the same fire risk (belief) | 🎭 framing | Fine as the belief to correct; no number, no attribution. |
+| 2 | these cells used different chemistry | ✅ | BYD says "ternary lithium battery" vs Blade (LFP); InsideEVs "NCM, LFP and Blade". |
+| 3 | nickel cell passed 900 °F | ✅ | 500 °C = 932 °F, BYD: "exceeded 500°C". Say it is BYD's figure (line has "BYD's own test": OK). "Nickel" = our plain word for BYD's "ternary (NCM)"; BYD did not name the grade or whose cell. Don't imply Tesla's. |
+| 3 | Blade stayed under 140 °F | 🟡 | BYD: "only reached 30 to 60°C"; 60 °C = exactly 140 °F, so "under" is wrong at the top end. Fix: "stayed at or below 140" (✅). Both are **surface** temps (BYD UK wording), not internal; fine for "BYD's own test". |
+| 4-5 | A charged nickel cell that overheats can release oxygen | ✅ | Sandia/J. Electrochem. Soc. 2020: "Cathode delithiation leads to a less stable metal oxide subject to phase transformations including oxygen release when heated" (delithiated = charged). |
+| 5 | ...and feed its own fire | 🟡 | The same abstract says heat from oxide phase changes and solvent oxidation "are of comparable magnitudes": supports oxygen reacting with the electrolyte, not the phrase. Acceptable plain-English gloss; safer: "release oxygen that helps fuel the fire." |
+| 6 | Iron phosphate holds its oxygen far more tightly | ✅ | Frontiers in Chemistry 2024: "owing to the high strength of phosphorus oxygen bond in phosphate group"; BYD: "non oxygen release". Drop "far" if you want zero stretch: "much more tightly". |
+| 7 | Blade is over three feet long | ✅ | electrive/RWTH: "965 millimetres in length" = 38 in = 3.17 ft. (BYD nominal spec ~960 mm: still over 3 ft.) |
+| 7 | half an inch thick | 🟡 | 14 mm = 0.55 in, so "over half an inch" (✅) is exact; "half an inch" is a rounding down. |
+| 7 | BYD says that lets heat escape | 🟡 | BYD South Africa page: "The unique flat rectangle shape also improves cooling efficiency and preheating performance." BYD's 2020 launch release says nothing on shape. Wording "BYD says the shape improves cooling" is ✅; "lets heat escape" paraphrases it (acceptable, attributed). No independent study isolates shape. |
+| 8 | Tesla said in 2021 it was moving its standard-range cars to iron phosphate | ✅ | Tesla Q3 2021 shareholder deck (released 2021-10-20), via Electrek: "For standard range vehicles, we are shifting to Lithium Iron Phosphate (LFP) battery chemistry globally." Dropping "globally" is fine, it only narrows. "Too" fine. Tesla's own product, so naming it is within the rule. Note: the Electrek URL slug says Q2, article text says Q3; Q3 is right. |
+| 9 | German researchers found... | ✅ | electrive: RWTH Aachen PEM chair. "German researchers" is a generic attribution, not a named company or study, so it does not break the no-citation-naming rule; fine. Full cite goes in the description. |
+| 9 | a Tesla nickel cell holds about fifty percent more energy per kg | 🟡 | Scope: one Tesla cell (4680, NMC811, 241.01 Wh/kg) vs BYD's Blade (160 Wh/kg): 241.01/160 = 1.506 ✅ math. But "a Tesla nickel cell" implies all Tesla nickel cells; and the Blade is the 2020-era cell (the 2nd-gen is claimed denser). Fix: "German researchers found Tesla's 4680 nickel cell holds about fifty percent more energy per kilogram than the Blade." (✅). |
+| 10 | iron-phosphate cells can still overheat | ✅ | Frontiers: LFP has a measured Tmax of 239 °C (ranked last, not absent); Battery Design: LFP critical temperature "230 - 260 °C". |
+| 10 | ...and burn | ❌ as worded | Frontiers 2024 (opened) says of its LFP cell "there is no thermal runaway combustion or spontaneous combustion when the LFP battery ruptures". KIT ARC study (Ohneseit et al., *Batteries* 2023): LFP showed no runaway under nail penetration or heating to 350 °C at 0%/30% SOC. LFP vent gas burning is supported only by search summaries (not opened): 🟡. |
+| 10 | ...just later and less violently | 🟡 | "Later" is supported as *higher temperature needed*, not as time: Battery Design (opened): NMC self-heating ~90-110 °C vs LFP ~150-170 °C; runaway "170-190 °C" vs "230-260 °C"; heat released ~20-25 vs ~10-15 kJ/Ah. KIT ARC (opened): LFP "reacted more slowly and at significantly higher temperatures". "Less violently" = ✅ via lower Tmax/heat release. |
+| 10 | **Fix for line 10** | | "Calmer isn't fireproof, though: iron-phosphate cells can still go into thermal runaway, just at higher temperatures and with less heat." (✅ Battery Design + KIT + Frontiers). If the writer wants "burn", hedge: "...and their vented gas can still burn" and only after a source is opened (🟡 until then). |
+| 11 | ending question | n/a | No claim. |
+
+**Hook vs section H option B:** the script's line 1 is H option B verbatim. H marked it ✅ as BYD's test; on re-check "same nail" and "barely got warm" are the two soft spots (see line 1). Line 3 then supplies the attribution, so the hook is acceptable on a first-person cold open only if line 3 follows within seconds, as it does.
+
+**New sources opened in this pass (accessed 2026-11-09):**
+- [NMC vs LFP Safety: What the Data Actually Shows](https://www.batterydesign.net/objective-safety-analysis-of-nmc-vs-lfp/), Battery Design. "for LFP/graphite it occurs around 150 - 170 °C" / "For NMC/graphite cells this occurs at around 170 - 190 °C, compared to 230 - 260 °C for LFP/graphite." / "LFP/graphite cells tested under the same conditions released only approximately 10 - 15 kJ/Ah." Industry blog, not peer-reviewed.
+- [Thermal and Mechanical Safety Assessment of Type 21700 Lithium-Ion Batteries with NMC, NCA and LFP Cathodes](https://publikationen.bibliothek.kit.edu/1000160506), Ohneseit et al., KIT, *Batteries* 9(5):237, 2023, doi:10.3390/batteries9050237. "LFP cells reacted more slowly and at significantly higher temperatures" (abstract, paraphrased by tool; KIT page truncated).
+- Frontiers in Chemistry 2024 re-opened: Tmax values, ranking, and "no thermal runaway combustion" quote above. Note its own caveat: LFP onset (Toer) 62.5 °C vs NMC811 62.49 °C, essentially equal, and LFP "Ttr is not even detected", so "later" is not what this paper shows; use Battery Design/KIT for that.
+- Could not open: PMC12114410 (captcha), mdpi.com 2313-0105/11/10/352 (403): LFP vent-gas flammability stays 🟡.
+
+---
+
 ## Key facts in one screen
 
 1. **The test (company claim):** BYD unveiled the Blade Battery at an **online launch on 2020-03-29** and showed a **video** of nail-penetration tests on **three cells**: an NCM ("ternary") cell, a conventional LFP block cell, and a Blade cell. BYD's figures: Blade **no smoke, no fire, surface 30–60 °C**; ternary **"exceeded 500°C and violently burned"**; LFP block **no open flame, 200–400 °C**. BYD also claimed crush, bend, 300 °C furnace and 260% overcharge without fire. **No independent replication of BYD's test found.**
@@ -163,7 +237,7 @@ Everything was accessed on 2026-11-03. **How to read the quotes** (same rules as
 ## 13. The trade-off: LFP stores less energy per kilogram
 
 - **Script (expected):** "The catch is weight. When German researchers took both apart, Tesla's nickel cell stored about half again as much energy per kilogram as BYD's blade."
-- **Status:** ✅ (tool), independent teardown (figures relayed by two trade outlets; paper itself not opened)
+- **Status:** 🟡 fact-check 2026-11-09: electrive re-opened, figures ✅ (160 vs 241.01 Wh/kg, RWTH Aachen PEM, 4680 = NMC811). Scope is one cell each; say "Tesla's 4680" not "a Tesla nickel cell". Paper itself not opened.
 - **Source:** electrive, 2025-03-07 (claim 7). Quote (tool): "160 Wh/kg and 355.26 Wh/l were determined for BYD's LFP cell." / Tesla's cell reaches "241.01 Wh/kg and 643.3 Wh/l at the cell level." / "BYD's battery is more efficient because it enables simpler thermal management."
 - **Source:** battery-news.de, 2025-03-10 (claim 7). Quote (tool): "160 watt-hours per kilogram of gravimetric and 355 watt-hours per liter of volumetric energy density" (Blade); "241 watt-hours per kilogram … 643 watt-hours per liter" (4680)
 - **Note:** 241 ÷ 160 = 1.51 → "about 50% more per kilogram"; 643 ÷ 355 = 1.81 → "about 80% more per liter" 🧮. Cell level only; at pack level BYD's cell-to-pack claws some back (claim 8). These are the **first-gen** Blade (2020 design) vs the 4680 (NMC811). BYD says 2nd-gen Blade raises energy density "by over 5%" (CnEVPost 2026-03-05, tool); Wikipedia/CarNewsChina cite 190–210 Wh/kg for the long 2nd-gen Blade (snippet; chemistry possibly LMFP, unconfirmed). Say "first-generation" or keep the comparison as "the cells those researchers tested". The researchers are at RWTH Aachen (German): "German researchers" ✅.
@@ -190,7 +264,7 @@ Everything was accessed on 2026-11-03. **How to read the quotes** (same rules as
 ## 16. Calmer is not fireproof
 
 - **Script (expected, one honest line):** "Iron-phosphate cells can still overheat and burn; they just do it later and less violently."
-- **Status:** ✅ (tool) for "still goes into thermal runaway at lower intensity" (Frontiers Tmax and ranking, claim 5); 🟡 for the flame-speed finding (snippet); ✅ (tool) for the Han crash fire as reported
+- **Status:** 🟡 as of v3 (the v1 wording "and burn" was ❌ and is no longer in the script; v3 line 9 says "overheat out of control, but it takes a higher temperature, and they give off less heat", supported). Fact-check 2026-11-09 on the old wording: ("burn" ❌ because Frontiers says no combustion for its LFP cell; no opened source shows an LFP cell burning); 🟡 "later" (= higher temperature, Battery Design + KIT); ✅ "less violently"; 🟡 for the flame-speed finding (snippet). Fixed wording in the FACT-CHECK table above (line 10).
 - **Source:** Frontiers in Chemistry 2024 (claim 5): LFP is last in the ranking, not absent; Tmax 239 °C.
 - **Source (snippet, 🟡):** "The trade-off characteristic between battery thermal runaway and combustion", *Energy Storage Materials*, 2024, doi:10.1016/j.ensm.2024.103380 (abstract via search summary; faculty page and full text not opened): "The LiFePO4|Graphite (LFP|Gr) battery with the weak cathode oxidizability shows the lowest temperature of 297.4 °C within the battery, but with the highest laminar flame speed of 55 cm s−1 outside the battery."
 - **Source:** [BYD Han EV suffers in independent crash testing](https://carnewschina.com/2021/07/29/byd-han-ev-suffers-in-independent-crash-testing), James Chen, CarNewsChina, 2021-07-29. Quote (tool): a "50% offset crash test (64km/h per car)" with an Arcfox α-S; the Han caught fire after sitting two days (tool paraphrase); BYD said it "suspect[s] that the car has been tampered with" (coolant of a different, conductive type).

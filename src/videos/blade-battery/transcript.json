@@ -2,119 +2,894 @@
   "audio": null,
   "words": [
     {
-      "text": "Put",
+      "text": "BYD",
       "start": 0.15,
       "end": 0.42
     },
     {
-      "text": "the",
+      "text": "drove",
       "start": 0.46,
-      "end": 0.73
-    },
-    {
-      "text": "hook",
-      "start": 0.77,
-      "end": 1.09
-    },
-    {
-      "text": "in",
-      "start": 1.13,
-      "end": 1.35
-    },
-    {
-      "text": "this",
-      "start": 1.39,
-      "end": 1.71
-    },
-    {
-      "text": "first",
-      "start": 1.75,
-      "end": 2.12
-    },
-    {
-      "text": "sentence.",
-      "start": 2.16,
-      "end": 2.68
-    },
-    {
-      "text": "Then",
-      "start": 3.04,
-      "end": 3.36
-    },
-    {
-      "text": "write",
-      "start": 3.4,
-      "end": 3.77
-    },
-    {
-      "text": "the",
-      "start": 3.81,
-      "end": 4.08
-    },
-    {
-      "text": "rest",
-      "start": 4.12,
-      "end": 4.44
-    },
-    {
-      "text": "of",
-      "start": 4.48,
-      "end": 4.7
-    },
-    {
-      "text": "the",
-      "start": 4.74,
-      "end": 5.01
-    },
-    {
-      "text": "voiceover",
-      "start": 5.05,
-      "end": 5.62
-    },
-    {
-      "text": "here,",
-      "start": 5.66,
-      "end": 5.98
-    },
-    {
-      "text": "about",
-      "start": 6.18,
-      "end": 6.55
-    },
-    {
-      "text": "150",
-      "start": 6.59,
-      "end": 6.86
-    },
-    {
-      "text": "to",
-      "start": 6.9,
-      "end": 7.12
-    },
-    {
-      "text": "170",
-      "start": 7.16,
-      "end": 7.43
-    },
-    {
-      "text": "words",
-      "start": 7.47,
-      "end": 7.84
-    },
-    {
-      "text": "for",
-      "start": 7.88,
-      "end": 8.15
+      "end": 0.83
     },
     {
       "text": "a",
-      "start": 8.19,
-      "end": 8.36
+      "start": 0.87,
+      "end": 1.04
     },
     {
-      "text": "minute.",
-      "start": 8.4,
+      "text": "nail",
+      "start": 1.08,
+      "end": 1.4
+    },
+    {
+      "text": "through",
+      "start": 1.44,
+      "end": 1.91
+    },
+    {
+      "text": "two",
+      "start": 1.95,
+      "end": 2.22
+    },
+    {
+      "text": "battery",
+      "start": 2.26,
+      "end": 2.73
+    },
+    {
+      "text": "cells.",
+      "start": 2.77,
+      "end": 3.14
+    },
+    {
+      "text": "One",
+      "start": 3.5,
+      "end": 3.77
+    },
+    {
+      "text": "burst",
+      "start": 3.81,
+      "end": 4.18
+    },
+    {
+      "text": "into",
+      "start": 4.22,
+      "end": 4.54
+    },
+    {
+      "text": "flames,",
+      "start": 4.58,
+      "end": 5
+    },
+    {
+      "text": "and",
+      "start": 5.2,
+      "end": 5.47
+    },
+    {
+      "text": "the",
+      "start": 5.51,
+      "end": 5.78
+    },
+    {
+      "text": "other",
+      "start": 5.82,
+      "end": 6.19
+    },
+    {
+      "text": "didn't",
+      "start": 6.23,
+      "end": 6.6
+    },
+    {
+      "text": "even",
+      "start": 6.64,
+      "end": 6.96
+    },
+    {
+      "text": "smoke.",
+      "start": 7,
+      "end": 7.37
+    },
+    {
+      "text": "You",
+      "start": 7.73,
+      "end": 8
+    },
+    {
+      "text": "might",
+      "start": 8.04,
+      "end": 8.41
+    },
+    {
+      "text": "think",
+      "start": 8.45,
       "end": 8.82
+    },
+    {
+      "text": "every",
+      "start": 8.86,
+      "end": 9.23
+    },
+    {
+      "text": "EV",
+      "start": 9.27,
+      "end": 9.49
+    },
+    {
+      "text": "battery",
+      "start": 9.53,
+      "end": 10
+    },
+    {
+      "text": "has",
+      "start": 10.04,
+      "end": 10.31
+    },
+    {
+      "text": "the",
+      "start": 10.35,
+      "end": 10.62
+    },
+    {
+      "text": "same",
+      "start": 10.66,
+      "end": 10.98
+    },
+    {
+      "text": "fire",
+      "start": 11.02,
+      "end": 11.34
+    },
+    {
+      "text": "risk.",
+      "start": 11.38,
+      "end": 11.7
+    },
+    {
+      "text": "In",
+      "start": 12.06,
+      "end": 12.28
+    },
+    {
+      "text": "BYD's",
+      "start": 12.32,
+      "end": 12.64
+    },
+    {
+      "text": "own",
+      "start": 12.68,
+      "end": 12.95
+    },
+    {
+      "text": "test,",
+      "start": 12.99,
+      "end": 13.31
+    },
+    {
+      "text": "a",
+      "start": 13.51,
+      "end": 13.68
+    },
+    {
+      "text": "nickel",
+      "start": 13.72,
+      "end": 14.14
+    },
+    {
+      "text": "cell",
+      "start": 14.18,
+      "end": 14.5
+    },
+    {
+      "text": "went",
+      "start": 14.54,
+      "end": 14.86
+    },
+    {
+      "text": "over",
+      "start": 14.9,
+      "end": 15.22
+    },
+    {
+      "text": "900",
+      "start": 15.26,
+      "end": 15.53
+    },
+    {
+      "text": "degrees",
+      "start": 15.57,
+      "end": 16.04
+    },
+    {
+      "text": "Fahrenheit,",
+      "start": 16.08,
+      "end": 16.7
+    },
+    {
+      "text": "and",
+      "start": 16.9,
+      "end": 17.17
+    },
+    {
+      "text": "BYD's",
+      "start": 17.21,
+      "end": 17.53
+    },
+    {
+      "text": "iron-phosphate",
+      "start": 17.57,
+      "end": 18.34
+    },
+    {
+      "text": "Blade",
+      "start": 18.38,
+      "end": 18.75
+    },
+    {
+      "text": "stayed",
+      "start": 18.79,
+      "end": 19.21
+    },
+    {
+      "text": "at",
+      "start": 19.25,
+      "end": 19.47
+    },
+    {
+      "text": "140",
+      "start": 19.51,
+      "end": 19.78
+    },
+    {
+      "text": "or",
+      "start": 19.82,
+      "end": 20.04
+    },
+    {
+      "text": "below.",
+      "start": 20.08,
+      "end": 20.45
+    },
+    {
+      "text": "So",
+      "start": 20.81,
+      "end": 21.03
+    },
+    {
+      "text": "why",
+      "start": 21.07,
+      "end": 21.34
+    },
+    {
+      "text": "does",
+      "start": 21.38,
+      "end": 21.7
+    },
+    {
+      "text": "chemistry",
+      "start": 21.74,
+      "end": 22.31
+    },
+    {
+      "text": "matter",
+      "start": 22.35,
+      "end": 22.77
+    },
+    {
+      "text": "that",
+      "start": 22.81,
+      "end": 23.13
+    },
+    {
+      "text": "much?",
+      "start": 23.17,
+      "end": 23.49
+    },
+    {
+      "text": "When",
+      "start": 23.85,
+      "end": 24.17
+    },
+    {
+      "text": "a",
+      "start": 24.21,
+      "end": 24.38
+    },
+    {
+      "text": "charged",
+      "start": 24.42,
+      "end": 24.89
+    },
+    {
+      "text": "nickel",
+      "start": 24.93,
+      "end": 25.35
+    },
+    {
+      "text": "cell",
+      "start": 25.39,
+      "end": 25.71
+    },
+    {
+      "text": "overheats,",
+      "start": 25.75,
+      "end": 26.32
+    },
+    {
+      "text": "it",
+      "start": 26.52,
+      "end": 26.74
+    },
+    {
+      "text": "can",
+      "start": 26.78,
+      "end": 27.05
+    },
+    {
+      "text": "release",
+      "start": 27.09,
+      "end": 27.56
+    },
+    {
+      "text": "oxygen",
+      "start": 27.6,
+      "end": 28.02
+    },
+    {
+      "text": "that",
+      "start": 28.06,
+      "end": 28.38
+    },
+    {
+      "text": "helps",
+      "start": 28.42,
+      "end": 28.79
+    },
+    {
+      "text": "fuel",
+      "start": 28.83,
+      "end": 29.15
+    },
+    {
+      "text": "the",
+      "start": 29.19,
+      "end": 29.46
+    },
+    {
+      "text": "fire.",
+      "start": 29.5,
+      "end": 29.82
+    },
+    {
+      "text": "Iron",
+      "start": 30.18,
+      "end": 30.5
+    },
+    {
+      "text": "phosphate",
+      "start": 30.54,
+      "end": 31.11
+    },
+    {
+      "text": "holds",
+      "start": 31.15,
+      "end": 31.52
+    },
+    {
+      "text": "its",
+      "start": 31.56,
+      "end": 31.83
+    },
+    {
+      "text": "oxygen",
+      "start": 31.87,
+      "end": 32.29
+    },
+    {
+      "text": "much",
+      "start": 32.33,
+      "end": 32.65
+    },
+    {
+      "text": "more",
+      "start": 32.69,
+      "end": 33.01
+    },
+    {
+      "text": "tightly.",
+      "start": 33.05,
+      "end": 33.52
+    },
+    {
+      "text": "BYD",
+      "start": 33.88,
+      "end": 34.15
+    },
+    {
+      "text": "says",
+      "start": 34.19,
+      "end": 34.51
+    },
+    {
+      "text": "the",
+      "start": 34.55,
+      "end": 34.82
+    },
+    {
+      "text": "Blade's",
+      "start": 34.86,
+      "end": 35.28
+    },
+    {
+      "text": "long,",
+      "start": 35.32,
+      "end": 35.64
+    },
+    {
+      "text": "flat",
+      "start": 35.84,
+      "end": 36.16
+    },
+    {
+      "text": "shape",
+      "start": 36.2,
+      "end": 36.57
+    },
+    {
+      "text": "also",
+      "start": 36.61,
+      "end": 36.93
+    },
+    {
+      "text": "helps",
+      "start": 36.97,
+      "end": 37.34
+    },
+    {
+      "text": "the",
+      "start": 37.38,
+      "end": 37.65
+    },
+    {
+      "text": "cell",
+      "start": 37.69,
+      "end": 38.01
+    },
+    {
+      "text": "cool.",
+      "start": 38.05,
+      "end": 38.37
+    },
+    {
+      "text": "Each",
+      "start": 38.73,
+      "end": 39.05
+    },
+    {
+      "text": "cell",
+      "start": 39.09,
+      "end": 39.41
+    },
+    {
+      "text": "is",
+      "start": 39.45,
+      "end": 39.67
+    },
+    {
+      "text": "more",
+      "start": 39.71,
+      "end": 40.03
+    },
+    {
+      "text": "than",
+      "start": 40.07,
+      "end": 40.39
+    },
+    {
+      "text": "three",
+      "start": 40.43,
+      "end": 40.8
+    },
+    {
+      "text": "feet",
+      "start": 40.84,
+      "end": 41.16
+    },
+    {
+      "text": "long",
+      "start": 41.2,
+      "end": 41.52
+    },
+    {
+      "text": "and",
+      "start": 41.56,
+      "end": 41.83
+    },
+    {
+      "text": "just",
+      "start": 41.87,
+      "end": 42.19
+    },
+    {
+      "text": "over",
+      "start": 42.23,
+      "end": 42.55
+    },
+    {
+      "text": "half",
+      "start": 42.59,
+      "end": 42.91
+    },
+    {
+      "text": "an",
+      "start": 42.95,
+      "end": 43.17
+    },
+    {
+      "text": "inch",
+      "start": 43.21,
+      "end": 43.53
+    },
+    {
+      "text": "thick.",
+      "start": 43.57,
+      "end": 43.94
+    },
+    {
+      "text": "Iron-phosphate",
+      "start": 44.3,
+      "end": 45.07
+    },
+    {
+      "text": "cells",
+      "start": 45.11,
+      "end": 45.48
+    },
+    {
+      "text": "can",
+      "start": 45.52,
+      "end": 45.79
+    },
+    {
+      "text": "still",
+      "start": 45.83,
+      "end": 46.2
+    },
+    {
+      "text": "overheat",
+      "start": 46.24,
+      "end": 46.76
+    },
+    {
+      "text": "out",
+      "start": 46.8,
+      "end": 47.07
+    },
+    {
+      "text": "of",
+      "start": 47.11,
+      "end": 47.33
+    },
+    {
+      "text": "control,",
+      "start": 47.37,
+      "end": 47.84
+    },
+    {
+      "text": "but",
+      "start": 48.04,
+      "end": 48.31
+    },
+    {
+      "text": "it",
+      "start": 48.35,
+      "end": 48.57
+    },
+    {
+      "text": "takes",
+      "start": 48.61,
+      "end": 48.98
+    },
+    {
+      "text": "a",
+      "start": 49.02,
+      "end": 49.19
+    },
+    {
+      "text": "higher",
+      "start": 49.23,
+      "end": 49.65
+    },
+    {
+      "text": "temperature,",
+      "start": 49.69,
+      "end": 50.36
+    },
+    {
+      "text": "and",
+      "start": 50.56,
+      "end": 50.83
+    },
+    {
+      "text": "they",
+      "start": 50.87,
+      "end": 51.19
+    },
+    {
+      "text": "give",
+      "start": 51.23,
+      "end": 51.55
+    },
+    {
+      "text": "off",
+      "start": 51.59,
+      "end": 51.86
+    },
+    {
+      "text": "less",
+      "start": 51.9,
+      "end": 52.22
+    },
+    {
+      "text": "heat.",
+      "start": 52.26,
+      "end": 52.58
+    },
+    {
+      "text": "Tesla",
+      "start": 52.94,
+      "end": 53.31
+    },
+    {
+      "text": "said",
+      "start": 53.35,
+      "end": 53.67
+    },
+    {
+      "text": "in",
+      "start": 53.71,
+      "end": 53.93
+    },
+    {
+      "text": "2021",
+      "start": 53.97,
+      "end": 54.29
+    },
+    {
+      "text": "it",
+      "start": 54.33,
+      "end": 54.55
+    },
+    {
+      "text": "was",
+      "start": 54.59,
+      "end": 54.86
+    },
+    {
+      "text": "moving",
+      "start": 54.9,
+      "end": 55.32
+    },
+    {
+      "text": "its",
+      "start": 55.36,
+      "end": 55.63
+    },
+    {
+      "text": "standard-range",
+      "start": 55.67,
+      "end": 56.44
+    },
+    {
+      "text": "cars",
+      "start": 56.48,
+      "end": 56.8
+    },
+    {
+      "text": "to",
+      "start": 56.84,
+      "end": 57.06
+    },
+    {
+      "text": "iron",
+      "start": 57.1,
+      "end": 57.42
+    },
+    {
+      "text": "phosphate",
+      "start": 57.46,
+      "end": 58.03
+    },
+    {
+      "text": "as",
+      "start": 58.07,
+      "end": 58.29
+    },
+    {
+      "text": "well.",
+      "start": 58.33,
+      "end": 58.65
+    },
+    {
+      "text": "That",
+      "start": 59.01,
+      "end": 59.33
+    },
+    {
+      "text": "chemistry",
+      "start": 59.37,
+      "end": 59.94
+    },
+    {
+      "text": "stores",
+      "start": 59.98,
+      "end": 60.4
+    },
+    {
+      "text": "less",
+      "start": 60.44,
+      "end": 60.76
+    },
+    {
+      "text": "energy",
+      "start": 60.8,
+      "end": 61.22
+    },
+    {
+      "text": "for",
+      "start": 61.26,
+      "end": 61.53
+    },
+    {
+      "text": "its",
+      "start": 61.57,
+      "end": 61.84
+    },
+    {
+      "text": "weight,",
+      "start": 61.88,
+      "end": 62.3
+    },
+    {
+      "text": "though.",
+      "start": 62.5,
+      "end": 62.92
+    },
+    {
+      "text": "Tesla's",
+      "start": 63.28,
+      "end": 63.7
+    },
+    {
+      "text": "4680",
+      "start": 63.74,
+      "end": 64.06
+    },
+    {
+      "text": "nickel",
+      "start": 64.1,
+      "end": 64.52
+    },
+    {
+      "text": "cell",
+      "start": 64.56,
+      "end": 64.88
+    },
+    {
+      "text": "holds",
+      "start": 64.92,
+      "end": 65.29
+    },
+    {
+      "text": "about",
+      "start": 65.33,
+      "end": 65.7
+    },
+    {
+      "text": "fifty",
+      "start": 65.74,
+      "end": 66.11
+    },
+    {
+      "text": "percent",
+      "start": 66.15,
+      "end": 66.62
+    },
+    {
+      "text": "more",
+      "start": 66.66,
+      "end": 66.98
+    },
+    {
+      "text": "than",
+      "start": 67.02,
+      "end": 67.34
+    },
+    {
+      "text": "the",
+      "start": 67.38,
+      "end": 67.65
+    },
+    {
+      "text": "Blade,",
+      "start": 67.69,
+      "end": 68.06
+    },
+    {
+      "text": "German",
+      "start": 68.26,
+      "end": 68.68
+    },
+    {
+      "text": "researchers",
+      "start": 68.72,
+      "end": 69.39
+    },
+    {
+      "text": "found.",
+      "start": 69.43,
+      "end": 69.8
+    },
+    {
+      "text": "Do",
+      "start": 70.16,
+      "end": 70.38
+    },
+    {
+      "text": "you",
+      "start": 70.42,
+      "end": 70.69
+    },
+    {
+      "text": "know",
+      "start": 70.73,
+      "end": 71.05
+    },
+    {
+      "text": "which",
+      "start": 71.09,
+      "end": 71.46
+    },
+    {
+      "text": "battery",
+      "start": 71.5,
+      "end": 71.97
+    },
+    {
+      "text": "chemistry",
+      "start": 72.01,
+      "end": 72.58
+    },
+    {
+      "text": "is",
+      "start": 72.62,
+      "end": 72.84
+    },
+    {
+      "text": "in",
+      "start": 72.88,
+      "end": 73.1
+    },
+    {
+      "text": "the",
+      "start": 73.14,
+      "end": 73.41
+    },
+    {
+      "text": "car",
+      "start": 73.45,
+      "end": 73.72
+    },
+    {
+      "text": "you'd",
+      "start": 73.76,
+      "end": 74.08
+    },
+    {
+      "text": "buy?",
+      "start": 74.12,
+      "end": 74.39
     }
   ]
 }

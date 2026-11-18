@@ -204,3 +204,13 @@ No overlap with No. 006 (braking). Status: research.
 - Light to data (bits ↔ light): researched and scripted, parked in `src/videos/light-to-data/` for a possible long-form video.
 - New York to London: how a message shares the same fibre (research saved in the same folder).
 - Toll roads without stopping, phone time zone switching, "rain in 12 minutes", suitcase routing at airports.
+
+## Shortlist (owner, 2026-11-16)
+
+| Topic | Hook direction | Status |
+|---|---|---|
+| Key fob rolling codes | "Your car key sends a different code every time you press it." (how it protects you, never how to break it) | shortlisted |
+| Parking sensors | "The little dots on your bumper are shouting, and listening for the echo." | shortlisted |
+| Phone crash detection | "If you crash and can't reach your phone, it can call 911 for you." (how it tells a crash from a drop) | **No. 020, in research** |
+
+All unverified until researched.

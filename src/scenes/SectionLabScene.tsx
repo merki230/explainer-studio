@@ -71,13 +71,20 @@ export type SectionLabSceneProps = {
    * What the Lab is dressed as: 'apps' (default: No. 001's phone bench, arms, counter, meter) or
    * 'tire-bay' (No. 002: a rack of two rows of eight wheels with set-panel labels, two extras gauging).
    */
-  dressing?: 'apps' | 'tire-bay' | 'heat-bench' | 'timing-check';
+  dressing?: 'apps' | 'tire-bay' | 'heat-bench' | 'timing-check' | 'crash-data';
   /**
    * No. 019 (N11), 'timing-check': the wall grid's keys (seconds into the scene): `waveAt` (the orange wave sweeps it over
    * `waveFor`, default 1.8 s, lighting the cells pale), `resolveAt` (a 0.6 s sweep: `share`, default 0.77, solid ink-light,
    * the rest hollow), `blinkAt` (the hollow ones blink), `lit` (start lit, after an earlier scene's wave), `typing`
    * (default true), `leanAt` ([left, right] researcher's lean-in). Framings 'wide' and 'grid' (with `framing`/`cameraKeys`).
    */
+  /**
+   * No. 020 (N8), 'crash-data': the wall of trace tiles and the bench phone (seconds into the scene): `waveAt` (the crash
+   * tiles light in a wave over `waveFor`, default 1.2 s), `crashTiles` (default 30), `benchAt` (the bench phone's four
+   * lanes catch their signs, the agree node lights), `typing` (default true), `leanAt` (the researcher leans in). Framing
+   * 'wide' (with `framing`/`cameraKeys`).
+   */
+  crashData?: {waveAt?: number | null; waveFor?: number; crashTiles?: number; benchAt?: number | null; typing?: boolean; leanAt?: number | null};
   timingCheck?: {
     waveAt?: number;
     waveFor?: number;
@@ -170,7 +177,7 @@ const labCameraMove = (p: Partial<SectionLabSceneProps>, durationInFrames: numbe
 
 /** The keyed camera (heat bench, or any Lab scene with `framing` / `cameraKeys`). */
 const keyedCamera = (p: Partial<SectionLabSceneProps>) =>
-  p.dressing === 'heat-bench' || p.dressing === 'timing-check' || p.framing !== undefined || (p.cameraKeys?.length ?? 0) > 0;
+  p.dressing === 'heat-bench' || p.dressing === 'timing-check' || p.dressing === 'crash-data' || p.framing !== undefined || (p.cameraKeys?.length ?? 0) > 0;
 
 /** The keyed camera's framing at second `s`: keys from where the last scene ended, a glide in, the push from the last key. */
 const labKeyedAt = (p: Partial<SectionLabSceneProps>, s: number): Framing => {
@@ -284,6 +291,7 @@ const KeyedLab: React.FC<SectionLabSceneProps> = (p) => {
         tireBay={p.tireBay}
         heatBench={p.dressing === 'heat-bench' ? st : undefined}
         timingCheck={p.timingCheck}
+        crashData={p.dressing === 'crash-data' ? {...p.crashData, cameraDistance: f.distance} : undefined}
       />
     </SectionStage>
   );

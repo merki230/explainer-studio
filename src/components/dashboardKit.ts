@@ -292,8 +292,10 @@ export type DispatchMapState = {
   breathe?: number;
   /** The pin, 0 (not there) → 1 (dropped in place). */
   pin: number;
-  /** The ink label beside the pin (e.g. "MILE 137"); shown with the pin. */
+  /** The ink label beside the pin (e.g. "MILE 137"); shown with the pin. Empty: no label. */
   label: string;
+  /** No. 020: 'highway' (default, No. 009: one highway line) or 'street' (a small city grid, the pin on a street). */
+  kind?: 'highway' | 'street';
 };
 
 /**
@@ -339,20 +341,50 @@ export const drawDispatchMap = (cx: CanvasRenderingContext2D, w: number, h: numb
     cx.lineTo(c * w, d * h);
     cx.stroke();
   }
+  // No. 020: a street grid instead (a few blocks, slightly turned), the caller mid-block on one street
+  const street = s.kind === 'street';
+  if (street) {
+    cx.save();
+    cx.translate(w / 2, h / 2);
+    cx.rotate(-0.12);
+    cx.strokeStyle = DIM;
+    cx.lineWidth = 7 * u;
+    for (const k of [-0.62, -0.2, 0.22, 0.64]) {
+      cx.beginPath();
+      cx.moveTo(-w, k * h);
+      cx.lineTo(w, k * h);
+      cx.stroke();
+      cx.beginPath();
+      cx.moveTo(k * w * 1.05, -h);
+      cx.lineTo(k * w * 1.05, h);
+      cx.stroke();
+    }
+    cx.restore();
+  }
   // the highway: one grey line from lower left to upper right, a gentle bend
-  const hw = (k: number): [number, number] => [
+  const hw0 = (k: number): [number, number] => [
     w * (-0.05 + 1.1 * k),
     h * (0.92 - 0.84 * k + 0.12 * Math.sin(Math.PI * k)),
   ];
-  cx.strokeStyle = DIM;
-  cx.lineWidth = 10 * u;
-  cx.beginPath();
-  for (let i = 0; i <= 40; i++) {
-    const [x, y] = hw(i / 40);
-    if (i === 0) cx.moveTo(x, y);
-    else cx.lineTo(x, y);
+  // on the street map the pin sits on the grid's second street, a little left of centre (rotated with it)
+  const hw = (k: number): [number, number] => {
+    if (!street) return hw0(k);
+    const lx = (k - 0.5) * w * 0.6;
+    const ly = 0.22 * h;
+    const a = -0.12;
+    return [w / 2 + lx * Math.cos(a) - ly * Math.sin(a), h / 2 + lx * Math.sin(a) + ly * Math.cos(a)];
+  };
+  if (!street) {
+    cx.strokeStyle = DIM;
+    cx.lineWidth = 10 * u;
+    cx.beginPath();
+    for (let i = 0; i <= 40; i++) {
+      const [x, y] = hw(i / 40);
+      if (i === 0) cx.moveTo(x, y);
+      else cx.lineTo(x, y);
+    }
+    cx.stroke();
   }
-  cx.stroke();
   // where the caller is (on the highway) and the rough circle's centre (a little off it)
   const [pinX, pinY] = hw(0.46);
   const k = Math.max(0, Math.min(1, s.circle));
@@ -388,7 +420,8 @@ export const drawDispatchMap = (cx: CanvasRenderingContext2D, w: number, h: numb
     cx.beginPath();
     cx.arc(pinX, top + pr, pr * 0.42, 0, Math.PI * 2);
     cx.fill();
-    // the label: Inter 700, on a dark halo so it reads over the line
+    // the label: Inter 700, on a dark halo so it reads over the line (none when empty)
+    if (s.label) {
     cx.globalAlpha = Math.max(0, Math.min(1, (p - 0.5) * 2));
     cx.font = `700 ${Math.round(30 * u)}px ${fonts.sans}, Arial`;
     cx.textAlign = 'left';
@@ -401,6 +434,7 @@ export const drawDispatchMap = (cx: CanvasRenderingContext2D, w: number, h: numb
     cx.fillStyle = INK;
     cx.fillText(s.label, lx, ly + 1 * u);
     cx.globalAlpha = 1;
+    }
   }
   cx.restore();
 };
