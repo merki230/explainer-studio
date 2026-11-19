@@ -1,6 +1,7 @@
 import React, {useMemo} from 'react';
 import * as THREE from 'three';
-import {REAL, section, WINTER, type Mood} from '../../theme';
+import {MOODS, REAL, section, WINTER, type Mood} from '../../theme';
+import {random} from 'remotion';
 import {raw, roundedBox} from '../plaster';
 import {cutMaterial, INK, InkLine} from '../section/cutLook';
 import {GlowEdge, GlowShell, haloOpacity} from './madeBy';
@@ -409,6 +410,28 @@ export type DriveUnitProps = {
   stageOutline?: [number, number];
   /** `stages: 2`: orange glow 0–1 on the output gear. */
   outputGlow?: number;
+  /**
+   * No. 021 (N6), single-speed only: the gear case closed (its front half on, uncut) until `open` 0 → 1 lifts it off
+   * (forward and up, then gone); inside, an oil pool (`REAL.oilFresh`, a material, never orange) the gears dip into, a
+   * small oil pump and a filter; drips off the pump's outlet onto the gears and a splash off the big gear at each of
+   * `splash` (s); `t` is the scene time. Default none (the case cut open, No. 006–017).
+   */
+  gearOil?: {open: number; t: number; splash?: number[]; coat?: number} | null;
+};
+
+/** No. 021 (N6): the gear case's oil, pump and filter (front unit, car frame; the rear unit mirrors x). */
+export const GEAR_OIL = {
+  /** The pool's surface (y) inside the case. */
+  level: 0.312,
+  pump: [1.226, 0.432] as P2,
+  filter: [1.128, 0.372] as P2,
+  filterR: 0.026,
+};
+/** No. 021: named points (front unit, car frame): 'gearbox' (the case's middle), 'gearPool' (the pool), 'gearDrain' (the drain plug under the case). */
+export const GEARBOX_POINTS: Record<string, V3> = {
+  gearbox: [1.33, 0.44, EV.gearZ + 0.06],
+  gearPool: [1.36, 0.28, EV.gearZ + 0.004],
+  gearDrain: [1.36, 0.19, EV.gearZ - 0.02],
 };
 
 /** The inverter's control board (No. 008) on the inverter's near end face (x0, x1, y0, y1). */
@@ -428,6 +451,7 @@ export const DriveUnit: React.FC<DriveUnitProps> = ({
   stageGlow,
   stageOutline,
   outputGlow = 0,
+  gearOil,
 }) => {
   const {env, envScale, albedo} = usePhys();
   const mats = useMemo(
@@ -567,6 +591,7 @@ export const DriveUnit: React.FC<DriveUnitProps> = ({
   const [mx, my] = EV.motor;
   const [ix0, ix1, iy0, iy1, iz0, iz1] = EV.inverter;
   const ink = INK * inkScale;
+  const oil = gearOil && stages === 1 ? gearOil : null;
   // the intermediate gear turns the other way, by the ratio of the radii
   const interSpin = -wheelSpin * (EV.final.r / EV.inter.r);
   const blur = Math.abs(rotorBlur);
@@ -711,6 +736,7 @@ export const DriveUnit: React.FC<DriveUnitProps> = ({
   return (
     <group>
       {motorParts}
+      {oil ? <GearOil oil={oil} mood={mood} wheelSpin={wheelSpin} ink={ink} gearMat={mats.gear} housing={mats.housing} /> : null}
       {/* the gear case behind, cut at its own plane; the final gear on the axle, the intermediate */}
       <mesh geometry={geo.gearCase} material={[mats.cut, mats.housing]} castShadow receiveShadow />
       {geo.gearInk.map((c, i) => (
@@ -748,6 +774,205 @@ export const DriveUnit: React.FC<DriveUnitProps> = ({
       {inverterParts}
       <mesh geometry={geo.hv} material={mats.cable} castShadow />
       {boardParts}
+    </group>
+  );
+};
+
+/** Clip a polygon to y ≤ level (one Sutherland–Hodgman edge). */
+const clipBelowY = (pts: P2[], level: number): P2[] => {
+  const out: P2[] = [];
+  for (let i = 0; i < pts.length; i++) {
+    const a = pts[i];
+    const b = pts[(i + 1) % pts.length];
+    const ina = a[1] <= level;
+    const inb = b[1] <= level;
+    if (ina) out.push(a);
+    if (ina !== inb) {
+      const u = (level - a[1]) / (b[1] - a[1]);
+      out.push([a[0] + u * (b[0] - a[0]), level]);
+    }
+  }
+  return out;
+};
+
+/**
+ * No. 021 (N6): the gear case's oil (see `DriveUnitProps.gearOil`): the lid (the case's front half) until it lifts off,
+ * the pool, the pump and filter (cut on the case's plane), the drips and splashes, the teeth's wet sheen. Nothing orange.
+ */
+const GearOil: React.FC<{
+  oil: {open: number; t: number; splash?: number[]; coat?: number};
+  mood: Mood;
+  wheelSpin: number;
+  ink: number;
+  gearMat: THREE.MeshPhysicalMaterial;
+  housing: THREE.Material;
+}> = ({oil, mood, wheelSpin, ink, gearMat, housing}) => {
+  const mats = useMemo(
+    () => ({
+      cut: cutMaterial(),
+      lid: phys(REAL.housing, {metalness: 0.55, roughness: 0.5, transparent: true}),
+      oilFace: new THREE.MeshBasicMaterial({color: raw(REAL.oilFresh)}),
+      oilSide: phys(REAL.oilFresh, {roughness: 0.15, clearcoat: 1}),
+      drop: phys(REAL.oilFresh, {roughness: 0.1, clearcoat: 1}),
+      film: phys(REAL.oilFresh, {roughness: 0.15, clearcoat: 1, transparent: true, depthWrite: false, side: THREE.DoubleSide}),
+      steel: phys(REAL.steel, {metalness: 0.9, roughness: 0.3}),
+      element: new THREE.MeshStandardMaterial({color: raw(REAL.friction), roughness: 0.9}),
+      dark: new THREE.MeshBasicMaterial({color: raw(REAL.labDark)}),
+    }),
+    [],
+  );
+  mats.oilFace.color.copy(raw(REAL.oilFresh)).multiplyScalar(1 / MOODS[mood].exposure);
+  const geo = useMemo(() => {
+    const caseOut = hull([...circlePts(EV.final.c, EV.final.r + 0.05, 32), ...circlePts(EV.inter.c, EV.inter.r + 0.05, 32)]);
+    const caseIn = hull([...circlePts(EV.final.c, EV.final.r + 0.022, 32), ...circlePts(EV.inter.c, EV.inter.r + 0.022, 32)]);
+    const lidOut = hull([...caseOut, ...circlePts(GEAR_OIL.filter, GEAR_OIL.filterR + 0.012, 24)]);
+    const pool = clipBelowY(caseIn, GEAR_OIL.level);
+    const [px, py] = GEAR_OIL.pump;
+    const pump: P2[] = [
+      [px - 0.016, py - 0.012],
+      [px + 0.016, py - 0.012],
+      [px + 0.016, py + 0.012],
+      [px - 0.016, py + 0.012],
+    ];
+    const pumpIn: P2[] = [
+      [px - 0.011, py - 0.007],
+      [px + 0.011, py - 0.007],
+      [px + 0.011, py + 0.007],
+      [px - 0.011, py + 0.007],
+    ];
+    const [fx, fy] = GEAR_OIL.filter;
+    const fr = GEAR_OIL.filterR;
+    const filt: P2[] = [
+      [fx - fr, fy - 0.04],
+      [fx + fr, fy - 0.04],
+      [fx + fr, fy + 0.04],
+      [fx - fr, fy + 0.04],
+    ];
+    const filtIn: P2[] = [
+      [fx - fr + 0.004, fy - 0.036],
+      [fx + fr - 0.004, fy - 0.036],
+      [fx + fr - 0.004, fy + 0.036],
+      [fx - fr + 0.004, fy + 0.036],
+    ];
+    const z = EV.gearZ;
+    return {
+      lid: extrude(shapeOf(lidOut), z + 0.001, z + 0.075),
+      pool: extrude(shapeOf(pool), -0.14, z - 0.001),
+      poolInk: pool.map(([x, y]) => [x, y, z + 0.0015] as V3),
+      pump: extrude(shapeOf(pump, [pumpIn]), z - 0.05, z),
+      pumpInk: [pump, pumpIn].map((p) => p.map(([x, y]) => [x, y, z + 0.002] as V3)),
+      filter: extrude(shapeOf(filt, [filtIn]), z - 0.07, z),
+      filterInk: [filt, filtIn].map((p) => p.map(([x, y]) => [x, y, z + 0.002] as V3)),
+      element: (() => {
+        const g = new THREE.PlaneGeometry(2 * fr - 0.012, 0.064, 8, 1);
+        g.translate(fx, fy, z - 0.004);
+        return g;
+      })(),
+      feed: new THREE.TubeGeometry(
+        new THREE.CatmullRomCurve3(([[px - 0.016, py, z - 0.02], [fx + 0.01, fy + 0.03, z - 0.02], [fx + fr, fy + 0.02, z - 0.02]] as V3[]).map((q) => new THREE.Vector3(...q))),
+        12,
+        0.004,
+        8,
+      ),
+    };
+  }, []);
+  const k = Math.max(0, Math.min(1, oil.open));
+  // the teeth come up wet: a clearcoat sheen on the gears once the case is open, and a lighter, less mirror-like steel
+  // (at 0.85 metalness the faces read black at this angle)
+  gearMat.clearcoat = k > 0 ? 0.9 * k : 0;
+  gearMat.clearcoatRoughness = 0.12;
+  gearMat.metalness = k > 0 ? 0.85 - 0.4 * k : 0.85;
+  gearMat.roughness = k > 0 ? 0.35 - 0.05 * k : 0.35;
+  // the coat: an amber film sweeping round each gear's teeth from the pool up (`coat` 0 → 1), wet beads riding the teeth
+  const coat = Math.max(0, Math.min(1, oil.coat ?? k));
+  mats.film.opacity = 0.62 * Math.min(1, coat * 1.5);
+  const interSpin = -wheelSpin * (EV.final.r / EV.inter.r);
+  const lift = k * k * (3 - 2 * k);
+  mats.lid.opacity = 1 - Math.max(0, Math.min(1, (k - 0.55) / 0.45));
+  mats.lid.depthWrite = mats.lid.opacity > 0.99;
+  const t = oil.t;
+  // drips off the pump's outlet onto the intermediate gear, every 0.7 s
+  const drips = [0, 1].flatMap((n) => {
+    const u = ((((t + n * 0.35) % 0.7) + 0.7) % 0.7) / 0.7;
+    const y = GEAR_OIL.pump[1] - 0.014 - 0.03 * u * u;
+    return [{p: [GEAR_OIL.pump[0] + 0.006, y, EV.gearZ - 0.008] as V3, s: Math.min(1, u / 0.15, (1 - u) / 0.15)}];
+  });
+  // splashes: droplets thrown up off the big gear's rising teeth, arcing back into the pool
+  const splash = (oil.splash ?? []).flatMap((s0) =>
+    [...Array(6).keys()].flatMap((i) => {
+      const age = t - s0 - i * 0.03;
+      if (age < 0 || age > 0.8) return [];
+      const vx = 0.12 + 0.12 * random(`gear-splash-${s0}-${i}`);
+      const vy = 0.32 + 0.18 * random(`gear-splash-y-${s0}-${i}`);
+      const x0 = EV.final.c[0] + EV.final.r * 0.75;
+      const y0 = GEAR_OIL.level + 0.004;
+      const y = y0 + vy * age - 0.5 * 1.6 * age * age;
+      if (y < GEAR_OIL.level) return [];
+      return [{p: [x0 + vx * age, y, EV.gearZ - 0.004] as V3, s: Math.min(1, age / 0.05)}];
+    }),
+  );
+  return (
+    <group>
+      {k < 0.999 ? (
+        <mesh geometry={geo.lid} material={mats.lid} position={[0, 0.12 * lift, 0.32 * lift]} castShadow={k < 0.5} receiveShadow renderOrder={k > 0 ? 7 : 0} />
+      ) : null}
+      {k > 0 ? (
+        <>
+          {/* the pool (its cut face flat, an ink line where it meets the case), the pump and the filter (cut) */}
+          <mesh geometry={geo.pool} material={[mats.oilFace, mats.oilSide]} />
+          <InkLine points={geo.poolInk} thickness={ink * 0.5} />
+          <mesh geometry={geo.pump} material={[mats.cut, housing]} castShadow receiveShadow />
+          {geo.pumpInk.map((p, i) => (
+            <InkLine key={i} points={p} thickness={ink * 0.6} />
+          ))}
+          <group position={[GEAR_OIL.pump[0], GEAR_OIL.pump[1], EV.gearZ - 0.004]} rotation={[0, 0, wheelSpin * 3]}>
+            {[0, 1, 2, 3].map((i) => (
+              <mesh key={i} material={mats.steel} rotation={[0, 0, (i / 4) * Math.PI]}>
+                <boxGeometry args={[0.012, 0.0025, 0.004]} />
+              </mesh>
+            ))}
+          </group>
+          <mesh geometry={geo.filter} material={[mats.cut, housing]} castShadow receiveShadow />
+          <mesh geometry={geo.element} material={mats.element} />
+          {geo.filterInk.map((p, i) => (
+            <InkLine key={i} points={p} thickness={ink * 0.6} />
+          ))}
+          <mesh geometry={geo.feed} material={mats.steel} />
+          {coat > 0.01
+            ? (
+                [
+                  [EV.final.c, EV.final.r, wheelSpin],
+                  [EV.inter.c, EV.inter.r, interSpin],
+                ] as [P2, number, number][]
+              ).map(([c, r, spin], gi) => (
+                <group key={`coat${gi}`} position={[c[0], c[1], EV.gearZ - 0.0045]}>
+                  {/* the film over the teeth band, swept from the bottom round to full */}
+                  <mesh material={mats.film} rotation={[0, 0, -Math.PI / 2]}>
+                    <ringGeometry args={[r - 0.016, r + 0.002, 64, 1, 0, Math.max(0.01, Math.min(1, coat) * Math.PI * 2)]} />
+                  </mesh>
+                  {/* wet beads on the tooth tips, turning with the gear */}
+                  <group rotation={[0, 0, spin]}>
+                    {[...Array(gi === 0 ? 14 : 10).keys()].map((b, _i, arr) => {
+                      const a = (b / arr.length) * Math.PI * 2;
+                      return (
+                        <mesh key={b} position={[Math.cos(a) * (r + 0.001), Math.sin(a) * (r + 0.001), 0.003]} scale={Math.min(1, coat * 1.5)} material={mats.drop}>
+                          <sphereGeometry args={[0.0042, 10, 8]} />
+                        </mesh>
+                      );
+                    })}
+                  </group>
+                </group>
+              ))
+            : null}
+          {[...drips, ...splash].map((d, i) =>
+            d.s > 0.02 ? (
+              <mesh key={i} position={d.p} scale={d.s} material={mats.drop}>
+                <sphereGeometry args={[0.0045, 10, 8]} />
+              </mesh>
+            ) : null,
+          )}
+        </>
+      ) : null}
     </group>
   );
 };

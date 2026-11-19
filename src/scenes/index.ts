@@ -26,6 +26,7 @@ import {PlugSheetScene} from './PlugSheetScene';
 import {ColdLabScene} from './ColdLabScene';
 import {HouseSliceScene} from './HouseSliceScene';
 import {CameoSlicesScene} from './CameoSlicesScene';
+import {ShopSliceScene} from './ShopSliceScene';
 
 /**
  * Scene registry. To add a scene: write a component that takes
@@ -60,6 +61,7 @@ export const SCENES: Record<string, React.FC<any>> = {
   'cold-lab': ColdLabScene,
   'house-slice': HouseSliceScene,
   'cameo-slices': CameoSlicesScene,
+  'shop-slice': ShopSliceScene,
 };
 
 export type SceneName =
@@ -89,4 +91,5 @@ export type SceneName =
   | 'plug-sheet'
   | 'cold-lab'
   | 'house-slice'
-  | 'cameo-slices';
+  | 'cameo-slices'
+  | 'shop-slice';

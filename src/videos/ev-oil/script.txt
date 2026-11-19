@@ -1,0 +1,21 @@
+A gas car's engine and transmission have hundreds of moving parts.
+An EV motor has about one.
+Why does only the gas car need engine oil changes?
+A big part of the answer is combustion.
+The fuel burning inside the engine slowly wears out its oil.
+Inside the engine alone, dozens of metal parts slide and spin against each other.
+Oil keeps that metal from rubbing and carries the heat away.
+Each time the fuel burns, a little hot gas leaks past the piston and down into the oil.
+That gas is dirty.
+It carries soot, water, acid and bits of unburned fuel.
+Over time, the acid uses up the oil's protective additives, and the fuel makes the oil thinner.
+That's why many gas cars need fresh oil about every five to ten thousand miles.
+An EV motor has no combustion.
+Its rotor spins inside a ring of coils, and there's no engine oil to change.
+Even so, an EV does have oil.
+A Tesla Model 3's rear gearbox holds about two liters.
+That oil coats spinning gears, but nothing burns anywhere near them.
+Tesla's maintenance schedule doesn't list a change for that oil.
+In fairness, that same schedule still lists brake fluid checks, cabin filters and tire rotations.
+Counting those, one consumer study found EVs cost about half as much as gas cars to maintain and repair.
+How many miles do you go between oil changes?

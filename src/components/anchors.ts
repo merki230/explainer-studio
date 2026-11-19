@@ -16,6 +16,7 @@ import {recordsAnchorOnScreen, type RecordsSliceSceneProps} from '../scenes/Reco
 import {plugSheetAnchorOnScreen, type PlugSheetSceneProps} from '../scenes/PlugSheetScene';
 import {streetAnchorOnScreen, type StreetSliceSceneProps} from '../scenes/StreetSliceScene';
 import {towerAnchorOnScreen, type TowerSliceSceneProps} from '../scenes/TowerSliceScene';
+import {shopAnchorOnScreen, type ShopSliceSceneProps} from '../scenes/ShopSliceScene';
 import type {Format} from '../theme';
 
 /**
@@ -48,6 +49,7 @@ export const ANCHOR_SCENES = [
   'city-twin',
   'records-slice',
   'plug-sheet',
+  'shop-slice',
 ];
 
 /**
@@ -110,5 +112,6 @@ export const anchorOnScreen = (
   if (scene.name === 'city-twin') return cityTwinAnchorOnScreen(scene.props as Partial<CityTwinSceneProps>, anchor, o);
   if (scene.name === 'records-slice') return recordsAnchorOnScreen(scene.props as Partial<RecordsSliceSceneProps>, anchor, o);
   if (scene.name === 'plug-sheet') return plugSheetAnchorOnScreen(scene.props as Partial<PlugSheetSceneProps>, anchor, o);
+  if (scene.name === 'shop-slice') return shopAnchorOnScreen(scene.props as Partial<ShopSliceSceneProps>, anchor, o);
   return undefined;
 };

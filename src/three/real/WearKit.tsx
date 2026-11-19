@@ -271,6 +271,18 @@ const PAN_INNER: P2[] = [
   [-0.148, -0.16],
 ];
 
+/** No. 021: the sump's inner floor and top (car-frame y) and its oil surface's height at a `level` (0 → 1, as `OilPan`). */
+export const oilPanSpan = () => {
+  const ys = PAN_INNER.map(([a, b]) => cyl(a, b)[1]);
+  return {lo: Math.min(...ys), hi: Math.max(...ys)};
+};
+export const oilSurfaceY = (level: number) => {
+  const {lo, hi} = oilPanSpan();
+  return lo + (hi - lo) * Math.max(0.05, Math.min(0.95, level));
+};
+/** No. 021: the sump's outline in the car frame (x, y), outer and inner, and its section plane. */
+export const OIL_PAN = {outer: () => PAN_OUTER.map(([a, b]) => cyl(a, b)), inner: () => PAN_INNER.map(([a, b]) => cyl(a, b)), z: PAN.z, back: PAN.back};
+
 /** Where the oil pan's callout points (car frame): the oil's cut face, just in front of the section plane. */
 export const OIL_PAN_POINT: V3 = [...cyl(-0.23, -0.04), PAN.z + 0.01] as V3;
 
@@ -280,7 +292,7 @@ export const OIL_PAN_POINT: V3 = [...cyl(-0.23, -0.04), PAN.z + 0.01] as V3;
  * level at `level` of the sump's depth (default 0.55), its cut face flat `REAL.coffee` dark brown. `tremor`: the
  * running engine's offset (it is bolted to the block).
  */
-export const OilPan: React.FC<{mood: Mood; inkScale?: number; level?: number; tremor?: V3}> = ({mood, inkScale = 1, level = 0.55, tremor}) => {
+export const OilPan: React.FC<{mood: Mood; inkScale?: number; level?: number; tremor?: V3; color?: string}> = ({mood, inkScale = 1, level = 0.55, tremor, color = REAL.coffee}) => {
   const mats = useMemo(
     () => ({
       cut: cutMaterial(),
@@ -290,7 +302,8 @@ export const OilPan: React.FC<{mood: Mood; inkScale?: number; level?: number; tr
     }),
     [],
   );
-  mats.oil.color.copy(raw(REAL.coffee)).multiplyScalar(1 / MOODS[mood].exposure);
+  mats.oil.color.copy(raw(color)).multiplyScalar(1 / MOODS[mood].exposure);
+  mats.oilSide.color.copy(raw(color));
   const geo = useMemo(() => {
     const outer = PAN_OUTER.map(([a, b]) => cyl(a, b));
     const inner = PAN_INNER.map(([a, b]) => cyl(a, b));

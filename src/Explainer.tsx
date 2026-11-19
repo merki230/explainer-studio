@@ -46,6 +46,7 @@ import {recordsCameraEnd, recordsCameraStart} from './scenes/RecordsSliceScene';
 import {plugSheetCameraEnd, plugSheetCameraStart} from './scenes/PlugSheetScene';
 import {coldLabCameraEnd, coldLabCameraStart} from './scenes/ColdLabScene';
 import {houseCameraEnd, houseCameraStart, houseCarry} from './scenes/HouseSliceScene';
+import {shopCameraEnd, shopCameraStart} from './scenes/ShopSliceScene';
 import {REVEALS} from './scenes/openingReveal';
 import type {Framing} from './three/section/SectionCamera';
 
@@ -74,6 +75,7 @@ const CAMERAS: Record<string, {start: CameraFn; end: CameraFn}> = {
   'plug-sheet': {start: plugSheetCameraStart as CameraFn, end: plugSheetCameraEnd as CameraFn},
   'cold-lab': {start: coldLabCameraStart as CameraFn, end: coldLabCameraEnd as CameraFn},
   'house-slice': {start: houseCameraStart as CameraFn, end: houseCameraEnd as CameraFn},
+  'shop-slice': {start: shopCameraStart as CameraFn, end: shopCameraEnd as CameraFn},
 };
 import {transitionInto, type Transition} from './scenes/transitions';
 import {clickOffFrame, type ClickOff} from './scenes/clickOff';

@@ -205,6 +205,22 @@ const cyl = (along: number, across = 0): P2 => {
   const c = Math.cos(GAS.lean);
   return [cx - s * along + c * across, cy + c * along + s * across];
 };
+/** No. 021: the four-cylinder's cylinder frame (`cyl`), for parts drawn on its section plane (`OilKit`). */
+export const i4Cyl = cyl;
+/** No. 021: the four-cylinder's deck and head heights along the cylinder axis (m from the crank centre). */
+export const I4 = {deck: 0.275, headTop: 0.395};
+/**
+ * No. 021: where the four-cylinder's moving parts sit at a crank angle (as `I4Bay` draws them; `crank` undefined = No.
+ * 008's still pose): the crank angle used (`th`, 0 = top dead centre), the pin's centre, the pin's and the piston
+ * pin's distance along the axis, the pin's offset across it, the piston's crown along the axis.
+ */
+export const i4Pose = (crank?: number) => {
+  const th = 0.6 + (crank ?? 0);
+  const pinAlong = GAS.throw * Math.cos(th);
+  const pinAcross = GAS.throw * Math.sin(th);
+  const pistonAlong = pinAlong + Math.sqrt(GAS.rod ** 2 - pinAcross ** 2);
+  return {th, pin: cyl(pinAlong, pinAcross), pinAlong, pinAcross, pistonAlong, crown: pistonAlong + 0.012 + 0.025, skirt: pistonAlong + 0.012 - 0.025};
+};
 const toV3 = (pts: P2[], z: number): V3[] => pts.map(([x, y]) => [x, y, z]);
 /**
  * A closed outline subdivided into steps ≤ `step` (m), for `InkLine`, which samples its path evenly by
@@ -271,6 +287,12 @@ export type EngineBayProps = {
   radiator?: boolean;
   /** 'i4' (No. 014): the engine's tremor while it runs, an offset (m) of the block, head and moving parts. Default none. */
   tremor?: V3;
+  /**
+   * 'i4' (No. 021, the close oil framings): the bore's honed wall dark (`REAL.labDark`), the bore's ink on its two walls
+   * only (not across its open ends, which cut across the piston up close), the cam pockets a little smaller so the ports
+   * stay open beside them. Default false (as No. 008–020).
+   */
+  detail?: boolean;
 };
 
 /** The engine bay: the four-cylinder (default, No. 008) or the V8 (`engine: 'v8'`, No. 007). */
@@ -278,7 +300,7 @@ export const EngineBay: React.FC<EngineBayProps> = ({engine = 'i4', crank, ...p}
   engine === 'v8' ? <V8Bay mood={p.mood} crank={crank ?? 0} inkScale={p.inkScale} /> : <I4Bay {...p} crank={crank} />;
 
 /** The four-cylinder, intake, throttle body, air duct, radiator and the computer (see the file comment). */
-const I4Bay: React.FC<Omit<EngineBayProps, 'engine'>> = ({mood, open = 0, inkScale = 1, crank, intake = true, tremor, radiator = true}) => {
+const I4Bay: React.FC<Omit<EngineBayProps, 'engine'>> = ({mood, open = 0, inkScale = 1, crank, intake = true, tremor, radiator = true, detail = false}) => {
   const {env, envScale, albedo} = usePhys();
   const mats = useMemo(
     () => ({
@@ -291,6 +313,7 @@ const I4Bay: React.FC<Omit<EngineBayProps, 'engine'>> = ({mood, open = 0, inkSca
       rubber: phys(REAL.rubber, {roughness: 0.75}),
       dark: phys(REAL.labDark, {roughness: 0.6}),
       bore: phys(REAL.lamination, {metalness: 0.6, roughness: 0.32, side: THREE.BackSide}),
+      boreDark: phys(REAL.labDark, {metalness: 0.35, roughness: 0.45, side: THREE.BackSide}),
       plate: phys(REAL.chrome, {metalness: 0.85, roughness: 0.28, side: THREE.DoubleSide}),
       gear: phys(REAL.steel, {metalness: 0.85, roughness: 0.35}),
       nylon: phys(REAL.shield, {roughness: 0.45}),
@@ -437,7 +460,13 @@ const I4Bay: React.FC<Omit<EngineBayProps, 'engine'>> = ({mood, open = 0, inkSca
     const tbz = GAS.tbZ;
     // No. 014: the cams' pockets in the head's section (a running engine shows its cams turning)
     const camHoles = [-1, 1].map((sd) => circlePts(cyl(h0 + 0.1, sd * 0.045), 0.04, 32).reverse());
+    // No. 021 (`detail`): pockets clear of the ports (the 0.04 pockets overlap them, which closes the ports' holes)
+    const camHolesD = [-1, 1].map((sd) => circlePts(cyl(h0 + 0.1, sd * 0.045), 0.034, 32).reverse());
     return {
+      headRunD: extrude(shapeOf(head, [intakePort, exhaustPort, ...camHolesD]), -0.25, z),
+      headRunInkD: [head, intakePort, exhaustPort, ...camHolesD].map((p) => toV3(p, z + 0.002)),
+      // the two cut pieces' own outlines (the crankcase's slanted walls, the bore's walls; nothing across the openings)
+      blockInkD: [blockL, blockR].map((p) => toV3(p, z + 0.002)),
       headRun: extrude(shapeOf(head, [intakePort, exhaustPort, ...camHoles]), -0.25, z),
       headRunInk: [head, intakePort, exhaustPort, ...camHoles].map((p) => toV3(p, z + 0.002)),
       camHoles,
@@ -600,12 +629,12 @@ const I4Bay: React.FC<Omit<EngineBayProps, 'engine'>> = ({mood, open = 0, inkSca
       {/* the block (cut), the bore's back wall, the piston, rod and crank */}
       <mesh geometry={geo.blockL} material={[mats.cut, mats.iron]} castShadow receiveShadow />
       <mesh geometry={geo.blockR} material={[mats.cut, mats.iron]} castShadow receiveShadow />
-      {geo.blockInk.map((p, i) => (
+      {(detail ? geo.blockInkD : geo.blockInk).map((p, i) => (
         <InkLine key={i} points={p} thickness={ink} />
       ))}
       <mesh
         geometry={geo.boreBack}
-        material={mats.bore}
+        material={detail ? mats.boreDark : mats.bore}
         position={[...cyl((0.105 + 0.275) / 2), z] as V3}
         rotation={[0, 0, lean]}
       />
@@ -634,8 +663,8 @@ const I4Bay: React.FC<Omit<EngineBayProps, 'engine'>> = ({mood, open = 0, inkSca
         rotation={[Math.PI / 2, 0, 0]}
       />
       {/* the head (cut, its ports), the valves, the two cams, the cam cover */}
-      <mesh geometry={crank === undefined ? geo.head : geo.headRun} material={[mats.cut, mats.alu]} castShadow receiveShadow />
-      {(crank === undefined ? geo.headInk : geo.headRunInk).map((p, i) => (
+      <mesh geometry={crank === undefined ? geo.head : detail ? geo.headRunD : geo.headRun} material={[mats.cut, mats.alu]} castShadow receiveShadow />
+      {(crank === undefined ? geo.headInk : detail ? geo.headRunInkD : geo.headRunInk).map((p, i) => (
         <InkLine key={i} points={p} thickness={ink} />
       ))}
       {crank === undefined
@@ -650,18 +679,19 @@ const I4Bay: React.FC<Omit<EngineBayProps, 'engine'>> = ({mood, open = 0, inkSca
           })}
       {[-1, 1].map((s) => (
         <group key={s}>
-          <mesh
-            geometry={geo.valve}
-            material={mats.steel}
-            position={[...cyl(0.275 + 0.07, s * 0.022), z - 0.01] as V3}
-            rotation={[0, 0, lean - s * 0.2]}
-          />
-          <mesh
-            geometry={geo.valveHead}
-            material={mats.steel}
-            position={[...cyl(0.275 + 0.034, s * 0.03), z - 0.01] as V3}
-            rotation={[0, 0, lean - s * 0.2]}
-          />
+          {(() => {
+            // No. 021 (`detail`, running): each valve opens as its cam's nose turns down onto it (🎭 8 mm lift)
+            const a = lean - s * 0.2;
+            const lift = detail && crank !== undefined ? 0.008 * Math.max(0, Math.cos(s * 1.2 - crank / 2 - (a - Math.PI / 2))) ** 3 : 0;
+            const d: V3 = [Math.sin(a) * lift, -Math.cos(a) * lift, 0];
+            const at = (q: [number, number]): V3 => [q[0] + d[0], q[1] + d[1], z - 0.01];
+            return (
+              <>
+                <mesh geometry={geo.valve} material={mats.steel} position={at(cyl(0.275 + 0.07, s * 0.022))} rotation={[0, 0, a]} />
+                <mesh geometry={geo.valveHead} material={mats.steel} position={at(cyl(0.275 + 0.034, s * 0.03))} rotation={[0, 0, a]} />
+              </>
+            );
+          })()}
           <mesh
             geometry={geo.cam}
             material={mats.steel}

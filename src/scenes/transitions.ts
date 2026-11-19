@@ -59,6 +59,8 @@ const SECTION_DEFAULT_LOCATION: Record<string, string> = {
   'house-slice': 'house',
   // No. 020: the cameo (coaster and ski blocks on one sheet)
   'cameo-slices': 'cameo',
+  // No. 021: the shop (two bays on one sheet)
+  'shop-slice': 'shop',
 };
 
 /** Frames of a horizontal video's `slide` (§ 11.6: 24, cubic in-out). */

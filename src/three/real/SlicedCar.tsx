@@ -29,6 +29,9 @@ import {madeByCoreR, madeByState, type MadeByKeys} from './madeBy';
 import {
   CRANK_SCALE,
   EngineBay,
+  GAS,
+  i4Cyl,
+  i4Pose,
   Gearbox,
   GAS_ROUTES,
   gasDrivePath,
@@ -45,6 +48,8 @@ import {HYBRID, hybridPoint, HybridSystems} from './HybridDrive';
 import {DragArrow, ExhaustPuffs} from './CarAir';
 import {BreathPuffs, flowState, GasHeat, HEAT, HEAT_SPIN, HeatFlow, HeatPump, heatSpin, HvacBox, InkGauge, runs, SeatHeat, WheelHeat, type FlowKeys, steppedLevel, type GasHeatKeys, type HeatPumpKeys, type HvacKeys} from './HeatKit';
 import {BrakeDust, DUST_LIFE, InkArrowAlong, inkArrowState, OIL_PAN_POINT, OilPan, treadHeight, type DustPuff} from './WearKit';
+import {oilColorAt, OilSystem, type OilShade, type OilSystemKeys} from './OilKit';
+import {GEARBOX_POINTS} from './EvDrive';
 import {CarCityRoad} from '../section/CarCityRoad';
 import {HighwayWinter} from '../section/HighwayWinter';
 import {RealWheel, WHEEL} from './RealWheel';
@@ -820,6 +825,37 @@ export type SlicedCarOptions = {
   held?: SlicedCarHeld | null;
   /** No. 020 (N5): ink waves (§ 5 Physical events in ink; see `SlicedCarInkWaves`). Null for none (default). */
   inkWaves?: SlicedCarInkWaves | null;
+  /**
+   * No. 021 (N1, N2), 'gas' four-cylinder: the engine's oil at work (`OilKit`): the pump, pickup, filter, drilled passages,
+   * bearings, rings and jet (neutral), the orange circulation, film and drops with their `strength`, the firings' flash and
+   * the blow-by haze with its specks (never orange). Implies `oilPan` and a turning crank. Null for none (default).
+   */
+  oilSystem?: OilSystemKeys | null;
+  /**
+   * No. 021 (N3): the sump oil's shade from each `at` (s): 'fresh' (`REAL.oilFresh`), 'used' (`REAL.coffee`), 'old'
+   * (`REAL.oilOld`), each step eased over `for` (default 0.6 s). Default: 'used' (`coffee`, as No. 016).
+   */
+  oilColor?: {at: number; shade: OilShade; for?: number}[];
+  /** No. 021 (N3): the sump's oil level, 0 (drained) → 1, a constant or keys (a drain, a refill from the bottom). Default 0.55. */
+  oilLevel?: Keyed;
+  /** No. 021 (N4): the in-set ink oil-life gauge beside the sump (range look, no digits; `InkGaugeKeys`). Null for none. */
+  oilGauge?: InkGaugeKeys | null;
+  /** No. 021: the oil's clock (dots, drops) at the scene's start (s). Default the scene's start in the video; a loop sets it. */
+  oilClock?: number;
+  /**
+   * No. 021 (N6), 'ev': which drive units: 'front' (default; with `awd` both) or 'rear' (a rear-drive EV: the rear unit
+   * alone on the rear axle, the rear bay open, the front bay empty).
+   */
+  evDrive?: 'front' | 'rear';
+  /**
+   * No. 021 (N6), 'ev': the drive unit's gear case closed (its front half on, uncut) until `open` 0 → 1 lifts it off (key it
+   * over 0.5 s); inside, the gears dip in an oil pool (`REAL.oilFresh`, never darkening, never orange) with a small pump and
+   * filter, drips from the pump onto the gears, splashes off the big gear at each of `splashAt` (s). On the unit that drives
+   * (`evDrive`). Null for none (default: the case cut open as No. 006–017).
+   */
+  gearbox?: {open?: Keyed; splashAt?: number[]; coatAt?: number} | null;
+  /** No. 021: the tires' moulded sidewall lettering; false for none (brand: nothing readable up close). Default true. */
+  tireText?: boolean;
 };
 
 /** No. 020: the held instant's keys (see `SlicedCarOptions.held`). */
@@ -1551,7 +1587,8 @@ export const engineOnAt = (p: Partial<SlicedCarOptions>, t: number) => {
 
 /** No. 014: whether this car's four-cylinder turns ('hybrid' always; 'gas' i4 only when asked, so posted videos hold). */
 export const engineTurns = (p: Partial<SlicedCarOptions>) =>
-  p.variant === 'hybrid' || (p.variant === 'gas' && p.engine !== 'v8' && (p.engineRun !== undefined || p.rpm !== undefined || p.exhaust !== undefined));
+  p.variant === 'hybrid' ||
+  (p.variant === 'gas' && p.engine !== 'v8' && (p.engineRun !== undefined || p.rpm !== undefined || p.exhaust !== undefined || p.oilSystem != null));
 
 /**
  * No. 014: the four-cylinder's crank angle (rad) at t: ∫ rpm × running × the playback rate, × `CRANK_SCALE` (🎭), from
@@ -1572,6 +1609,31 @@ export const engineCrank = (p: Partial<SlicedCarOptions>, t: number) => {
  * No. 014: a named point of the car (world, for anchors): 'engine', 'motor', 'battery', 'inverter' (the hybrid's), 'nose', 'tail',
  * 'roof', 'frontWheel', 'rearWheel', 'cluster'; No. 016: 'oilPan' (the four-cylinder's sump, `oilPan`), 'driveUnit' (the EV's front motor).
  */
+/** No. 021 (N4): the oil-life gauge's default foot (car frame): beside the sump on the firewall side, in front of its cut. */
+export const OIL_GAUGE_AT: V3 = [1.37, 0.14, 0.36];
+/**
+ * No. 021: named points of the four-cylinder's oil system (car frame, on its section plane): 'ringGap' (the top ring's gap,
+ * mid-stroke), 'rodBearing' (mid-stroke), 'mainBearing', 'filter', 'pump', 'gallery', 'cylinder' (the chamber), 'jet',
+ * 'drainPlug' (the sump's drain plug, under it), 'filler' (the oil filler on the cam cover), 'oilGauge' (the gauge's top).
+ */
+export const OIL_POINTS: Record<string, V3> = (() => {
+  const mid = i4Pose(Math.PI / 2 - 0.6);
+  const at = (a: number, c: number, dz = 0.006): V3 => [...i4Cyl(a, c), GAS.engineZ + dz] as V3;
+  return {
+    ringGap: at(mid.crown - 0.008, 0.012, 0.002),
+    rodBearing: at(mid.pinAlong, mid.pinAcross, -0.008),
+    mainBearing: at(0, 0, -0.008),
+    filter: at(-0.035, 0.2),
+    pump: at(-0.1, 0.075),
+    gallery: at(0, 0.135),
+    cylinder: at(0.3, 0, 0.002),
+    jet: at(0.1, -0.095, -0.004),
+    drainPlug: at(-0.275, -0.06, 0.0),
+    filler: at(0.475, -0.04, -0.12),
+    oilGauge: OIL_GAUGE_AT,
+  };
+})();
+
 export const slicedCarPoint = (p: Partial<SlicedCarOptions>, name: string): V3 | undefined => {
   const lay = layoutOf(p);
   const car: V3 | undefined =
@@ -1589,11 +1651,17 @@ export const slicedCarPoint = (p: Partial<SlicedCarOptions>, name: string): V3 |
                 ? [C.axleX.rear, R, C.cutZ + 0.12]
                 : name === 'cluster'
                   ? [lay.cluster[0] + 0.07, lay.cluster[1] + 0.06, lay.cluster[2]]
-                  : name === 'oilPan'
+                  : name === 'oilPan' || name === 'sump'
                     ? OIL_PAN_POINT
                     : name === 'driveUnit'
                       ? [EV.motor[0], EV.motor[1], EV.motorZ + 0.05]
-                      : undefined;
+                      : name in OIL_POINTS
+                        ? OIL_POINTS[name]
+                        : name in GEARBOX_POINTS
+                          ? p.evDrive === 'rear'
+                            ? rearUnitPoint(GEARBOX_POINTS[name])
+                            : GEARBOX_POINTS[name]
+                          : undefined;
   return car ? toWorld(p, car) : undefined;
 };
 
@@ -2306,7 +2374,7 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
   const v8 = gas && props.engine === 'v8';
   const crank = v8 ? slicedCarCrank(props, t) : 0;
   const gearNow = v8 ? gearShiftAt(props.gear, t) : null;
-  const rearBay = props.rearBay ?? (v8 ? true : undefined);
+  const rearBay = props.rearBay ?? (v8 ? true : props.evDrive === 'rear' ? true : undefined);
   const passengerSeat = props.passengerSeat ?? !(v8 && side === 'far');
   // the styled coupe's performance wheels (No. 007 realism pass)
   const sportWheel = sportWheelOf(props);
@@ -2748,6 +2816,8 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
   // ---- No. 014: the four-cylinder running (gas, hybrid), its tremor, the puffs, the brake heat, the drag arrow
   const turns4 = engineTurns(props);
   const crank4 = turns4 ? engineCrank(props, t) : undefined;
+  // No. 021 (N3): the sump's oil level
+  const oilLevelK = Math.max(0, Math.min(1, keyedValue(props.oilLevel, t, 0.55)));
   const on4 = turns4 ? engineOnAt(props, t) : 0;
   const trem = on4 * 0.001 * Math.sqrt(Math.max(0.3, keyedValue(props.rpm, t, 800) / 800));
   const tremor: V3 | undefined = turns4 && trem > 1e-5 ? [0, trem * Math.sin((crank4 ?? 0) * 2), 0.5 * trem * Math.cos((crank4 ?? 0) * 2)] : undefined;
@@ -3178,6 +3248,17 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
     return slots ? slots.map((v, i) => Math.max(v, own[i])) : own;
   };
   const frontSlots = dpk ? unitSlots('front') : slots;
+  // No. 021 (N6): the gear case's lid and its oil
+  const gearOil =
+    ev && props.gearbox
+      ? {
+          open: Math.max(0, Math.min(1, keyedValue(props.gearbox.open, t, 0))),
+          t,
+          splash: props.gearbox.splashAt,
+          // No. 021 FIX-C: the amber coat sweeps round the teeth from `coatAt` (0.8 s); default with the opening
+          ...(props.gearbox.coatAt !== undefined ? {coat: ease(t, props.gearbox.coatAt, props.gearbox.coatAt + 0.8)} : {}),
+        }
+      : null;
   const rearSlots = dpk ? unitSlots('rear') : slots;
   const drivePulses = driveUnits.flatMap((d) => {
     if (!(dpk?.pulses ?? true) || !d.st.flowing || d.st.glow <= 0.01) return [];
@@ -3501,8 +3582,47 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
                 </>
               ) : (
                 <>
-                  <EngineBay mood={mood} open={plate} inkScale={inkK} crank={crank4} tremor={tremor} radiator={!props.gasHeat} />
-                  {props.oilPan ? <OilPan mood={mood} inkScale={inkK} tremor={tremor} /> : null}
+                  <EngineBay mood={mood} open={plate} inkScale={inkK} crank={crank4} tremor={tremor} radiator={!props.gasHeat} {...(props.oilSystem ? {detail: true} : {})} />
+                  {props.oilPan || props.oilSystem ? (
+                    <OilPan
+                      mood={mood}
+                      inkScale={inkK}
+                      tremor={tremor}
+                      color={props.oilColor ? oilColorAt(props.oilColor, t) : undefined}
+                      level={props.oilLevel !== undefined ? oilLevelK : undefined}
+                    />
+                  ) : null}
+                  {props.oilSystem ? (
+                    <OilSystem
+                      keys={props.oilSystem}
+                      mood={mood}
+                      t={t}
+                      fps={fps}
+                      clock={props.oilClock ?? startFrame / fps}
+                      // before the scene's start the crank runs on at its first rate (so wisps fired then are in flight)
+                      crankAt={(tt) =>
+                        tt >= 0
+                          ? engineCrank(props, tt)
+                          : engineCrank(props, 0) + (keyedValue(props.rpm, 0, 800) / 60) * engineOnAt(props, 0) * rateAt(props, 0) * Math.PI * 2 * CRANK_SCALE * tt
+                      }
+                      onAt={(tt) => engineOnAt(props, tt)}
+                      camD={camD}
+                      inkScale={inkK}
+                      level={oilLevelK}
+                      tremor={tremor}
+                    />
+                  ) : null}
+                  {props.oilGauge ? (
+                    <InkGauge
+                      kind="range"
+                      level={steppedLevel(props.oilGauge, t)}
+                      at={props.oilGauge.at ?? OIL_GAUGE_AT}
+                      height={props.oilGauge.height ?? 0.2}
+                      mood={mood}
+                      k={Math.max(0.35, Math.min(2.2, camD / 6))}
+                      opacity={keyedValue(props.oilGauge.opacity, t, 1)}
+                    />
+                  ) : null}
                 </>
               )}
               {dz ? (
@@ -3725,17 +3845,20 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
           ) : null}
           {ev && !strip ? (
             <>
-              <DriveUnit
-                mood={mood}
-                wheelSpin={gearSpin}
-                rotorSpin={rotorSpin}
-                rotorBlur={rotorBlur}
-                slots={frontSlots}
-                inkScale={inkK}
-                board={props.drive !== undefined}
-              />
-              {props.awd ? (
-                // No. 007: the rear unit, the front one mirrored onto the rear axle, turning with it
+              {props.evDrive === 'rear' ? null : (
+                <DriveUnit
+                  mood={mood}
+                  wheelSpin={gearSpin}
+                  rotorSpin={rotorSpin}
+                  rotorBlur={rotorBlur}
+                  slots={frontSlots}
+                  inkScale={inkK}
+                  board={props.drive !== undefined}
+                  {...(gearOil ? {gearOil} : {})}
+                />
+              )}
+              {props.awd || props.evDrive === 'rear' ? (
+                // No. 007: the rear unit, the front one mirrored onto the rear axle, turning with it (No. 021: alone)
                 <RearDriveUnit
                   mood={mood}
                   wheelSpin={gearSpin}
@@ -3743,6 +3866,7 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
                   rotorBlur={rotorBlur}
                   slots={rearSlots}
                   inkScale={inkK}
+                  {...(gearOil && props.evDrive === 'rear' ? {gearOil} : {})}
                 />
               ) : null}
               {bladeSt ? (
@@ -3980,6 +4104,7 @@ export const SlicedCar: React.FC<SlicedCarProps> = (props) => {
           <RealWheel
             key={id}
             mood={mood}
+            {...(props.tireText === false ? {lettering: false} : {})}
             position={[dir * w.x, R - (w.near ? dropOf(id) : 0) + (tread ? tread.h * R : 0), w.z]}
             yaw={(w.near ? -Math.PI / 2 : Math.PI / 2) + steerYaw}
             radius={R}

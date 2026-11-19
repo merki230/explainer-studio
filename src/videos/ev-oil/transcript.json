@@ -1,0 +1,1190 @@
+{
+  "audio": "audio/voiceover.mp3",
+  "words": [
+    {
+      "text": "A",
+      "start": 0.137,
+      "end": 0.16
+    },
+    {
+      "text": "gas",
+      "start": 0.32,
+      "end": 0.48
+    },
+    {
+      "text": "car's",
+      "start": 0.6,
+      "end": 0.8
+    },
+    {
+      "text": "engine",
+      "start": 0.88,
+      "end": 1.2
+    },
+    {
+      "text": "and",
+      "start": 1.28,
+      "end": 1.36
+    },
+    {
+      "text": "transmission",
+      "start": 1.52,
+      "end": 2.08
+    },
+    {
+      "text": "have",
+      "start": 2.16,
+      "end": 2.48
+    },
+    {
+      "text": "hundreds",
+      "start": 2.52,
+      "end": 2.96
+    },
+    {
+      "text": "of",
+      "start": 3.04,
+      "end": 3.12
+    },
+    {
+      "text": "moving",
+      "start": 3.28,
+      "end": 3.44
+    },
+    {
+      "text": "parts.",
+      "start": 3.68,
+      "end": 4.32
+    },
+    {
+      "text": "An",
+      "start": 4.4,
+      "end": 4.48
+    },
+    {
+      "text": "EV",
+      "start": 4.56,
+      "end": 4.8
+    },
+    {
+      "text": "motor",
+      "start": 4.88,
+      "end": 5.36
+    },
+    {
+      "text": "has",
+      "start": 5.44,
+      "end": 5.52
+    },
+    {
+      "text": "about",
+      "start": 5.6,
+      "end": 5.92
+    },
+    {
+      "text": "one.",
+      "start": 6.08,
+      "end": 6.64
+    },
+    {
+      "text": "Why",
+      "start": 6.8,
+      "end": 6.96
+    },
+    {
+      "text": "does",
+      "start": 7.04,
+      "end": 7.2
+    },
+    {
+      "text": "only",
+      "start": 7.32,
+      "end": 7.44
+    },
+    {
+      "text": "the",
+      "start": 7.56,
+      "end": 7.68
+    },
+    {
+      "text": "gas",
+      "start": 7.84,
+      "end": 8
+    },
+    {
+      "text": "car",
+      "start": 8.12,
+      "end": 8.24
+    },
+    {
+      "text": "need",
+      "start": 8.32,
+      "end": 8.48
+    },
+    {
+      "text": "engine",
+      "start": 8.64,
+      "end": 8.8
+    },
+    {
+      "text": "oil",
+      "start": 8.92,
+      "end": 9.04
+    },
+    {
+      "text": "changes?",
+      "start": 9.32,
+      "end": 10
+    },
+    {
+      "text": "A",
+      "start": 10.137,
+      "end": 10.16
+    },
+    {
+      "text": "big",
+      "start": 10.24,
+      "end": 10.32
+    },
+    {
+      "text": "part",
+      "start": 10.4,
+      "end": 10.56
+    },
+    {
+      "text": "of",
+      "start": 10.6,
+      "end": 10.64
+    },
+    {
+      "text": "the",
+      "start": 10.72,
+      "end": 10.8
+    },
+    {
+      "text": "answer",
+      "start": 10.88,
+      "end": 11.28
+    },
+    {
+      "text": "is",
+      "start": 11.36,
+      "end": 11.44
+    },
+    {
+      "text": "combustion.",
+      "start": 11.6,
+      "end": 12.6
+    },
+    {
+      "text": "The",
+      "start": 12.64,
+      "end": 12.8
+    },
+    {
+      "text": "fuel",
+      "start": 12.96,
+      "end": 13.12
+    },
+    {
+      "text": "burning",
+      "start": 13.24,
+      "end": 13.44
+    },
+    {
+      "text": "inside",
+      "start": 13.64,
+      "end": 13.84
+    },
+    {
+      "text": "the",
+      "start": 13.88,
+      "end": 13.92
+    },
+    {
+      "text": "engine",
+      "start": 14,
+      "end": 14.48
+    },
+    {
+      "text": "slowly",
+      "start": 14.64,
+      "end": 14.96
+    },
+    {
+      "text": "wears",
+      "start": 15.04,
+      "end": 15.28
+    },
+    {
+      "text": "out",
+      "start": 15.36,
+      "end": 15.44
+    },
+    {
+      "text": "its",
+      "start": 15.52,
+      "end": 15.6
+    },
+    {
+      "text": "oil.",
+      "start": 15.68,
+      "end": 16.56
+    },
+    {
+      "text": "Inside",
+      "start": 16.76,
+      "end": 16.96
+    },
+    {
+      "text": "the",
+      "start": 17,
+      "end": 17.04
+    },
+    {
+      "text": "engine",
+      "start": 17.12,
+      "end": 17.36
+    },
+    {
+      "text": "alone,",
+      "start": 17.68,
+      "end": 18
+    },
+    {
+      "text": "dozens",
+      "start": 18.08,
+      "end": 18.48
+    },
+    {
+      "text": "of",
+      "start": 18.56,
+      "end": 18.64
+    },
+    {
+      "text": "metal",
+      "start": 18.76,
+      "end": 18.88
+    },
+    {
+      "text": "parts",
+      "start": 18.96,
+      "end": 19.28
+    },
+    {
+      "text": "slide",
+      "start": 19.36,
+      "end": 19.76
+    },
+    {
+      "text": "and",
+      "start": 19.84,
+      "end": 20.08
+    },
+    {
+      "text": "spin",
+      "start": 20.24,
+      "end": 20.4
+    },
+    {
+      "text": "against",
+      "start": 20.6,
+      "end": 20.8
+    },
+    {
+      "text": "each",
+      "start": 20.88,
+      "end": 20.96
+    },
+    {
+      "text": "other.",
+      "start": 21.04,
+      "end": 21.84
+    },
+    {
+      "text": "Oil",
+      "start": 22,
+      "end": 22.16
+    },
+    {
+      "text": "keeps",
+      "start": 22.24,
+      "end": 22.48
+    },
+    {
+      "text": "that",
+      "start": 22.56,
+      "end": 22.64
+    },
+    {
+      "text": "metal",
+      "start": 22.76,
+      "end": 22.88
+    },
+    {
+      "text": "from",
+      "start": 22.96,
+      "end": 23.12
+    },
+    {
+      "text": "rubbing",
+      "start": 23.2,
+      "end": 23.6
+    },
+    {
+      "text": "and",
+      "start": 23.72,
+      "end": 23.84
+    },
+    {
+      "text": "carries",
+      "start": 23.92,
+      "end": 24.16
+    },
+    {
+      "text": "the",
+      "start": 24.24,
+      "end": 24.32
+    },
+    {
+      "text": "heat",
+      "start": 24.4,
+      "end": 24.48
+    },
+    {
+      "text": "away.",
+      "start": 24.56,
+      "end": 25.4
+    },
+    {
+      "text": "Each",
+      "start": 25.44,
+      "end": 25.6
+    },
+    {
+      "text": "time",
+      "start": 25.72,
+      "end": 25.84
+    },
+    {
+      "text": "the",
+      "start": 25.92,
+      "end": 26
+    },
+    {
+      "text": "fuel",
+      "start": 26.16,
+      "end": 26.32
+    },
+    {
+      "text": "burns,",
+      "start": 26.48,
+      "end": 26.96
+    },
+    {
+      "text": "a",
+      "start": 27.04,
+      "end": 27.08
+    },
+    {
+      "text": "little",
+      "start": 27.12,
+      "end": 27.36
+    },
+    {
+      "text": "hot",
+      "start": 27.48,
+      "end": 27.6
+    },
+    {
+      "text": "gas",
+      "start": 27.68,
+      "end": 28
+    },
+    {
+      "text": "leaks",
+      "start": 28.16,
+      "end": 28.48
+    },
+    {
+      "text": "past",
+      "start": 28.6,
+      "end": 28.72
+    },
+    {
+      "text": "the",
+      "start": 28.8,
+      "end": 28.88
+    },
+    {
+      "text": "piston",
+      "start": 28.92,
+      "end": 29.36
+    },
+    {
+      "text": "and",
+      "start": 29.44,
+      "end": 29.52
+    },
+    {
+      "text": "down",
+      "start": 29.6,
+      "end": 29.84
+    },
+    {
+      "text": "into",
+      "start": 29.96,
+      "end": 30.08
+    },
+    {
+      "text": "the",
+      "start": 30.16,
+      "end": 30.24
+    },
+    {
+      "text": "oil.",
+      "start": 30.32,
+      "end": 31.08
+    },
+    {
+      "text": "That",
+      "start": 31.12,
+      "end": 31.28
+    },
+    {
+      "text": "gas",
+      "start": 31.48,
+      "end": 31.68
+    },
+    {
+      "text": "is",
+      "start": 31.76,
+      "end": 32
+    },
+    {
+      "text": "dirty.",
+      "start": 32.36,
+      "end": 32.773
+    },
+    {
+      "text": "It",
+      "start": 32.827,
+      "end": 32.88
+    },
+    {
+      "text": "carries",
+      "start": 32.96,
+      "end": 33.28
+    },
+    {
+      "text": "soot,",
+      "start": 33.36,
+      "end": 33.84
+    },
+    {
+      "text": "water,",
+      "start": 33.92,
+      "end": 34.48
+    },
+    {
+      "text": "acid",
+      "start": 34.64,
+      "end": 35.04
+    },
+    {
+      "text": "and",
+      "start": 35.12,
+      "end": 35.36
+    },
+    {
+      "text": "bits",
+      "start": 35.44,
+      "end": 35.52
+    },
+    {
+      "text": "of",
+      "start": 35.6,
+      "end": 35.68
+    },
+    {
+      "text": "unburned",
+      "start": 35.76,
+      "end": 36.16
+    },
+    {
+      "text": "fuel.",
+      "start": 36.24,
+      "end": 37.16
+    },
+    {
+      "text": "Over",
+      "start": 37.2,
+      "end": 37.44
+    },
+    {
+      "text": "time,",
+      "start": 37.68,
+      "end": 37.92
+    },
+    {
+      "text": "the",
+      "start": 38,
+      "end": 38.08
+    },
+    {
+      "text": "acid",
+      "start": 38.16,
+      "end": 38.48
+    },
+    {
+      "text": "uses",
+      "start": 38.56,
+      "end": 38.8
+    },
+    {
+      "text": "up",
+      "start": 38.88,
+      "end": 38.96
+    },
+    {
+      "text": "the",
+      "start": 39.04,
+      "end": 39.12
+    },
+    {
+      "text": "oil's",
+      "start": 39.2,
+      "end": 39.44
+    },
+    {
+      "text": "protective",
+      "start": 39.64,
+      "end": 40
+    },
+    {
+      "text": "additives,",
+      "start": 40.08,
+      "end": 40.827
+    },
+    {
+      "text": "and",
+      "start": 40.853,
+      "end": 40.88
+    },
+    {
+      "text": "the",
+      "start": 40.96,
+      "end": 41.04
+    },
+    {
+      "text": "fuel",
+      "start": 41.12,
+      "end": 41.44
+    },
+    {
+      "text": "makes",
+      "start": 41.52,
+      "end": 41.68
+    },
+    {
+      "text": "the",
+      "start": 41.76,
+      "end": 41.84
+    },
+    {
+      "text": "oil",
+      "start": 41.92,
+      "end": 42.16
+    },
+    {
+      "text": "thinner.",
+      "start": 42.24,
+      "end": 43.08
+    },
+    {
+      "text": "That's",
+      "start": 43.12,
+      "end": 43.28
+    },
+    {
+      "text": "why",
+      "start": 43.4,
+      "end": 43.52
+    },
+    {
+      "text": "many",
+      "start": 43.64,
+      "end": 43.76
+    },
+    {
+      "text": "gas",
+      "start": 43.92,
+      "end": 44.08
+    },
+    {
+      "text": "cars",
+      "start": 44.24,
+      "end": 44.4
+    },
+    {
+      "text": "need",
+      "start": 44.52,
+      "end": 44.64
+    },
+    {
+      "text": "fresh",
+      "start": 44.76,
+      "end": 44.88
+    },
+    {
+      "text": "oil",
+      "start": 44.96,
+      "end": 45.2
+    },
+    {
+      "text": "about",
+      "start": 45.28,
+      "end": 45.52
+    },
+    {
+      "text": "every",
+      "start": 45.72,
+      "end": 45.92
+    },
+    {
+      "text": "five",
+      "start": 46.04,
+      "end": 46.16
+    },
+    {
+      "text": "to",
+      "start": 46.24,
+      "end": 46.4
+    },
+    {
+      "text": "ten",
+      "start": 46.48,
+      "end": 46.56
+    },
+    {
+      "text": "thousand",
+      "start": 46.64,
+      "end": 46.96
+    },
+    {
+      "text": "miles.",
+      "start": 47.04,
+      "end": 47.92
+    },
+    {
+      "text": "An",
+      "start": 48,
+      "end": 48.08
+    },
+    {
+      "text": "EV",
+      "start": 48.16,
+      "end": 48.48
+    },
+    {
+      "text": "motor",
+      "start": 48.56,
+      "end": 48.88
+    },
+    {
+      "text": "has",
+      "start": 48.96,
+      "end": 49.2
+    },
+    {
+      "text": "no",
+      "start": 49.32,
+      "end": 49.44
+    },
+    {
+      "text": "combustion.",
+      "start": 49.56,
+      "end": 50.48
+    },
+    {
+      "text": "Its",
+      "start": 50.56,
+      "end": 50.64
+    },
+    {
+      "text": "rotor",
+      "start": 50.76,
+      "end": 51.04
+    },
+    {
+      "text": "spins",
+      "start": 51.12,
+      "end": 51.36
+    },
+    {
+      "text": "inside",
+      "start": 51.44,
+      "end": 51.76
+    },
+    {
+      "text": "a",
+      "start": 51.8,
+      "end": 51.84
+    },
+    {
+      "text": "ring",
+      "start": 51.92,
+      "end": 52
+    },
+    {
+      "text": "of",
+      "start": 52.08,
+      "end": 52.24
+    },
+    {
+      "text": "coils,",
+      "start": 52.32,
+      "end": 53.04
+    },
+    {
+      "text": "and",
+      "start": 53.12,
+      "end": 53.2
+    },
+    {
+      "text": "there's",
+      "start": 53.28,
+      "end": 53.52
+    },
+    {
+      "text": "no",
+      "start": 53.6,
+      "end": 53.68
+    },
+    {
+      "text": "engine",
+      "start": 53.76,
+      "end": 54
+    },
+    {
+      "text": "oil",
+      "start": 54.12,
+      "end": 54.24
+    },
+    {
+      "text": "to",
+      "start": 54.32,
+      "end": 54.4
+    },
+    {
+      "text": "change.",
+      "start": 54.88,
+      "end": 55.4
+    },
+    {
+      "text": "Even",
+      "start": 55.44,
+      "end": 55.68
+    },
+    {
+      "text": "so,",
+      "start": 55.76,
+      "end": 56.16
+    },
+    {
+      "text": "an",
+      "start": 56.24,
+      "end": 56.32
+    },
+    {
+      "text": "EV",
+      "start": 56.4,
+      "end": 56.88
+    },
+    {
+      "text": "does",
+      "start": 57.04,
+      "end": 57.2
+    },
+    {
+      "text": "have",
+      "start": 57.28,
+      "end": 57.52
+    },
+    {
+      "text": "oil.",
+      "start": 57.6,
+      "end": 58.427
+    },
+    {
+      "text": "A",
+      "start": 58.453,
+      "end": 58.48
+    },
+    {
+      "text": "Tesla",
+      "start": 58.56,
+      "end": 58.88
+    },
+    {
+      "text": "Model",
+      "start": 59,
+      "end": 59.12
+    },
+    {
+      "text": "3's",
+      "start": 59.2,
+      "end": 59.52
+    },
+    {
+      "text": "rear",
+      "start": 59.6,
+      "end": 59.84
+    },
+    {
+      "text": "gearbox",
+      "start": 59.92,
+      "end": 60.4
+    },
+    {
+      "text": "holds",
+      "start": 60.48,
+      "end": 60.64
+    },
+    {
+      "text": "about",
+      "start": 60.72,
+      "end": 61.04
+    },
+    {
+      "text": "two",
+      "start": 61.12,
+      "end": 61.2
+    },
+    {
+      "text": "liters.",
+      "start": 61.28,
+      "end": 62.2
+    },
+    {
+      "text": "That",
+      "start": 62.24,
+      "end": 62.4
+    },
+    {
+      "text": "oil",
+      "start": 62.48,
+      "end": 62.72
+    },
+    {
+      "text": "coats",
+      "start": 62.8,
+      "end": 63.04
+    },
+    {
+      "text": "spinning",
+      "start": 63.12,
+      "end": 63.44
+    },
+    {
+      "text": "gears,",
+      "start": 63.52,
+      "end": 64.08
+    },
+    {
+      "text": "but",
+      "start": 64.16,
+      "end": 64.4
+    },
+    {
+      "text": "nothing",
+      "start": 64.6,
+      "end": 64.8
+    },
+    {
+      "text": "burns",
+      "start": 64.96,
+      "end": 65.16
+    },
+    {
+      "text": "anywhere",
+      "start": 65.2,
+      "end": 65.52
+    },
+    {
+      "text": "near",
+      "start": 65.6,
+      "end": 65.76
+    },
+    {
+      "text": "them.",
+      "start": 65.84,
+      "end": 66.44
+    },
+    {
+      "text": "Tesla's",
+      "start": 66.48,
+      "end": 66.88
+    },
+    {
+      "text": "maintenance",
+      "start": 67.08,
+      "end": 67.28
+    },
+    {
+      "text": "schedule",
+      "start": 67.52,
+      "end": 67.76
+    },
+    {
+      "text": "doesn't",
+      "start": 67.88,
+      "end": 68.08
+    },
+    {
+      "text": "list",
+      "start": 68.16,
+      "end": 68.32
+    },
+    {
+      "text": "a",
+      "start": 68.48,
+      "end": 68.587
+    },
+    {
+      "text": "change",
+      "start": 68.693,
+      "end": 68.8
+    },
+    {
+      "text": "for",
+      "start": 68.88,
+      "end": 68.96
+    },
+    {
+      "text": "that",
+      "start": 69.04,
+      "end": 69.12
+    },
+    {
+      "text": "oil.",
+      "start": 69.2,
+      "end": 69.96
+    },
+    {
+      "text": "In",
+      "start": 70,
+      "end": 70.16
+    },
+    {
+      "text": "fairness,",
+      "start": 70.28,
+      "end": 70.8
+    },
+    {
+      "text": "that",
+      "start": 70.92,
+      "end": 71.04
+    },
+    {
+      "text": "same",
+      "start": 71.16,
+      "end": 71.28
+    },
+    {
+      "text": "schedule",
+      "start": 71.36,
+      "end": 71.84
+    },
+    {
+      "text": "still",
+      "start": 71.92,
+      "end": 72.08
+    },
+    {
+      "text": "lists",
+      "start": 72.16,
+      "end": 72.48
+    },
+    {
+      "text": "brake",
+      "start": 72.56,
+      "end": 72.8
+    },
+    {
+      "text": "fluid",
+      "start": 72.96,
+      "end": 73.12
+    },
+    {
+      "text": "checks,",
+      "start": 73.36,
+      "end": 73.6
+    },
+    {
+      "text": "cabin",
+      "start": 73.68,
+      "end": 74
+    },
+    {
+      "text": "filters",
+      "start": 74.24,
+      "end": 74.48
+    },
+    {
+      "text": "and",
+      "start": 74.56,
+      "end": 74.72
+    },
+    {
+      "text": "tire",
+      "start": 74.76,
+      "end": 74.96
+    },
+    {
+      "text": "rotations.",
+      "start": 75.04,
+      "end": 76.08
+    },
+    {
+      "text": "Counting",
+      "start": 76.16,
+      "end": 76.32
+    },
+    {
+      "text": "those,",
+      "start": 76.4,
+      "end": 76.64
+    },
+    {
+      "text": "one",
+      "start": 76.72,
+      "end": 77.2
+    },
+    {
+      "text": "consumer",
+      "start": 77.44,
+      "end": 77.68
+    },
+    {
+      "text": "study",
+      "start": 77.76,
+      "end": 78.08
+    },
+    {
+      "text": "found",
+      "start": 78.24,
+      "end": 78.4
+    },
+    {
+      "text": "EVs",
+      "start": 78.48,
+      "end": 78.88
+    },
+    {
+      "text": "cost",
+      "start": 78.96,
+      "end": 79.2
+    },
+    {
+      "text": "about",
+      "start": 79.28,
+      "end": 79.6
+    },
+    {
+      "text": "half",
+      "start": 79.68,
+      "end": 79.84
+    },
+    {
+      "text": "as",
+      "start": 79.92,
+      "end": 80.08
+    },
+    {
+      "text": "much",
+      "start": 80.16,
+      "end": 80.24
+    },
+    {
+      "text": "as",
+      "start": 80.32,
+      "end": 80.4
+    },
+    {
+      "text": "gas",
+      "start": 80.48,
+      "end": 80.72
+    },
+    {
+      "text": "cars",
+      "start": 80.8,
+      "end": 81.04
+    },
+    {
+      "text": "to",
+      "start": 81.12,
+      "end": 81.2
+    },
+    {
+      "text": "maintain",
+      "start": 81.36,
+      "end": 81.76
+    },
+    {
+      "text": "and",
+      "start": 81.8,
+      "end": 81.84
+    },
+    {
+      "text": "repair.",
+      "start": 81.92,
+      "end": 82.811
+    },
+    {
+      "text": "How",
+      "start": 82.869,
+      "end": 82.88
+    },
+    {
+      "text": "many",
+      "start": 82.96,
+      "end": 83.12
+    },
+    {
+      "text": "miles",
+      "start": 83.2,
+      "end": 83.52
+    },
+    {
+      "text": "do",
+      "start": 83.6,
+      "end": 83.68
+    },
+    {
+      "text": "you",
+      "start": 83.76,
+      "end": 83.84
+    },
+    {
+      "text": "go",
+      "start": 83.92,
+      "end": 84
+    },
+    {
+      "text": "between",
+      "start": 84.08,
+      "end": 84.4
+    },
+    {
+      "text": "oil",
+      "start": 84.52,
+      "end": 84.64
+    },
+    {
+      "text": "changes?",
+      "start": 84.88,
+      "end": 85.36
+    }
+  ]
+}

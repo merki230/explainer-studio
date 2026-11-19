@@ -434,6 +434,8 @@ export type RealWheelProps = {
    * it (a drive unit) reads through in a close framing. Default none (as before); 1 restores it.
    */
   ghost?: number;
+  /** No. 021: the sidewall's moulded lettering (size code, load, DOT code). false: the ribs and triangles only, nothing readable. Default true. */
+  lettering?: boolean;
   /**
    * No. 014 (N2): heat in the brake rotor, 0 → 1 (with `axle`): its friction face glows `orange` (the energy lost as heat,
    * the system), seen through the spokes of a whole wheel, with the § 5 halo at 25 %, both bloomed. The caliper keeps
@@ -797,6 +799,7 @@ export const RealWheel: React.FC<RealWheelProps> = ({
   heat = 0,
   squeeze,
   tread,
+  lettering = true,
 }) => {
   const gl = useThree((s) => s.gl);
   gl.localClippingEnabled = true;
@@ -869,7 +872,7 @@ export const RealWheel: React.FC<RealWheelProps> = ({
   }
   // the polar textures (shared per blur bucket; each material turns its own copy by an offset)
   setMap(mats.tread, treadTexture(blur), -spin / (Math.PI * 2));
-  const side = sidewallTexture(fonts.sans, ready, blur);
+  const side = sidewallTexture(fonts.sans, ready, blur, lettering);
   setMap(mats.sideOut, side, spin / (Math.PI * 2));
   setMap(mats.sideIn, side, -spin / (Math.PI * 2));
   if (axle) setMap(mats.rotor, rotorTexture(blur), spin / (Math.PI * 2));

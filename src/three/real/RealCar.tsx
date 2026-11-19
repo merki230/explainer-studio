@@ -291,6 +291,25 @@ const BODY_EV_REAR: P2[] = [
   [-1.79, 0.24],
   ...arch(-1.35),
 ];
+/**
+ * No. 021 (`rearBay` on the crossover, a rear-drive EV): the rear section opened like the front bay, cut at `REAR_BAY_Z`: a
+ * thin wall in front of the rear bench's base, the floor under the bench, the solid rear end behind the arch; the bay
+ * between (round the rear drive unit) open down to the road.
+ */
+const BODY_EV_REAR_BAY: P2[] = [
+  [-0.88, 0.36],
+  [-0.88, 0.84],
+  [-1.85, 0.84],
+  [-1.9, 1.28],
+  [-2.3, 1.3],
+  [-2.4, 1.1],
+  [-2.4, 0.5],
+  [-2.32, 0.24],
+  [-1.82, 0.24],
+  [-1.82, 0.79],
+  [-0.93, 0.79],
+  [-0.93, 0.36],
+];
 /** The gas car's sill (No. 008, `gas`): the band between the arches the EV's pack filled. */
 const SILL_GAS: P2[] = [
   [-0.91, 0.24],
@@ -859,7 +878,7 @@ export const cutCarOutlines = (o: {
   if (bay)
     return [
       BODY_EV_FRONT.map(([x, y]) => [x, y, EV_FIREWALL_Z + 0.003] as V3),
-      BODY_EV_REAR.map(([x, y]) => [x, y, CAR_LAYOUT.cutZ + 0.003] as V3),
+      (o.rearBay ? BODY_EV_REAR_BAY : BODY_EV_REAR).map(([x, y]) => [x, y, zRear + 0.003] as V3),
       ...(o.gas ? [SILL_GAS.map(([x, y]) => [x, y, CAR_LAYOUT.cutZ + 0.003] as V3)] : []),
     ];
   return [BODY.map(([x, y]) => [x, y, CAR_LAYOUT.cutZ + 0.003] as V3)];
@@ -1274,6 +1293,7 @@ export const RealCar: React.FC<RealCarProps> = ({
       body: extrude(shapeOf(BODY), -0.87, CAR_LAYOUT.cutZ),
       evFront: extrude(shapeOf(BODY_EV_FRONT), -0.87, EV_FIREWALL_Z),
       evRear: extrude(shapeOf(BODY_EV_REAR), -0.87, CAR_LAYOUT.cutZ),
+      evRearBay: extrude(shapeOf(BODY_EV_REAR_BAY), -0.87, REAR_BAY_Z),
       sill: extrude(shapeOf(sillOf(sillFrom)), -0.87, CAR_LAYOUT.cutZ),
       far: extrude(shapeOf(FAR, WINDOWS), CAR_LAYOUT.farZ, -0.87),
       glass: WINDOWS.map((w) => new THREE.ShapeGeometry(shapeOf(w))),
@@ -1387,7 +1407,7 @@ export const RealCar: React.FC<RealCarProps> = ({
           ) : bay ? (
             <>
               <mesh geometry={geo.evFront} material={[mats.cut, mats.paint]} castShadow receiveShadow />
-              <mesh geometry={geo.evRear} material={[mats.cut, mats.paint]} castShadow receiveShadow />
+              <mesh geometry={rearBay ? geo.evRearBay : geo.evRear} material={[mats.cut, mats.paint]} castShadow receiveShadow />
               {gas ? <mesh geometry={geo.sill} material={[mats.cut, mats.paint]} castShadow receiveShadow /> : null}
             </>
           ) : (

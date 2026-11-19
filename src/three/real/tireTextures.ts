@@ -150,7 +150,7 @@ export const SIDE_BASE = 0.76;
  * concentric striations near the bead, a knurled band under the shoulder and tread-wear triangles.
  * Drawn on a canvas once the fonts are in; the layout repeats twice round the tire.
  */
-const sideBase = (font: string) => (): Gray => {
+const sideBase = (font: string, lettering = true) => (): Gray => {
   const w = SIDE_W;
   const h = SIDE_H;
   const c = document.createElement('canvas');
@@ -193,7 +193,7 @@ const sideBase = (font: string) => (): Gray => {
     cx.fillText(s, 0, 0);
     cx.restore();
   };
-  for (const off of [0, 0.5]) {
+  for (const off of lettering ? [0, 0.5] : []) {
     text('225/45 R17 94V', off + 0.12, 0.84, 50, 800, 1);
     text('TUBELESS', off + 0.3, 0.845, 30, 800, 0.97);
     text('RADIAL', off + 0.4, 0.845, 30, 800, 0.97);
@@ -274,8 +274,8 @@ export const blurBucket = (angle: number, w: number, step: number) => {
 /** The tread texture for a blur angle (radians swept while the shutter is open). */
 export const treadTexture = (blur = 0) => textureFor('tread', treadBase, blurBucket(blur, 2048, 2));
 /** The sidewall texture (needs the fonts: pass whether they're in, so the text is drawn once they are). */
-export const sidewallTexture = (font: string, ready: boolean, blur = 0) =>
-  textureFor(`side:${ready ? font : 'none'}`, ready ? sideBase(font) : sideBlank, blurBucket(blur, SIDE_W, 4));
+export const sidewallTexture = (font: string, ready: boolean, blur = 0, lettering = true) =>
+  textureFor(`side:${ready ? font : 'none'}${lettering ? '' : ':plain'}`, ready ? sideBase(font, lettering) : sideBlank, blurBucket(blur, SIDE_W, 4));
 /** The rotor face texture. */
 export const rotorTexture = (blur = 0) => textureFor('rotor', rotorBase, blurBucket(blur, 1024, 2));
 

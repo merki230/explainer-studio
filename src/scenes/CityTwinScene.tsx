@@ -61,6 +61,9 @@ const NOSE_X = 2.42;
 const LEAD_HALF = 2.42;
 /** The storefronts' and slabs' repeat (m): the loop brings the street's scroll back to it. */
 const STREET_PERIOD = 12;
+/** No. 021: the highway's broken lane line repeats every 40 ft (`HIGHWAY_LAYOUT.dash.period`); the verge posts every 10 m. */
+const HWY_DASH_PERIOD = 40 * 0.3048;
+const POST_PERIOD = 10;
 
 /** The lead car ahead of a twin. */
 export type TwinLead = {
@@ -107,7 +110,16 @@ export type CityTwinFraming =
   | 'evCar'
   | 'evNose'
   | 'evSky'
-  | 'evCabin';
+  | 'evCabin'
+  // No. 021 (N7), the gas car over the rear-drive EV on the highway
+  | 'twinBays'
+  | 'evUnit'
+  | 'engine'
+  | 'cylinder'
+  | 'crankcase'
+  | 'blowby'
+  | 'motor'
+  | 'gearbox';
 
 export type CityTwinSceneProps = {
   durationInFrames: number;
@@ -216,7 +228,7 @@ const topShapeOf = (p: Partial<CityTwinSceneProps>): ShellProfile => p.top?.shap
  */
 export const cityTwinFramings = (p: Partial<CityTwinSceneProps>): Record<CityTwinFraming, Framing> => {
   const g = gapOf(p);
-  const sedan = cityTwinSedanFramings(g);
+  const sedan = {...cityTwinSedanFramings(g), ...oilFramings(p)};
   if (topShapeOf(p) !== 'crossover') return sedan;
   return {
     ...sedan,
@@ -253,6 +265,33 @@ const winterFramings = (g: number): Record<string, Framing> => ({
   evCabin: {look: [-0.45, g + 1.15, 0.3], distance: 3.4},
 });
 
+/**
+ * No. 021 (N7): the oil video's framings (world; the gas car's lane and the EV's lane found from the twins' variants, so
+ * either order works; set on test stills). 'twinBays': frame 0 and the loop, the gas engine bay and the EV's rear drive
+ * unit on the diagonal; 'evUnit': the EV's rear unit whole (motor, gearbox, half-shaft); 'engine': the four-cylinder from
+ * the cam cover to the sump floor, the gauge's place beside the sump; 'cylinder': the chamber, piston and rings (the ring
+ * gap); 'crankcase': the rod's big end, the piston's underside and jet, the pool; 'blowby': under the skirt down the front
+ * wall to the pool; 'motor': the rear motor's stator and rotor, room on the left for a callout; 'gearbox': the rear gear
+ * case, its pool, pump and filter.
+ */
+const oilFramings = (p: Partial<CityTwinSceneProps>): Record<'twinBays' | 'evUnit' | 'engine' | 'cylinder' | 'crankcase' | 'blowby' | 'motor' | 'gearbox', Framing> => {
+  const g = gapOf(p);
+  const top = p.top?.variant;
+  const bottom = p.bottom === false ? undefined : p.bottom?.variant;
+  const gasY = top === 'gas' ? g : bottom === 'gas' ? 0 : g;
+  const evY = gasY === g ? 0 : g;
+  return {
+    twinBays: {look: [-0.05, (gasY + evY) / 2 + 0.75, 0.35], distance: 18},
+    evUnit: {look: [1.3, evY + 0.4, 0.3], distance: 2.8},
+    engine: {look: [-1.6, gasY + 0.44, 0.32], distance: 2.4},
+    cylinder: {look: [-1.645, gasY + 0.58, 0.3], distance: 1.2},
+    crankcase: {look: [-1.68, gasY + 0.3, 0.3], distance: 1.4},
+    blowby: {look: [-1.74, gasY + 0.27, 0.3], distance: 0.8},
+    motor: {look: [1.2, evY + 0.66, 0.3], distance: 2.2},
+    gearbox: {look: [1.3, evY + 0.42, 0.22], distance: 1.4},
+  };
+};
+
 /** No. 014's framings (the sedan pair), as posted. */
 const cityTwinSedanFramings = (g: number): Record<CityTwinFraming, Framing> => {
   return {
@@ -268,7 +307,7 @@ const cityTwinSedanFramings = (g: number): Record<CityTwinFraming, Framing> => {
     bottomCar: {look: [0.25, 0.55, 0.3], distance: 16.5},
     wheels: {look: [1.3, g / 2 + 0.3, 0.8], distance: 11.0},
     ...(winterFramings(g) as Record<'twinHeat' | 'twinSpring' | 'evHeat' | 'evPack' | 'evFront' | 'evCar' | 'evNose' | 'evSky' | 'evCabin', Framing>),
-  };
+  } as Record<Exclude<CityTwinFraming, keyof ReturnType<typeof oilFramings>>, Framing> as Record<CityTwinFraming, Framing>;
 };
 
 /** The lamps lit (0 → 1) from speed keys at t: while slowing or standing. */
@@ -341,8 +380,16 @@ const carBase = (p: Partial<CityTwinSceneProps>, w: Which, fps: number): Partial
     lights: c.lights ?? p.lights,
     signal: c.signal ?? (w === 'bottom' && (p.signals ?? 'top') === 'top' ? false : undefined),
   }));
+  // No. 021: an EV in the bottom lane is YOU's car (YOU driving, YOU's colour), not the gas twin's defaults
+  // and a gas car in the top lane is the gas twin (an extra driving, `TWINS.gasPaint`, the engine running)
+  const base: Partial<SlicedCarOptions> =
+    w === 'bottom' && car.variant === 'ev'
+      ? (({paint: _p, driver: _d, engineRun: _e, ...rest}) => (void _p, void _d, void _e, rest))(DEFAULTS.bottom)
+      : w === 'top' && car.variant === 'gas'
+        ? {...DEFAULTS.top, driver: 'extra', paint: TWINS.gasPaint, engineRun: [{at: -1, on: true}]}
+        : DEFAULTS[w];
   const o: Partial<SlicedCarOptions> = {
-    ...DEFAULTS[w],
+    ...base,
     // the highway's block (its front face nearer the cars than the city's) thinner on top, so the gas twin's roof under
     // it stays whole at the far framings (owner: "the gas car seems to be cut")
     ...(road === 'highway' && w === 'top' ? {roadDepth: 0.35} : {}),
@@ -366,13 +413,18 @@ const carBase = (p: Partial<CityTwinSceneProps>, w: Which, fps: number): Partial
     const secs = T / fps;
     const z = {...o, revsFrom: 0, wheelFrom: 0, crankFrom: 0};
     const dist = simRevs(z, secs, fps) * WHEEL_C;
-    o.revsFrom = -mod(dist, STREET_PERIOD) / WHEEL_C;
-    o.wheelFrom = -mod(wheelTurnRevs(z, secs, fps), 0.2);
+    // No. 021: on the highway the road's repeat is the broken lane line's (40 ft); an EV there lands its rotor too (its
+    // turn is the wheel's × an integer ratio, so a whole wheel turn brings the 8 magnet pairs and the 5 spokes back)
+    const hwy = road === 'highway';
+    o.revsFrom = -mod(dist, hwy ? HWY_DASH_PERIOD : STREET_PERIOD) / WHEEL_C;
+    o.wheelFrom = -mod(wheelTurnRevs(z, secs, fps), hwy && o.variant === 'ev' ? 1 : 0.2);
     if (engineTurns(o)) o.crankFrom = -mod(engineCrank(z, secs), 4 * Math.PI);
     // the drivers' idle (breathing, blinks) lands on frame 0's clock too
     o.figureClock = -secs;
     // No. 017 (N13): the heat parts' dots and wisps on frame 0's phase, the blower and fan on frame 0's turn
     o.heatClock = -secs;
+    // No. 021: the oil's dots and drops on frame 0's phase
+    o.oilClock = -secs;
     o.heatTurnFrom = heatTurnsAt({...o, heatTurnFrom: undefined}, secs, fps, true);
   }
   return o;
@@ -559,7 +611,7 @@ const VergePosts: React.FC<{scroll: number; half: number}> = ({scroll, half}) =>
     }),
     [planes],
   );
-  const P = 10;
+  const P = POST_PERIOD;
   const n0 = Math.floor((-half - 1 - scroll) / P);
   const n1 = Math.ceil((half + 1 - scroll) / P);
   return (
@@ -640,7 +692,11 @@ export const CityTwinScene: React.FC<CityTwinSceneProps> = (props) => {
           <group key={w} position={[0, laneY(props, w), 0]}>
             <SlicedCar {...(car as SlicedCarOptions)} cameraDistance={camD} />
             {(props.road ?? 'city') === 'highway' ? (
-              <VergePosts scroll={simRevs(car as SlicedCarOptions, t, fps) * WHEEL_C} half={(car as SlicedCarOptions).roadHalf ?? STREET.half} />
+              <VergePosts
+                // a loop lands the posts on frame 0's places (their 10 m repeat isn't the road's 40 ft one)
+                scroll={simRevs(car as SlicedCarOptions, t, fps) * WHEEL_C - (props.loop ? mod(simRevs(car as SlicedCarOptions, durationInFrames / fps, fps) * WHEEL_C, POST_PERIOD) : 0)}
+                half={(car as SlicedCarOptions).roadHalf ?? STREET.half}
+              />
             ) : null}
             {props.postClock && (props.postClock.lane ?? 'top') === w && (props.road ?? 'city') === 'city' ? (
               <PostClock pc={props.loop && props.postClock.when === undefined ? {...props.postClock, when: durationInFrames / fps} : props.postClock} car={car as SlicedCarOptions} t={t} fps={fps} />

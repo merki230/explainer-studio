@@ -444,6 +444,15 @@ export const REAL = {
   cell: '#3d4654',
   /** The pedals' rubber pads and steel arms. */
   pedal: '#232428',
+  /**
+   * No. 021 (`ev-oil`, style guide v0.18.18 § 1, § 3 Liquids): engine oil that ages on screen goes `oilFresh` (fresh,
+   * honey amber, 42°, 45%, 38%: 2° above the band's hue edge and 15 points under its saturation floor) → `coffee` →
+   * `oilOld` (spent, warm near-black, 20°, 18%, 10%). An EV gearbox's and a gas transaxle's oil stay `oilFresh`.
+   */
+  oilFresh: '#8c7235',
+  oilOld: '#1e1815',
+  /** Unburned fuel droplets in blow-by gas (= `pad`, pale straw; v0.18.18). */
+  fuel: '#b49f5e',
 };
 
 /**

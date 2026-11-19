@@ -53,6 +53,8 @@ import {spec as gamePreload} from './game-preload/spec';
 import gamePreloadTranscript from './game-preload/transcript.json';
 import {spec as crashDetect} from './crash-detect/spec';
 import crashDetectTranscript from './crash-detect/transcript.json';
+import {spec as evOil} from './ev-oil/spec';
+import evOilTranscript from './ev-oil/transcript.json';
 // </imports>
 
 export type VideoEntry = {spec: VideoSpec; transcript: Transcript};
@@ -89,5 +91,6 @@ export const VIDEOS: Record<string, VideoEntry> = {
   'light-countdown': {spec: lightCountdown, transcript: lightCountdownTranscript as Transcript},
   'game-preload': {spec: gamePreload, transcript: gamePreloadTranscript as Transcript},
   'crash-detect': {spec: crashDetect, transcript: crashDetectTranscript as Transcript},
+  'ev-oil': {spec: evOil, transcript: evOilTranscript as Transcript},
   // </entries>
 };
